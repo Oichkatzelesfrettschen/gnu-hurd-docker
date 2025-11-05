@@ -1,4 +1,4 @@
-name: Create Release
+name: Release
 
 on:
   push:
@@ -8,80 +8,77 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: Create GitHub Release
-
-    permissions:
-      contents: write
-      packages: write
+    name: Create Release
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
-        id: version
+      - name: Generate changelog
+        id: changelog
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG#v}
+          VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Validate configuration
-        run: |
-          echo "=== Release validation ==="
-          ./scripts/validate-config.sh || exit 1
+          echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          release_name: GNU/Hurd Docker ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.changelog.outputs.version }}
           body: |
-            # GNU/Hurd Docker Release ${{ steps.version.outputs.version }}
-
-            ## What's included
-            - Dockerized GNU/Mach i386 microkernel
-            - Complete QEMU-in-Docker implementation
-            - Production-ready configuration
-            - Comprehensive documentation
-
+            # GNU/Hurd Docker ${{ steps.changelog.outputs.version }}
+            
+            Release Date: ${{ steps.changelog.outputs.date }}
+            
+            ## Contents
+            - Dockerfile: Docker image specification
+            - entrypoint.sh: QEMU launcher script
+            - docker-compose.yml: Container orchestration
+            - PKGBUILD: Arch Linux kernel fix package
+            
+            ## Prerequisites
+            
+            ### System Requirements
+            - Docker and Docker Compose installed
+            - Debian GNU/Hurd i386 QCOW2 disk image
+            - 2GB+ available disk space for container
+            - 2GB+ available RAM
+            
+            ### Kernel Requirements
+            - Linux kernel with nf_tables/iptables support
+            - If missing: apply fix from gnu-hurd-docker-kernel-fix package
+            
             ## Quick Start
-            1. Review docs/DEPLOYMENT.md for prerequisites
-            2. Run: `./scripts/download-image.sh` (downloads Debian GNU/Hurd)
-            3. Run: `docker-compose build`
-            4. Run: `docker-compose up -d`
-
+            
+            ```bash
+            # Apply kernel fix if needed
+            pacman -S gnu-hurd-docker-kernel-fix
+            sudo gnu-hurd-docker-kernel-fix
+            
+            # Build Docker image
+            docker-compose build
+            
+            # Deploy container
+            docker-compose up -d
+            
+            # View logs
+            docker-compose logs -f
+            ```
+            
             ## Documentation
-            - **docs/ARCHITECTURE.md** - Design decisions and rationale
-            - **docs/DEPLOYMENT.md** - Step-by-step deployment guide
-            - **docs/CREDENTIALS.md** - Default access and security info
-            - **docs/USER-SETUP.md** - User account management
-            - **docs/TROUBLESHOOTING.md** - Common issues and fixes
-
-            ## System Requirements
-            - Docker daemon with nf_tables/iptables support
-            - 2+ GB free disk space
-            - 2 GB RAM available for QEMU
-            - Linux kernel 5.10+
-
-            ## Known Issues
-            - Docker daemon startup requires kernel nf_tables configuration (see TROUBLESHOOTING.md)
-            - QEMU CPU emulation adds ~100-200ms latency
-            - Serial console access requires manual input (no automated boot)
-
-            ## Getting Help
-            1. Check docs/TROUBLESHOOTING.md
-            2. Review QEMU logs in container
-            3. Access serial console via PTY or SSH port 2222
-
+            
+            - **README.md**: Overview and quick start
+            - **docs/ARCHITECTURE.md**: Design decisions and system parameters
+            - **docs/DEPLOYMENT.md**: Step-by-step deployment guide
+            - **docs/TROUBLESHOOTING.md**: Common issues and solutions
+            - **docs/CREDENTIALS.md**: Default access information
+            - **docs/USER-SETUP.md**: User account management
+            
+            ## Repository
+            
+            https://github.com/oaich/gnu-hurd-docker
           draft: false
           prerelease: false
-
-      - name: Generate Release Summary
-        run: |
-          echo "## Release Created" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag: ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: Complete" >> $GITHUB_STEP_SUMMARY

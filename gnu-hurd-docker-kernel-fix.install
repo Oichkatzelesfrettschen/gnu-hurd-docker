@@ -1,0 +1,63 @@
+post_install() {
+    cat << 'POST_MSG'
+========================================================================
+GNU/Hurd Docker Kernel Networking Fix Installed
+========================================================================
+
+The Docker daemon requires a properly configured nf_tables subsystem.
+This package provides tools to fix the CHAIN_ADD nf_tables error.
+
+NEXT STEPS:
+1. Run the fix script to detect and apply the best solution:
+   
+   sudo gnu-hurd-docker-kernel-fix
+   
+   This script will:
+   - Detect current networking configuration
+   - Identify available kernel modules
+   - Recommend the best fix option
+   - Apply the fix and verify
+
+2. After running the script, verify Docker works:
+   
+   docker ps
+   docker-compose --version
+
+3. If automatic fix fails, choose from three manual options:
+   
+   OPTION 1 (Best for long-term): Rebuild kernel with nf_tables support
+   - See: /usr/share/doc/gnu-hurd-docker-kernel-fix/README.md
+   
+   OPTION 2 (Quick): Load nf_tables kernel modules
+   - See: /usr/share/doc/gnu-hurd-docker-kernel-fix/README.md
+   
+   OPTION 3 (Workaround): Use iptables-legacy wrapper
+   - See: /usr/share/doc/gnu-hurd-docker-kernel-fix/README.md
+
+========================================================================
+Documentation: /usr/share/doc/gnu-hurd-docker-kernel-fix/README.md
+Repository: https://github.com/oaich/gnu-hurd-docker
+========================================================================
+POST_MSG
+}
+
+post_upgrade() {
+    post_install
+}
+
+post_remove() {
+    cat << 'REMOVE_MSG'
+========================================================================
+GNU/Hurd Docker Kernel Fix Removed
+========================================================================
+
+The Docker daemon kernel configuration remains unchanged.
+If you experience Docker connectivity issues, you may need to:
+
+1. Reinstall this package: pacman -S gnu-hurd-docker-kernel-fix
+2. Or manually apply one of the three fix options documented at:
+   https://github.com/oaich/gnu-hurd-docker
+
+========================================================================
+REMOVE_MSG
+}
