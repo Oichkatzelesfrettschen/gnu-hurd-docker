@@ -11,7 +11,9 @@
       "Bash(gh repo list:*)",
       "Bash(gh repo create:*)",
       "Bash(gh repo edit:*)",
-      "Bash(shellcheck:*)"
+      "Bash(shellcheck:*)",
+      "mcp__filesystem__write_file",
+      "Bash(for file in /home/eirikr/Playground/gnu-hurd-docker/docs/mach-variants/*.md)"
     ],
     "deny": [],
     "ask": []
