@@ -1,25 +1,39 @@
-version: '3.9'
-
 services:
   gnu-hurd-dev:
     build:
       context: .
       dockerfile: Dockerfile
-    
+
     container_name: gnu-hurd-dev
     privileged: true
-    
+
     volumes:
-      - .:/opt/hurd-image:ro
-    
+      - .:/opt/hurd-image           # Project root (read-write for QCOW2)
+      - ./qmp:/qmp                  # Unix sockets (monitor, QMP)
+      - ./share:/share              # Shared files via 9p (scripts, data)
+
     ports:
-      - "2222:2222"  # SSH access
-      - "8080:80"    # HTTP access
+      - "2222:2222"  # SSH access to guest
+      - "8080:80"    # HTTP access to guest
       - "9999:9999"  # Custom application port
-    
+      - "5555:5555"  # Serial console (telnet)
+      - "5901:5901"  # VNC (if DISPLAY_MODE=vnc)
+
+    # Linux-only optimizations (comment out on macOS/Windows)
+    devices:
+      - /dev/kvm     # KVM acceleration (auto-detected in entrypoint.sh)
+
+    environment:
+      # Override defaults if needed
+      - QEMU_RAM=2048
+      - QEMU_SMP=1
+      - DISPLAY_MODE=nographic    # nographic|vnc
+      - SERIAL_PORT=5555
+      - SHARE_TAG=scripts
+
     stdin_open: true
     tty: true
-    
+
     networks:
       - hurd-net
 
