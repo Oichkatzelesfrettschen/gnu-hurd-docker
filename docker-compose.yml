@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  gnu-hurd-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: gnu-hurd-dev
+    privileged: true
+    
+    volumes:
+      - .:/opt/hurd-image:ro
+    
+    ports:
+      - "2222:2222"
+      - "9999:9999"
+    
+    stdin_open: true
+    tty: true
+    
+    networks:
+      - hurd-net
+
+networks:
+  hurd-net:
+    driver: bridge

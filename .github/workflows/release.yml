@@ -1,0 +1,87 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Create GitHub Release
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Validate configuration
+        run: |
+          echo "=== Release validation ==="
+          ./scripts/validate-config.sh || exit 1
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          release_name: GNU/Hurd Docker ${{ steps.version.outputs.version }}
+          body: |
+            # GNU/Hurd Docker Release ${{ steps.version.outputs.version }}
+
+            ## What's included
+            - Dockerized GNU/Mach i386 microkernel
+            - Complete QEMU-in-Docker implementation
+            - Production-ready configuration
+            - Comprehensive documentation
+
+            ## Quick Start
+            1. Review docs/DEPLOYMENT.md for prerequisites
+            2. Run: `./scripts/download-image.sh` (downloads Debian GNU/Hurd)
+            3. Run: `docker-compose build`
+            4. Run: `docker-compose up -d`
+
+            ## Documentation
+            - **docs/ARCHITECTURE.md** - Design decisions and rationale
+            - **docs/DEPLOYMENT.md** - Step-by-step deployment guide
+            - **docs/CREDENTIALS.md** - Default access and security info
+            - **docs/USER-SETUP.md** - User account management
+            - **docs/TROUBLESHOOTING.md** - Common issues and fixes
+
+            ## System Requirements
+            - Docker daemon with nf_tables/iptables support
+            - 2+ GB free disk space
+            - 2 GB RAM available for QEMU
+            - Linux kernel 5.10+
+
+            ## Known Issues
+            - Docker daemon startup requires kernel nf_tables configuration (see TROUBLESHOOTING.md)
+            - QEMU CPU emulation adds ~100-200ms latency
+            - Serial console access requires manual input (no automated boot)
+
+            ## Getting Help
+            1. Check docs/TROUBLESHOOTING.md
+            2. Review QEMU logs in container
+            3. Access serial console via PTY or SSH port 2222
+
+          draft: false
+          prerelease: false
+
+      - name: Generate Release Summary
+        run: |
+          echo "## Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag: ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: Complete" >> $GITHUB_STEP_SUMMARY

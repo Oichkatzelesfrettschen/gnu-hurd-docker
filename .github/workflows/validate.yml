@@ -1,0 +1,102 @@
+name: Validate Configuration
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+      - 'docker-compose.yml'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+      - 'docker-compose.yml'
+      - '.github/workflows/validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate Docker Configuration
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Validate Dockerfile
+        run: |
+          echo "=== Validating Dockerfile ==="
+          if [ ! -f Dockerfile ]; then
+            echo "ERROR: Dockerfile not found"
+            exit 1
+          fi
+          echo "OK: Dockerfile structure is present"
+
+      - name: Validate entrypoint.sh
+        run: |
+          echo "=== Validating entrypoint.sh ==="
+          if [ ! -f entrypoint.sh ]; then
+            echo "ERROR: entrypoint.sh not found"
+            exit 1
+          fi
+          if [ ! -x entrypoint.sh ]; then
+            echo "ERROR: entrypoint.sh is not executable"
+            exit 1
+          fi
+          shellcheck -S error entrypoint.sh
+          echo "OK: entrypoint.sh passes shellcheck validation"
+
+      - name: Validate docker-compose.yml
+        run: |
+          echo "=== Validating docker-compose.yml ==="
+          python3 << 'PYTHON_SCRIPT'
+          import yaml
+          import sys
+          try:
+              with open('docker-compose.yml', 'r') as f:
+                  data = yaml.safe_load(f)
+              if data is None:
+                  print("ERROR: docker-compose.yml is empty")
+                  sys.exit(1)
+              print("OK: docker-compose.yml has valid YAML syntax")
+              print(f"Services defined: {list(data.get('services', {}).keys())}")
+          except yaml.YAMLError as e:
+              print(f"ERROR: YAML syntax error: {e}")
+              sys.exit(1)
+          except FileNotFoundError:
+              print("ERROR: docker-compose.yml not found")
+              sys.exit(1)
+          PYTHON_SCRIPT
+
+      - name: Validate configuration files
+        run: |
+          echo "=== Validating configuration files ==="
+          [ -f LICENSE ] && echo "OK: LICENSE file present" || echo "WARN: LICENSE file missing"
+          [ -f README.md ] && echo "OK: README.md present" || echo "WARN: README.md missing"
+          [ -f .gitignore ] && echo "OK: .gitignore present" || echo "WARN: .gitignore missing"
+          [ -d docs ] && echo "OK: docs directory present" || echo "WARN: docs directory missing"
+          [ -d scripts ] && echo "OK: scripts directory present" || echo "WARN: scripts directory missing"
+
+      - name: Check script executability
+        run: |
+          echo "=== Checking script executability ==="
+          for script in scripts/*.sh; do
+            if [ -f "$script" ]; then
+              if [ -x "$script" ]; then
+                echo "OK: $script is executable"
+              else
+                echo "ERROR: $script is not executable"
+                exit 1
+              fi
+            fi
+          done

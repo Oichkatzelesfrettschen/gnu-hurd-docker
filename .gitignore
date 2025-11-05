@@ -1,0 +1,36 @@
+# Disk Images (large files - download from cdimage.debian.org)
+*.qcow2
+*.img
+*.tar.xz
+
+# QEMU logs and output
+qemu*.log
+serial*.log
+*.pid
+hurd_serial.log
+
+# Docker artifacts
+.docker/
+docker-compose.override.yml
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Python and scripts
+__pycache__/
+*.pyc
+.env.local
+venv/
+.venv/
+
+# Temporary files
+/tmp/
+/temp/
+*.tmp
