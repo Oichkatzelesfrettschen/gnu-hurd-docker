@@ -13,8 +13,9 @@ services:
       - .:/opt/hurd-image:ro
     
     ports:
-      - "2222:2222"
-      - "9999:9999"
+      - "2222:2222"  # SSH access
+      - "8080:80"    # HTTP access
+      - "9999:9999"  # Custom application port
     
     stdin_open: true
     tty: true
