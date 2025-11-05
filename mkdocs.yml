@@ -1,0 +1,97 @@
+site_name: GNU/Hurd Docker - Mach Development Environment
+site_url: https://oichkatzelesfrettschen.github.io/gnu-hurd-docker
+repo_url: https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker
+repo_name: Oichkatzelesfrettschen/gnu-hurd-docker
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+nav:
+  - Home: index.md
+  - Quick Start:
+    - Overview: QUICK_START_GUIDE.md
+    - Kernel Fix: QUICK-START-KERNEL-FIX.txt
+  - Architecture:
+    - Design Overview: ARCHITECTURE.md
+    - Deployment Guide: DEPLOYMENT.md
+    - QEMU Research: MACH_QEMU_RESEARCH_REPORT.md
+  - Mach Variants:
+    - Overview: mach-variants/INDEX.md
+    - GNU Mach: mach-variants/GNU-MACH.md
+    - Darwin/XNU: mach-variants/DARWIN-XNU.md
+    - OSF/1 Mach: mach-variants/OSF1-MACH.md
+    - OpenMach: mach-variants/OPENMACH.md
+    - xMach: mach-variants/XMACH.md
+    - Comparative Analysis: mach-variants/COMPARATIVE-ANALYSIS.md
+  - Development:
+    - User Setup: USER-SETUP.md
+    - Credentials: CREDENTIALS.md
+    - Troubleshooting: TROUBLESHOOTING.md
+  - Research:
+    - Research Findings: RESEARCH-FINDINGS.md
+    - Kernel Standardization: KERNEL-STANDARDIZATION-PLAN.md
+    - Kernel Fix Guide: KERNEL-FIX-GUIDE.md
+    - Tools Assessment: MCP-TOOLS-ASSESSMENT-MATRIX.md
+  - Status Reports:
+    - Implementation: IMPLEMENTATION-COMPLETE.md
+    - Deployment: DEPLOYMENT-STATUS.md
+    - Execution Summary: EXECUTION-SUMMARY.md
+    - Session Report: SESSION-COMPLETION-REPORT.md
+    - Validation: VALIDATION-AND-TROUBLESHOOTING.md
+    - Analysis Plan: COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Oichkatzelesfrettschen
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2025 Eirikr Hinngart - Licensed under MIT

@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/eirikr/Playground/gnu-hurd-docker/logs/.bbe014959dd517d19e603025ad9fdb94e6d31808-audit.json",
+    "files": [
+        {
+            "date": 1762374680483,
+            "name": "/home/eirikr/Playground/gnu-hurd-docker/logs/mcp-puppeteer-2025-11-05.log",
+            "hash": "50be6d0166f4ae2eb90bb350ca9306a8abad4d0e27d6cf6a74505be1e7b11322"
+        }
+    ],
+    "hashType": "sha256"
+}

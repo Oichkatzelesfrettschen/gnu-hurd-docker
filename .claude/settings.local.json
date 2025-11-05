@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__filesystem__directory_tree",
+      "mcp__filesystem__list_directory_with_sizes",
+      "mcp__filesystem__read_multiple_files",
+      "mcp__desktop-commander__write_file",
+      "Bash(gh repo view:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo list:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gh repo edit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
