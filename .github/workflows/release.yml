@@ -21,6 +21,16 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+          # Generate changelog from commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $LAST_TAG..HEAD >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Initial release" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         uses: actions/create-release@v1
         env:
@@ -30,8 +40,11 @@ jobs:
           release_name: Release ${{ steps.changelog.outputs.version }}
           body: |
             # GNU/Hurd Docker ${{ steps.changelog.outputs.version }}
-            
+
             Release Date: ${{ steps.changelog.outputs.date }}
+
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
             
             ## Contents
             - Dockerfile: Docker image specification
