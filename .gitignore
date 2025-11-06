@@ -38,3 +38,5 @@ venv/
 # npm/yarn audit logs
 logs/
 *.audit.json
+*.qcow2.bak.*
+*.img.bak.*
