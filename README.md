@@ -27,14 +27,16 @@ This project provides a production-ready Docker Compose setup for running native
 - 8GB free disk space (minimum; 15GB recommended)
 - 2GB available RAM (QEMU allocation)
 
-### Installation
+## Installation
+
+### Quick Install (All Platforms)
 
 ```bash
 # Clone repository
-git clone https://github.com/oaich/gnu-hurd-docker.git
+git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 
-# Download system image (if not included)
+# Download system image
 ./scripts/download-image.sh
 
 # Build Docker image
@@ -46,6 +48,20 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 ```
+
+### Arch Linux (AUR Package)
+
+```bash
+# Using yay
+yay -S gnu-hurd-docker
+
+# Using package commands
+gnu-hurd-docker download
+gnu-hurd-docker build
+gnu-hurd-docker start
+```
+
+See **[INSTALLATION.md](INSTALLATION.md)** for complete platform-specific installation instructions (Linux, macOS, Windows).
 
 ### Access the System
 
@@ -94,11 +110,29 @@ docker-compose exec gnu-hurd-dev bash
 
 ## Documentation
 
+### Getting Started
+- **[INSTALLATION.md](INSTALLATION.md)** - Complete installation guide for all platforms
+- **[requirements.md](requirements.md)** - Detailed system requirements and dependencies
+- **[SIMPLE-START.md](SIMPLE-START.md)** - Quickest path to running system
+- **[LOCAL-TESTING-GUIDE.md](LOCAL-TESTING-GUIDE.md)** - Testing and validation procedures
+
+### Architecture & Design
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Detailed design rationale and implementation
-- **[CREDENTIALS.md](docs/CREDENTIALS.md)** - Default root user/password and SSH access
-- **[USER-SETUP.md](docs/USER-SETUP.md)** - Creating and configuring standard user accounts
+- **[QEMU-TUNING.md](docs/QEMU-TUNING.md)** - Performance optimization guide
+- **[HURD-IMAGE-BUILDING.md](docs/HURD-IMAGE-BUILDING.md)** - Custom image creation
+
+### Operations & CI/CD
+- **[CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md)** - QEMU automation and CI/CD workflows
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Step-by-step deployment procedures
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[VALIDATION-AND-TROUBLESHOOTING.md](docs/VALIDATION-AND-TROUBLESHOOTING.md)** - Common issues and solutions
+
+### User Management
+- **[CREDENTIALS.md](docs/CREDENTIALS.md)** - Default root user/password and SSH access
+- **[docs/USER-SETUP.md](docs/USER-SETUP.md)** - Creating and configuring standard user accounts
+
+### Reference
+- **[PROJECT-SUMMARY.md](PROJECT-SUMMARY.md)** - Comprehensive project overview
+- **[REPOSITORY-INDEX.md](REPOSITORY-INDEX.md)** - Complete file structure index
 
 ## File Structure
 
@@ -248,13 +282,36 @@ GNU/Mach is a microkernel that requires direct hardware access and cannot be swa
 
 ## CI/CD Workflows
 
-This repository includes GitHub Actions workflows:
+This repository includes comprehensive GitHub Actions workflows:
 
-- **Build:** Builds Docker image on push (validates syntax)
+### Build & Validation
+- **Build:** Builds Docker image on push (validates syntax and structure)
 - **Validate:** Validates configuration files (Dockerfile, compose, scripts)
-- **Release:** Creates releases and tags
+- **Quality & Security:** Comprehensive linting and security scanning
+  - ShellCheck for all shell scripts (warnings as errors)
+  - YAML validation with strict rules
+  - Python linting (black, flake8, pylint)
+  - Dockerfile best practices (Hadolint)
+  - Security scanning (Trivy)
+  - Dependency auditing
 
-See `.github/workflows/` for workflow definitions.
+### QEMU CI/CD
+- **QEMU CI (TCG):** GitHub-hosted runners with software emulation
+  - Automated QEMU boot testing
+  - QMP automation validation
+  - Serial console testing
+  - Artifact collection
+- **QEMU CI (KVM):** Self-hosted runners with hardware acceleration
+  - Performance testing
+  - Full system integration tests
+  - Benchmark execution
+
+### Release & Deployment
+- **Release:** Creates releases and tags
+- **Push GHCR:** Automated Docker image publishing to GitHub Container Registry
+- **Deploy Pages:** Documentation deployment to GitHub Pages
+
+See `.github/workflows/` for workflow definitions and [docs/CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md) for detailed automation guide.
 
 ## Validation Status
 
