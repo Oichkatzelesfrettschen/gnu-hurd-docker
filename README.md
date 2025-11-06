@@ -31,7 +31,39 @@ This project provides a production-ready Docker Compose setup for running native
 
 ## Installation
 
-### Quick Install (All Platforms)
+### Option 1: Using Pre-built Docker Image (Fastest)
+
+Pull the pre-built image from GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+
+# Download Debian GNU/Hurd QCOW2 image
+wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+tar xf debian-hurd.img.tar.xz
+
+# Run the container
+docker run -d --privileged \
+  --name gnu-hurd \
+  -p 2222:2222 -p 5555:5555 -p 5901:5901 \
+  -v $(pwd):/opt/hurd-image \
+  --device /dev/kvm \
+  -e QEMU_RAM=4096 \
+  -e QEMU_SMP=4 \
+  -e DISPLAY_MODE=vnc \
+  ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+
+# Access via SSH (once booted, ~60 seconds)
+ssh -p 2222 root@localhost  # Password: root
+```
+
+**Available tags:**
+- `latest` - Latest stable release
+- `main` - Latest from main branch
+- `v*` - Specific version tags
+
+### Option 2: Build from Source
 
 ```bash
 # Clone repository
@@ -51,7 +83,7 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-### Arch Linux (AUR Package)
+### Option 3: Arch Linux (AUR Package)
 
 ```bash
 # Using yay
