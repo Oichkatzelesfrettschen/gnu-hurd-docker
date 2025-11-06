@@ -25,9 +25,12 @@ services:
 
     environment:
       # Override defaults if needed
-      - QEMU_RAM=2048
-      - QEMU_SMP=1
-      - DISPLAY_MODE=vnc          # nographic|vnc - CHANGED TO VNC FOR TESTING
+      - QEMU_RAM=4096                    # 4 GB for better performance (2048 minimum)
+      - QEMU_SMP=4                       # 4 cores (1-6 recommended)
+      - DISPLAY_MODE=sdl-gl              # nographic|vnc|sdl-gl|gtk-gl
+      - QEMU_VIDEO=virtio-vga-gl         # std|virtio-vga-gl|cirrus
+      - QEMU_STORAGE=virtio              # ide|virtio (virtio recommended)
+      - QEMU_NET=virtio                  # e1000|virtio (virtio recommended)
       - SERIAL_PORT=5555
       - SHARE_TAG=scripts
 

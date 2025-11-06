@@ -12,29 +12,65 @@ This project provides a production-ready Docker Compose setup for running native
 
 ### Key Features
 
-- **Complete GNU/Hurd i386 Environment:** Full microkernel OS with package management
-- **QEMU Emulation:** Pentium CPU emulation with 1.5GB RAM
-- **Interactive Access:** TTY-based serial console and SSH
-- **Network Isolation:** User-mode NAT networking with port forwarding
-- **Production-Ready:** Validated configuration with zero errors
-- **Well-Documented:** Comprehensive architecture and deployment guides
+- **Complete GNU/Hurd i386 Environment:** Full microkernel OS with package management (Debian 2025)
+- **Optimized QEMU Emulation:** VirtIO devices, KVM acceleration, multiple display modes
+- **Graphics Support:** VNC, SDL with OpenGL, GTK with OpenGL, framebuffer
+- **Interactive Access:** TTY-based serial console, SSH, and optional GUI
+- **Network Isolation:** User-mode NAT networking with VirtIO-Net
+- **Production-Ready:** Validated configuration based on official 2025 guidelines
+- **Well-Documented:** Comprehensive optimization and deployment guides
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker Engine (>=20.10) and Docker Compose (>=1.29)
-- 8GB free disk space (minimum; 15GB recommended)
-- 2GB available RAM (QEMU allocation)
+- 10-20GB free disk space (depending on packages installed)
+- 4-8GB available RAM (2GB minimum for CLI, 4GB+ recommended for GUI)
+- Optional: KVM support for hardware acceleration (Linux only)
 
-### Installation
+## Installation
+
+### Option 1: Using Pre-built Docker Image (Fastest)
+
+Pull the pre-built image from GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+
+# Download Debian GNU/Hurd QCOW2 image
+wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+tar xf debian-hurd.img.tar.xz
+
+# Run the container
+docker run -d --privileged \
+  --name gnu-hurd \
+  -p 2222:2222 -p 5555:5555 -p 5901:5901 \
+  -v $(pwd):/opt/hurd-image \
+  --device /dev/kvm \
+  -e QEMU_RAM=4096 \
+  -e QEMU_SMP=4 \
+  -e DISPLAY_MODE=vnc \
+  ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+
+# Access via SSH (once booted, ~60 seconds)
+ssh -p 2222 root@localhost  # Password: root
+```
+
+**Available tags:**
+- `latest` - Latest stable release
+- `main` - Latest from main branch
+- `v*` - Specific version tags
+
+### Option 2: Build from Source
 
 ```bash
 # Clone repository
-git clone https://github.com/oaich/gnu-hurd-docker.git
+git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 
-# Download system image (if not included)
+# Download system image
 ./scripts/download-image.sh
 
 # Build Docker image
@@ -46,6 +82,20 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 ```
+
+### Option 3: Arch Linux (AUR Package)
+
+```bash
+# Using yay
+yay -S gnu-hurd-docker
+
+# Using package commands
+gnu-hurd-docker download
+gnu-hurd-docker build
+gnu-hurd-docker start
+```
+
+See **[INSTALLATION.md](INSTALLATION.md)** for complete platform-specific installation instructions (Linux, macOS, Windows).
 
 ### Access the System
 
@@ -94,11 +144,29 @@ docker-compose exec gnu-hurd-dev bash
 
 ## Documentation
 
+### Getting Started
+- **[INSTALLATION.md](INSTALLATION.md)** - Complete installation guide for all platforms
+- **[requirements.md](requirements.md)** - Detailed system requirements and dependencies
+- **[SIMPLE-START.md](SIMPLE-START.md)** - Quickest path to running system
+- **[LOCAL-TESTING-GUIDE.md](LOCAL-TESTING-GUIDE.md)** - Testing and validation procedures
+
+### Architecture & Design
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Detailed design rationale and implementation
-- **[CREDENTIALS.md](docs/CREDENTIALS.md)** - Default root user/password and SSH access
-- **[USER-SETUP.md](docs/USER-SETUP.md)** - Creating and configuring standard user accounts
+- **[QEMU-TUNING.md](docs/QEMU-TUNING.md)** - Performance optimization guide
+- **[HURD-IMAGE-BUILDING.md](docs/HURD-IMAGE-BUILDING.md)** - Custom image creation
+
+### Operations & CI/CD
+- **[CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md)** - QEMU automation and CI/CD workflows
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Step-by-step deployment procedures
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[VALIDATION-AND-TROUBLESHOOTING.md](docs/VALIDATION-AND-TROUBLESHOOTING.md)** - Common issues and solutions
+
+### User Management
+- **[CREDENTIALS.md](docs/CREDENTIALS.md)** - Default root user/password and SSH access
+- **[docs/USER-SETUP.md](docs/USER-SETUP.md)** - Creating and configuring standard user accounts
+
+### Reference
+- **[PROJECT-SUMMARY.md](PROJECT-SUMMARY.md)** - Comprehensive project overview
+- **[REPOSITORY-INDEX.md](REPOSITORY-INDEX.md)** - Complete file structure index
 
 ## File Structure
 
@@ -168,8 +236,28 @@ docker image inspect gnu-hurd-dev:latest
 
 ## Testing
 
+### Automated System Testing
+
 ```bash
-# Run automated tests
+# Run comprehensive GNU/Hurd system tests
+./scripts/test-hurd-system.sh
+
+# This tests:
+# - Container and boot status
+# - Root user access (root/root)
+# - Agents user access (agents/agents) with sudo NOPASSWD
+# - C program compilation and execution
+# - Package management functionality
+# - Filesystem operations
+# - GNU/Hurd specific features
+```
+
+See **[docs/HURD-TESTING-REPORT.md](docs/HURD-TESTING-REPORT.md)** for detailed test results and examples.
+
+### Docker Configuration Tests
+
+```bash
+# Run automated Docker setup tests
 ./scripts/test-docker.sh
 
 # Manual testing checklist
@@ -248,13 +336,36 @@ GNU/Mach is a microkernel that requires direct hardware access and cannot be swa
 
 ## CI/CD Workflows
 
-This repository includes GitHub Actions workflows:
+This repository includes comprehensive GitHub Actions workflows:
 
-- **Build:** Builds Docker image on push (validates syntax)
+### Build & Validation
+- **Build:** Builds Docker image on push (validates syntax and structure)
 - **Validate:** Validates configuration files (Dockerfile, compose, scripts)
-- **Release:** Creates releases and tags
+- **Quality & Security:** Comprehensive linting and security scanning
+  - ShellCheck for all shell scripts (warnings as errors)
+  - YAML validation with strict rules
+  - Python linting (black, flake8, pylint)
+  - Dockerfile best practices (Hadolint)
+  - Security scanning (Trivy)
+  - Dependency auditing
 
-See `.github/workflows/` for workflow definitions.
+### QEMU CI/CD
+- **QEMU CI (TCG):** GitHub-hosted runners with software emulation
+  - Automated QEMU boot testing
+  - QMP automation validation
+  - Serial console testing
+  - Artifact collection
+- **QEMU CI (KVM):** Self-hosted runners with hardware acceleration
+  - Performance testing
+  - Full system integration tests
+  - Benchmark execution
+
+### Release & Deployment
+- **Release:** Creates releases and tags
+- **Push GHCR:** Automated Docker image publishing to GitHub Container Registry
+- **Deploy Pages:** Documentation deployment to GitHub Pages
+
+See `.github/workflows/` for workflow definitions and [docs/CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md) for detailed automation guide.
 
 ## Validation Status
 

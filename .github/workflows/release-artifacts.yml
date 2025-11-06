@@ -1,0 +1,370 @@
+name: Create Release with Artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  RELEASE_NAME: gnu-hurd-docker-release
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_clean=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Create release artifacts directory
+        run: |
+          mkdir -p release-artifacts
+          mkdir -p release-artifacts/scripts
+          mkdir -p release-artifacts/docs
+          mkdir -p release-artifacts/.github/workflows
+
+      - name: Package scripts
+        run: |
+          echo "=== Packaging scripts ==="
+          cp -v scripts/*.sh release-artifacts/scripts/
+          cp -v scripts/*.py release-artifacts/scripts/
+          chmod +x release-artifacts/scripts/*.sh
+          chmod +x release-artifacts/scripts/*.py
+          
+          # Create scripts README
+          cat > release-artifacts/scripts/README.md << 'EOF'
+          # GNU/Hurd Docker - Scripts
+          
+          This directory contains utility scripts for managing the GNU/Hurd Docker environment.
+          
+          ## Available Scripts
+          
+          ### Setup and Configuration
+          - `download-image.sh` - Download Debian GNU/Hurd QCOW2 image
+          - `configure-users.sh` - Configure users in the guest system
+          - `configure-shell.sh` - Configure shell environment
+          - `setup-hurd-dev.sh` - Setup development environment
+          - `install-hurd-packages.sh` - Install recommended packages in guest
+          
+          ### Management
+          - `monitor-qemu.sh` - Monitor QEMU process and resources
+          - `manage-snapshots.sh` - Manage QCOW2 snapshots
+          - `connect-console.sh` - Connect to serial console
+          
+          ### Testing
+          - `test-docker.sh` - Test Docker configuration
+          - `test-hurd-system.sh` - Comprehensive system testing
+          - `validate-config.sh` - Validate configuration
+          
+          ### Automation
+          - `qmp-helper.py` - QEMU Machine Protocol automation
+          - `full-automated-setup.sh` - Complete automated setup
+          
+          ## Usage
+          
+          Most scripts can be run directly:
+          ```bash
+          ./scripts/download-image.sh
+          ./scripts/test-hurd-system.sh
+          ```
+          
+          For guest system scripts (run inside the GNU/Hurd VM):
+          ```bash
+          # Copy to guest via 9p mount
+          mount -t 9p -o trans=virtio scripts /mnt
+          /mnt/install-hurd-packages.sh
+          ```
+          EOF
+
+      - name: Package documentation
+        run: |
+          echo "=== Packaging documentation ==="
+          cp -v README.md release-artifacts/
+          cp -v INSTALLATION.md release-artifacts/
+          cp -v requirements.md release-artifacts/
+          cp -v LICENSE release-artifacts/ 2>/dev/null || echo "No LICENSE file"
+          cp -rv docs/ release-artifacts/
+          
+          # Create documentation index
+          cat > release-artifacts/DOCUMENTATION-INDEX.md << 'EOF'
+          # GNU/Hurd Docker - Documentation Index
+          
+          ## Quick Start
+          - [README.md](README.md) - Project overview and quick start
+          - [INSTALLATION.md](INSTALLATION.md) - Installation guide for all platforms
+          - [requirements.md](requirements.md) - System requirements
+          
+          ## Comprehensive Guides
+          - [docs/QEMU-OPTIMIZATION-2025.md](docs/QEMU-OPTIMIZATION-2025.md) - QEMU optimization guide
+          - [docs/CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md) - CI/CD automation guide
+          - [docs/HURD-TESTING-REPORT.md](docs/HURD-TESTING-REPORT.md) - Testing procedures
+          - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Architecture and design
+          - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment procedures
+          
+          ## Reference
+          - [docs/INDEX.md](docs/INDEX.md) - Complete documentation index
+          - [docs/CREDENTIALS.md](docs/CREDENTIALS.md) - Default credentials
+          - [docs/USER-SETUP.md](docs/USER-SETUP.md) - User management
+          
+          For the most up-to-date documentation, visit:
+          https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker
+          EOF
+
+      - name: Package configuration files
+        run: |
+          echo "=== Packaging configuration files ==="
+          cp -v Dockerfile release-artifacts/
+          cp -v docker-compose.yml release-artifacts/
+          cp -v entrypoint.sh release-artifacts/
+          cp -v PKGBUILD release-artifacts/
+          cp -v gnu-hurd-docker.install release-artifacts/
+          cp -v mkdocs.yml release-artifacts/ 2>/dev/null || true
+
+      - name: Package workflows
+        run: |
+          echo "=== Packaging CI/CD workflows ==="
+          cp -v .github/workflows/*.yml release-artifacts/.github/workflows/
+          
+          cat > release-artifacts/.github/workflows/README.md << 'EOF'
+          # GitHub Actions Workflows
+          
+          This directory contains CI/CD workflows for the GNU/Hurd Docker project.
+          
+          ## Available Workflows
+          
+          ### Build and Publish
+          - `push-ghcr.yml` - Build and push Docker image to GitHub Container Registry
+          - `build.yml` - Build and test Docker image
+          - `build-docker.yml` - Additional build validation
+          
+          ### Testing
+          - `qemu-ci-tcg.yml` - QEMU CI with TCG emulation (GitHub-hosted)
+          - `qemu-ci-kvm.yml` - QEMU CI with KVM acceleration (self-hosted)
+          - `integration-test.yml` - Integration testing
+          - `quality-and-security.yml` - Code quality and security scanning
+          
+          ### Deployment
+          - `deploy-pages.yml` - Deploy documentation to GitHub Pages
+          - `release-artifacts.yml` - Create release with artifacts
+          
+          ### Validation
+          - `validate.yml` - Configuration validation
+          - `validate-config.yml` - Additional validation checks
+          
+          ## Usage
+          
+          Copy the workflows directory to your forked repository:
+          ```bash
+          cp -r .github/workflows /path/to/your/repo/.github/
+          ```
+          
+          Workflows will run automatically on push/PR events as configured.
+          EOF
+
+      - name: Create comprehensive archive
+        run: |
+          echo "=== Creating release archive ==="
+          cd release-artifacts
+          tar -czf ../gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz .
+          cd ..
+          
+          # Create checksums
+          sha256sum gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz > gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+          
+          # List contents
+          echo "Archive contents:"
+          tar -tzf gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz | head -20
+
+      - name: Create standalone scripts package
+        run: |
+          echo "=== Creating standalone scripts package ==="
+          cd release-artifacts/scripts
+          tar -czf ../../gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz .
+          cd ../..
+          sha256sum gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz > gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+
+      - name: Create documentation package
+        run: |
+          echo "=== Creating documentation package ==="
+          cd release-artifacts
+          tar -czf ../gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz \
+            README.md INSTALLATION.md requirements.md DOCUMENTATION-INDEX.md docs/
+          cd ..
+          sha256sum gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz > gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release-notes.md << 'EOF'
+          # GNU/Hurd Docker Release ${{ steps.version.outputs.version }}
+          
+          ## 🎉 What's New
+          
+          This release includes a complete GNU/Hurd Docker environment with production-grade features:
+          
+          ### 🐳 Docker Image
+          The Docker image is available on GitHub Container Registry:
+          ```bash
+          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+          ```
+          
+          ### 📦 Release Artifacts
+          
+          Three packages are available for download:
+          
+          1. **Complete Package** (`gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - All scripts, documentation, and configuration files
+             - Ready to use with Docker or as standalone
+             - Recommended for most users
+          
+          2. **Scripts Only** (`gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - Utility scripts for setup and management
+             - Lightweight package for automation
+          
+          3. **Documentation Only** (`gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - Complete documentation set
+             - Optimization guides and references
+          
+          All packages include SHA256 checksums for verification.
+          
+          ### ✨ Features
+          
+          - **Debian GNU/Hurd 2025** (i386) with full microkernel support
+          - **QEMU Optimization** - VirtIO devices, KVM acceleration, multiple display modes
+          - **Graphics Support** - VNC, SDL/GTK with OpenGL, framebuffer acceleration
+          - **Development Ready** - Pre-configured with build tools and packages
+          - **CI/CD Workflows** - Complete automation for testing and deployment
+          - **Comprehensive Documentation** - 30+ markdown files with guides
+          
+          ### 🚀 Quick Start
+          
+          **Option 1: Using Docker Image**
+          ```bash
+          # Pull the image
+          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+          
+          # Download Hurd QCOW2 image
+          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+          tar xf debian-hurd.img.tar.xz
+          
+          # Run
+          docker run -d --privileged --name gnu-hurd \
+            -p 2222:2222 -p 5555:5555 -p 5901:5901 \
+            -v $(pwd):/opt/hurd-image \
+            --device /dev/kvm \
+            -e QEMU_RAM=4096 -e QEMU_SMP=4 -e DISPLAY_MODE=vnc \
+            ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+          
+          # Access
+          ssh -p 2222 root@localhost  # Password: root
+          ```
+          
+          **Option 2: Using Release Archive**
+          ```bash
+          # Download and extract
+          wget https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/releases/download/${{ steps.version.outputs.version }}/gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
+          tar xzf gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
+          cd gnu-hurd-docker-${{ steps.version.outputs.version_clean }}
+          
+          # Download Hurd image
+          ./scripts/download-image.sh
+          
+          # Build and run
+          docker-compose build
+          docker-compose up -d
+          ```
+          
+          **Option 3: Clone Repository**
+          ```bash
+          git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
+          cd gnu-hurd-docker
+          ./scripts/download-image.sh
+          docker-compose up -d
+          ```
+          
+          ### 📚 Documentation
+          
+          - [Installation Guide](INSTALLATION.md)
+          - [QEMU Optimization Guide](docs/QEMU-OPTIMIZATION-2025.md)
+          - [System Requirements](requirements.md)
+          - [Testing Report](docs/HURD-TESTING-REPORT.md)
+          - [CI/CD Guide](docs/CI-CD-GUIDE.md)
+          
+          ### 🔒 Security
+          
+          - All scripts validated with ShellCheck (warnings as errors)
+          - Docker image scanned with Trivy
+          - Dependency auditing enabled
+          - Supply chain attestation included
+          
+          ### 🐛 Bug Reports
+          
+          Please report issues at: https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/issues
+          
+          ### 📝 Changelog
+          
+          See commit history for detailed changes.
+          EOF
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          files: |
+            gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
+            gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+            gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz
+            gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+            gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz
+            gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
+
+      - name: Generate summary
+        run: |
+          echo "## 📦 Release Created Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Complete package: \`gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Scripts only: \`gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation: \`gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checksums" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Docker Image" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

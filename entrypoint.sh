@@ -16,7 +16,10 @@ QEMU_QMP="/qmp/qmp.sock"
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 VNC_DISPLAY="${VNC_DISPLAY:-:1}"
 SHARE_TAG="${SHARE_TAG:-scripts}"
-DISPLAY_MODE="${DISPLAY_MODE:-nographic}"  # nographic|vnc
+DISPLAY_MODE="${DISPLAY_MODE:-nographic}"  # nographic|vnc|sdl-gl|gtk-gl
+QEMU_VIDEO="${QEMU_VIDEO:-std}"  # std|virtio-vga-gl|cirrus
+QEMU_STORAGE="${QEMU_STORAGE:-virtio}"  # ide|virtio
+QEMU_NET="${QEMU_NET:-virtio}"  # e1000|virtio
 
 # ============================================================================
 # Validation
@@ -34,8 +37,10 @@ fi
 
 # Detect KVM availability (Linux hosts only)
 KVM_OPTS=()
+CPU_MODEL="pentium3"  # Default for maximum compatibility
 if [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
     KVM_OPTS+=(-enable-kvm)
+    CPU_MODEL="host"  # Use host CPU for best performance with KVM
     ACCEL="KVM"
     echo "[INFO] KVM acceleration: ENABLED"
 else
@@ -49,19 +54,91 @@ fi
 # ============================================================================
 
 DISPLAY_OPTS=()
+VIDEO_OPTS=()
+
 case "$DISPLAY_MODE" in
     nographic)
         DISPLAY_OPTS+=(-nographic)
         echo "[INFO] Display: No graphics (serial console only)"
         ;;
     vnc)
-        DISPLAY_OPTS+=(-vnc "$VNC_DISPLAY")
+        DISPLAY_OPTS+=(-display "vnc=$VNC_DISPLAY")
+        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
         echo "[INFO] Display: VNC on ${VNC_DISPLAY} (port $((5900 + ${VNC_DISPLAY#:})))"
+        echo "[INFO] Video: $QEMU_VIDEO"
+        ;;
+    sdl-gl)
+        DISPLAY_OPTS+=(-display "sdl,gl=on")
+        if [ "$QEMU_VIDEO" = "virtio-vga-gl" ]; then
+            VIDEO_OPTS+=(-device virtio-vga-gl)
+        else
+            VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
+        fi
+        echo "[INFO] Display: SDL with OpenGL acceleration"
+        echo "[INFO] Video: $QEMU_VIDEO"
+        ;;
+    gtk-gl)
+        DISPLAY_OPTS+=(-display "gtk,gl=on")
+        if [ "$QEMU_VIDEO" = "virtio-vga-gl" ]; then
+            VIDEO_OPTS+=(-device virtio-vga-gl)
+        else
+            VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
+        fi
+        echo "[INFO] Display: GTK with OpenGL acceleration"
+        echo "[INFO] Video: $QEMU_VIDEO"
+        ;;
+    sdl)
+        DISPLAY_OPTS+=(-display sdl)
+        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
+        echo "[INFO] Display: SDL (no GL)"
+        echo "[INFO] Video: $QEMU_VIDEO"
+        ;;
+    gtk)
+        DISPLAY_OPTS+=(-display gtk)
+        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
+        echo "[INFO] Display: GTK (no GL)"
+        echo "[INFO] Video: $QEMU_VIDEO"
         ;;
     *)
         DISPLAY_OPTS+=(-nographic)
+        echo "[WARN] Unknown display mode '$DISPLAY_MODE', using nographic"
         ;;
 esac
+
+# USB support for GUI modes
+USB_OPTS=()
+if [[ "$DISPLAY_MODE" != "nographic" ]]; then
+    USB_OPTS+=(-usb -device usb-tablet)
+    echo "[INFO] USB: Enabled with tablet device for better mouse integration"
+fi
+
+# ============================================================================
+# Storage Configuration
+# ============================================================================
+
+STORAGE_OPTS=()
+if [ "$QEMU_STORAGE" = "virtio" ]; then
+    STORAGE_OPTS+=(-drive "file=$QCOW2_IMAGE,format=qcow2,cache=writeback,aio=threads,if=virtio,discard=unmap")
+    echo "[INFO] Storage: VirtIO with writeback cache (best performance)"
+else
+    STORAGE_OPTS+=(-drive "file=$QCOW2_IMAGE,format=qcow2,cache=writeback,aio=threads,if=ide")
+    echo "[INFO] Storage: IDE with writeback cache (compatibility mode)"
+fi
+
+# ============================================================================
+# Network Configuration
+# ============================================================================
+
+NETWORK_OPTS=()
+if [ "$QEMU_NET" = "virtio" ]; then
+    NETWORK_OPTS+=(-netdev "user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999")
+    NETWORK_OPTS+=(-device "virtio-net-pci,netdev=net0")
+    echo "[INFO] Network: VirtIO-Net (best performance)"
+else
+    NETWORK_OPTS+=(-netdev "user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999")
+    NETWORK_OPTS+=(-device "e1000,netdev=net0")
+    echo "[INFO] Network: E1000 (compatibility mode)"
+fi
 
 # ============================================================================
 # File Sharing Configuration (9p - portable)
@@ -71,9 +148,9 @@ esac
 # Guest mounts with: mount -t 9p -o trans=virtio,version=9p2000.L scripts /mnt
 SHARE_OPTS=()
 if [ -d /share ]; then
-    SHARE_OPTS+=(
-        -virtfs local,path=/share,mount_tag="$SHARE_TAG",security_model=none,id=fsdev0
-    )
+    # Note: commas in virtfs parameters are not array separators
+    # shellcheck disable=SC2054
+    SHARE_OPTS+=(-virtfs "local,path=/share,mount_tag=$SHARE_TAG,security_model=none,id=fsdev0")
     echo "[INFO] File sharing: 9p export /share as '$SHARE_TAG'"
     echo "       Mount in guest: mount -t 9p -o trans=virtio $SHARE_TAG /mnt"
 else
@@ -86,20 +163,22 @@ fi
 
 echo ""
 echo "======================================================================"
-echo "  GNU/Hurd Docker - QEMU i386 Microkernel Environment"
+echo "  GNU/Hurd Docker - QEMU i386 Microkernel Environment (2025 Optimized)"
 echo "======================================================================"
 echo ""
 echo "Configuration:"
 echo "  - Image: $QCOW2_IMAGE"
 echo "  - Memory: ${QEMU_RAM} MB"
-echo "  - CPU: Pentium3 (i686, SSE support)"
+echo "  - CPU: $CPU_MODEL"
 echo "  - SMP: ${QEMU_SMP} core(s)"
 echo "  - Acceleration: $ACCEL"
 echo "  - Machine: pc-i440fx-7.2"
-echo "  - Storage: QCOW2 with writeback cache, threaded AIO"
+echo "  - Storage: $QEMU_STORAGE (writeback cache, threaded AIO)"
+echo "  - Video: $QEMU_VIDEO"
+echo "  - Display: $DISPLAY_MODE"
 echo ""
 echo "Networking:"
-echo "  - Mode: User-mode NAT"
+echo "  - Mode: User-mode NAT ($QEMU_NET)"
 echo "  - SSH: localhost:2222 → guest:22"
 echo "  - HTTP: localhost:8080 → guest:80"
 echo "  - Custom: localhost:9999 → guest:9999"
@@ -123,13 +202,14 @@ echo ""
 exec qemu-system-i386 \
     "${KVM_OPTS[@]}" \
     -m "$QEMU_RAM" \
-    -cpu pentium3 \
-    -machine pc-i440fx-7.2,usb=off \
+    -cpu "$CPU_MODEL" \
+    -machine pc-i440fx-7.2 \
     -smp "$QEMU_SMP" \
-    -drive file="$QCOW2_IMAGE",format=qcow2,cache=writeback,aio=threads,if=ide \
-    -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999 \
-    -device e1000,netdev=net0 \
+    "${STORAGE_OPTS[@]}" \
+    "${NETWORK_OPTS[@]}" \
     "${DISPLAY_OPTS[@]}" \
+    "${VIDEO_OPTS[@]}" \
+    "${USB_OPTS[@]}" \
     -monitor unix:"$QEMU_MONITOR",server,nowait \
     -qmp unix:"$QEMU_QMP",server,nowait \
     -serial telnet:0.0.0.0:"$SERIAL_PORT",server,nowait \
