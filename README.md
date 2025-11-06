@@ -202,8 +202,28 @@ docker image inspect gnu-hurd-dev:latest
 
 ## Testing
 
+### Automated System Testing
+
 ```bash
-# Run automated tests
+# Run comprehensive GNU/Hurd system tests
+./scripts/test-hurd-system.sh
+
+# This tests:
+# - Container and boot status
+# - Root user access (root/root)
+# - Agents user access (agents/agents) with sudo NOPASSWD
+# - C program compilation and execution
+# - Package management functionality
+# - Filesystem operations
+# - GNU/Hurd specific features
+```
+
+See **[docs/HURD-TESTING-REPORT.md](docs/HURD-TESTING-REPORT.md)** for detailed test results and examples.
+
+### Docker Configuration Tests
+
+```bash
+# Run automated Docker setup tests
 ./scripts/test-docker.sh
 
 # Manual testing checklist
