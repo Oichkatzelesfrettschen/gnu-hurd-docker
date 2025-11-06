@@ -16,6 +16,7 @@
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Design decisions and parameters | Developers | 15 min |
 | [CI-CD-GUIDE.md](CI-CD-GUIDE.md) | QEMU CI/CD automation | DevOps | 20 min |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Deployment procedures | DevOps | 20 min |
+| [HURD-TESTING-REPORT.md](HURD-TESTING-REPORT.md) | System testing and validation | Everyone | 10 min |
 | [VALIDATION-AND-TROUBLESHOOTING.md](VALIDATION-AND-TROUBLESHOOTING.md) | Issues and solutions | Everyone | 15 min |
 | [CREDENTIALS.md](CREDENTIALS.md) | Default access information | Security | 5 min |
 | [USER-SETUP.md](USER-SETUP.md) | User account management | Admins | 15 min |
