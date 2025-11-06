@@ -103,10 +103,23 @@ jobs:
           echo "docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Usage" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Start" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# Pull the image" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Download Hurd QCOW2 image (first time only)" >> $GITHUB_STEP_SUMMARY
+          echo "wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
+          echo "tar xf debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Run with QCOW2 image" >> $GITHUB_STEP_SUMMARY
           echo "docker run -d --privileged \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -p 2222:2222 -p 8080:80 \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -v \$(pwd):/opt/hurd-image:ro \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --name gnu-hurd \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -p 2222:2222 -p 5555:5555 -p 5901:5901 \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -v \$(pwd):/opt/hurd-image \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --device /dev/kvm \\" >> $GITHUB_STEP_SUMMARY
           echo "  ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Access via SSH (once booted)" >> $GITHUB_STEP_SUMMARY
+          echo "ssh -p 2222 root@localhost" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
