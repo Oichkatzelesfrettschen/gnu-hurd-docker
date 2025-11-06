@@ -172,7 +172,7 @@ echo "  - Memory: ${QEMU_RAM} MB"
 echo "  - CPU: $CPU_MODEL"
 echo "  - SMP: ${QEMU_SMP} core(s)"
 echo "  - Acceleration: $ACCEL"
-echo "  - Machine: pc-i440fx-7.2"
+echo "  - Machine: pc"
 echo "  - Storage: $QEMU_STORAGE (writeback cache, threaded AIO)"
 echo "  - Video: $QEMU_VIDEO"
 echo "  - Display: $DISPLAY_MODE"
@@ -203,7 +203,7 @@ exec qemu-system-i386 \
     "${KVM_OPTS[@]}" \
     -m "$QEMU_RAM" \
     -cpu "$CPU_MODEL" \
-    -machine pc-i440fx-7.2 \
+    -machine pc \
     -smp "$QEMU_SMP" \
     "${STORAGE_OPTS[@]}" \
     "${NETWORK_OPTS[@]}" \

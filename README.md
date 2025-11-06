@@ -55,7 +55,7 @@ docker run -d --privileged \
   ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
 # Access via SSH (once booted, ~60 seconds)
-ssh -p 2222 root@localhost  # Password: root
+ssh -p 2222 root@localhost  # Password: root (after scripts/install-ssh-hurd.sh)
 ```
 
 **Available tags:**
@@ -101,17 +101,15 @@ See **[INSTALLATION.md](INSTALLATION.md)** for complete platform-specific instal
 
 **Via Serial Console:**
 ```bash
-# Find PTY from logs
-docker-compose logs | grep "char device redirected"
-
-# Connect (replace /dev/pts/X with actual PTY)
-screen /dev/pts/X
+# Connect via telnet to serial console
+telnet localhost 5555
 ```
 
 **Via SSH (port 2222):**
 ```bash
+# After running scripts/install-ssh-hurd.sh (enables password auth)
 ssh -p 2222 root@localhost
-# Default password: (see CREDENTIALS.md)
+# Password: root
 ```
 
 **Direct Shell:**

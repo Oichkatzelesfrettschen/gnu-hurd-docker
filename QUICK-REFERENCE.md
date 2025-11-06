@@ -24,7 +24,7 @@ docker run -d --privileged --name gnu-hurd \
   ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
 # Access (wait ~60 seconds for boot)
-ssh -p 2222 root@localhost  # Password: root
+ssh -p 2222 root@localhost  # Password: root (after scripts/install-ssh-hurd.sh)
 ```
 
 ---
@@ -142,7 +142,7 @@ paru -S gnu-hurd-docker
 ### SSH Access
 
 ```bash
-# Root user
+# Root user (after scripts/install-ssh-hurd.sh)
 ssh -p 2222 root@localhost
 # Password: root
 

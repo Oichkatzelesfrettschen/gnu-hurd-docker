@@ -25,15 +25,17 @@ For the official Debian GNU/Hurd 2025 release (August 2025):
 
 ### SSH Access
 
-SSH is configured for remote terminal access on port 2222 (mapped from container port 22).
+SSH is mapped host:2222 -> guest:22.
+
+Default behavior before provisioning: may reject passwords if PermitRootLogin prohibit-password.
+Run scripts/install-ssh-hurd.sh to force password authentication.
 
 ```bash
-# SSH to root account
-ssh -p 2222 root@localhost
+# Enable password auth and set root password
+./scripts/install-ssh-hurd.sh
 
-# If password prompt appears, try:
-# - Empty password (just press Enter)
-# - Refer to Debian documentation for official defaults
+# Then connect
+ssh -p 2222 root@localhost   # Password: root
 ```
 
 ### Serial Console Access
