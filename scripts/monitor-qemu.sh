@@ -76,12 +76,17 @@ display_metrics() {
     local pid="$1"
 
     # Get metrics
-    local cpu_usage=$(get_cpu_usage "$pid")
-    local mem_data=$(get_memory_usage "$pid")
-    local mem_percent=$(echo "$mem_data" | awk '{print $1}')
-    local mem_rss=$(echo "$mem_data" | awk '{print $2}')
+    local cpu_usage
+    cpu_usage=$(get_cpu_usage "$pid")
+    local mem_data
+    mem_data=$(get_memory_usage "$pid")
+    local mem_percent
+    mem_percent=$(echo "$mem_data" | awk '{print $1}')
+    local mem_rss
+    mem_rss=$(echo "$mem_data" | awk '{print $2}')
     local mem_mb=$((mem_rss / 1024))
-    local runtime=$(get_runtime "$pid")
+    local runtime
+    runtime=$(get_runtime "$pid")
 
     # Display metrics
     echo -e "${GREEN}Process Information:${NC}"
@@ -118,7 +123,8 @@ display_metrics() {
 main() {
     echo "Searching for QEMU process..."
 
-    local qemu_pid=$(find_qemu_pid)
+    local qemu_pid
+    qemu_pid=$(find_qemu_pid)
 
     if ! check_qemu_running "$qemu_pid"; then
         echo -e "${RED}ERROR: QEMU process not found or not running${NC}"

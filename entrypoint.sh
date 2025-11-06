@@ -71,9 +71,9 @@ esac
 # Guest mounts with: mount -t 9p -o trans=virtio,version=9p2000.L scripts /mnt
 SHARE_OPTS=()
 if [ -d /share ]; then
-    SHARE_OPTS+=(
-        -virtfs local,path=/share,mount_tag="$SHARE_TAG",security_model=none,id=fsdev0
-    )
+    # Note: commas in virtfs parameters are not array separators
+    # shellcheck disable=SC2054
+    SHARE_OPTS+=(-virtfs "local,path=/share,mount_tag=$SHARE_TAG,security_model=none,id=fsdev0")
     echo "[INFO] File sharing: 9p export /share as '$SHARE_TAG'"
     echo "       Mount in guest: mount -t 9p -o trans=virtio $SHARE_TAG /mnt"
 else

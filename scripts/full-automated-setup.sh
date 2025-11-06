@@ -129,10 +129,7 @@ echo ""
 echo_info "Phase 3: Creating agents user..."
 echo ""
 
-sshpass -p 'root' ssh -o StrictHostKeyChecking=no -p $SSH_PORT root@$SSH_HOST << 'EOSSH' || {
-    echo "ERROR: Failed to create agents user"
-    exit 1
-}
+if ! sshpass -p 'root' ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "root@$SSH_HOST" << 'EOSSH'; then
 # Create agents user with home directory
 useradd -m -s /bin/bash -G sudo agents || echo "User agents may already exist"
 
@@ -146,6 +143,9 @@ chmod 0440 /etc/sudoers.d/agents
 
 echo "User agents created successfully"
 EOSSH
+    echo "ERROR: Failed to create agents user"
+    exit 1
+fi
 
 echo_success "User agents created (password: agents, expires on first login)"
 
@@ -154,10 +154,7 @@ echo ""
 echo_info "Phase 4: Copying setup scripts to guest via 9p..."
 echo ""
 
-sshpass -p 'root' ssh -o StrictHostKeyChecking=no -p $SSH_PORT root@$SSH_HOST << 'EOSSH' || {
-    echo "ERROR: Failed to mount 9p filesystem"
-    exit 1
-}
+if ! sshpass -p 'root' ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "root@$SSH_HOST" << 'EOSSH'; then
 # Create mount point
 mkdir -p /mnt/scripts
 
@@ -173,6 +170,9 @@ fi
 echo "9p filesystem mounted at /mnt/scripts"
 ls -la /mnt/scripts/
 EOSSH
+    echo "ERROR: Failed to mount 9p filesystem"
+    exit 1
+fi
 
 echo_success "Setup scripts accessible in guest"
 

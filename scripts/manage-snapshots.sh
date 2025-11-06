@@ -175,7 +175,8 @@ cmd_backup() {
     echo ""
 
     # Get source size for progress estimation
-    local source_size=$(qemu-img info --output=json "$QCOW2_IMAGE" | grep -o '"virtual-size": [0-9]*' | cut -d' ' -f2)
+    local source_size
+    source_size=$(qemu-img info --output=json "$QCOW2_IMAGE" | grep -o '"virtual-size": [0-9]*' | cut -d' ' -f2)
     local source_size_gb=$((source_size / 1024 / 1024 / 1024))
 
     echo "Virtual size: ${source_size_gb}GB"

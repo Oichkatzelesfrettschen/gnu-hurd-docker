@@ -63,7 +63,8 @@ check_container() {
 find_pty() {
     echo -e "${YELLOW}Searching for serial console PTY...${NC}"
 
-    local pty=$(docker logs "$CONTAINER_NAME" 2>&1 | \
+    local pty
+    pty=$(docker logs "$CONTAINER_NAME" 2>&1 | \
                 grep -oP "char device redirected to /dev/pts/\K[0-9]+" | \
                 tail -1)
 
@@ -93,7 +94,8 @@ show_logs() {
     docker logs --tail 50 "$CONTAINER_NAME" 2>&1
     echo ""
 
-    local pty=$(docker logs "$CONTAINER_NAME" 2>&1 | \
+    local pty
+    pty=$(docker logs "$CONTAINER_NAME" 2>&1 | \
                 grep -oP "char device redirected to /dev/pts/\K[0-9]+" | \
                 tail -1)
 
@@ -111,7 +113,8 @@ show_logs() {
 connect_serial() {
     check_container
 
-    local pty=$(find_pty)
+    local pty
+    pty=$(find_pty)
 
     echo -e "${GREEN}Found serial console: $pty${NC}"
     echo ""
