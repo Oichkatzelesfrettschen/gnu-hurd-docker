@@ -34,3 +34,7 @@ venv/
 /tmp/
 /temp/
 *.tmp
+
+# npm/yarn audit logs
+logs/
+*.audit.json
