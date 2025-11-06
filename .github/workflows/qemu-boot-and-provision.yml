@@ -43,7 +43,15 @@ jobs:
           done
 
       - name: Initial boot grace period (Hurd slow boot)
-        run: sleep 600
+        run: |
+          echo "Start boot wait: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for i in $(seq 1 600); do
+            if (( i % 30 == 0 )); then
+              echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) waiting: ${i}s/600s";
+            fi
+            sleep 1
+          done
+          echo "End boot wait: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Provision GUI via serial (SSH enable + root pwd)
         env:
