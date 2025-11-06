@@ -27,7 +27,7 @@ services:
       # Override defaults if needed
       - QEMU_RAM=2048
       - QEMU_SMP=1
-      - DISPLAY_MODE=nographic    # nographic|vnc
+      - DISPLAY_MODE=vnc          # nographic|vnc - CHANGED TO VNC FOR TESTING
       - SERIAL_PORT=5555
       - SHARE_TAG=scripts
 
