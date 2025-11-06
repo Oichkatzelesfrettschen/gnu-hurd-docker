@@ -12,20 +12,22 @@ This project provides a production-ready Docker Compose setup for running native
 
 ### Key Features
 
-- **Complete GNU/Hurd i386 Environment:** Full microkernel OS with package management
-- **QEMU Emulation:** Pentium CPU emulation with 1.5GB RAM
-- **Interactive Access:** TTY-based serial console and SSH
-- **Network Isolation:** User-mode NAT networking with port forwarding
-- **Production-Ready:** Validated configuration with zero errors
-- **Well-Documented:** Comprehensive architecture and deployment guides
+- **Complete GNU/Hurd i386 Environment:** Full microkernel OS with package management (Debian 2025)
+- **Optimized QEMU Emulation:** VirtIO devices, KVM acceleration, multiple display modes
+- **Graphics Support:** VNC, SDL with OpenGL, GTK with OpenGL, framebuffer
+- **Interactive Access:** TTY-based serial console, SSH, and optional GUI
+- **Network Isolation:** User-mode NAT networking with VirtIO-Net
+- **Production-Ready:** Validated configuration based on official 2025 guidelines
+- **Well-Documented:** Comprehensive optimization and deployment guides
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker Engine (>=20.10) and Docker Compose (>=1.29)
-- 8GB free disk space (minimum; 15GB recommended)
-- 2GB available RAM (QEMU allocation)
+- 10-20GB free disk space (depending on packages installed)
+- 4-8GB available RAM (2GB minimum for CLI, 4GB+ recommended for GUI)
+- Optional: KVM support for hardware acceleration (Linux only)
 
 ## Installation
 
