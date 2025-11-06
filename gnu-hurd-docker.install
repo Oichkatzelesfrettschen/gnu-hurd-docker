@@ -1,0 +1,184 @@
+## Post-installation message for gnu-hurd-docker
+
+post_install() {
+    cat <<EOF
+
+===================================================================================
+  GNU/Hurd Docker - Installation Complete
+===================================================================================
+
+The GNU/Hurd Docker development environment has been installed.
+
+QUICK START:
+-----------
+
+1. Ensure Docker daemon is running:
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker \$USER
+   # Log out and log back in for group changes to take effect
+
+2. Download Debian GNU/Hurd image:
+   gnu-hurd-docker download
+
+3. Build Docker image:
+   gnu-hurd-docker build
+
+4. Start the environment:
+   gnu-hurd-docker start
+
+5. Access the system:
+   - SSH: ssh -p 2222 root@localhost
+   - Serial: telnet localhost 5555
+   - Logs: gnu-hurd-docker logs
+
+USAGE:
+------
+
+Run 'gnu-hurd-docker help' for available commands.
+
+Work directory: ~/.local/share/gnu-hurd-docker/
+Documentation: /usr/share/doc/gnu-hurd-docker/
+
+REQUIREMENTS:
+------------
+
+- Docker daemon running
+- 8 GB free disk space
+- 2 GB RAM available
+- Network access for image downloads
+
+Optional (Linux only):
+- /dev/kvm for KVM acceleration
+- nf_tables kernel modules for Docker networking
+
+For detailed requirements, see:
+/usr/share/doc/gnu-hurd-docker/requirements.md
+
+TROUBLESHOOTING:
+---------------
+
+If Docker daemon fails to start:
+1. Check kernel networking modules:
+   lsmod | grep nf_tables
+
+2. Load required modules:
+   sudo modprobe nf_tables
+   sudo modprobe nf_tables_ipv4
+   sudo modprobe nft_masq
+   sudo modprobe nf_nat
+
+3. Restart Docker:
+   sudo systemctl restart docker
+
+For KVM acceleration (optional):
+1. Check CPU support:
+   egrep -c '(vmx|svm)' /proc/cpuinfo
+
+2. Load KVM module:
+   sudo modprobe kvm_intel  # or kvm_amd
+   sudo usermod -aG kvm \$USER
+
+REFERENCES:
+----------
+
+- GitHub: https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker
+- GNU/Hurd: https://www.gnu.org/software/hurd/
+- Debian Hurd: https://www.debian.org/ports/hurd/
+
+===================================================================================
+
+EOF
+}
+
+post_upgrade() {
+    cat <<EOF
+
+===================================================================================
+  GNU/Hurd Docker - Upgraded to version $(pacman -Q gnu-hurd-docker | awk '{print $2}')
+===================================================================================
+
+IMPORTANT NOTES:
+---------------
+
+1. Your work directory is preserved at: ~/.local/share/gnu-hurd-docker/
+
+2. If docker-compose.yml was updated, you may want to review changes:
+   diff ~/.local/share/gnu-hurd-docker/docker-compose.yml \\
+        /etc/gnu-hurd-docker/docker-compose.yml
+
+3. Rebuild Docker image to pick up changes:
+   gnu-hurd-docker build
+
+4. Restart container if running:
+   gnu-hurd-docker stop
+   gnu-hurd-docker start
+
+CHANGELOG:
+---------
+
+Check GitHub releases for detailed changes:
+https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/releases
+
+===================================================================================
+
+EOF
+}
+
+pre_remove() {
+    cat <<EOF
+
+===================================================================================
+  GNU/Hurd Docker - Preparing for Removal
+===================================================================================
+
+Your work directory will be preserved at:
+~/.local/share/gnu-hurd-docker/
+
+This includes:
+- QEMU disk images
+- Container configurations
+- Logs and data
+
+To completely remove everything:
+1. Stop any running containers:
+   docker-compose down
+   
+2. Remove Docker images:
+   docker image rm gnu-hurd-dev
+
+3. Remove work directory:
+   rm -rf ~/.local/share/gnu-hurd-docker/
+
+===================================================================================
+
+EOF
+}
+
+post_remove() {
+    cat <<EOF
+
+===================================================================================
+  GNU/Hurd Docker - Removed
+===================================================================================
+
+The package has been removed, but your data is preserved.
+
+To clean up completely:
+
+1. Remove work directory:
+   rm -rf ~/.local/share/gnu-hurd-docker/
+
+2. Remove Docker images (if any):
+   docker image ls | grep gnu-hurd
+   docker image rm gnu-hurd-dev
+
+3. Remove Docker containers (if any):
+   docker ps -a | grep gnu-hurd
+   docker rm -f gnu-hurd-dev
+
+Thank you for using GNU/Hurd Docker!
+
+===================================================================================
+
+EOF
+}
