@@ -17,7 +17,7 @@ jobs:
 
       - name: Disable KVM in compose for CI
         run: |
-          sed -i 's@- /dev/kvm@# - /dev/kvm (disabled in CI)@' docker-compose.yml || true
+          sed -i '/devices:/,/- \/dev\/kvm/d' docker-compose.yml || true
 
       - name: Install host tooling (sshpass, telnet, expect, netcat)
         run: sudo apt-get update && sudo apt-get install -y sshpass telnet expect netcat-openbsd
