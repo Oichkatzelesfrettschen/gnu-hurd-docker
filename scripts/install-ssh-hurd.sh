@@ -32,7 +32,7 @@ set timeout 600
 set send_slow {1 .001}
 log_user 1
 
-puts "[DEBUG] Connecting to telnet $SERIAL_HOST:$SERIAL_PORT"
+puts "Connecting to telnet $SERIAL_HOST:$SERIAL_PORT"
 
 # Connect to telnet
 spawn telnet $SERIAL_HOST $SERIAL_PORT
@@ -44,12 +44,12 @@ sleep 2
 # Wait for login prompt (could be various forms)
 expect {
     -re ".*login:\s*\$" {
-        puts "\n[SUCCESS] Found login prompt"
+        puts "\nFound login prompt"
         send -s "root\r"
     }
     timeout {
-        puts "\n[ERROR] Timeout waiting for login prompt after 600s"
-        puts "[INFO] The system may not have booted yet or serial is not responding"
+        puts "\nTimeout waiting for login prompt after 600s"
+        puts "The system may not have booted yet or serial is not responding"
         exit 1
     }
 }
@@ -57,14 +57,14 @@ expect {
 # Wait for password prompt or shell
 expect {
     "Password:" {
-        puts "[DEBUG] Password prompt, sending empty password"
+        puts "Password prompt, sending empty password"
         send "\r"
     }
     -re "#\s*\$" {
-        puts "[SUCCESS] Already at shell"
+        puts "Already at shell"
     }
     timeout {
-        puts "\n[ERROR] Timeout after login"
+        puts "\nTimeout after login"
         exit 1
     }
 }
@@ -72,10 +72,10 @@ expect {
 # Wait for shell prompt
 expect {
     -re "#\s*\$" {
-        puts "\n[SUCCESS] Logged in as root"
+        puts "\nLogged in as root"
     }
     timeout {
-        puts "\n[ERROR] Did not get shell prompt"
+        puts "\nDid not get shell prompt"
         exit 1
     }
 }
