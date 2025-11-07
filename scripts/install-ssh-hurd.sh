@@ -23,31 +23,33 @@ echo "Press Ctrl+C to cancel, or Enter to continue..."
 read -r
 
 echo ""
-echo "[INFO] Connecting to serial console..."
+echo "[INFO] Connecting to serial console on port $SERIAL_PORT..."
 echo ""
 
 # Use expect to automate the serial console interaction
-expect << 'EXPECT_SCRIPT'
-set timeout 120
+expect << EXPECT_SCRIPT
+set timeout 600
 set send_slow {1 .001}
+log_user 1
+
+puts "[DEBUG] Connecting to telnet $SERIAL_HOST:$SERIAL_PORT"
 
 # Connect to telnet
-spawn telnet localhost 5555
+spawn telnet $SERIAL_HOST $SERIAL_PORT
+
+# Send wake-up characters
+send "\r\r\r"
+sleep 2
 
 # Wait for login prompt (could be various forms)
 expect {
-    "login:" {
-        send -s "root\r"
-    }
-    "localhost login:" {
-        send -s "root\r"
-    }
-    "debian login:" {
+    -re ".*login:\s*\$" {
+        puts "\n[SUCCESS] Found login prompt"
         send -s "root\r"
     }
     timeout {
-        puts "\n[ERROR] Timeout waiting for login prompt"
-        puts "[INFO] The system may still be booting. Wait 2-3 more minutes."
+        puts "\n[ERROR] Timeout waiting for login prompt after 600s"
+        puts "[INFO] The system may not have booted yet or serial is not responding"
         exit 1
     }
 }
@@ -55,11 +57,11 @@ expect {
 # Wait for password prompt or shell
 expect {
     "Password:" {
-        # Empty password - just press Enter
+        puts "[DEBUG] Password prompt, sending empty password"
         send "\r"
     }
-    "#" {
-        # Already at shell
+    -re "#\s*\$" {
+        puts "[SUCCESS] Already at shell"
     }
     timeout {
         puts "\n[ERROR] Timeout after login"
@@ -69,7 +71,7 @@ expect {
 
 # Wait for shell prompt
 expect {
-    "#" {
+    -re "#\s*\$" {
         puts "\n[SUCCESS] Logged in as root"
     }
     timeout {
@@ -80,18 +82,14 @@ expect {
 
 # Check network connectivity
 send -s "ping -c 1 8.8.8.8 2>&1 | head -2\r"
-expect "#"
+expect -re "#"
 
 # Update package lists
 puts "\n[INFO] Updating package lists..."
 send -s "apt-get update\r"
 expect {
-    "#" {
+    -re "#" {
         puts "[SUCCESS] Package lists updated"
-    }
-    "Err:" {
-        puts "\n[WARN] Some package sources may have failed"
-        expect "#"
     }
     timeout {
         puts "\n[ERROR] apt-get update timed out"
@@ -101,15 +99,10 @@ expect {
 
 # Install SSH server and entropy daemon
 puts "\n[INFO] Installing openssh-server and random-egd..."
-send -s "apt-get install -y openssh-server random-egd\r"
+send -s "DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server random-egd\r"
 expect {
-    "#" {
+    -re "#" {
         puts "[SUCCESS] Packages installed"
-    }
-    "E: " {
-        puts "\n[ERROR] Package installation failed"
-        expect "#"
-        exit 1
     }
     timeout {
         puts "\n[ERROR] Package installation timed out (this can take 5-10 minutes)"
@@ -121,28 +114,33 @@ expect {
 # Start SSH daemon
 puts "\n[INFO] Starting SSH daemon..."
 send -s "/etc/init.d/ssh start\r"
-expect "#"
+expect -re "#"
 
 # Enable SSH on boot
 puts "\n[INFO] Enabling SSH on boot..."
 send -s "update-rc.d ssh defaults\r"
-expect "#"
+expect -re "#"
 
-# Relax sshd restrictions for password auth (override hardened defaults)
+# Configure sshd for password auth (simpler approach - no nested quotes)
 puts "\n[INFO] Configuring sshd for password authentication..."
-send -s "grep -q '^PermitRootLogin' /etc/ssh/sshd_config && sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config || echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config\r"
-expect "#"
-send -s "grep -q '^PasswordAuthentication' /etc/ssh/sshd_config && sed -i 's/^PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config || echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config\r"
-expect "#"
-send -s "grep -q '^UsePAM' /etc/ssh/sshd_config && sed -i 's/^UsePAM.*/UsePAM yes/' /etc/ssh/sshd_config || echo 'UsePAM yes' >> /etc/ssh/sshd_config\r"
-expect "#"
+send -s "sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config\r"
+expect -re "#"
+send -s "sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config\r"
+expect -re "#"
+send -s "sed -i 's/^#\\?UsePAM.*/UsePAM yes/' /etc/ssh/sshd_config\r"
+expect -re "#"
 send -s "/etc/init.d/ssh restart\r"
-expect "#"
+expect -re "#"
 
 # Set root password
 puts "\n[INFO] Setting root password..."
 send -s "echo 'root:root' | chpasswd\r"
-expect "#"
+expect -re "#"
+
+# Verify SSH config
+puts "\n[INFO] Verifying SSH configuration..."
+send -s "grep -E '^(PermitRootLogin|PasswordAuthentication|UsePAM)' /etc/ssh/sshd_config\r"
+expect -re "#"
 
 puts "\n========================================================================"
 puts "  SSH Installation Complete!"

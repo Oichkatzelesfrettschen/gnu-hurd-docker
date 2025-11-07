@@ -217,5 +217,4 @@ exec qemu-system-i386 \
     -rtc base=utc,clock=host \
     -no-reboot \
     -d guest_errors \
-    -D "$QEMU_LOG" \
-    "$@"
+    -D "$QEMU_LOG"
