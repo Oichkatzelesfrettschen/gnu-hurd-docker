@@ -18,7 +18,7 @@ jobs:
       - name: Disable KVM in compose for CI
         run: |
           sed -i '/devices:/,/^[^ ]/{ /devices:/d; /- \/dev\/kvm/d; }' docker-compose.yml
-          docker-compose config > /dev/null && echo "YAML valid" || (echo "YAML syntax error after sed"; cat docker-compose.yml; exit 1)
+          docker-compose config > /dev/null || { echo "YAML syntax error after sed"; cat docker-compose.yml; exit 1; }
 
       - name: Install host tooling (sshpass, telnet, expect, netcat)
         run: sudo apt-get update && sudo apt-get install -y sshpass telnet expect netcat-openbsd
