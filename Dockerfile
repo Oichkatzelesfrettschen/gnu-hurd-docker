@@ -73,38 +73,18 @@ RUN ! dpkg --get-selections | grep -E ':i386|i386-' || \
 # - /var/log/qemu: QEMU output and debugging logs (FHS compliant)
 RUN mkdir -p /opt/hurd-image /opt/scripts /var/log/qemu
 
+# Create non-root user for security (best practice)
+# UID/GID 1000 matches typical first user on host for volume permissions
+RUN groupadd -g 1000 hurd 2>/dev/null || true && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash hurd 2>/dev/null || true && \
+    chown -R 1000:1000 /opt/hurd-image /opt/scripts /var/log/qemu
+
 # Copy entrypoint script with proper permissions
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Create health check script
-RUN cat > /opt/scripts/health-check.sh <<'EOF'
-#!/bin/bash
-# Health check for QEMU x86_64 Hurd VM
-
-# Check if QEMU process is running (x86_64 binary specifically)
-if ! pgrep -f "qemu-system-x86_64" > /dev/null; then
-    echo "ERROR: qemu-system-x86_64 process not running"
-    exit 1
-fi
-
-# Check if SSH port is accessible (guest might still be booting)
-if nc -zv localhost 2222 2>/dev/null; then
-    echo "OK: SSH port 2222 is accessible"
-else
-    echo "INFO: SSH port 2222 not yet accessible (VM may be booting)"
-fi
-
-# Check if HTTP port is accessible
-if nc -zv localhost 8080 2>/dev/null; then
-    echo "OK: HTTP port 8080 is accessible"
-else
-    echo "INFO: HTTP port 8080 not yet accessible"
-fi
-
-# Success - QEMU is running
-exit 0
-EOF
+# Copy health check script
+COPY scripts/health-check.sh /opt/scripts/health-check.sh
 RUN chmod +x /opt/scripts/health-check.sh
 
 # Expose ports for container->host mapping
@@ -125,6 +105,9 @@ VOLUME ["/opt/hurd-image"]
 # - retries=3: Allow 3 failures before marking unhealthy
 HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
     CMD /opt/scripts/health-check.sh || exit 1
+
+# Switch to non-root user for security (runs QEMU as hurd:hurd)
+USER hurd
 
 # Default entrypoint - launches QEMU with smart KVM/TCG detection
 ENTRYPOINT ["/entrypoint.sh"]

@@ -1,5 +1,11 @@
 # GNU/Hurd Docker - x86_64 Development Environment
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-24.0+-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/)
+[![QEMU](https://img.shields.io/badge/QEMU-x86__64-FF6600?logo=qemu&logoColor=white)](https://www.qemu.org/)
+[![Architecture](https://img.shields.io/badge/Architecture-x86__64%20only-success)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
+[![Documentation](https://img.shields.io/badge/docs-comprehensive-brightgreen)](docs/INDEX.md)
+
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
 **Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)

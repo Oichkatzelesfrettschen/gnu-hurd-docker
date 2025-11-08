@@ -40,3 +40,7 @@ logs/
 *.audit.json
 *.qcow2.bak.*
 *.img.bak.*
+
+# Docker secrets (actual credentials - NEVER commit)
+secrets/*.txt
+!secrets/*.txt.example
