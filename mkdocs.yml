@@ -63,7 +63,7 @@ nav:
       - Execution Summary: EXECUTION-SUMMARY.md
       - Session Report: SESSION-COMPLETION-REPORT.md
       - Validation: VALIDATION-AND-TROUBLESHOOTING.md
-    - Analysis Plan: COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md
+      - Analysis Plan: COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md
 
 plugins:
   - search

@@ -119,26 +119,28 @@ jobs:
           echo "**Repository:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Digest:** \`${{ steps.push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### 📦 Available Tags" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### 🚀 Quick Start" >> $GITHUB_STEP_SUMMARY
+          REPO="${{ github.repository }}"
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "# Pull the latest image" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Download Debian GNU/Hurd QCOW2 image (first time only)" >> $GITHUB_STEP_SUMMARY
           echo "# Option 1: Use our download script" >> $GITHUB_STEP_SUMMARY
-          echo "curl -O https://raw.githubusercontent.com/${{ github.repository }}/main/scripts/download-image.sh" >> $GITHUB_STEP_SUMMARY
+          echo "curl -O https://raw.githubusercontent.com/$REPO/main/scripts/download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "chmod +x download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "./download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Option 2: Direct download" >> $GITHUB_STEP_SUMMARY
-          echo "wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
+          HURD_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-i386"
+          echo "wget $HURD_URL/debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "tar xf debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Run the container" >> $GITHUB_STEP_SUMMARY
@@ -162,14 +164,15 @@ jobs:
           echo "docker-compose up -d" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### 📚 Documentation" >> $GITHUB_STEP_SUMMARY
-          echo "- [Installation Guide](https://github.com/${{ github.repository }}/blob/main/INSTALLATION.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [QEMU Optimization Guide](https://github.com/${{ github.repository }}/blob/main/docs/QEMU-OPTIMIZATION-2025.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Testing Report](https://github.com/${{ github.repository }}/blob/main/docs/HURD-TESTING-REPORT.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Requirements](https://github.com/${{ github.repository }}/blob/main/requirements.md)" >> $GITHUB_STEP_SUMMARY
+          BASE="https://github.com/$REPO/blob/main"
+          echo "- [Installation Guide]($BASE/INSTALLATION.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [QEMU Optimization Guide]($BASE/docs/QEMU-OPTIMIZATION-2025.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Testing Report]($BASE/docs/HURD-TESTING-REPORT.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Requirements]($BASE/requirements.md)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### 🎯 Features" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Debian GNU/Hurd 2025 (i386)" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ QEMU with KVM acceleration support" >> $GITHUB_STEP_SUMMARY

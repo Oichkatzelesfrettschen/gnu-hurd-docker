@@ -17,24 +17,24 @@ jobs:
   shellcheck:
     runs-on: ubuntu-latest
     name: ShellCheck Linting (Warnings as Errors)
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install ShellCheck
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck
           shellcheck --version
-      
+
       - name: Run ShellCheck on all scripts
         run: |
           echo "=== Running ShellCheck with warnings as errors ==="
-          
+
           # Find all shell scripts
           SCRIPTS=$(find . -name "*.sh" -type f ! -path "./.git/*")
-          
+
           FAILED=0
           for script in $SCRIPTS; do
             echo "Checking: $script"
@@ -45,37 +45,37 @@ jobs:
               echo "✓ PASSED: $script"
             fi
           done
-          
+
           if [ $FAILED -eq 1 ]; then
             echo ""
             echo "ERROR: ShellCheck found warnings or errors"
             echo "All warnings are treated as errors in this project"
             exit 1
           fi
-          
+
           echo ""
           echo "✓ All shell scripts passed ShellCheck"
-  
+
   yaml-lint:
     runs-on: ubuntu-latest
     name: YAML Validation (Strict Mode)
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install yamllint
         run: |
           sudo apt-get update
           sudo apt-get install -y yamllint
           yamllint --version
-      
+
       - name: Create strict yamllint config
         run: |
           cat > .yamllint-strict.yml <<EOF
           ---
           extends: default
-          
+
           rules:
             line-length:
               max: 120
@@ -97,11 +97,11 @@ jobs:
               allowed-values: ['true', 'false']
               level: error
           EOF
-      
+
       - name: Run yamllint with strict rules
         run: |
           echo "=== Running yamllint with strict configuration ==="
-          
+
           FAILED=0
           for file in docker-compose.yml mkdocs.yml .github/workflows/*.yml; do
             if [ -f "$file" ]; then
@@ -114,34 +114,34 @@ jobs:
               fi
             fi
           done
-          
+
           if [ $FAILED -eq 1 ]; then
             echo ""
             echo "ERROR: YAML validation failed"
             exit 1
           fi
-          
+
           echo ""
           echo "✓ All YAML files passed validation"
-  
+
   python-lint:
     runs-on: ubuntu-latest
     name: Python Code Quality (Strict)
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install linting tools
         run: |
           python -m pip install --upgrade pip
           pip install pylint flake8 black mypy
-      
+
       - name: Run black (code formatting check)
         run: |
           echo "=== Checking Python code formatting with black ==="
@@ -150,7 +150,7 @@ jobs:
             echo "Run 'black scripts/*.py' to fix"
             exit 1
           }
-      
+
       - name: Run flake8 (PEP8 compliance)
         run: |
           echo "=== Running flake8 for PEP8 compliance ==="
@@ -158,33 +158,34 @@ jobs:
             echo "ERROR: PEP8 violations found"
             exit 1
           }
-      
+
       - name: Run pylint (comprehensive linting)
         continue-on-error: true  # Pylint can be very strict
         run: |
           echo "=== Running pylint for comprehensive analysis ==="
           pylint scripts/*.py --max-line-length=100 --score=yes || true
-      
+
       - name: Run mypy (type checking)
         continue-on-error: true  # Type hints may not be complete
         run: |
           echo "=== Running mypy for type checking ==="
           mypy scripts/*.py --ignore-missing-imports || true
-  
+
   dockerfile-lint:
     runs-on: ubuntu-latest
     name: Dockerfile Best Practices
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Hadolint
         run: |
-          wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          HADOLINT_URL="https://github.com/hadolint/hadolint/releases/download"
+          wget -O /usr/local/bin/hadolint $HADOLINT_URL/v2.12.0/hadolint-Linux-x86_64
           chmod +x /usr/local/bin/hadolint
           hadolint --version
-      
+
       - name: Run Hadolint on Dockerfile
         run: |
           echo "=== Running Hadolint on Dockerfile ==="
@@ -193,20 +194,20 @@ jobs:
             exit 1
           }
           echo "✓ Dockerfile passed Hadolint validation"
-  
+
   markdown-lint:
     runs-on: ubuntu-latest
     name: Markdown Quality Check
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install markdownlint-cli
         run: |
           npm install -g markdownlint-cli
           markdownlint --version
-      
+
       - name: Create markdownlint config
         run: |
           cat > .markdownlint.json <<EOF
@@ -217,13 +218,13 @@ jobs:
             "MD041": false
           }
           EOF
-      
+
       - name: Run markdownlint
         continue-on-error: true  # Documentation may have valid exceptions
         run: |
           echo "=== Running markdownlint on documentation ==="
           markdownlint '**/*.md' --config .markdownlint.json || true
-  
+
   security-scan:
     runs-on: ubuntu-latest
     name: Security Vulnerability Scan
@@ -234,7 +235,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -243,13 +244,13 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
-      
+
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
-      
+
       - name: Run Trivy on Dockerfile
         uses: aquasecurity/trivy-action@master
         with:
@@ -258,35 +259,37 @@ jobs:
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
-  
+
   dependency-audit:
     runs-on: ubuntu-latest
     name: Dependency Audit
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Check for security advisories in dependencies
         run: |
           echo "=== Auditing dependencies ==="
 
           # List packages to be installed from Dockerfile
           echo "Packages to be installed from Dockerfile:"
-          grep -E "^\s+(qemu-|curl|wget|ca-certificates|socat|netcat|screen|tmux|expect|sshpass|iproute2|procps)" Dockerfile | grep -v "^#" || true
+          PATTERN="^\s+(qemu-|curl|wget|ca-certificates|socat|netcat|screen|tmux"
+          PATTERN="${PATTERN}|expect|sshpass|iproute2|procps)"
+          grep -E "$PATTERN" Dockerfile | grep -v "^#" || true
 
           echo ""
           echo "Note: Trivy scanner performs comprehensive vulnerability scanning"
           echo "✓ Dependency audit complete"
-  
+
   license-compliance:
     runs-on: ubuntu-latest
     name: License Compliance Check
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Check LICENSE file exists
         run: |
           if [ ! -f LICENSE ]; then
@@ -294,11 +297,11 @@ jobs:
             exit 1
           fi
           echo "✓ LICENSE file present"
-      
+
       - name: Verify license headers in scripts
         run: |
           echo "=== Checking for license/copyright headers ==="
-          
+
           # This is informational - not all scripts require headers
           for script in scripts/*.sh scripts/*.py entrypoint.sh; do
             if [ -f "$script" ]; then
@@ -309,20 +312,20 @@ jobs:
               fi
             fi
           done
-  
+
   comprehensive-validation:
     runs-on: ubuntu-latest
     name: Comprehensive Repository Validation
     needs: [shellcheck, yaml-lint, dockerfile-lint]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Validate repository structure
         run: |
           echo "=== Validating repository structure ==="
-          
+
           REQUIRED_FILES=(
             "README.md"
             "LICENSE"
@@ -335,7 +338,7 @@ jobs:
             "docs/CI-CD-GUIDE.md"
             ".github/workflows/build.yml"
           )
-          
+
           MISSING=0
           for file in "${REQUIRED_FILES[@]}"; do
             if [ -f "$file" ]; then
@@ -345,25 +348,25 @@ jobs:
               MISSING=1
             fi
           done
-          
+
           if [ $MISSING -eq 1 ]; then
             echo "ERROR: Required files are missing"
             exit 1
           fi
-          
+
           echo "✓ All required files present"
-      
+
       - name: Validate script executability
         run: |
           echo "=== Checking script execute permissions ==="
-          
+
           REQUIRED_EXECUTABLE=(
             "entrypoint.sh"
             "scripts/download-image.sh"
             "scripts/validate-config.sh"
             "scripts/qmp-helper.py"
           )
-          
+
           FAILED=0
           for script in "${REQUIRED_EXECUTABLE[@]}"; do
             if [ -f "$script" ]; then
@@ -375,35 +378,35 @@ jobs:
               fi
             fi
           done
-          
+
           if [ $FAILED -eq 1 ]; then
             echo "ERROR: Some scripts are not executable"
             exit 1
           fi
-          
+
           echo "✓ All required scripts are executable"
-      
+
       - name: Check for TODO/FIXME markers
         run: |
           echo "=== Scanning for TODO/FIXME markers ==="
-          
+
           # This is informational only
           echo "TODOs found:"
           grep -rn "TODO\|FIXME\|XXX\|HACK" --include="*.sh" --include="*.py" --include="*.yml" . || echo "None"
-          
+
           echo ""
           echo "Note: TODOs are tracked but don't fail the build"
-      
+
       - name: Validate PKGBUILD
         run: |
           echo "=== Validating PKGBUILD for AUR ==="
-          
+
           # Check syntax
           bash -n PKGBUILD || {
             echo "ERROR: PKGBUILD has syntax errors"
             exit 1
           }
-          
+
           # Check required fields
           for field in pkgname pkgver pkgrel pkgdesc arch url license; do
             if ! grep -q "^${field}=" PKGBUILD; then
@@ -411,15 +414,15 @@ jobs:
               exit 1
             fi
           done
-          
+
           echo "✓ PKGBUILD is valid"
-      
+
       - name: Generate quality report
         if: always()
         run: |
           cat <<EOF >> $GITHUB_STEP_SUMMARY
           ## Code Quality and Security Summary
-          
+
           **Validation Results:**
           - ✓ Shell scripts: Linted with ShellCheck (warnings as errors)
           - ✓ YAML files: Validated with strict rules
@@ -428,14 +431,14 @@ jobs:
           - ✓ Security: Scanned for vulnerabilities
           - ✓ Dependencies: Audited for security issues
           - ✓ License: Compliance verified
-          
+
           **Quality Standards:**
           - All warnings treated as errors
           - Strict linting enabled for all file types
           - Security scanning with Trivy
           - Dependency vulnerability checking
           - Comprehensive validation suite
-          
+
           **Next Steps:**
           - Review any warnings in job logs
           - Fix any identified issues
