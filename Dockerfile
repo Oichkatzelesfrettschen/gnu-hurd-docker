@@ -74,10 +74,16 @@ RUN ! dpkg --get-selections | grep -E ':i386|i386-' || \
 RUN mkdir -p /opt/hurd-image /opt/scripts /var/log/qemu
 
 # Create non-root user for security (best practice)
-# UID/GID 1000 matches typical first user on host for volume permissions
-RUN groupadd -g 1000 hurd 2>/dev/null || true && \
-    useradd -u 1000 -g 1000 -m -s /bin/bash hurd 2>/dev/null || true && \
-    chown -R 1000:1000 /opt/hurd-image /opt/scripts /var/log/qemu
+# Try UID/GID 1000 (typical first user), fall back to 1001 if taken
+# CRITICAL: Must verify user creation succeeds (no silent failures with || true)
+RUN if id -u 1000 >/dev/null 2>&1; then \
+      HURD_UID=1001; HURD_GID=1001; \
+    else \
+      HURD_UID=1000; HURD_GID=1000; \
+    fi && \
+    groupadd -g $HURD_GID hurd && \
+    useradd -u $HURD_UID -g $HURD_GID -m -s /bin/bash hurd && \
+    chown -R hurd:hurd /opt/hurd-image /opt/scripts /var/log/qemu
 
 # Copy entrypoint script with proper permissions
 COPY entrypoint.sh /entrypoint.sh
