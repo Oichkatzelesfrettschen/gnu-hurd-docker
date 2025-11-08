@@ -127,7 +127,7 @@ class QMPClient:
         if self.sock:
             try:
                 self.sock.close()
-            except:
+            except Exception:
                 pass
             finally:
                 self.sock = None
