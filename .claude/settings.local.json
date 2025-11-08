@@ -93,7 +93,10 @@
       "mcp__desktop-commander__force_terminate",
       "Bash(cloc:*)",
       "Bash(wc:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(command -v bfg:*)",
+      "Bash(command -v:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch:*)"
     ],
     "deny": [],
     "ask": []
