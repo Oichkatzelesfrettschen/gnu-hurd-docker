@@ -2,6 +2,8 @@
 *.qcow2
 *.img
 *.tar.xz
+*.tar.gz
+backup-*.tar.gz
 
 # QEMU logs and output
 qemu*.log
