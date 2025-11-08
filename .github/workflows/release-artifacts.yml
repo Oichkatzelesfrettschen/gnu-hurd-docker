@@ -290,10 +290,12 @@ jobs:
           **Option 2: Using Release Archive**
           ```bash
           # Download and extract
-          REPO="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/releases/download"
-          wget $REPO/${{ steps.version.outputs.version }}/gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
-          tar xzf gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
-          cd gnu-hurd-docker-${{ steps.version.outputs.version_clean }}
+          REPO="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
+          VER="${{ steps.version.outputs.version }}"
+          VCLEAN="${{ steps.version.outputs.version_clean }}"
+          wget $REPO/releases/download/$VER/gnu-hurd-docker-$VCLEAN.tar.gz
+          tar xzf gnu-hurd-docker-$VCLEAN.tar.gz
+          cd gnu-hurd-docker-$VCLEAN
 
           # Download Hurd image
           ./scripts/download-image.sh
@@ -353,23 +355,25 @@ jobs:
 
       - name: Generate summary
         run: |
+          VER="${{ steps.version.outputs.version }}"
+          VCLEAN="${{ steps.version.outputs.version_clean }}"
           echo "## 📦 Release Created Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $VER" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Complete package: \`gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Scripts only: \`gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Documentation: \`gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Complete package: \`gnu-hurd-docker-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Scripts only: \`gnu-hurd-docker-scripts-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation: \`gnu-hurd-docker-docs-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Checksums" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
-          cat gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
-          cat gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-$VCLEAN.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-scripts-$VCLEAN.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
+          cat gnu-hurd-docker-docs-$VCLEAN.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Docker Image" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:$VER" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
