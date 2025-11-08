@@ -46,53 +46,53 @@ jobs:
 
             ## Changes
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ## Contents
             - Dockerfile: Docker image specification
             - entrypoint.sh: QEMU launcher script
             - docker-compose.yml: Container orchestration
             - PKGBUILD: Arch Linux kernel fix package
-            
+
             ## Prerequisites
-            
+
             ### System Requirements
             - Docker and Docker Compose installed
             - Debian GNU/Hurd i386 QCOW2 disk image
             - 2GB+ available disk space for container
             - 2GB+ available RAM
-            
+
             ### Kernel Requirements
             - Linux kernel with nf_tables/iptables support
             - If missing: apply fix from gnu-hurd-docker-kernel-fix package
-            
+
             ## Quick Start
-            
+
             ```bash
             # Apply kernel fix if needed
             pacman -S gnu-hurd-docker-kernel-fix
             sudo gnu-hurd-docker-kernel-fix
-            
+
             # Build Docker image
             docker-compose build
-            
+
             # Deploy container
             docker-compose up -d
-            
+
             # View logs
             docker-compose logs -f
             ```
-            
+
             ## Documentation
-            
+
             - **README.md**: Overview and quick start
             - **docs/ARCHITECTURE.md**: Design decisions and system parameters
             - **docs/DEPLOYMENT.md**: Step-by-step deployment guide
             - **docs/TROUBLESHOOTING.md**: Common issues and solutions
             - **docs/CREDENTIALS.md**: Default access information
             - **docs/USER-SETUP.md**: User account management
-            
+
             ## Repository
-            
+
             https://github.com/oaich/gnu-hurd-docker
           draft: false
           prerelease: false
