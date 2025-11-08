@@ -1,6 +1,7 @@
+---
 name: Configuration Validation
 
-on:
+"on":
   push:
     paths:
       - Dockerfile

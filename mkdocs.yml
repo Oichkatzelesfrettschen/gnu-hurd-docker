@@ -1,3 +1,4 @@
+---
 site_name: GNU/Hurd Docker - Mach Development Environment
 site_url: https://oichkatzelesfrettschen.github.io/gnu-hurd-docker
 repo_url: https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker
@@ -33,35 +34,35 @@ theme:
 nav:
   - Home: index.md
   - Quick Start:
-    - Overview: QUICK_START_GUIDE.md
-    - Kernel Fix: QUICK-START-KERNEL-FIX.txt
+      - Overview: QUICK_START_GUIDE.md
+      - Kernel Fix: QUICK-START-KERNEL-FIX.txt
   - Architecture:
-    - Design Overview: ARCHITECTURE.md
-    - Deployment Guide: DEPLOYMENT.md
-    - QEMU Research: MACH_QEMU_RESEARCH_REPORT.md
+      - Design Overview: ARCHITECTURE.md
+      - Deployment Guide: DEPLOYMENT.md
+      - QEMU Research: MACH_QEMU_RESEARCH_REPORT.md
   - Mach Variants:
-    - Overview: mach-variants/INDEX.md
-    - GNU Mach: mach-variants/GNU-MACH.md
-    - Darwin/XNU: mach-variants/DARWIN-XNU.md
-    - OSF/1 Mach: mach-variants/OSF1-MACH.md
-    - OpenMach: mach-variants/OPENMACH.md
-    - xMach: mach-variants/XMACH.md
-    - Comparative Analysis: mach-variants/COMPARATIVE-ANALYSIS.md
+      - Overview: mach-variants/INDEX.md
+      - GNU Mach: mach-variants/GNU-MACH.md
+      - Darwin/XNU: mach-variants/DARWIN-XNU.md
+      - OSF/1 Mach: mach-variants/OSF1-MACH.md
+      - OpenMach: mach-variants/OPENMACH.md
+      - xMach: mach-variants/XMACH.md
+      - Comparative Analysis: mach-variants/COMPARATIVE-ANALYSIS.md
   - Development:
-    - User Setup: USER-SETUP.md
-    - Credentials: CREDENTIALS.md
-    - Troubleshooting: TROUBLESHOOTING.md
+      - User Setup: USER-SETUP.md
+      - Credentials: CREDENTIALS.md
+      - Troubleshooting: TROUBLESHOOTING.md
   - Research:
-    - Research Findings: RESEARCH-FINDINGS.md
-    - Kernel Standardization: KERNEL-STANDARDIZATION-PLAN.md
-    - Kernel Fix Guide: KERNEL-FIX-GUIDE.md
-    - Tools Assessment: MCP-TOOLS-ASSESSMENT-MATRIX.md
+      - Research Findings: RESEARCH-FINDINGS.md
+      - Kernel Standardization: KERNEL-STANDARDIZATION-PLAN.md
+      - Kernel Fix Guide: KERNEL-FIX-GUIDE.md
+      - Tools Assessment: MCP-TOOLS-ASSESSMENT-MATRIX.md
   - Status Reports:
-    - Implementation: IMPLEMENTATION-COMPLETE.md
-    - Deployment: DEPLOYMENT-STATUS.md
-    - Execution Summary: EXECUTION-SUMMARY.md
-    - Session Report: SESSION-COMPLETION-REPORT.md
-    - Validation: VALIDATION-AND-TROUBLESHOOTING.md
+      - Implementation: IMPLEMENTATION-COMPLETE.md
+      - Deployment: DEPLOYMENT-STATUS.md
+      - Execution Summary: EXECUTION-SUMMARY.md
+      - Session Report: SESSION-COMPLETION-REPORT.md
+      - Validation: VALIDATION-AND-TROUBLESHOOTING.md
     - Analysis Plan: COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md
 
 plugins:

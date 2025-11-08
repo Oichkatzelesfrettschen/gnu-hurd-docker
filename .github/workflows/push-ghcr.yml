@@ -1,6 +1,7 @@
+---
 name: Build and Push to GitHub Container Registry
 
-on:
+"on":
   push:
     branches:
       - main

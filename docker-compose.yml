@@ -8,6 +8,7 @@
 # - Best practices for container orchestration
 # =============================================================================
 
+---
 services:
   # Single x86_64 Hurd service - NO i386 variants
   hurd-x86_64:

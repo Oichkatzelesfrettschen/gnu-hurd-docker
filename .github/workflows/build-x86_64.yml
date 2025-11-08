@@ -1,8 +1,9 @@
+---
 name: Build Hurd x86_64 Image
 
-on:
+"on":
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:

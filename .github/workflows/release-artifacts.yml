@@ -1,6 +1,7 @@
+---
 name: Create Release with Artifacts
 
-on:
+"on":
   push:
     tags:
       - 'v*'
