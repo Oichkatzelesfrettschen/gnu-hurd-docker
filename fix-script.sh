@@ -34,9 +34,9 @@ check_nf_tables() {
 
 # Function to check iptables mode
 check_iptables_mode() {
-    if ls -la /usr/bin/iptables 2>/dev/null | grep -q "iptables-legacy"; then
+    if readlink /usr/bin/iptables 2>/dev/null | grep -q "iptables-legacy"; then
         echo "legacy"
-    elif ls -la /usr/bin/iptables 2>/dev/null | grep -q "iptables-nft"; then
+    elif readlink /usr/bin/iptables 2>/dev/null | grep -q "iptables-nft"; then
         echo "nft"
     else
         echo "unknown"

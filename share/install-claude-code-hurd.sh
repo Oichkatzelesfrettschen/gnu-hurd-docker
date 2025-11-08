@@ -114,7 +114,7 @@ fi
 # Configure npm for global install without sudo
 echo_info "Configuring npm..."
 mkdir -p ~/.npm-global
-npm config set prefix '~/.npm-global'
+npm config set prefix "$HOME/.npm-global"
 
 # Add to PATH if not already
 if ! grep -q "npm-global" ~/.bashrc; then

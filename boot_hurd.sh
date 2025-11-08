@@ -21,6 +21,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # Source the configuration file to load variables
+# shellcheck source=/dev/null
 source "$CONFIG_FILE"
 
 # --- Default values for optional parameters ---
@@ -70,7 +71,7 @@ QEMU_ARGS+=("-display" "${DISPLAY_TYPE}")
 
 # --- Execute the QEMU command ---
 echo "Launching QEMU with command:"
-echo "${QEMU_CMD} ${QEMU_ARGS[@]}"
+echo "${QEMU_CMD} ${QEMU_ARGS[*]}"
 echo "--------------------------------------------------"
 
 # Execute QEMU

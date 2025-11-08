@@ -15,6 +15,7 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
+# shellcheck disable=SC2034  # Reserved for future use
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
@@ -98,7 +99,7 @@ build_qemu_command() {
 
     # Acceleration with automatic fallback
     # This follows the ChatGPT guide recommendation
-    cmd+=(-accel kvm -accel tcg,thread=multi)
+    cmd+=(-accel kvm -accel "tcg,thread=multi")
 
     # CPU model based on acceleration
     if [ "$accel_mode" = "kvm" ]; then
@@ -147,7 +148,7 @@ build_qemu_command() {
     fi
 
     # RTC for proper timekeeping
-    cmd+=(-rtc base=utc,clock=host)
+    cmd+=(-rtc "base=utc,clock=host")
 
     # Disable reboot on exit
     cmd+=(-no-reboot)

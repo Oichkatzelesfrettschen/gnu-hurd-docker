@@ -1,0 +1,28 @@
+---
+extends: default
+
+rules:
+  # Disable document-start requirement (not needed for single-document files)
+  document-start: disable
+
+  # Disable truthy check on keys (fixes GitHub Actions "on:" false positive)
+  truthy:
+    check-keys: false
+
+  # Relax line length to 200 characters (GitHub Actions generate long lines)
+  line-length:
+    max: 200
+    level: warning
+
+  # Disable trailing-spaces check (will be handled by editor auto-trim)
+  trailing-spaces: disable
+
+  # Allow inline brackets spacing
+  brackets:
+    max-spaces-inside: 1
+
+  # Keep indentation warnings but don't fail
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    level: warning

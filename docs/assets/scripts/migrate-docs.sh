@@ -9,6 +9,7 @@ set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 DOCS_DIR="$REPO_ROOT/docs"
+# shellcheck disable=SC2034  # Reserved for future archive operations
 ARCHIVE_DIR="$DOCS_DIR/archive"
 
 echo "================================================================================
