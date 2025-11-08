@@ -153,8 +153,8 @@ build_qemu_command() {
     # Disable reboot on exit
     cmd+=(-no-reboot)
 
-    # Enable guest error logging
-    cmd+=(-d guest_errors -D /var/log/qemu/guest-errors.log)
+    # Enable guest error logging (to /tmp which is writable)
+    cmd+=(-d guest_errors -D /tmp/qemu-guest-errors.log)
 
     echo "${cmd[@]}"
 }
@@ -202,7 +202,7 @@ main() {
     mkdir -p /var/log/qemu
     chown -R hurd:hurd /var/log/qemu 2>/dev/null || true
 
-    # Execute QEMU
+    # Execute QEMU (run as root for testing - volume permission issues)
     # shellcheck disable=SC2086
     exec $qemu_cmd "$@"
 }

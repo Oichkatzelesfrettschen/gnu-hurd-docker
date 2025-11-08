@@ -46,3 +46,7 @@ logs/
 # Docker secrets (actual credentials - NEVER commit)
 secrets/*.txt
 !secrets/*.txt.example
+CREDENTIALS.txt
+
+# Claude Code local settings (auto-approvals and personal config)
+.claude/*.local.json
