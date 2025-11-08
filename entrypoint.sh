@@ -1,220 +1,209 @@
 #!/bin/bash
-set -e
+# =============================================================================
+# Pure x86_64 Debian GNU/Hurd QEMU Launcher with Smart KVM/TCG Detection
+# =============================================================================
+# PURPOSE:
+# - Launch QEMU with x86_64-only configuration
+# - Automatically detect and use KVM when available
+# - Gracefully fall back to TCG when KVM unavailable
+# - Configure optimal settings for Hurd's requirements
+# =============================================================================
 
-# ============================================================================
-# GNU/Hurd Docker - Enhanced QEMU Launcher
-# Portable baseline with Linux-specific optimizations
-# ============================================================================
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
-# Configuration variables (override via environment)
-QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-i386-20250807.qcow2}"
+# Color codes for output (makes debugging easier)
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
+
+# Logging functions
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $*" >&2
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $*" >&2
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $*" >&2
+}
+
+# =============================================================================
+# CONFIGURATION DEFAULTS
+# =============================================================================
+# All configuration via environment variables for Docker flexibility
+QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-amd64.qcow2}"
 QEMU_RAM="${QEMU_RAM:-2048}"
-QEMU_SMP="${QEMU_SMP:-1}"
-QEMU_LOG="/tmp/qemu.log"
-QEMU_MONITOR="/qmp/monitor.sock"
-QEMU_QMP="/qmp/qmp.sock"
+QEMU_SMP="${QEMU_SMP:-2}"
 SERIAL_PORT="${SERIAL_PORT:-5555}"
-VNC_DISPLAY="${VNC_DISPLAY:-:1}"
-SHARE_TAG="${SHARE_TAG:-scripts}"
-DISPLAY_MODE="${DISPLAY_MODE:-nographic}"  # nographic|vnc|sdl-gl|gtk-gl
-QEMU_VIDEO="${QEMU_VIDEO:-std}"  # std|virtio-vga-gl|cirrus
-QEMU_STORAGE="${QEMU_STORAGE:-virtio}"  # ide|virtio
-QEMU_NET="${QEMU_NET:-virtio}"  # e1000|virtio
+MONITOR_PORT="${MONITOR_PORT:-9999}"
 
-# ============================================================================
-# Validation
-# ============================================================================
+# =============================================================================
+# ARCHITECTURE VERIFICATION - x86_64 ONLY!
+# =============================================================================
+verify_x86_64_only() {
+    # Verify host architecture
+    if [ "$(uname -m)" != "x86_64" ]; then
+        log_error "This container requires x86_64 host architecture"
+        exit 1
+    fi
 
-if [ ! -f "$QCOW2_IMAGE" ]; then
-    echo "ERROR: QCOW2 image not found at $QCOW2_IMAGE"
-    echo "Download with: ./download-image.sh"
-    exit 1
-fi
+    # Verify QEMU x86_64 binary exists (with underscore!)
+    if [ ! -x /usr/bin/qemu-system-x86_64 ]; then
+        log_error "qemu-system-x86_64 binary not found or not executable"
+        log_error "Path should be: /usr/bin/qemu-system-x86_64"
+        exit 1
+    fi
 
-# ============================================================================
-# Feature Detection
-# ============================================================================
+    log_info "Architecture verified: x86_64-only configuration"
+}
 
-# Detect KVM availability (Linux hosts only)
-KVM_OPTS=()
-CPU_MODEL="pentium3"  # Default for maximum compatibility
-if [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
-    KVM_OPTS+=(-enable-kvm)
-    CPU_MODEL="host"  # Use host CPU for best performance with KVM
-    ACCEL="KVM"
-    echo "[INFO] KVM acceleration: ENABLED"
-else
-    ACCEL="TCG"
-    echo "[INFO] KVM acceleration: DISABLED (not available or no permissions)"
-    echo "[INFO] Using TCG software emulation (slower but portable)"
-fi
+# =============================================================================
+# KVM AVAILABILITY DETECTION
+# =============================================================================
+detect_acceleration() {
+    # Try KVM first, fall back to TCG
+    # This matches the recommended pattern: -accel kvm -accel tcg,thread=multi
 
-# ============================================================================
-# Display Configuration
-# ============================================================================
+    if [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+        # KVM is available
+        echo "kvm"
+        log_info "KVM hardware acceleration detected and will be used"
+        log_info "CPU model: host (full CPU passthrough)"
+    else
+        # Fall back to TCG
+        echo "tcg"
+        log_warn "KVM not available, using TCG software emulation"
+        log_warn "To enable KVM, run container with: --device=/dev/kvm"
+        log_info "CPU model: max (all emulated features enabled)"
+    fi
+}
 
-DISPLAY_OPTS=()
-VIDEO_OPTS=()
+# =============================================================================
+# BUILD QEMU COMMAND LINE
+# =============================================================================
+build_qemu_command() {
+    local accel_mode
+    accel_mode=$(detect_acceleration)
 
-case "$DISPLAY_MODE" in
-    nographic)
-        DISPLAY_OPTS+=(-nographic)
-        echo "[INFO] Display: No graphics (serial console only)"
-        ;;
-    vnc)
-        DISPLAY_OPTS+=(-display "vnc=$VNC_DISPLAY")
-        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
-        echo "[INFO] Display: VNC on ${VNC_DISPLAY} (port $((5900 + ${VNC_DISPLAY#:})))"
-        echo "[INFO] Video: $QEMU_VIDEO"
-        ;;
-    sdl-gl)
-        DISPLAY_OPTS+=(-display "sdl,gl=on")
-        if [ "$QEMU_VIDEO" = "virtio-vga-gl" ]; then
-            VIDEO_OPTS+=(-device virtio-vga-gl)
-        else
-            VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
-        fi
-        echo "[INFO] Display: SDL with OpenGL acceleration"
-        echo "[INFO] Video: $QEMU_VIDEO"
-        ;;
-    gtk-gl)
-        DISPLAY_OPTS+=(-display "gtk,gl=on")
-        if [ "$QEMU_VIDEO" = "virtio-vga-gl" ]; then
-            VIDEO_OPTS+=(-device virtio-vga-gl)
-        else
-            VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
-        fi
-        echo "[INFO] Display: GTK with OpenGL acceleration"
-        echo "[INFO] Video: $QEMU_VIDEO"
-        ;;
-    sdl)
-        DISPLAY_OPTS+=(-display sdl)
-        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
-        echo "[INFO] Display: SDL (no GL)"
-        echo "[INFO] Video: $QEMU_VIDEO"
-        ;;
-    gtk)
-        DISPLAY_OPTS+=(-display gtk)
-        VIDEO_OPTS+=(-vga "$QEMU_VIDEO")
-        echo "[INFO] Display: GTK (no GL)"
-        echo "[INFO] Video: $QEMU_VIDEO"
-        ;;
-    *)
-        DISPLAY_OPTS+=(-nographic)
-        echo "[WARN] Unknown display mode '$DISPLAY_MODE', using nographic"
-        ;;
-esac
+    # Start with base command - ALWAYS x86_64 binary
+    local -a cmd=(/usr/bin/qemu-system-x86_64)
 
-# USB support for GUI modes
-USB_OPTS=()
-if [[ "$DISPLAY_MODE" != "nographic" ]]; then
-    USB_OPTS+=(-usb -device usb-tablet)
-    echo "[INFO] USB: Enabled with tablet device for better mouse integration"
-fi
+    # Machine type: pc (i440fx) for Hurd compatibility
+    # WHY: Hurd has better support for legacy PC hardware than Q35
+    cmd+=(-machine pc)
 
-# ============================================================================
-# Storage Configuration
-# ============================================================================
+    # Acceleration with automatic fallback
+    # This follows the ChatGPT guide recommendation
+    cmd+=(-accel kvm -accel tcg,thread=multi)
 
-STORAGE_OPTS=()
-if [ "$QEMU_STORAGE" = "virtio" ]; then
-    STORAGE_OPTS+=(-drive "file=$QCOW2_IMAGE,format=qcow2,cache=writeback,aio=threads,if=virtio,discard=unmap")
-    echo "[INFO] Storage: VirtIO with writeback cache (best performance)"
-else
-    STORAGE_OPTS+=(-drive "file=$QCOW2_IMAGE,format=qcow2,cache=writeback,aio=threads,if=ide")
-    echo "[INFO] Storage: IDE with writeback cache (compatibility mode)"
-fi
+    # CPU model based on acceleration
+    if [ "$accel_mode" = "kvm" ]; then
+        cmd+=(-cpu host)  # Full passthrough with KVM
+    else
+        cmd+=(-cpu max)   # Maximum features with TCG
+    fi
 
-# ============================================================================
-# Network Configuration
-# ============================================================================
+    # Memory and SMP
+    cmd+=(-m "${QEMU_RAM}")
+    cmd+=(-smp "${QEMU_SMP}")
 
-NETWORK_OPTS=()
-if [ "$QEMU_NET" = "virtio" ]; then
-    NETWORK_OPTS+=(-netdev "user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999")
-    NETWORK_OPTS+=(-device "virtio-net-pci,netdev=net0")
-    echo "[INFO] Network: VirtIO-Net (best performance)"
-else
-    NETWORK_OPTS+=(-netdev "user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999")
-    NETWORK_OPTS+=(-device "e1000,netdev=net0")
-    echo "[INFO] Network: E1000 (compatibility mode)"
-fi
+    # Disk configuration - IDE for Hurd compatibility
+    # WHY: Hurd doesn't have good virtio-blk support
+    if [ -f "$QCOW2_IMAGE" ]; then
+        cmd+=(
+            -drive "file=${QCOW2_IMAGE},if=ide,cache=writeback,aio=threads,format=qcow2"
+        )
+        log_info "Disk: IDE interface with QCOW2 image"
+    else
+        log_error "Disk image not found: $QCOW2_IMAGE"
+        log_error "Please download or create a Debian GNU/Hurd x86_64 image"
+        exit 1
+    fi
 
-# ============================================================================
-# File Sharing Configuration (9p - portable)
-# ============================================================================
+    # Network: e1000 NIC (NOT virtio - Hurd doesn't support it well)
+    # Port forwarding for SSH and HTTP
+    cmd+=(
+        -nic "user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80"
+    )
+    log_info "Network: e1000 NIC with user-mode NAT"
 
-# Export /share directory to guest via 9p virtio
-# Guest mounts with: mount -t 9p -o trans=virtio,version=9p2000.L scripts /mnt
-SHARE_OPTS=()
-if [ -d /share ]; then
-    # Note: commas in virtfs parameters are not array separators
-    # shellcheck disable=SC2054
-    SHARE_OPTS+=(-virtfs "local,path=/share,mount_tag=$SHARE_TAG,security_model=none,id=fsdev0")
-    echo "[INFO] File sharing: 9p export /share as '$SHARE_TAG'"
-    echo "       Mount in guest: mount -t 9p -o trans=virtio $SHARE_TAG /mnt"
-else
-    echo "[WARN] File sharing: /share not mounted, skipping 9p export"
-fi
+    # Serial console and monitor
+    cmd+=(
+        -serial "telnet:0.0.0.0:${SERIAL_PORT},server,nowait"
+        -monitor "telnet:0.0.0.0:${MONITOR_PORT},server,nowait"
+    )
 
-# ============================================================================
-# Info Banner
-# ============================================================================
+    # Display options
+    if [ "${ENABLE_VNC:-0}" = "1" ]; then
+        cmd+=(-vnc :0)
+        log_info "VNC enabled on port 5900"
+    else
+        cmd+=(-nographic)
+        log_info "Running headless (serial console only)"
+    fi
 
-echo ""
-echo "======================================================================"
-echo "  GNU/Hurd Docker - QEMU i386 Microkernel Environment (2025 Optimized)"
-echo "======================================================================"
-echo ""
-echo "Configuration:"
-echo "  - Image: $QCOW2_IMAGE"
-echo "  - Memory: ${QEMU_RAM} MB"
-echo "  - CPU: $CPU_MODEL"
-echo "  - SMP: ${QEMU_SMP} core(s)"
-echo "  - Acceleration: $ACCEL"
-echo "  - Machine: pc"
-echo "  - Storage: $QEMU_STORAGE (writeback cache, threaded AIO)"
-echo "  - Video: $QEMU_VIDEO"
-echo "  - Display: $DISPLAY_MODE"
-echo ""
-echo "Networking:"
-echo "  - Mode: User-mode NAT ($QEMU_NET)"
-echo "  - SSH: localhost:2222 → guest:22"
-echo "  - HTTP: localhost:8080 → guest:80"
-echo "  - Custom: localhost:9999 → guest:9999"
-echo ""
-echo "Control Channels:"
-echo "  - Serial console: telnet localhost:${SERIAL_PORT}"
-echo "  - QEMU Monitor: socat - UNIX-CONNECT:/qmp/monitor.sock"
-echo "  - QMP automation: socat - UNIX-CONNECT:/qmp/qmp.sock"
-echo ""
-echo "Logs:"
-echo "  - QEMU errors: $QEMU_LOG"
-echo "  - Container logs: docker-compose logs -f"
-echo ""
-echo "======================================================================"
-echo ""
+    # RTC for proper timekeeping
+    cmd+=(-rtc base=utc,clock=host)
 
-# ============================================================================
-# Launch QEMU
-# ============================================================================
+    # Disable reboot on exit
+    cmd+=(-no-reboot)
 
-exec qemu-system-i386 \
-    "${KVM_OPTS[@]}" \
-    -m "$QEMU_RAM" \
-    -cpu "$CPU_MODEL" \
-    -machine pc \
-    -smp "$QEMU_SMP" \
-    "${STORAGE_OPTS[@]}" \
-    "${NETWORK_OPTS[@]}" \
-    "${DISPLAY_OPTS[@]}" \
-    "${VIDEO_OPTS[@]}" \
-    "${USB_OPTS[@]}" \
-    -monitor unix:"$QEMU_MONITOR",server,nowait \
-    -qmp unix:"$QEMU_QMP",server,nowait \
-    -serial telnet:0.0.0.0:"$SERIAL_PORT",server,nowait \
-    "${SHARE_OPTS[@]}" \
-    -rtc base=utc,clock=host \
-    -no-reboot \
-    -d guest_errors \
-    -D "$QEMU_LOG"
+    # Enable guest error logging
+    cmd+=(-d guest_errors -D /var/log/qemu/guest-errors.log)
+
+    echo "${cmd[@]}"
+}
+
+# =============================================================================
+# MAIN EXECUTION
+# =============================================================================
+main() {
+    echo ""
+    echo "=============================================================================="
+    echo "  Pure x86_64 Debian GNU/Hurd QEMU Environment"
+    echo "=============================================================================="
+    echo ""
+
+    # Verify x86_64-only setup
+    verify_x86_64_only
+
+    # Build command
+    local qemu_cmd
+    qemu_cmd=$(build_qemu_command)
+
+    echo "Configuration:"
+    echo "  - Binary: /usr/bin/qemu-system-x86_64"
+    echo "  - Image: ${QCOW2_IMAGE}"
+    echo "  - Memory: ${QEMU_RAM} MB"
+    echo "  - CPUs: ${QEMU_SMP}"
+    echo "  - Machine: pc (i440fx)"
+    echo "  - Disk: IDE interface (Hurd compatible)"
+    echo "  - Network: e1000 (Hurd compatible)"
+    echo ""
+    echo "Port Forwarding:"
+    echo "  - SSH: localhost:2222 -> guest:22"
+    echo "  - HTTP: localhost:8080 -> guest:80"
+    echo ""
+    echo "Management:"
+    echo "  - Serial: telnet localhost:${SERIAL_PORT}"
+    echo "  - Monitor: telnet localhost:${MONITOR_PORT}"
+    echo ""
+    echo "=============================================================================="
+    echo ""
+    echo "Starting QEMU..."
+    echo ""
+
+    # Execute QEMU
+    # shellcheck disable=SC2086
+    exec $qemu_cmd "$@"
+}
+
+# Signal handling for graceful shutdown
+trap 'log_info "Shutting down..."; exit 0' SIGTERM SIGINT
+
+# Run main
+main "$@"

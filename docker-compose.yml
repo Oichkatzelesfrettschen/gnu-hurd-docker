@@ -1,75 +1,173 @@
+# =============================================================================
+# Pure x86_64 Debian GNU/Hurd QEMU-in-Docker Compose Configuration
+# =============================================================================
+# PURPOSE:
+# - Single x86_64-only service (NO i386 contamination)
+# - Smart KVM detection with TCG fallback
+# - Production-ready with proper networking and volumes
+# - Best practices for container orchestration
+# =============================================================================
+
+version: '3.8'
+
 services:
-  gnu-hurd-dev:
+  # Single x86_64 Hurd service - NO i386 variants
+  hurd-x86_64:
+    # Build configuration
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1  # Enable BuildKit caching
 
-    container_name: gnu-hurd-dev
-    privileged: true
+    # Image naming (follows semantic versioning)
+    image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
 
-    volumes:
-      - .:/opt/hurd-image           # Project root (read-write for QCOW2)
-      - ./qmp:/qmp                  # Unix sockets (monitor, QMP)
-      - ./share:/share              # Shared files via 9p (scripts, data)
+    # Container naming (descriptive and unique)
+    container_name: hurd-x86_64-qemu
 
-    ports:
-      - "2222:2222"  # SSH access to guest
-      - "8080:80"    # HTTP access to guest
-      - "9999:9999"  # Custom application port
-      - "5555:5555"  # Serial console (telnet)
-      - "5901:5901"  # VNC (if DISPLAY_MODE=vnc)
+    # Runtime configuration
+    restart: unless-stopped  # Auto-restart on failure
 
-    # Linux-only optimizations (comment out on macOS/Windows)
+    # Privileged mode NOT required if using proper device mapping
+    privileged: false
+
+    # Device access for KVM acceleration (optional but recommended)
+    # If KVM not available, QEMU will fall back to TCG automatically
     devices:
-      - /dev/kvm     # KVM acceleration (auto-detected in entrypoint.sh)
+      - /dev/kvm:/dev/kvm:rw  # KVM device with read/write permissions
 
+    # Port mappings
+    # Format: "host:container" - container ports forward to guest via QEMU
+    ports:
+      - "2222:2222"   # SSH: host:2222 -> container:2222 -> guest:22
+      - "8080:8080"   # HTTP: host:8080 -> container:8080 -> guest:80
+      - "5555:5555"   # Serial console (telnet)
+      - "9999:9999"   # QEMU monitor (telnet)
+      - "5900:5900"   # VNC display :0 (optional, when ENABLE_VNC=1)
+
+    # Volume mounts for persistence
+    volumes:
+      # Hurd disk image - persists across container recreations
+      - hurd-disk:/opt/hurd-image:rw
+
+      # Optional: Mount local QCOW2 image instead of volume
+      # - ./debian-hurd-amd64.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw
+
+      # Shared directory for file exchange with host
+      - ./share:/share:rw
+
+      # QEMU logs for debugging
+      - ./logs:/var/log/qemu:rw
+
+    # Environment variables for QEMU configuration
     environment:
-      # Override defaults if needed
-      - QEMU_RAM=4096                    # 4 GB for better performance (2048 minimum)
-      - QEMU_SMP=4                       # 4 cores (1-6 recommended)
-      - DISPLAY_MODE=sdl-gl              # nographic|vnc|sdl-gl|gtk-gl
-      - QEMU_VIDEO=std                   # std|virtio-vga-gl|cirrus (Hurd-compatible)
-      - QEMU_STORAGE=ide                 # ide|virtio (Hurd-compatible default)
-      - QEMU_NET=e1000                   # e1000|virtio (Hurd-compatible default)
-      - SERIAL_PORT=5555
-      - SHARE_TAG=scripts
+      # Disk image path (inside container)
+      QEMU_DRIVE: /opt/hurd-image/debian-hurd-amd64.qcow2
 
-    stdin_open: true
-    tty: true
+      # Memory allocation (MB)
+      QEMU_RAM: 4096
 
+      # CPU cores (Hurd 2025 has SMP support)
+      QEMU_SMP: 2
+
+      # Display configuration
+      # Set to 1 to enable VNC on port 5900
+      ENABLE_VNC: 0
+
+      # Port configurations
+      SERIAL_PORT: 5555
+      MONITOR_PORT: 9999
+
+      # Optional: Download and create disk on first run
+      # CREATE_DISK: 1
+      # DISK_SIZE: 40G
+
+    # Network configuration
     networks:
       - hurd-net
 
-  gnu-hurd-cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: gnu-hurd-cli
-    privileged: true
-    profiles: ["cli"]
-    volumes:
-      - .:/opt/hurd-image
-      - ./qmp:/qmp
-      - ./share:/share
-    ports:
-      - "2223:2222"  # separate SSH for CLI profile
-      - "5556:5555"  # separate serial for CLI profile
-    devices:
-      - /dev/kvm
-    environment:
-      - QEMU_RAM=2048
-      - QEMU_SMP=1
-      - DISPLAY_MODE=nographic
-      - QEMU_VIDEO=std
-      - QEMU_STORAGE=ide
-      - QEMU_NET=e1000
-      - SERIAL_PORT=5555
-      - SHARE_TAG=scripts
-    stdin_open: true
-    tty: true
-    networks:
-      - hurd-net
+    # Resource limits (prevents container from consuming all host resources)
+    deploy:
+      resources:
+        limits:
+          cpus: '4'        # Max 4 CPU cores
+          memory: 6G       # Max 6GB RAM (4GB for VM + overhead)
+        reservations:
+          cpus: '1'        # Minimum 1 CPU core
+          memory: 2G       # Minimum 2GB RAM
 
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "/opt/scripts/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s  # Allow 3 minutes for VM to boot
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Labels for container metadata
+    labels:
+      com.docker.compose.project: "gnu-hurd"
+      com.docker.compose.service: "hurd-x86_64"
+      org.opencontainers.image.architecture: "x86_64"
+      org.opencontainers.image.description: "Pure x86_64 GNU/Hurd QEMU environment"
+
+# Network definition
 networks:
   hurd-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+          gateway: 172.25.0.1
+
+# Volume definition for persistent storage
+volumes:
+  hurd-disk:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/images  # Store images in ./images directory
+
+# =============================================================================
+# USAGE EXAMPLES:
+# =============================================================================
+# Start the container:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f hurd-x86_64
+#
+# SSH into Hurd VM:
+#   ssh -p 2222 root@localhost
+#
+# Access QEMU monitor:
+#   telnet localhost 9999
+#
+# Access serial console:
+#   telnet localhost 5555
+#
+# Stop the container:
+#   docker-compose down
+#
+# Remove everything including volumes:
+#   docker-compose down -v
+#
+# Build with no cache:
+#   docker-compose build --no-cache
+#
+# Run with KVM acceleration:
+#   docker-compose up -d  # Automatically detects /dev/kvm
+#
+# Run without KVM (TCG only):
+#   # Remove or comment out the 'devices:' section above
+#   docker-compose up -d
+# =============================================================================

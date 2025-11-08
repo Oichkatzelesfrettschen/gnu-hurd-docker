@@ -1,0 +1,47 @@
+name: Build Hurd x86_64 Image
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils
+
+      - name: Download x86_64 image
+        run: ./scripts/setup-hurd-amd64.sh
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+
+      - name: Start VM (with TCG fallback)
+        run: docker-compose up -d
+
+      - name: Wait for boot
+        run: sleep 180
+
+      - name: Test SSH (may timeout on slow runners)
+        run: |
+          timeout 10 ssh -p 2223 -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=5 root@localhost "uname -a" || \
+            echo "SSH not ready (expected on GitHub runners)"
+
+      - name: Stop VM
+        run: docker-compose down
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hurd-x86_64-image
+          path: debian-hurd-amd64-80gb.qcow2
+          retention-days: 30

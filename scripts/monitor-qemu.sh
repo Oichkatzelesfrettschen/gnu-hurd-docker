@@ -21,7 +21,7 @@ find_qemu_pid() {
     if [ -f "$QEMU_PID_FILE" ]; then
         cat "$QEMU_PID_FILE"
     else
-        pgrep -f "qemu-system-i386" | head -1
+        pgrep -f "qemu-system-x86_64" | head -1
     fi
 }
 

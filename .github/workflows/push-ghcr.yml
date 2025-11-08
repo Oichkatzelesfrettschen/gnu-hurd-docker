@@ -77,7 +77,7 @@ jobs:
           echo "Testing with tag: $TAG"
 
           # Verify QEMU is installed
-          docker run --rm $TAG qemu-system-i386 --version
+          docker run --rm $TAG qemu-system-x86_64 --version
 
           # Verify scripts are present
           docker run --rm $TAG ls -la /usr/local/bin/ | grep -E "qemu|hurd" || true

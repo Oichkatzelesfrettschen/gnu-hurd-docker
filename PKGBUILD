@@ -1,7 +1,7 @@
 pkgname=gnu-hurd-docker
 pkgver=2.0.0
 pkgrel=1
-pkgdesc="GNU/Hurd i386 microkernel in QEMU within Docker - Complete development environment"
+pkgdesc="GNU/Hurd x86_64 microkernel in QEMU within Docker - Complete development environment"
 arch=('x86_64' 'i686')
 url="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
 license=('MIT')
@@ -16,7 +16,7 @@ makedepends=(
     'shellcheck'
 )
 optdepends=(
-    'qemu-system-i386: For running QEMU outside Docker'
+    'qemu-system-x86-64: For running QEMU outside Docker'
     'qemu-img: For manual image manipulation'
     'cloud-image-utils: For cloud-init seed creation'
     'socat: For QMP/monitor socket control'
@@ -273,7 +273,7 @@ The package creates a work directory at `~/.local/share/gnu-hurd-docker/` for:
 - python (>=3.7)
 
 **Optional:**
-- qemu-system-i386: Run QEMU outside Docker
+- qemu-system-x86-64: Run QEMU outside Docker
 - cloud-image-utils: Create cloud-init seeds
 - socat: QMP automation
 - screen/telnet: Serial console access

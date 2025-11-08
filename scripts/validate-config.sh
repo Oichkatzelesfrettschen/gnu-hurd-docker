@@ -77,7 +77,7 @@ else
     warn "Base image is not debian:bookworm"
 fi
 
-if grep -q "qemu-system-i386" Dockerfile; then
+if grep -q "qemu-system-x86-64" Dockerfile; then
     pass "QEMU package included"
 else
     fail "QEMU package not found in Dockerfile"
@@ -118,7 +118,7 @@ else
     warn "Missing error handling (set -e)"
 fi
 
-if grep -q "qemu-system-i386" entrypoint.sh; then
+if grep -q "qemu-system-x86_64" entrypoint.sh; then
     pass "QEMU launcher found"
 else
     fail "QEMU launcher not found"
