@@ -23,7 +23,9 @@ jobs:
         run: ./scripts/setup-hurd-amd64.sh
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+        run: |
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$REPO:latest .
 
       - name: Start VM (with TCG fallback)
         run: docker-compose up -d
