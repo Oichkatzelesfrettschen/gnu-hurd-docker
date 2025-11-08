@@ -28,7 +28,7 @@ jobs:
           docker build -t ghcr.io/$REPO:latest .
 
       - name: Start VM (with TCG fallback)
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Wait for boot
         run: sleep 180
@@ -40,7 +40,7 @@ jobs:
             echo "SSH not ready (expected on GitHub runners)"
 
       - name: Stop VM
-        run: docker-compose down
+        run: docker compose down
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
