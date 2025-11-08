@@ -141,7 +141,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         }
 
     echo_info "Building Node.js (this will take a long time)..."
-    make -j$(nproc) || {
+    make -j"$(nproc)" || {
         echo_error "Build failed"
         echo_error "Trying without parallel build..."
         make || {

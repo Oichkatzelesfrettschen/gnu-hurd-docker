@@ -71,16 +71,19 @@ jobs:
         run: |
           echo "=== Testing Docker image ==="
           docker images | grep gnu-hurd
-          
+
           # Get the first tag for testing
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
           echo "Testing with tag: $TAG"
 
-          # Verify QEMU is installed
-          docker run --rm $TAG qemu-system-x86_64 --version
+          # Verify QEMU is installed (override entrypoint to skip disk check)
+          docker run --rm --entrypoint qemu-system-x86_64 $TAG --version
 
-          # Verify scripts are present
-          docker run --rm $TAG ls -la /usr/local/bin/ | grep -E "qemu|hurd" || true
+          # Verify health check script exists
+          docker run --rm --entrypoint ls $TAG -la /opt/scripts/health-check.sh
+
+          # Verify entrypoint is executable
+          docker run --rm --entrypoint ls $TAG -la /entrypoint.sh
 
           echo "=== Docker image test passed ==="
 

@@ -15,7 +15,7 @@ if ! docker ps --format '{{.Names}}' | grep -q '^gnu-hurd-dev$'; then
 fi
 
 echo "Waiting for serial (telnet $HOST:$SERIAL_PORT) ..."
-for i in {1..120}; do
+for _ in {1..120}; do
   if nc -z "$HOST" "$SERIAL_PORT" 2>/dev/null; then break; fi
   sleep 2
 done
