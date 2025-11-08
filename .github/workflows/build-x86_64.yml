@@ -27,6 +27,12 @@ jobs:
           REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$REPO:latest .
 
+      - name: Create required directories and secrets
+        run: |
+          mkdir -p secrets share logs
+          echo "root" > secrets/root_password.txt
+          echo "agents" > secrets/agents_password.txt
+
       - name: Start VM (with TCG fallback)
         run: docker compose up -d
 
@@ -35,7 +41,7 @@ jobs:
 
       - name: Test SSH (may timeout on slow runners)
         run: |
-          timeout 10 ssh -p 2223 -o StrictHostKeyChecking=no \
+          timeout 10 ssh -p 2222 -o StrictHostKeyChecking=no \
             -o ConnectTimeout=5 root@localhost "uname -a" || \
             echo "SSH not ready (expected on GitHub runners)"
 
