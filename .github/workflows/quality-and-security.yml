@@ -226,7 +226,10 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     name: Security Vulnerability Scan
-    
+    permissions:
+      security-events: write
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -266,17 +269,13 @@ jobs:
       - name: Check for security advisories in dependencies
         run: |
           echo "=== Auditing dependencies ==="
-          
-          # Check Docker base image
-          echo "Checking Debian Bookworm base image..."
-          docker pull debian:bookworm-slim
-          docker run --rm debian:bookworm-slim apt-get update
-          docker run --rm debian:bookworm-slim apt-get install -y debian-security-support
-          
-          # List installed packages in Dockerfile
-          echo "Packages to be installed:"
-          grep -E "^\s*(apt-get install|apk add)" Dockerfile | grep -v "^#" || true
-          
+
+          # List packages to be installed from Dockerfile
+          echo "Packages to be installed from Dockerfile:"
+          grep -E "^\s+(qemu-|curl|wget|ca-certificates|socat|netcat|screen|tmux|expect|sshpass|iproute2|procps)" Dockerfile | grep -v "^#" || true
+
+          echo ""
+          echo "Note: Trivy scanner performs comprehensive vulnerability scanning"
           echo "✓ Dependency audit complete"
   
   license-compliance:
