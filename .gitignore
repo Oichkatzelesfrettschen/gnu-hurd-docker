@@ -1,13 +1,12 @@
 # Disk Images (large files - download from cdimage.debian.org)
 # Images are now stored in images/ directory
-*.qcow2
+# *.qcow2 files are now tracked with Git LFS
 *.img
 *.tar.xz
 *.tar.gz
 backup-*.tar.gz
 images/*.img
 images/*.tar.xz
-images/*.qcow2
 
 # QEMU logs and output
 qemu*.log
@@ -44,7 +43,6 @@ venv/
 # npm/yarn audit logs
 logs/
 *.audit.json
-*.qcow2.bak.*
 *.img.bak.*
 
 # Docker secrets (actual credentials - NEVER commit)
