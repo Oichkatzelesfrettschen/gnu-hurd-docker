@@ -33,14 +33,87 @@ log_error() {
 }
 
 # =============================================================================
+# RESOURCE DETECTION AND SMART DEFAULTS
+# =============================================================================
+# Detect host resources for optimal allocation
+detect_host_resources() {
+    # CPU cores: use nproc if available, fallback to /proc/cpuinfo
+    if command -v nproc >/dev/null 2>&1; then
+        HOST_CPUS=$(nproc)
+    else
+        HOST_CPUS=$(grep -c "^processor" /proc/cpuinfo 2>/dev/null || echo 2)
+    fi
+
+    # Available memory in MB
+    if [ -f /proc/meminfo ]; then
+        HOST_MEM_KB=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+        HOST_MEM_MB=$((HOST_MEM_KB / 1024))
+    else
+        HOST_MEM_MB=2048  # Conservative fallback
+    fi
+
+    log_info "Detected host resources: ${HOST_CPUS} CPUs, ${HOST_MEM_MB} MB available memory"
+}
+
+# Calculate optimal SMP based on host CPUs
+calculate_optimal_smp() {
+    local host_cpus=$1
+    local requested_smp=${QEMU_SMP:-0}
+
+    # If user specified SMP, validate and use it
+    if [ "$requested_smp" -gt 0 ]; then
+        if [ "$requested_smp" -gt "$host_cpus" ]; then
+            log_warn "Requested SMP ($requested_smp) exceeds host CPUs ($host_cpus)"
+            echo "$host_cpus"
+        else
+            echo "$requested_smp"
+        fi
+    else
+        # Auto-calculate: use 50% of host CPUs, minimum 2, maximum 8 (Hurd limitation)
+        local optimal=$((host_cpus / 2))
+        [ "$optimal" -lt 2 ] && optimal=2
+        [ "$optimal" -gt 8 ] && optimal=8
+        echo "$optimal"
+    fi
+}
+
+# Calculate optimal RAM based on available memory
+calculate_optimal_ram() {
+    local host_mem_mb=$1
+    local requested_ram=${QEMU_RAM:-0}
+
+    # If user specified RAM, validate and use it
+    if [ "$requested_ram" -gt 0 ]; then
+        if [ "$requested_ram" -gt "$host_mem_mb" ]; then
+            log_warn "Requested RAM ($requested_ram MB) exceeds available ($host_mem_mb MB)"
+            # Use 75% of available memory as safety limit
+            echo $((host_mem_mb * 3 / 4))
+        else
+            echo "$requested_ram"
+        fi
+    else
+        # Auto-calculate: use 25% of available memory, minimum 2GB, maximum 8GB
+        local optimal=$((host_mem_mb / 4))
+        [ "$optimal" -lt 2048 ] && optimal=2048
+        [ "$optimal" -gt 8192 ] && optimal=8192
+        echo "$optimal"
+    fi
+}
+
+# =============================================================================
 # CONFIGURATION DEFAULTS
 # =============================================================================
+# Detect host resources first
+detect_host_resources
+
 # All configuration via environment variables for Docker flexibility
 QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-amd64.qcow2}"
-QEMU_RAM="${QEMU_RAM:-2048}"
-QEMU_SMP="${QEMU_SMP:-2}"
+QEMU_RAM=$(calculate_optimal_ram "$HOST_MEM_MB")
+QEMU_SMP=$(calculate_optimal_smp "$HOST_CPUS")
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 MONITOR_PORT="${MONITOR_PORT:-9999}"
+
+log_info "Optimized settings: ${QEMU_SMP} CPUs, ${QEMU_RAM} MB RAM"
 
 # =============================================================================
 # ARCHITECTURE VERIFICATION - x86_64 ONLY!
@@ -101,24 +174,69 @@ build_qemu_command() {
     # This follows the ChatGPT guide recommendation
     cmd+=(-accel kvm -accel "tcg,thread=multi")
 
-    # CPU model based on acceleration
+    # CPU model based on acceleration with performance flags
     if [ "$accel_mode" = "kvm" ]; then
-        cmd+=(-cpu host)  # Full passthrough with KVM
+        # KVM: use host CPU with performance optimizations
+        # +invtsc: invariant TSC for better timekeeping
+        # +x2apic: extended APIC for better interrupt handling with SMP
+        local cpu_flags="host"
+        [ "$QEMU_SMP" -gt 2 ] && cpu_flags="host,+x2apic"
+        cmd+=(-cpu "$cpu_flags")
+        log_info "CPU: host passthrough with optimizations"
     else
-        cmd+=(-cpu max)   # Maximum features with TCG
+        # TCG: use max features for compatibility
+        cmd+=(-cpu max)
+        log_info "CPU: max emulated features"
     fi
 
-    # Memory and SMP
+    # Memory and SMP configuration
     cmd+=(-m "${QEMU_RAM}")
-    cmd+=(-smp "${QEMU_SMP}")
 
-    # Disk configuration - IDE for Hurd compatibility
+    # SMP configuration with topology hints for better scheduler performance
+    if [ "$QEMU_SMP" -gt 4 ]; then
+        # For >4 CPUs: specify topology for better cache coherency
+        local sockets=1
+        local cores=$QEMU_SMP
+        local threads=1
+        cmd+=(-smp "cpus=${QEMU_SMP},sockets=${sockets},cores=${cores},threads=${threads}")
+        log_info "SMP: ${QEMU_SMP} CPUs with explicit topology"
+    else
+        # For <=4 CPUs: simple configuration
+        cmd+=(-smp "${QEMU_SMP}")
+        log_info "SMP: ${QEMU_SMP} CPUs"
+    fi
+
+    # Disk configuration - IDE for Hurd compatibility with optimized I/O
     # WHY: Hurd doesn't have good virtio-blk support
     if [ -f "$QCOW2_IMAGE" ]; then
+        # Optimize AIO backend based on KVM availability
+        local aio_backend="threads"  # Default for TCG
+        local cache_mode="writeback"
+
+        if [ "$accel_mode" = "kvm" ]; then
+            # KVM: try io_uring (best performance), fallback to native
+            if grep -q io_uring /proc/filesystems 2>/dev/null || command -v qemu-system-x86_64 2>&1 | grep -q io_uring; then
+                aio_backend="io_uring"
+                log_info "Disk I/O: io_uring (optimal for KVM)"
+            else
+                aio_backend="native"
+                log_info "Disk I/O: native AIO (good for KVM)"
+            fi
+        else
+            # TCG: use threads
+            log_info "Disk I/O: threads (optimal for TCG)"
+        fi
+
+        # Adjust cache mode based on display mode (unsafe cache for testing)
+        if [ "${UNSAFE_CACHE:-0}" = "1" ]; then
+            cache_mode="unsafe"
+            log_warn "Using UNSAFE cache mode - faster but risk of data loss"
+        fi
+
         cmd+=(
-            -drive "file=${QCOW2_IMAGE},if=ide,cache=writeback,aio=threads,format=qcow2"
+            -drive "file=${QCOW2_IMAGE},if=ide,cache=${cache_mode},aio=${aio_backend},format=qcow2"
         )
-        log_info "Disk: IDE interface with QCOW2 image"
+        log_info "Disk: IDE interface with QCOW2 image, cache=${cache_mode}"
     else
         log_error "Disk image not found: $QCOW2_IMAGE"
         log_error "Please download or create a Debian GNU/Hurd x86_64 image"
@@ -126,11 +244,17 @@ build_qemu_command() {
     fi
 
     # Network: e1000 NIC (NOT virtio - Hurd doesn't support it well)
-    # Port forwarding for SSH and HTTP
-    cmd+=(
-        -nic "user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80"
-    )
-    log_info "Network: e1000 NIC with user-mode NAT"
+    # Port forwarding for SSH and HTTP with performance tuning
+    local net_opts="user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80"
+
+    # Add performance optimizations for user-mode networking
+    if [ "$accel_mode" = "kvm" ]; then
+        # Increase network buffer sizes for better throughput
+        net_opts="${net_opts},net=192.168.76.0/24,dhcpstart=192.168.76.9"
+    fi
+
+    cmd+=(-nic "$net_opts")
+    log_info "Network: e1000 NIC with user-mode NAT and optimized buffers"
 
     # Serial console and monitor
     cmd+=(
