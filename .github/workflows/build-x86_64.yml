@@ -19,8 +19,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qemu-system-x86 qemu-utils
 
-      - name: Download x86_64 image
-        run: ./scripts/setup-hurd-amd64.sh
+      - name: Download x86_64 image from releases or build
+        run: |
+          # Try to download from GitHub Releases first
+          if ./scripts/download-released-image.sh 2>/dev/null; then
+            echo "Successfully downloaded image from GitHub Releases"
+          else
+            echo "No release found, building image from source..."
+            ./scripts/setup-hurd-amd64.sh
+            mv debian-hurd-amd64-80gb.qcow2 images/debian-hurd-amd64.qcow2
+          fi
 
       - name: Build Docker image
         run: |

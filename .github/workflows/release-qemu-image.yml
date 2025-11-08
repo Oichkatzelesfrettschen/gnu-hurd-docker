@@ -1,0 +1,208 @@
+---
+name: Release QEMU Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for creating releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils xz-utils
+
+      - name: Download Hurd x86_64 image
+        run: |
+          ./scripts/setup-hurd-amd64.sh
+          mv debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64.qcow2
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "Release version: ${VERSION}"
+
+      - name: Get image info
+        id: image_info
+        run: |
+          qemu-img info debian-hurd-amd64.qcow2 > image-info.txt
+          cat image-info.txt
+
+          VIRTUAL_SIZE=$(qemu-img info debian-hurd-amd64.qcow2 | grep 'virtual size' | awk '{print $3, $4}')
+          DISK_SIZE=$(qemu-img info debian-hurd-amd64.qcow2 | grep 'disk size' | awk '{print $3, $4}')
+
+          echo "virtual_size=${VIRTUAL_SIZE}" >> $GITHUB_OUTPUT
+          echo "disk_size=${DISK_SIZE}" >> $GITHUB_OUTPUT
+
+      - name: Generate build metadata
+        run: |
+          cat > BUILD-METADATA.txt <<EOF
+          =============================================================================
+          GNU/Hurd x86_64 QEMU Image - Build Metadata
+          =============================================================================
+          Version: ${{ steps.version.outputs.version }}
+          Build Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          Build System: GitHub Actions
+          Runner: ${{ runner.os }} (${{ runner.arch }})
+          Workflow: ${{ github.workflow }}
+          Commit: ${{ github.sha }}
+          Repository: ${{ github.repository }}
+
+          =============================================================================
+          Image Details
+          =============================================================================
+          Base Image: Debian GNU/Hurd x86_64 (amd64) 2025 snapshot
+          Source: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
+          Architecture: x86_64 (amd64)
+          Machine Type: pc (i440fx)
+          Virtual Size: ${{ steps.image_info.outputs.virtual_size }}
+          Actual Size: ${{ steps.image_info.outputs.disk_size }}
+          Format: qcow2 (QEMU Copy-On-Write v2)
+
+          =============================================================================
+          Default Credentials
+          =============================================================================
+          WARNING: This image ships with DEFAULT CREDENTIALS for testing purposes.
+
+          Root Account:
+            Username: root
+            Password: (none - no password required)
+
+          SECURITY NOTICE: Change the root password immediately after first boot:
+            $ passwd root
+
+          =============================================================================
+          Boot Instructions
+          =============================================================================
+          Using Docker Compose (Recommended):
+            1. Download this release's debian-hurd-amd64.qcow2 file
+            2. Place it in the 'images' directory of the repository
+            3. Run: docker compose up -d
+            4. Connect via SSH: ssh -p 2222 root@localhost
+
+          Using QEMU directly:
+            qemu-system-x86_64 \\
+              -machine pc -accel kvm -accel tcg,thread=multi \\
+              -cpu host -m 4096 -smp 2 \\
+              -drive file=debian-hurd-amd64.qcow2,if=ide,cache=writeback,aio=threads \\
+              -nic user,model=e1000,hostfwd=tcp::2222-:22 \\
+              -nographic
+
+          =============================================================================
+          Verification
+          =============================================================================
+          SHA256 checksums are provided for integrity verification.
+
+          To verify the uncompressed image:
+            sha256sum -c debian-hurd-amd64.qcow2.sha256
+
+          To verify the compressed image:
+            sha256sum -c debian-hurd-amd64.qcow2.xz.sha256
+
+          =============================================================================
+          Support & Documentation
+          =============================================================================
+          Repository: https://github.com/${{ github.repository }}
+          Issues: https://github.com/${{ github.repository }}/issues
+          Documentation: https://github.com/${{ github.repository }}#readme
+
+          =============================================================================
+          License
+          =============================================================================
+          This QEMU image contains Debian GNU/Hurd, which is Free Software.
+          See: https://www.debian.org/legal/licenses/
+
+          Container orchestration and scripts: MIT License (see repository)
+          =============================================================================
+          EOF
+
+          cat BUILD-METADATA.txt
+
+      - name: Compress image with xz
+        run: |
+          echo "Compressing image (this may take several minutes)..."
+          xz -9 -k -v debian-hurd-amd64.qcow2
+          ls -lh debian-hurd-amd64.qcow2*
+
+      - name: Generate SHA256 checksums
+        run: |
+          sha256sum debian-hurd-amd64.qcow2 > debian-hurd-amd64.qcow2.sha256
+          sha256sum debian-hurd-amd64.qcow2.xz > debian-hurd-amd64.qcow2.xz.sha256
+
+          echo "=== Uncompressed Image Checksum ==="
+          cat debian-hurd-amd64.qcow2.sha256
+          echo ""
+          echo "=== Compressed Image Checksum ==="
+          cat debian-hurd-amd64.qcow2.xz.sha256
+
+      - name: Rename files with version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Rename files to include version
+          mv debian-hurd-amd64.qcow2 debian-hurd-amd64-${VERSION}.qcow2
+          mv debian-hurd-amd64.qcow2.xz debian-hurd-amd64-${VERSION}.qcow2.xz
+          mv debian-hurd-amd64.qcow2.sha256 debian-hurd-amd64-${VERSION}.qcow2.sha256
+          mv debian-hurd-amd64.qcow2.xz.sha256 debian-hurd-amd64-${VERSION}.qcow2.xz.sha256
+          mv BUILD-METADATA.txt BUILD-METADATA-${VERSION}.txt
+          mv image-info.txt IMAGE-INFO-${VERSION}.txt
+
+          # Create symlinks for "latest" (for convenience)
+          ln -s debian-hurd-amd64-${VERSION}.qcow2 debian-hurd-amd64-latest.qcow2
+          ln -s debian-hurd-amd64-${VERSION}.qcow2.xz debian-hurd-amd64-latest.qcow2.xz
+          ln -s debian-hurd-amd64-${VERSION}.qcow2.sha256 debian-hurd-amd64-latest.qcow2.sha256
+          ln -s debian-hurd-amd64-${VERSION}.qcow2.xz.sha256 debian-hurd-amd64-latest.qcow2.xz.sha256
+
+          ls -lh debian-hurd-amd64-*
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "GNU/Hurd x86_64 QEMU Image v${{ steps.version.outputs.version }}"
+          body_path: BUILD-METADATA-${{ steps.version.outputs.version }}.txt
+          prerelease: ${{ inputs.prerelease || false }}
+          files: |
+            debian-hurd-amd64-${{ steps.version.outputs.version }}.qcow2
+            debian-hurd-amd64-${{ steps.version.outputs.version }}.qcow2.xz
+            debian-hurd-amd64-${{ steps.version.outputs.version }}.qcow2.sha256
+            debian-hurd-amd64-${{ steps.version.outputs.version }}.qcow2.xz.sha256
+            BUILD-METADATA-${{ steps.version.outputs.version }}.txt
+            IMAGE-INFO-${{ steps.version.outputs.version }}.txt
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: hurd-release-artifacts-${{ steps.version.outputs.version }}
+          path: |
+            debian-hurd-amd64-${{ steps.version.outputs.version }}.*
+            BUILD-METADATA-${{ steps.version.outputs.version }}.txt
+            IMAGE-INFO-${{ steps.version.outputs.version }}.txt
+          retention-days: 7
