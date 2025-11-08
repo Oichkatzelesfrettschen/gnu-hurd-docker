@@ -104,8 +104,8 @@ jobs:
         run: |
           echo "=== Packaging documentation ==="
           cp -v README.md release-artifacts/
-          cp -v INSTALLATION.md release-artifacts/
-          cp -v requirements.md release-artifacts/
+          cp -v docs/INSTALLATION.md release-artifacts/
+          cp -v docs/requirements.md release-artifacts/
           cp -v LICENSE release-artifacts/ 2>/dev/null || echo "No LICENSE file"
           cp -rv docs/ release-artifacts/
 

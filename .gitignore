@@ -1,9 +1,13 @@
 # Disk Images (large files - download from cdimage.debian.org)
+# Images are now stored in images/ directory
 *.qcow2
 *.img
 *.tar.xz
 *.tar.gz
 backup-*.tar.gz
+images/*.img
+images/*.tar.xz
+images/*.qcow2
 
 # QEMU logs and output
 qemu*.log
@@ -46,7 +50,7 @@ logs/
 # Docker secrets (actual credentials - NEVER commit)
 secrets/*.txt
 !secrets/*.txt.example
-CREDENTIALS.txt
+# CREDENTIALS.txt moved to docs/ (contains default public credentials only)
 
 # Claude Code local settings (auto-approvals and personal config)
 .claude/*.local.json
