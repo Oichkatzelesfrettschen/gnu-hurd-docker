@@ -12,15 +12,9 @@
 services:
   # Single x86_64 Hurd service - NO i386 variants
   hurd-x86_64:
-    # Build configuration
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        BUILDKIT_INLINE_CACHE: 1  # Enable BuildKit caching
-
-    # Image naming (follows semantic versioning)
-    image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
+    # Production: Pull pre-built image from GHCR
+    # Local development: docker-compose.override.yml will override this with build section
+    image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
     # Container naming (descriptive and unique)
     container_name: hurd-x86_64-qemu

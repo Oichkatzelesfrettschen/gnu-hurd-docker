@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# GNU/Hurd Docker Compose - Local Development Override
+# =============================================================================
+# This file is AUTOMATICALLY loaded by Docker Compose in local development.
+# It overrides the 'image' configuration in docker-compose.yml with a 'build'
+# configuration to enable local image building.
+#
+# CI/CD: This file is IGNORED (only docker-compose.yml is used)
+# Local: This file is AUTOMATICALLY merged (no flags needed)
+# =============================================================================
+
+services:
+  hurd-x86_64:
+    # Override: Build locally instead of pulling from GHCR
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1  # Enable BuildKit caching
+
+    # Override: Use local tag instead of GHCR tag
+    image: gnu-hurd-docker:local-dev

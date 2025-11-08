@@ -198,6 +198,10 @@ main() {
     echo "Starting QEMU..."
     echo ""
 
+    # Ensure log directory exists with correct permissions
+    mkdir -p /var/log/qemu
+    chown -R hurd:hurd /var/log/qemu 2>/dev/null || true
+
     # Execute QEMU
     # shellcheck disable=SC2086
     exec $qemu_cmd "$@"

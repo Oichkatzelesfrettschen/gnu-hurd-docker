@@ -33,7 +33,10 @@ jobs:
           echo "root" > secrets/root_password.txt
           echo "agents" > secrets/agents_password.txt
 
-      - name: Start VM (with TCG fallback)
+      - name: Remove override file (CI uses only base docker-compose.yml)
+        run: rm -f docker-compose.override.yml
+
+      - name: Start VM (with TCG fallback, using GHCR image)
         run: docker compose up -d
 
       - name: Wait for boot
