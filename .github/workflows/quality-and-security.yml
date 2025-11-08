@@ -336,7 +336,7 @@ jobs:
             "requirements.md"
             "docs/ARCHITECTURE.md"
             "docs/CI-CD-GUIDE.md"
-            ".github/workflows/build.yml"
+            ".github/workflows/build-x86_64.yml"
           )
 
           MISSING=0
