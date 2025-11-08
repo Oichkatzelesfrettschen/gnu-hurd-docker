@@ -55,11 +55,12 @@ jobs:
           qemu-img info debian-hurd-amd64.qcow2 > image-info.txt
           cat image-info.txt
 
+          # Extract size information for metadata (quoted for GITHUB_OUTPUT)
           VIRTUAL_SIZE=$(qemu-img info debian-hurd-amd64.qcow2 | grep 'virtual size' | awk '{print $3, $4}')
           DISK_SIZE=$(qemu-img info debian-hurd-amd64.qcow2 | grep 'disk size' | awk '{print $3, $4}')
 
-          echo "virtual_size=${VIRTUAL_SIZE}" >> $GITHUB_OUTPUT
-          echo "disk_size=${DISK_SIZE}" >> $GITHUB_OUTPUT
+          echo "virtual_size=\"${VIRTUAL_SIZE}\"" >> $GITHUB_OUTPUT
+          echo "disk_size=\"${DISK_SIZE}\"" >> $GITHUB_OUTPUT
 
       - name: Generate build metadata
         run: |
