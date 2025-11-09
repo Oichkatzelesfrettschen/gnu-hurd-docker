@@ -4,7 +4,7 @@
 # WHAT: Measures LOC, complexity, dependencies, documentation
 # HOW: Parses scripts and counts various metrics
 
-set -eu
+set -euo pipefail
 
 SCRIPTS_DIR="/home/eirikr/Playground/gnu-hurd-docker/scripts"
 OUTPUT_JSON="/tmp/script-metrics.json"

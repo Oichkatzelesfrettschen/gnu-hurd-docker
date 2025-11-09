@@ -4,7 +4,7 @@
 # WHAT: Analyzes JSON data and produces structured report
 # HOW: Reads metrics, calculates aggregates, ranks scripts
 
-set -eu
+set -euo pipefail
 
 INPUT_JSON="/tmp/raw-metrics.json"
 OUTPUT_JSON="/tmp/script-complexity-report.json"

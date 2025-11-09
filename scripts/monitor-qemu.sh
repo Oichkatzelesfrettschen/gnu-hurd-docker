@@ -4,7 +4,8 @@
 # Version: 1.0
 
 set -euo pipefail
-n# Source libraries
+
+# Source libraries
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/container-helpers.sh
 source "$SCRIPT_DIR/lib/container-helpers.sh"

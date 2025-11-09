@@ -2,7 +2,7 @@
 # GNU/Hurd Docker Kernel Networking Fix Script
 # Detects and applies the appropriate fix for nf_tables/iptables issues
 
-set -e
+set -euo pipefail
 
 echo "=========================================================================="
 echo "GNU/Hurd Docker - Kernel Networking Fix Utility"
