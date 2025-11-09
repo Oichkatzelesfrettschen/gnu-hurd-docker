@@ -12,26 +12,51 @@
 
 ---
 
-## Quick Start
+## Quick Start (Choose Your Path)
+
+### Path A: Docker-based (Recommended for Most Users)
 
 ```bash
 # 1. Download and setup x86_64 image (10-15 min)
 ./scripts/setup-hurd-amd64.sh
 
 # 2. Start container
-docker-compose up -d
+docker compose up -d
 
 # 3. Wait for boot (2-5 minutes)
-docker-compose logs -f
+docker compose logs -f
 
 # 4. Connect via SSH
 ssh -p 2222 root@localhost
 # Password: root (or press Enter)
 ```
 
-**For detailed setup**: See [docs/01-GETTING-STARTED/INSTALLATION.md](docs/01-GETTING-STARTED/INSTALLATION.md)
+**Best for**: Development, testing, CI/CD, isolated environments
 
-**For fast-track guide**: See [docs/01-GETTING-STARTED/QUICKSTART.md](docs/01-GETTING-STARTED/QUICKSTART.md)
+### Path B: Standalone QEMU (Advanced Users)
+
+```bash
+# 1. Download QCOW2 image
+./scripts/setup-hurd-amd64.sh
+
+# 2. Launch VM directly (no Docker)
+./scripts/run-hurd-qemu.sh
+
+# 3. Connect via SSH
+ssh -p 2222 root@localhost
+# Password: root (or press Enter)
+
+# Custom configuration
+./scripts/run-hurd-qemu.sh --memory 8192 --cpus 4 --vnc :0
+```
+
+**Best for**: Native performance, benchmarking, direct QEMU control
+
+**Need help choosing?** See [docs/01-GETTING-STARTED/USAGE-MODES.md](docs/01-GETTING-STARTED/USAGE-MODES.md)
+
+**Detailed setup**: See [docs/01-GETTING-STARTED/INSTALLATION.md](docs/01-GETTING-STARTED/INSTALLATION.md)
+
+**Fast-track guide**: See [docs/01-GETTING-STARTED/QUICKSTART.md](docs/01-GETTING-STARTED/QUICKSTART.md)
 
 ---
 
@@ -42,8 +67,10 @@ ssh -p 2222 root@localhost
 ### Quick Links
 
 **Getting Started**:
+- [Usage Modes](docs/01-GETTING-STARTED/USAGE-MODES.md) - Choose Docker vs Standalone QEMU
 - [Installation Guide](docs/01-GETTING-STARTED/INSTALLATION.md) - Complete setup instructions
 - [Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) - Fast-track boot and verify
+- [Standalone QEMU Guide](docs/01-GETTING-STARTED/STANDALONE-QEMU.md) - Run Hurd without Docker
 
 **Daily Operations**:
 - [Interactive Access](docs/04-OPERATION/INTERACTIVE-ACCESS.md) - SSH, serial console, file transfers

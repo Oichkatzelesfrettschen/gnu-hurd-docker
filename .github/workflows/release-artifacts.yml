@@ -63,6 +63,12 @@ jobs:
 
           ## Available Scripts
 
+          ### Standalone QEMU Launcher
+          - `run-hurd-qemu.sh` - **NEW!** Standalone QEMU launcher (no Docker required)
+            - Automatic KVM detection with TCG fallback
+            - Simple configuration via CLI arguments or environment variables
+            - Usage: `./run-hurd-qemu.sh --help`
+
           ### Setup and Configuration
           - `download-image.sh` - Download Debian GNU/Hurd QCOW2 image
           - `configure-users.sh` - Configure users in the guest system
@@ -78,6 +84,7 @@ jobs:
           ### Testing
           - `test-docker.sh` - Test Docker configuration
           - `test-hurd-system.sh` - Comprehensive system testing
+          - `test-run-hurd-qemu.sh` - Test standalone QEMU launcher
           - `validate-config.sh` - Validate configuration
 
           ### Automation
@@ -86,13 +93,30 @@ jobs:
 
           ## Usage
 
-          Most scripts can be run directly:
+          ### Standalone QEMU (No Docker)
           ```bash
+          # Download QCOW2 image first
           ./scripts/download-image.sh
-          ./scripts/test-hurd-system.sh
+
+          # Launch Hurd VM directly
+          ./scripts/run-hurd-qemu.sh
+
+          # Custom configuration
+          ./scripts/run-hurd-qemu.sh --memory 8192 --cpus 4
+
+          # Connect via SSH
+          ssh -p 2222 root@localhost
           ```
 
-          For guest system scripts (run inside the GNU/Hurd VM):
+          ### Docker-based (Recommended for most users)
+          ```bash
+          ./scripts/download-image.sh
+          docker-compose up -d
+          ssh -p 2222 root@localhost
+          ```
+
+          ### Guest System Scripts
+          For scripts that run inside the GNU/Hurd VM:
           ```bash
           # Copy to guest via 9p mount
           mount -t 9p -o trans=virtio scripts /mnt

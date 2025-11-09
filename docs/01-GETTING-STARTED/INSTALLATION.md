@@ -67,6 +67,17 @@
 
 ---
 
+## Usage Modes
+
+This project supports two ways to run GNU/Hurd:
+
+1. **Docker Mode** (Recommended): QEMU runs inside a container - simpler setup, better isolation
+2. **Standalone QEMU Mode** (Advanced): QEMU runs directly on host - better performance, more control
+
+See [USAGE-MODES.md](USAGE-MODES.md) for detailed comparison and decision guide.
+
+For standalone QEMU setup, see [STANDALONE-QEMU.md](STANDALONE-QEMU.md).
+
 ## Quick Start
 
 ### Linux (Recommended)
