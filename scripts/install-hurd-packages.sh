@@ -2,25 +2,12 @@
 # GNU/Hurd Docker - Optimized Package Installation Script
 # Installs recommended packages for CLI and GUI development on Debian GNU/Hurd 2025
 
-set -e
+set -euo pipefail
 
-# Colors
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-echo_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-echo_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-echo_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
+# Source libraries
+# shellcheck source=lib/colors.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/colors.sh"
 
 echo ""
 echo "================================================================"

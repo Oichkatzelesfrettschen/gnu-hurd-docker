@@ -2,8 +2,28 @@
 # QCOW2 Snapshot Management Script
 # Create, list, restore, and delete QCOW2 snapshots
 # Version: 1.0
+# WHY: Clean up backup files on error during backup operation
+# WHAT: Track temporary backup file created during backup command
+# HOW: cleanup() removes incomplete backup file on abnormal exit
 
-set -e
+set -euo pipefail
+
+# Track cleanup state
+CLEANUP_NEEDED=false
+TEMP_BACKUP_FILE=""
+
+cleanup() {
+    local exit_code=$?
+    
+    if [ "$CLEANUP_NEEDED" = true ] && [ -n "$TEMP_BACKUP_FILE" ] && [ -f "$TEMP_BACKUP_FILE" ]; then
+        echo -e "${YELLOW}Cleaning up incomplete backup file...${NC}"
+        rm -f "$TEMP_BACKUP_FILE" && echo -e "${GREEN}✓ Removed: $TEMP_BACKUP_FILE${NC}"
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 QCOW2_IMAGE="${QCOW2_IMAGE:-debian-hurd-i386-20250807.qcow2}"
 
@@ -183,12 +203,20 @@ cmd_backup() {
     echo "Note: Actual copy size depends on disk usage"
     echo ""
 
+    # Track backup file for cleanup on error
+    TEMP_BACKUP_FILE="$dest"
+    CLEANUP_NEEDED=true
+
     # Copy with progress (if pv is available)
     if command -v pv &> /dev/null; then
         pv "$QCOW2_IMAGE" > "$dest"
     else
         cp -v "$QCOW2_IMAGE" "$dest"
     fi
+
+    # Backup successful, don't clean it up on exit
+    CLEANUP_NEEDED=false
+    TEMP_BACKUP_FILE=""
 
     echo -e "${GREEN}✓ Backup created: $dest${NC}"
     echo ""

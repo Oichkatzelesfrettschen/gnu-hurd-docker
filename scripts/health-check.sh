@@ -9,7 +9,14 @@
 # - Exit 0 if healthy, exit 1 if unhealthy
 # =============================================================================
 
-set -e
+set -euo pipefail
+
+# Source libraries
+# shellcheck source=lib/colors.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/colors.sh"
+# shellcheck source=lib/container-helpers.sh
+source "$SCRIPT_DIR/lib/container-helpers.sh"
 
 # Exit codes
 readonly EXIT_SUCCESS=0
@@ -19,30 +26,17 @@ readonly EXIT_FAILURE=1
 readonly SSH_PORT=2222
 readonly HTTP_PORT=8080
 
-# Colors for output (if terminal)
-if [ -t 1 ]; then
-    readonly RED='\033[0;31m'
-    readonly GREEN='\033[0;32m'
-    readonly BLUE='\033[0;34m'
-    readonly NC='\033[0m'  # No Color
-else
-    readonly RED=''
-    readonly GREEN=''
-    readonly BLUE=''
-    readonly NC=''
-fi
-
-# Logging functions
+# Logging functions (adapted to use library functions)
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
+    echo_error "$1" >&2
 }
 
 log_success() {
-    echo -e "${GREEN}[OK]${NC} $1"
+    echo_success "$1"
 }
 
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo_info "$1"
 }
 
 # Check if QEMU process is running (x86_64 binary specifically)

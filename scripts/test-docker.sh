@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # GNU/Hurd Docker - Testing Script
 # Tests Docker setup and container functionality
@@ -41,7 +42,7 @@ fi
 
 # Test 3: Docker Compose installed
 echo "Test 3: Docker Compose installed..."
-if command -v docker-compose &> /dev/null; then
+if docker compose version &> /dev/null; then
     pass "Docker Compose installed"
 else
     fail "Docker Compose not installed"
@@ -101,9 +102,9 @@ if [ $FAIL -eq 0 ]; then
     echo "All tests passed! Ready to deploy."
     echo ""
     echo "Next steps:"
-    echo "  docker-compose build"
-    echo "  docker-compose up -d"
-    echo "  docker-compose logs -f"
+    echo "  docker compose build"
+    echo "  docker compose up -d"
+    echo "  docker compose logs -f"
     exit 0
 else
     echo "Some tests failed. Please review errors above."

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setup Debian GNU/Hurd x86_64 (amd64) with 80GB dynamic qcow2 disk
-set -e
+set -euo pipefail
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -57,7 +57,7 @@ echo_info "Virtual size: 80GB (grows dynamically)"
 echo_info "Actual size: $(du -h debian-hurd-amd64-80gb.qcow2 | cut -f1)"
 echo ""
 echo_info "To start x86_64 Hurd VM:"
-echo "  docker-compose -f docker-compose.amd64.yml up -d"
+echo "  docker compose -f docker-compose.amd64.yml up -d"
 echo ""
 echo_info "Configuration:"
 echo "  - CPU: host passthrough (native x86_64)"

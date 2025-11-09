@@ -1,17 +1,64 @@
 #!/bin/bash
 # Orchestrate container boot, SSH enablement, sources fix, users, and dev setup
-# Requires: docker, docker-compose, telnet, expect, sshpass on host
+# Requires: docker, telnet, expect, sshpass on host
+# WHY: Ensure container and SSH sessions are cleaned on abnormal exit
+# WHAT: Track container name and SSH connections for cleanup
+# HOW: cleanup() stops container only if we started it; kills SSH sessions
 set -euo pipefail
+
+# Source libraries
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ssh-helpers.sh
+source "$SCRIPT_DIR/lib/ssh-helpers.sh"
+# shellcheck source=lib/container-helpers.sh
+source "$SCRIPT_DIR/lib/container-helpers.sh"
 
 ROOT_PASS=${ROOT_PASS:-root}
 AGENTS_PASS=${AGENTS_PASS:-agents}
 HOST=localhost
 SSH_PORT=2222
 SERIAL_PORT=${SERIAL_PORT:-5555}
+CONTAINER_NAME="gnu-hurd-dev"
+
+# Track cleanup state
+CLEANUP_NEEDED=false
+CONTAINER_STARTED_BY_SCRIPT=false
+SSH_SESSIONS=()
+
+cleanup() {
+    local exit_code=$?
+    
+    if [ "$CLEANUP_NEEDED" = true ]; then
+        echo ""
+        echo "[INFO] Cleaning up..."
+        
+        # Kill SSH background processes
+        for pid in "${SSH_SESSIONS[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+                echo "  [INFO] Terminated SSH session: PID $pid"
+            fi
+        done
+        
+        # Stop container only if this script started it
+        if [ "$CONTAINER_STARTED_BY_SCRIPT" = true ]; then
+            if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+                echo "  [INFO] Stopping container: $CONTAINER_NAME"
+                docker compose down 2>/dev/null || true
+            fi
+        fi
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 # 1) Boot container
-if ! docker ps --format '{{.Names}}' | grep -q '^gnu-hurd-dev$'; then
-  docker-compose up -d
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+  docker compose up -d
+  CONTAINER_STARTED_BY_SCRIPT=true
+  CLEANUP_NEEDED=true
 fi
 
 echo "Waiting for serial (telnet $HOST:$SERIAL_PORT) ..."

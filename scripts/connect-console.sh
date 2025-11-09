@@ -3,7 +3,7 @@
 # Automatically finds and connects to QEMU serial console
 # Version: 1.0
 
-set -e
+set -euo pipefail
 
 # Colors
 GREEN='\033[0;32m'
@@ -54,7 +54,7 @@ check_container() {
         echo -e "${RED}ERROR: Container '$CONTAINER_NAME' is not running${NC}"
         echo ""
         echo "Start container with:"
-        echo "  docker-compose up -d"
+        echo "  docker compose up -d"
         exit 1
     fi
 }
@@ -73,10 +73,10 @@ find_pty() {
         echo ""
         echo "Troubleshooting:"
         echo "  1. Check if QEMU is running:"
-        echo "     docker-compose logs | grep 'Starting QEMU'"
+        echo "     docker compose logs | grep 'Starting QEMU'"
         echo ""
         echo "  2. Verify serial output in logs:"
-        echo "     docker-compose logs | grep 'char device'"
+        echo "     docker compose logs | grep 'char device'"
         echo ""
         echo "  3. Check entrypoint.sh has '-serial pty'"
         exit 1

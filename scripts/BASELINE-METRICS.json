@@ -1,0 +1,1647 @@
+{
+  "metadata": {
+    "analysis_date": "2025-11-08",
+    "scripts_directory": "/home/eirikr/Playground/gnu-hurd-docker/scripts",
+    "total_scripts_analyzed": 27,
+    "analysis_version": "1.0"
+  },
+  "aggregate_metrics": {
+    "total_loc": 4742,
+    "code_loc": 3476,
+    "comment_loc": 525,
+    "blank_loc": 741,
+    "total_functions": 87,
+    "average_complexity": 22.74,
+    "average_loc_per_script": 175.6,
+    "overall_comment_ratio": 0.111
+  },
+  "quality_indicators": {
+    "scripts_with_set_e": 25,
+    "scripts_with_set_e_percentage": 92.6,
+    "scripts_with_trap": 1,
+    "scripts_with_trap_percentage": 3.7,
+    "scripts_with_docs": 27,
+    "scripts_with_docs_percentage": 100.0
+  },
+  "anti_pattern_summary": {
+    "oversized_scripts": 3,
+    "low_comment_ratio_scripts": 11,
+    "high_complexity_scripts": 1,
+    "deep_nesting_scripts": 21
+  },
+  "test_coverage": {
+    "test_scripts": 3,
+    "non_test_scripts": 24,
+    "coverage_percentage": 11.1,
+    "test_script_names": [
+      "test-docker-provision.sh",
+      "test-docker.sh",
+      "test-hurd-system.sh"
+    ]
+  },
+  "top_dependencies": [
+    {
+      "command": "echo",
+      "usage_count": 27,
+      "usage_percentage": 100.0
+    },
+    {
+      "command": "grep",
+      "usage_count": 17,
+      "usage_percentage": 63.0
+    },
+    {
+      "command": "apt",
+      "usage_count": 13,
+      "usage_percentage": 48.1
+    },
+    {
+      "command": "cat",
+      "usage_count": 13,
+      "usage_percentage": 48.1
+    },
+    {
+      "command": "docker",
+      "usage_count": 13,
+      "usage_percentage": 48.1
+    },
+    {
+      "command": "mkdir",
+      "usage_count": 11,
+      "usage_percentage": 40.7
+    },
+    {
+      "command": "curl",
+      "usage_count": 10,
+      "usage_percentage": 37.0
+    },
+    {
+      "command": "ssh",
+      "usage_count": 10,
+      "usage_percentage": 37.0
+    },
+    {
+      "command": "awk",
+      "usage_count": 9,
+      "usage_percentage": 33.3
+    },
+    {
+      "command": "cut",
+      "usage_count": 8,
+      "usage_percentage": 29.6
+    },
+    {
+      "command": "git",
+      "usage_count": 8,
+      "usage_percentage": 29.6
+    },
+    {
+      "command": "read",
+      "usage_count": 8,
+      "usage_percentage": 29.6
+    },
+    {
+      "command": "gcc",
+      "usage_count": 8,
+      "usage_percentage": 29.6
+    },
+    {
+      "command": "make",
+      "usage_count": 8,
+      "usage_percentage": 29.6
+    },
+    {
+      "command": "sed",
+      "usage_count": 6,
+      "usage_percentage": 22.2
+    }
+  ],
+  "complexity_rankings": {
+    "top_10_complex": [
+      {
+        "filename": "test-hurd-system.sh",
+        "complexity": 53,
+        "loc": 418,
+        "functions": 13
+      },
+      {
+        "filename": "install-essentials-hurd.sh",
+        "complexity": 44,
+        "loc": 310,
+        "functions": 4
+      },
+      {
+        "filename": "full-automated-setup.sh",
+        "complexity": 34,
+        "loc": 399,
+        "functions": 4
+      },
+      {
+        "filename": "manage-snapshots.sh",
+        "complexity": 31,
+        "loc": 260,
+        "functions": 10
+      },
+      {
+        "filename": "validate-config.sh",
+        "complexity": 31,
+        "loc": 218,
+        "functions": 3
+      },
+      {
+        "filename": "configure-shell.sh",
+        "complexity": 29,
+        "loc": 231,
+        "functions": 1
+      },
+      {
+        "filename": "analyze-script-complexity.sh",
+        "complexity": 28,
+        "loc": 141,
+        "functions": 1
+      },
+      {
+        "filename": "install-claude-code-hurd.sh",
+        "complexity": 28,
+        "loc": 191,
+        "functions": 4
+      },
+      {
+        "filename": "health-check.sh",
+        "complexity": 27,
+        "loc": 106,
+        "functions": 7
+      },
+      {
+        "filename": "install-nodejs-hurd.sh",
+        "complexity": 27,
+        "loc": 194,
+        "functions": 4
+      }
+    ],
+    "top_10_largest": [
+      {
+        "filename": "test-hurd-system.sh",
+        "loc": 418,
+        "complexity": 53
+      },
+      {
+        "filename": "full-automated-setup.sh",
+        "loc": 399,
+        "complexity": 34
+      },
+      {
+        "filename": "install-essentials-hurd.sh",
+        "loc": 310,
+        "complexity": 44
+      },
+      {
+        "filename": "download-released-image.sh",
+        "loc": 260,
+        "complexity": 26
+      },
+      {
+        "filename": "manage-snapshots.sh",
+        "loc": 260,
+        "complexity": 31
+      },
+      {
+        "filename": "configure-shell.sh",
+        "loc": 231,
+        "complexity": 29
+      },
+      {
+        "filename": "install-hurd-packages.sh",
+        "loc": 231,
+        "complexity": 26
+      },
+      {
+        "filename": "connect-console.sh",
+        "loc": 225,
+        "complexity": 25
+      },
+      {
+        "filename": "validate-config.sh",
+        "loc": 218,
+        "complexity": 31
+      },
+      {
+        "filename": "install-nodejs-hurd.sh",
+        "loc": 194,
+        "complexity": 27
+      }
+    ],
+    "top_10_maintainable": [
+      {
+        "filename": "bringup-and-provision.sh",
+        "maintainability_score": 2.922,
+        "comment_ratio": 0.205
+      },
+      {
+        "filename": "boot_hurd.sh",
+        "maintainability_score": 1.488,
+        "comment_ratio": 0.179
+      },
+      {
+        "filename": "setup-hurd-amd64.sh",
+        "maintainability_score": 1.207,
+        "comment_ratio": 0.085
+      },
+      {
+        "filename": "fix-sources-hurd.sh",
+        "maintainability_score": 1.103,
+        "comment_ratio": 0.232
+      },
+      {
+        "filename": "generate-complexity-report.sh",
+        "maintainability_score": 1.013,
+        "comment_ratio": 0.101
+      },
+      {
+        "filename": "install-ssh-hurd.sh",
+        "maintainability_score": 0.968,
+        "comment_ratio": 0.107
+      },
+      {
+        "filename": "audit-documentation.sh",
+        "maintainability_score": 0.907,
+        "comment_ratio": 0.127
+      },
+      {
+        "filename": "health-check.sh",
+        "maintainability_score": 0.769,
+        "comment_ratio": 0.208
+      },
+      {
+        "filename": "test-docker.sh",
+        "maintainability_score": 0.683,
+        "comment_ratio": 0.116
+      },
+      {
+        "filename": "fix-script.sh",
+        "maintainability_score": 0.609,
+        "comment_ratio": 0.079
+      }
+    ]
+  },
+  "refactoring_recommendations": [
+    {
+      "priority": "CRITICAL",
+      "script": "test-hurd-system.sh",
+      "issue": "Extremely high cyclomatic complexity",
+      "metric": "Complexity: 53",
+      "recommendation": "Break into smaller functions, extract logic into separate scripts"
+    },
+    {
+      "priority": "HIGH",
+      "script": "test-hurd-system.sh",
+      "issue": "Large script with high complexity",
+      "metric": "LOC: 418, Complexity: 53",
+      "recommendation": "Consider splitting into multiple modules or converting to Python"
+    },
+    {
+      "priority": "HIGH",
+      "script": "full-automated-setup.sh",
+      "issue": "Large script with high complexity",
+      "metric": "LOC: 399, Complexity: 34",
+      "recommendation": "Consider splitting into multiple modules or converting to Python"
+    },
+    {
+      "priority": "HIGH",
+      "script": "install-essentials-hurd.sh",
+      "issue": "Large script with high complexity",
+      "metric": "LOC: 310, Complexity: 44",
+      "recommendation": "Consider splitting into multiple modules or converting to Python"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "configure-shell.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.42, Comments: 12.1%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "configure-users.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.44, Comments: 9.7%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "connect-console.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.27, Comments: 6.7%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "full-automated-setup.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.42, Comments: 14.3%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "install-claude-code-hurd.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.43, Comments: 12.0%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "install-essentials-hurd.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.34, Comments: 15.2%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "install-hurd-packages.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.42, Comments: 10.8%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "install-nodejs-hurd.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.34, Comments: 9.3%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "manage-snapshots.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.22, Comments: 6.9%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "monitor-qemu.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.50, Comments: 13.0%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "test-hurd-system.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.15, Comments: 8.1%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "validate-config.sh",
+      "issue": "Low maintainability score",
+      "metric": "Maintainability: 0.18, Comments: 5.5%",
+      "recommendation": "Add more documentation, simplify logic"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "boot_hurd.sh",
+      "issue": "Missing set -e error handling",
+      "metric": "Code LOC: 53",
+      "recommendation": "Add set -e or set -eu at script start"
+    },
+    {
+      "priority": "MEDIUM",
+      "script": "test-docker.sh",
+      "issue": "Missing set -e error handling",
+      "metric": "Code LOC: 83",
+      "recommendation": "Add set -e or set -eu at script start"
+    },
+    {
+      "priority": "LOW",
+      "script": "analyze-script-complexity.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "connect-console.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "download-released-image.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 6 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "install-claude-code-hurd.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "install-nodejs-hurd.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "manage-snapshots.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "monitor-qemu.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 6 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "test-hurd-system.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 8 levels",
+      "recommendation": "Extract nested logic into functions"
+    },
+    {
+      "priority": "LOW",
+      "script": "validate-config.sh",
+      "issue": "Deep nesting detected",
+      "metric": "Max nesting: 6 levels",
+      "recommendation": "Extract nested logic into functions"
+    }
+  ],
+  "per_script_details": [
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/analyze-script-complexity.sh",
+      "filename": "analyze-script-complexity.sh",
+      "lines": {
+        "total": 141,
+        "code": 100,
+        "comments": 21,
+        "blank": 20
+      },
+      "complexity": {
+        "cyclomatic": 28,
+        "functions": 1,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "apt",
+        "awk",
+        "cat",
+        "chmod",
+        "chown",
+        "cp",
+        "curl",
+        "cut",
+        "date",
+        "docker",
+        "dpkg",
+        "echo",
+        "find",
+        "git",
+        "grep",
+        "mkdir",
+        "mv",
+        "printf",
+        "rm",
+        "scp",
+        "sed",
+        "sort",
+        "ssh",
+        "systemctl",
+        "uniq",
+        "wc",
+        "wget"
+      ],
+      "dependency_count": 27,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.149,
+        "maintainability_score": 0.532
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/audit-documentation.sh",
+      "filename": "audit-documentation.sh",
+      "lines": {
+        "total": 126,
+        "code": 90,
+        "comments": 16,
+        "blank": 20
+      },
+      "complexity": {
+        "cyclomatic": 14,
+        "functions": 0,
+        "max_nesting": 2
+      },
+      "dependencies": [
+        "awk",
+        "date",
+        "echo",
+        "find",
+        "grep",
+        "qemu-system-i386",
+        "read",
+        "sed",
+        "sort",
+        "uniq",
+        "wc"
+      ],
+      "dependency_count": 11,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.127,
+        "maintainability_score": 0.907
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/boot_hurd.sh",
+      "filename": "boot_hurd.sh",
+      "lines": {
+        "total": 84,
+        "code": 53,
+        "comments": 15,
+        "blank": 16
+      },
+      "complexity": {
+        "cyclomatic": 12,
+        "functions": 1,
+        "max_nesting": 2
+      },
+      "dependencies": [
+        "echo"
+      ],
+      "dependency_count": 1,
+      "error_handling": {
+        "set_e": false,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.179,
+        "maintainability_score": 1.488
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/bringup-and-provision.sh",
+      "filename": "bringup-and-provision.sh",
+      "lines": {
+        "total": 44,
+        "code": 27,
+        "comments": 9,
+        "blank": 8
+      },
+      "complexity": {
+        "cyclomatic": 7,
+        "functions": 0,
+        "max_nesting": 1
+      },
+      "dependencies": [
+        "apt",
+        "chmod",
+        "docker",
+        "echo",
+        "gcc",
+        "git",
+        "grep",
+        "make",
+        "mkdir",
+        "printf",
+        "sleep",
+        "ssh"
+      ],
+      "dependency_count": 12,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.205,
+        "maintainability_score": 2.922
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/configure-shell.sh",
+      "filename": "configure-shell.sh",
+      "lines": {
+        "total": 231,
+        "code": 166,
+        "comments": 28,
+        "blank": 37
+      },
+      "complexity": {
+        "cyclomatic": 29,
+        "functions": 1,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "awk",
+        "cat",
+        "chown",
+        "cp",
+        "date",
+        "dpkg",
+        "echo",
+        "gcc",
+        "git",
+        "grep",
+        "make",
+        "mv",
+        "rm",
+        "sed"
+      ],
+      "dependency_count": 14,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.121,
+        "maintainability_score": 0.418
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/configure-users.sh",
+      "filename": "configure-users.sh",
+      "lines": {
+        "total": 144,
+        "code": 111,
+        "comments": 14,
+        "blank": 19
+      },
+      "complexity": {
+        "cyclomatic": 22,
+        "functions": 0,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "chmod",
+        "chown",
+        "echo",
+        "mkdir",
+        "rm",
+        "ssh"
+      ],
+      "dependency_count": 8,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.097,
+        "maintainability_score": 0.442
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/connect-console.sh",
+      "filename": "connect-console.sh",
+      "lines": {
+        "total": 225,
+        "code": 176,
+        "comments": 15,
+        "blank": 34
+      },
+      "complexity": {
+        "cyclomatic": 25,
+        "functions": 7,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "docker",
+        "echo",
+        "find",
+        "grep",
+        "sleep"
+      ],
+      "dependency_count": 7,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.067,
+        "maintainability_score": 0.267
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/download-image.sh",
+      "filename": "download-image.sh",
+      "lines": {
+        "total": 144,
+        "code": 107,
+        "comments": 10,
+        "blank": 27
+      },
+      "complexity": {
+        "cyclomatic": 15,
+        "functions": 0,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "awk",
+        "curl",
+        "cut",
+        "docker",
+        "echo",
+        "wget"
+      ],
+      "dependency_count": 6,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.069,
+        "maintainability_score": 0.463
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/download-released-image.sh",
+      "filename": "download-released-image.sh",
+      "lines": {
+        "total": 260,
+        "code": 191,
+        "comments": 36,
+        "blank": 33
+      },
+      "complexity": {
+        "cyclomatic": 26,
+        "functions": 6,
+        "max_nesting": 6
+      },
+      "dependencies": [
+        "cat",
+        "curl",
+        "docker",
+        "echo",
+        "mkdir",
+        "mv",
+        "ssh"
+      ],
+      "dependency_count": 7,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.138,
+        "maintainability_score": 0.533
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/fix-script.sh",
+      "filename": "fix-script.sh",
+      "lines": {
+        "total": 101,
+        "code": 80,
+        "comments": 8,
+        "blank": 13
+      },
+      "complexity": {
+        "cyclomatic": 13,
+        "functions": 3,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "docker",
+        "echo",
+        "gcc",
+        "grep",
+        "make",
+        "systemctl"
+      ],
+      "dependency_count": 6,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.079,
+        "maintainability_score": 0.609
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/fix-sources-hurd.sh",
+      "filename": "fix-sources-hurd.sh",
+      "lines": {
+        "total": 82,
+        "code": 49,
+        "comments": 19,
+        "blank": 14
+      },
+      "complexity": {
+        "cyclomatic": 21,
+        "functions": 0,
+        "max_nesting": 2
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "cp",
+        "date",
+        "echo",
+        "grep",
+        "mkdir",
+        "printf",
+        "ssh"
+      ],
+      "dependency_count": 9,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.232,
+        "maintainability_score": 1.103
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/full-automated-setup.sh",
+      "filename": "full-automated-setup.sh",
+      "lines": {
+        "total": 399,
+        "code": 271,
+        "comments": 57,
+        "blank": 71
+      },
+      "complexity": {
+        "cyclomatic": 34,
+        "functions": 4,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "apt",
+        "awk",
+        "cat",
+        "chmod",
+        "chown",
+        "cp",
+        "curl",
+        "dpkg",
+        "echo",
+        "gcc",
+        "git",
+        "grep",
+        "make",
+        "mkdir",
+        "read",
+        "sleep",
+        "ssh",
+        "wget"
+      ],
+      "dependency_count": 18,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": true,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.143,
+        "maintainability_score": 0.42
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/generate-complexity-report.sh",
+      "filename": "generate-complexity-report.sh",
+      "lines": {
+        "total": 79,
+        "code": 65,
+        "comments": 8,
+        "blank": 6
+      },
+      "complexity": {
+        "cyclomatic": 10,
+        "functions": 0,
+        "max_nesting": 5
+      },
+      "dependencies": [
+        "awk",
+        "cat",
+        "echo",
+        "jq"
+      ],
+      "dependency_count": 4,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.101,
+        "maintainability_score": 1.013
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/health-check.sh",
+      "filename": "health-check.sh",
+      "lines": {
+        "total": 106,
+        "code": 67,
+        "comments": 22,
+        "blank": 17
+      },
+      "complexity": {
+        "cyclomatic": 27,
+        "functions": 7,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "echo",
+        "qemu-system-x86_64"
+      ],
+      "dependency_count": 2,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.208,
+        "maintainability_score": 0.769
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-claude-code-hurd.sh",
+      "filename": "install-claude-code-hurd.sh",
+      "lines": {
+        "total": 191,
+        "code": 140,
+        "comments": 23,
+        "blank": 28
+      },
+      "complexity": {
+        "cyclomatic": 28,
+        "functions": 4,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "chmod",
+        "curl",
+        "cut",
+        "echo",
+        "grep",
+        "mkdir",
+        "node",
+        "npm",
+        "python",
+        "read",
+        "sed"
+      ],
+      "dependency_count": 11,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.12,
+        "maintainability_score": 0.43
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-essentials-hurd.sh",
+      "filename": "install-essentials-hurd.sh",
+      "lines": {
+        "total": 310,
+        "code": 211,
+        "comments": 47,
+        "blank": 52
+      },
+      "complexity": {
+        "cyclomatic": 44,
+        "functions": 4,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "curl",
+        "echo",
+        "gcc",
+        "git",
+        "grep",
+        "make",
+        "pip",
+        "python3",
+        "sed",
+        "ssh",
+        "systemctl",
+        "wget"
+      ],
+      "dependency_count": 14,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": true,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.152,
+        "maintainability_score": 0.345
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-hurd-packages.sh",
+      "filename": "install-hurd-packages.sh",
+      "lines": {
+        "total": 231,
+        "code": 171,
+        "comments": 25,
+        "blank": 35
+      },
+      "complexity": {
+        "cyclomatic": 26,
+        "functions": 3,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "curl",
+        "docker",
+        "dpkg",
+        "echo",
+        "gcc",
+        "git",
+        "make",
+        "mkdir",
+        "pip",
+        "python3",
+        "read",
+        "rsync",
+        "wget"
+      ],
+      "dependency_count": 15,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.108,
+        "maintainability_score": 0.416
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-nodejs-hurd.sh",
+      "filename": "install-nodejs-hurd.sh",
+      "lines": {
+        "total": 194,
+        "code": 142,
+        "comments": 18,
+        "blank": 34
+      },
+      "complexity": {
+        "cyclomatic": 27,
+        "functions": 4,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "apt",
+        "curl",
+        "echo",
+        "git",
+        "grep",
+        "make",
+        "mkdir",
+        "node",
+        "npm",
+        "python3",
+        "read"
+      ],
+      "dependency_count": 11,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.093,
+        "maintainability_score": 0.344
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-ssh-hurd.sh",
+      "filename": "install-ssh-hurd.sh",
+      "lines": {
+        "total": 169,
+        "code": 127,
+        "comments": 18,
+        "blank": 24
+      },
+      "complexity": {
+        "cyclomatic": 11,
+        "functions": 0,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "apt",
+        "echo",
+        "grep",
+        "read",
+        "sed",
+        "sleep",
+        "ssh"
+      ],
+      "dependency_count": 7,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.107,
+        "maintainability_score": 0.968
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/manage-snapshots.sh",
+      "filename": "manage-snapshots.sh",
+      "lines": {
+        "total": 260,
+        "code": 200,
+        "comments": 18,
+        "blank": 42
+      },
+      "complexity": {
+        "cyclomatic": 31,
+        "functions": 10,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "cp",
+        "cut",
+        "echo",
+        "grep",
+        "read"
+      ],
+      "dependency_count": 7,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.069,
+        "maintainability_score": 0.223
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/monitor-qemu.sh",
+      "filename": "monitor-qemu.sh",
+      "lines": {
+        "total": 162,
+        "code": 115,
+        "comments": 21,
+        "blank": 26
+      },
+      "complexity": {
+        "cyclomatic": 26,
+        "functions": 9,
+        "max_nesting": 6
+      },
+      "dependencies": [
+        "awk",
+        "cat",
+        "docker",
+        "echo",
+        "grep",
+        "printf",
+        "qemu-system-x86_64",
+        "sleep"
+      ],
+      "dependency_count": 8,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": true,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.13,
+        "maintainability_score": 0.499
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/setup-hurd-amd64.sh",
+      "filename": "setup-hurd-amd64.sh",
+      "lines": {
+        "total": 71,
+        "code": 54,
+        "comments": 6,
+        "blank": 11
+      },
+      "complexity": {
+        "cyclomatic": 7,
+        "functions": 2,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "curl",
+        "cut",
+        "docker",
+        "echo",
+        "mv"
+      ],
+      "dependency_count": 5,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.085,
+        "maintainability_score": 1.207
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/setup-hurd-dev.sh",
+      "filename": "setup-hurd-dev.sh",
+      "lines": {
+        "total": 144,
+        "code": 125,
+        "comments": 5,
+        "blank": 14
+      },
+      "complexity": {
+        "cyclomatic": 14,
+        "functions": 0,
+        "max_nesting": 2
+      },
+      "dependencies": [
+        "apt",
+        "awk",
+        "curl",
+        "echo",
+        "gcc",
+        "git",
+        "make",
+        "read",
+        "rsync",
+        "wget"
+      ],
+      "dependency_count": 10,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.035,
+        "maintainability_score": 0.248
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-docker-provision.sh",
+      "filename": "test-docker-provision.sh",
+      "lines": {
+        "total": 96,
+        "code": 73,
+        "comments": 7,
+        "blank": 16
+      },
+      "complexity": {
+        "cyclomatic": 16,
+        "functions": 3,
+        "max_nesting": 4
+      },
+      "dependencies": [
+        "docker",
+        "echo",
+        "mkdir",
+        "ssh"
+      ],
+      "dependency_count": 4,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.073,
+        "maintainability_score": 0.456
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-docker.sh",
+      "filename": "test-docker.sh",
+      "lines": {
+        "total": 112,
+        "code": 83,
+        "comments": 13,
+        "blank": 16
+      },
+      "complexity": {
+        "cyclomatic": 17,
+        "functions": 2,
+        "max_nesting": 2
+      },
+      "dependencies": [
+        "awk",
+        "cut",
+        "docker",
+        "echo",
+        "grep"
+      ],
+      "dependency_count": 5,
+      "error_handling": {
+        "set_e": false,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": false,
+        "high_complexity": false,
+        "deep_nesting": false
+      },
+      "metrics": {
+        "comment_ratio": 0.116,
+        "maintainability_score": 0.683
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-hurd-system.sh",
+      "filename": "test-hurd-system.sh",
+      "lines": {
+        "total": 418,
+        "code": 316,
+        "comments": 34,
+        "blank": 68
+      },
+      "complexity": {
+        "cyclomatic": 53,
+        "functions": 13,
+        "max_nesting": 8
+      },
+      "dependencies": [
+        "apt",
+        "cat",
+        "cut",
+        "date",
+        "docker",
+        "echo",
+        "gcc",
+        "grep",
+        "mkdir",
+        "printf",
+        "rm",
+        "sleep",
+        "ssh"
+      ],
+      "dependency_count": 13,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": true,
+        "low_comment_ratio": true,
+        "high_complexity": true,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.081,
+        "maintainability_score": 0.153
+      }
+    },
+    {
+      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/validate-config.sh",
+      "filename": "validate-config.sh",
+      "lines": {
+        "total": 218,
+        "code": 166,
+        "comments": 12,
+        "blank": 40
+      },
+      "complexity": {
+        "cyclomatic": 31,
+        "functions": 3,
+        "max_nesting": 6
+      },
+      "dependencies": [
+        "cut",
+        "docker",
+        "echo",
+        "grep",
+        "python3",
+        "qemu-system-x86",
+        "qemu-system-x86_64"
+      ],
+      "dependency_count": 7,
+      "error_handling": {
+        "set_e": true,
+        "trap_exit": false,
+        "error_checks": 0
+      },
+      "has_documentation_header": true,
+      "anti_patterns": {
+        "oversized_script": false,
+        "low_comment_ratio": true,
+        "high_complexity": false,
+        "deep_nesting": true
+      },
+      "metrics": {
+        "comment_ratio": 0.055,
+        "maintainability_score": 0.178
+      }
+    }
+  ]
+}

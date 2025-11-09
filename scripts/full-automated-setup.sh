@@ -9,37 +9,51 @@
 #
 # Version: 1.0
 # Date: 2025-11-05
+# WHY: Add trap handlers for cleanup on exit/error
+# WHAT: Track SSH sessions; clean up on abnormal exit
+# HOW: cleanup() called on EXIT/INT/TERM; removes known SSH sessions
 
-set -e
+set -euo pipefail
+
+# Determine script directory first
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source libraries
+# shellcheck source=lib/colors.sh
+source "$SCRIPT_DIR/lib/colors.sh"
+# shellcheck source=lib/ssh-helpers.sh
+source "$SCRIPT_DIR/lib/ssh-helpers.sh"
+
+# Track cleanup state
+CLEANUP_NEEDED=false
+SSH_SESSIONS=()
+
+cleanup() {
+    local exit_code=$?
+    
+    if [ "$CLEANUP_NEEDED" = true ]; then
+        echo ""
+        echo_info "Cleaning up SSH sessions..."
+        
+        # Kill any SSH processes we may have spawned
+        for pid in "${SSH_SESSIONS[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+                echo_info "  Terminated SSH session: PID $pid"
+            fi
+        done
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 # Configuration
 SSH_PORT=2222
 SSH_HOST="localhost"
 MAX_WAIT=600  # 10 minutes max wait for boot
 CHECK_INTERVAL=5  # Check every 5 seconds
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-echo_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-echo_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-echo_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-echo_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
 
 echo ""
 echo "======================================================================"
@@ -185,7 +199,7 @@ echo ""
 # Create non-interactive version of setup script
 sshpass -p 'root' ssh -o StrictHostKeyChecking=no -p $SSH_PORT root@$SSH_HOST << 'EOSSH'
 #!/bin/bash
-set -e
+set -euo pipefail
 
 echo "======================================================================"
 echo "  Installing GNU/Hurd Development Tools (Automated)"

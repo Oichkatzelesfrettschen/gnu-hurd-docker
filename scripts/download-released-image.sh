@@ -4,9 +4,37 @@
 # =============================================================================
 # Downloads the latest or a specific version of the Debian GNU/Hurd x86_64
 # QEMU image from GitHub Releases, verifies checksums, and extracts if needed.
+# WHY: Clean up incomplete downloads on error or interrupt
+# WHAT: Track temp files (compressed image, checksum file) for cleanup
+# HOW: cleanup() removes incomplete files on abnormal exit
 # =============================================================================
 
 set -euo pipefail
+
+# Track cleanup state
+CLEANUP_NEEDED=false
+TEMP_FILES=()
+
+cleanup() {
+    local exit_code=$?
+    
+    if [ "$CLEANUP_NEEDED" = true ]; then
+        echo ""
+        log_info "Cleaning up incomplete downloads..."
+        
+        # Remove incomplete temp files
+        for file in "${TEMP_FILES[@]}"; do
+            if [ -f "$file" ]; then
+                log_info "Removing: $file"
+                rm -f "$file"
+            fi
+        done
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -170,6 +198,9 @@ main() {
 
     # Download image
     log_info "Downloading ${filename}..."
+    TEMP_FILES+=("${filename}")
+    CLEANUP_NEEDED=true
+    
     if ! curl -L -f -o "${filename}" "${download_url}/${filename}"; then
         log_error "Failed to download ${filename}"
         log_error "URL: ${download_url}/${filename}"
@@ -180,9 +211,13 @@ main() {
     # Download checksum
     if [ "${VERIFY_CHECKSUM}" = "true" ]; then
         log_info "Downloading checksum file..."
+        TEMP_FILES+=("${checksum_file}")
+        
         if ! curl -L -f -o "${checksum_file}" "${download_url}/${checksum_file}"; then
             log_warn "Failed to download checksum file, skipping verification"
             VERIFY_CHECKSUM=false
+            # Remove from cleanup list if we failed to download
+            TEMP_FILES=("${filename}")
         else
             log_success "Downloaded: ${checksum_file}"
         fi
@@ -212,23 +247,31 @@ main() {
 
         local extracted_file="${filename%.xz}"
         log_success "Extracted: ${extracted_file}"
+        
+        # Track extracted file for cleanup on error
+        TEMP_FILES+=("${extracted_file}")
 
         # Rename to standard filename
         if [ "${VERSION}" = "latest" ]; then
             mv "${extracted_file}" "debian-hurd-amd64.qcow2"
             log_info "Renamed to: debian-hurd-amd64.qcow2"
+            # Remove extracted file from cleanup list (now renamed)
+            TEMP_FILES=("${filename}" "${checksum_file}")
         else
             mv "${extracted_file}" "debian-hurd-amd64.qcow2"
             log_info "Renamed to: debian-hurd-amd64.qcow2"
+            TEMP_FILES=("${filename}" "${checksum_file}")
         fi
     else
         # Rename to standard filename
         if [ "${VERSION}" = "latest" ]; then
             mv "${filename}" "debian-hurd-amd64.qcow2"
             log_info "Renamed to: debian-hurd-amd64.qcow2"
+            TEMP_FILES=("${checksum_file}")
         else
             mv "${filename}" "debian-hurd-amd64.qcow2"
             log_info "Renamed to: debian-hurd-amd64.qcow2"
+            TEMP_FILES=("${checksum_file}")
         fi
     fi
 

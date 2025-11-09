@@ -4,7 +4,7 @@
 # Version: 1.0
 # Date: 2025-11-05
 
-set -e
+set -euo pipefail
 
 echo "======================================================================"
 echo "  GNU/Hurd Docker - Development Environment Setup"

@@ -3,7 +3,11 @@
 # Monitors QEMU performance metrics in real-time
 # Version: 1.0
 
-set -e
+set -euo pipefail
+n# Source libraries
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/container-helpers.sh
+source "$SCRIPT_DIR/lib/container-helpers.sh"
 
 QEMU_PID_FILE="qemu.pid"
 REFRESH_INTERVAL=2
@@ -130,7 +134,7 @@ main() {
         echo -e "${RED}ERROR: QEMU process not found or not running${NC}"
         echo ""
         echo "Start QEMU with:"
-        echo "  docker-compose up -d"
+        echo "  docker compose up -d"
         echo ""
         echo "Or run QEMU directly:"
         echo "  ./entrypoint.sh &"

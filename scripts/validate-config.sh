@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # GNU/Hurd Docker - Configuration Validation Script
 # Validates Dockerfile, entrypoint.sh, and docker-compose.yml

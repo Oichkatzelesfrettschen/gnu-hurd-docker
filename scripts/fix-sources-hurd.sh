@@ -3,6 +3,10 @@
 # Requires: sshpass on host; SSH running in guest (root access)
 # Usage: ROOT_PASS=root scripts/fix-sources-hurd.sh [-h host] [-p port]
 set -euo pipefail
+n# Source libraries
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ssh-helpers.sh
+source "$SCRIPT_DIR/lib/ssh-helpers.sh"
 
 HOST=localhost
 PORT=2222
@@ -21,6 +25,10 @@ ssh_cmd=(sshpass -p "$ROOT_PASS" ssh -o StrictHostKeyChecking=no -p "$PORT" root
 # Write sources.list for debian-ports (unstable + unreleased) and install keyring
 "${ssh_cmd[@]}" bash -s <<'EOSSH'
 set -euo pipefail
+n# Source libraries
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ssh-helpers.sh
+source "$SCRIPT_DIR/lib/ssh-helpers.sh"
 backup=/etc/apt/sources.list.$(date +%Y%m%d%H%M%S).bak
 [ -f /etc/apt/sources.list ] && cp -f /etc/apt/sources.list "$backup" || true
 cat > /etc/apt/sources.list <<'EOF'

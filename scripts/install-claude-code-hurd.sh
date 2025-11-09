@@ -3,7 +3,7 @@
 # Attempts installation via native installer or npm fallback
 # Version: 1.0
 
-set -e
+set -euo pipefail
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'

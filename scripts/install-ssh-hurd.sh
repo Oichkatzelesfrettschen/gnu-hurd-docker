@@ -2,7 +2,7 @@
 # Automated SSH Installation for GNU/Hurd via Serial Console
 # Connects to running QEMU instance and installs OpenSSH server
 
-set -e
+set -euo pipefail
 
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 SERIAL_HOST="${SERIAL_HOST:-localhost}"

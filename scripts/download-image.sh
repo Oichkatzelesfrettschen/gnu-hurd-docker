@@ -1,8 +1,11 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # GNU/Hurd Docker - Image Download Script
 # Downloads and converts Debian GNU/Hurd system image
+# WHY: Clean up incomplete downloads on error or interrupt
+# WHAT: Track temp files created during download/extract/convert
+# HOW: cleanup() removes temp files only if download incomplete
 
 echo "=========================================="
 echo "GNU/Hurd System Image Downloader"
@@ -14,6 +17,31 @@ DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hur
 COMPRESSED_FILE="debian-hurd.img.tar.xz"
 RAW_IMAGE="debian-hurd-i386-20250807.img"
 QCOW2_IMAGE="debian-hurd-i386-20250807.qcow2"
+
+# Track cleanup state
+CLEANUP_NEEDED=false
+TEMP_FILES=()
+
+cleanup() {
+    local exit_code=$?
+    
+    if [ "$CLEANUP_NEEDED" = true ]; then
+        echo ""
+        echo "[INFO] Cleaning up incomplete downloads..."
+        
+        # Remove incomplete temp files
+        for file in "${TEMP_FILES[@]}"; do
+            if [ -f "$file" ]; then
+                echo "  [INFO] Removing: $file"
+                rm -f "$file"
+            fi
+        done
+    fi
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 echo "Configuration:"
 echo "  Source URL: $DEBIAN_URL"
@@ -65,6 +93,9 @@ echo ""
 if [ -f "$COMPRESSED_FILE" ]; then
     echo "[SKIP] $COMPRESSED_FILE already exists"
 else
+    TEMP_FILES+=("$COMPRESSED_FILE")
+    CLEANUP_NEEDED=true
+    
     if command -v wget &> /dev/null; then
         wget -O "$COMPRESSED_FILE" "$DEBIAN_URL"
     else
@@ -88,6 +119,9 @@ echo ""
 if [ -f "$RAW_IMAGE" ]; then
     echo "[SKIP] $RAW_IMAGE already exists"
 else
+    TEMP_FILES+=("$RAW_IMAGE")
+    CLEANUP_NEEDED=true
+    
     tar xf "$COMPRESSED_FILE"
     
     if [ ! -f "$RAW_IMAGE" ]; then
@@ -138,6 +172,6 @@ echo "  $QCOW2_IMAGE"
 echo ""
 echo "Next steps:"
 echo "  1. Validate configuration: ./scripts/validate-config.sh"
-echo "  2. Build Docker image:    docker-compose build"
-echo "  3. Deploy container:      docker-compose up -d"
+echo "  2. Build Docker image:    docker compose build"
+echo "  3. Deploy container:      docker compose up -d"
 echo ""

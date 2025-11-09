@@ -25,8 +25,8 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo_warning "docker-compose not found. Install docker-compose first."
+if ! docker compose version &> /dev/null; then
+    echo_warning "docker compose not found (install Docker Compose v2). Install docker first."
     exit 1
 fi
 
@@ -69,7 +69,7 @@ echo_info "Starting provisioning (this will take 10-15 minutes with KVM)..."
 echo_info "Press Ctrl+C to cancel if needed"
 echo ""
 
-docker-compose -f docker-compose.provision.yml up
+docker compose -f docker-compose.provision.yml up
 
 # Check result
 echo ""
@@ -80,7 +80,7 @@ if [ -f "images/debian-hurd-i386-80gb-provisioned.qcow2" ]; then
     qemu-img info images/debian-hurd-i386-80gb-provisioned.qcow2
     echo ""
     echo_info "To test the provisioned image:"
-    echo "  QEMU_DRIVE=images/debian-hurd-i386-80gb-provisioned.qcow2 docker-compose up -d"
+    echo "  QEMU_DRIVE=images/debian-hurd-i386-80gb-provisioned.qcow2 docker compose up -d"
     echo "  ssh -p 2222 root@localhost"
     echo "  # Password: root"
 else
