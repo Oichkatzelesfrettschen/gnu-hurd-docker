@@ -57,7 +57,7 @@ Serial console login works the same as SSH - use root with the appropriate passw
 
 ## Creating Standard User Accounts
 
-See [USER-SETUP.md](USER-SETUP.md) for detailed instructions on:
+See [USER-SETUP.md](user/SETUP.md) for detailed instructions on:
 
 - Creating new user accounts
 - Configuring sudo privileges

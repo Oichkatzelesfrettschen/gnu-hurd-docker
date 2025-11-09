@@ -1,0 +1,1597 @@
+{
+  "summary": {
+    "total_links": 606,
+    "broken_links": 225,
+    "fixed_links": 9,
+    "manual_review": 8
+  },
+  "fixes_applied": [
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 99,
+      "text": "docs/DEPLOYMENT.md",
+      "old_url": "docs/DEPLOYMENT.md",
+      "new_url": "04-OPERATION/deployment/DEPLOYMENT.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 102,
+      "text": "docs/INDEX.md",
+      "old_url": "docs/INDEX.md",
+      "new_url": "07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 108,
+      "text": "docs/CREDENTIALS.md",
+      "old_url": "docs/CREDENTIALS.md",
+      "new_url": "03-CONFIGURATION/CREDENTIALS.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 111,
+      "text": "README.md",
+      "old_url": "README.md",
+      "new_url": "03-CONFIGURATION/README.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 135,
+      "text": "EXECUTION-SUMMARY.md",
+      "old_url": "EXECUTION-SUMMARY.md",
+      "new_url": "07-RESEARCH-AND-LESSONS/sessions/EXECUTION-SUMMARY.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 141,
+      "text": "CREDENTIALS.md",
+      "old_url": "docs/CREDENTIALS.md",
+      "new_url": "03-CONFIGURATION/CREDENTIALS.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 476,
+      "text": "CREDENTIALS.md",
+      "old_url": "CREDENTIALS.md",
+      "new_url": "03-CONFIGURATION/CREDENTIALS.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 502,
+      "text": "Wrong",
+      "old_url": "/docs/01-getting-started/INSTALLATION.md",
+      "new_url": "01-GETTING-STARTED/INSTALLATION.md"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 528,
+      "text": "Installation",
+      "old_url": "./INSTALLATION.md",
+      "new_url": "01-GETTING-STARTED/INSTALLATION.md"
+    }
+  ],
+  "manual_review": [
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 105,
+      "text": "docs/DEPLOYMENT.md",
+      "url": "docs/DEPLOYMENT.md",
+      "suggested": "04-OPERATION/deployment/DEPLOYMENT.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 114,
+      "text": "docs/DEPLOYMENT.md",
+      "url": "docs/DEPLOYMENT.md",
+      "suggested": "04-OPERATION/deployment/DEPLOYMENT.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 117,
+      "text": "docs/CREDENTIALS.md",
+      "url": "docs/CREDENTIALS.md",
+      "suggested": "03-CONFIGURATION/CREDENTIALS.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 120,
+      "text": "README.md",
+      "url": "README.md",
+      "suggested": "03-CONFIGURATION/README.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 123,
+      "text": "docs/DEPLOYMENT.md",
+      "url": "docs/DEPLOYMENT.md",
+      "suggested": "04-OPERATION/deployment/DEPLOYMENT.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 126,
+      "text": "docs/CREDENTIALS.md",
+      "url": "docs/CREDENTIALS.md",
+      "suggested": "03-CONFIGURATION/CREDENTIALS.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 129,
+      "text": "docs/DEPLOYMENT.md",
+      "url": "docs/DEPLOYMENT.md",
+      "suggested": "04-OPERATION/deployment/DEPLOYMENT.md",
+      "reason": "pattern_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 132,
+      "text": "docs/INDEX.md",
+      "url": "docs/INDEX.md",
+      "suggested": "07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md",
+      "reason": "pattern_not_found"
+    }
+  ],
+  "broken_links": [
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 17,
+      "text": "Troubleshooting",
+      "url": "../02-user-guide/TROUBLESHOOTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 18,
+      "text": "Same Directory",
+      "url": "./ANOTHER-DOC.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 31,
+      "text": "SSH Setup",
+      "url": "../02-user-guide/SSH-ACCESS.md#setup",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 32,
+      "text": "Problem 1",
+      "url": "./TROUBLESHOOTING.md#problem-1-description",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 51,
+      "text": "Getting Started",
+      "url": "../01-getting-started/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 59,
+      "text": "Related Doc 1",
+      "url": "../path/to/doc1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 60,
+      "text": "Related Doc 2",
+      "url": "../path/to/doc2.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 70,
+      "text": "Basic Concepts",
+      "url": "../00-overview/ARCHITECTURE.md#concepts",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 166,
+      "text": "Documentation",
+      "url": "docs/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 167,
+      "text": "Architecture",
+      "url": "docs/00-overview/ARCHITECTURE.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 174,
+      "text": "User Guide",
+      "url": "../02-user-guide/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 175,
+      "text": "SSH Access",
+      "url": "../02-user-guide/SSH-ACCESS.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 190,
+      "text": "Deprecated Guide",
+      "url": "../archive/2025-11-migration/OLD-GUIDE.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 191,
+      "text": "New Guide",
+      "url": "../current/NEW-GUIDE.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 200,
+      "text": "Guide",
+      "url": "../guide.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 201,
+      "text": "Setup",
+      "url": "../guide.md#setup",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 202,
+      "text": "Guides",
+      "url": "../02-guides/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 203,
+      "text": "Script",
+      "url": "../../scripts/setup.sh",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 213,
+      "text": "entrypoint.sh",
+      "url": "../../entrypoint.sh#L42",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 214,
+      "text": "docker-compose.yml",
+      "url": "../../docker-compose.yml",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 220,
+      "text": ".github/workflows/build.yml",
+      "url": "../../.github/workflows/build.yml",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 226,
+      "text": "Architecture Diagram",
+      "url": "../assets/diagrams/architecture.png",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
+      "line": 227,
+      "text": "Download Template",
+      "url": "../assets/templates/template.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 25,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 31,
+      "text": "REPO-SUMMARY.txt",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 219,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 233,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 235,
+      "text": "MACH_QEMU_RESEARCH_REPORT.md",
+      "url": "MACH_QEMU_RESEARCH_REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 236,
+      "text": "SESSION-COMPLETION-REPORT.md",
+      "url": "SESSION-COMPLETION-REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 239,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 241,
+      "text": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "url": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 256,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 262,
+      "text": "scripts/download-image.sh",
+      "url": "scripts/download-image.sh",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 272,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 275,
+      "text": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "url": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 331,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 393,
+      "text": "Repository Summary",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 403,
+      "text": "Kernel Fix",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 415,
+      "text": "Research Report",
+      "url": "MACH_QEMU_RESEARCH_REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "08-REFERENCE/maps/REPOSITORY-INDEX.md",
+      "line": 446,
+      "text": "REPO-SUMMARY.txt",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 18,
+      "text": "First Steps",
+      "url": "01-GETTING-STARTED/first-steps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 49,
+      "text": "first-steps.md",
+      "url": "01-GETTING-STARTED/first-steps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 50,
+      "text": "docker-compose-basics.md",
+      "url": "01-GETTING-STARTED/docker-compose-basics.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 59,
+      "text": "filesystem-layout.md",
+      "url": "02-ARCHITECTURE/filesystem-layout.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 60,
+      "text": "network-architecture.md",
+      "url": "02-ARCHITECTURE/network-architecture.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 69,
+      "text": "environment-variables.md",
+      "url": "03-CONFIGURATION/environment-variables.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 70,
+      "text": "mcp-servers.md",
+      "url": "03-CONFIGURATION/mcp-servers.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 78,
+      "text": "testing.md",
+      "url": "04-OPERATION/testing.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 80,
+      "text": "backup-restore.md",
+      "url": "04-OPERATION/backup-restore.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 81,
+      "text": "performance-tuning.md",
+      "url": "04-OPERATION/performance-tuning.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 89,
+      "text": "image-building.md",
+      "url": "05-CI-CD/image-building.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 90,
+      "text": "release-process.md",
+      "url": "05-CI-CD/release-process.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 91,
+      "text": "testing-automation.md",
+      "url": "05-CI-CD/testing-automation.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 98,
+      "text": "kernel-fixes.md",
+      "url": "06-TROUBLESHOOTING/kernel-fixes.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 101,
+      "text": "network-debugging.md",
+      "url": "06-TROUBLESHOOTING/network-debugging.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 102,
+      "text": "performance-issues.md",
+      "url": "06-TROUBLESHOOTING/performance-issues.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 109,
+      "text": "testing-reports.md",
+      "url": "07-RESEARCH-AND-LESSONS/testing-reports.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 110,
+      "text": "implementation-notes.md",
+      "url": "07-RESEARCH-AND-LESSONS/implementation-notes.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 111,
+      "text": "mach-variants-research.md",
+      "url": "07-RESEARCH-AND-LESSONS/mach-variants-research.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 112,
+      "text": "performance-analysis.md",
+      "url": "07-RESEARCH-AND-LESSONS/performance-analysis.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 113,
+      "text": "security-considerations.md",
+      "url": "07-RESEARCH-AND-LESSONS/security-considerations.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 121,
+      "text": "maps.md",
+      "url": "08-REFERENCE/maps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 122,
+      "text": "guidelines.md",
+      "url": "08-REFERENCE/guidelines.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 124,
+      "text": "api-reference.md",
+      "url": "08-REFERENCE/api-reference.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 125,
+      "text": "glossary.md",
+      "url": "08-REFERENCE/glossary.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 137,
+      "text": "image-building.md",
+      "url": "05-CI-CD/image-building.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 146,
+      "text": "performance-tuning.md",
+      "url": "04-OPERATION/performance-tuning.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 147,
+      "text": "security-considerations.md",
+      "url": "07-RESEARCH-AND-LESSONS/security-considerations.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 149,
+      "text": "mcp-servers.md",
+      "url": "03-CONFIGURATION/mcp-servers.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "INDEX.md",
+      "line": 150,
+      "text": "mach-variants-research.md",
+      "url": "07-RESEARCH-AND-LESSONS/mach-variants-research.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 160,
+      "text": "Troubleshooting",
+      "url": "../02-user-guide/TROUBLESHOOTING.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 162,
+      "text": "Same Directory",
+      "url": "./ANOTHER-DOC.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 164,
+      "text": "SSH Setup",
+      "url": "../02-user-guide/SSH-ACCESS.md#setup",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 166,
+      "text": "Problem 1",
+      "url": "./TROUBLESHOOTING.md#problem-1-description",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 168,
+      "text": "Getting Started",
+      "url": "../01-getting-started/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 170,
+      "text": "Related Doc 1",
+      "url": "../path/to/doc1.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 172,
+      "text": "Related Doc 2",
+      "url": "../path/to/doc2.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 174,
+      "text": "Basic Concepts",
+      "url": "../00-overview/ARCHITECTURE.md#concepts",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 176,
+      "text": "Documentation",
+      "url": "docs/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 178,
+      "text": "Architecture",
+      "url": "docs/00-overview/ARCHITECTURE.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 180,
+      "text": "User Guide",
+      "url": "../02-user-guide/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 182,
+      "text": "SSH Access",
+      "url": "../02-user-guide/SSH-ACCESS.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 184,
+      "text": "Deprecated Guide",
+      "url": "../archive/2025-11-migration/OLD-GUIDE.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 186,
+      "text": "New Guide",
+      "url": "../current/NEW-GUIDE.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 188,
+      "text": "Guide",
+      "url": "../guide.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 190,
+      "text": "Setup",
+      "url": "../guide.md#setup",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 192,
+      "text": "Guides",
+      "url": "../02-guides/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 194,
+      "text": "Script",
+      "url": "../../scripts/setup.sh",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 196,
+      "text": "entrypoint.sh",
+      "url": "../../entrypoint.sh#L42",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 200,
+      "text": ".github/workflows/build.yml",
+      "url": "../../.github/workflows/build.yml",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 202,
+      "text": "Architecture Diagram",
+      "url": "../assets/diagrams/architecture.png",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 204,
+      "text": "Download Template",
+      "url": "../assets/templates/template.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 211,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 213,
+      "text": "REPO-SUMMARY.txt",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 223,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 233,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 237,
+      "text": "MACH_QEMU_RESEARCH_REPORT.md",
+      "url": "MACH_QEMU_RESEARCH_REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 239,
+      "text": "SESSION-COMPLETION-REPORT.md",
+      "url": "SESSION-COMPLETION-REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 241,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 245,
+      "text": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "url": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 249,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 257,
+      "text": "scripts/download-image.sh",
+      "url": "scripts/download-image.sh",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 263,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 267,
+      "text": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "url": "VALIDATION-AND-TROUBLESHOOTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 269,
+      "text": "QUICK-START-KERNEL-FIX.txt",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 271,
+      "text": "Repository Summary",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 273,
+      "text": "Kernel Fix",
+      "url": "QUICK-START-KERNEL-FIX.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 285,
+      "text": "Research Report",
+      "url": "MACH_QEMU_RESEARCH_REPORT.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 287,
+      "text": "REPO-SUMMARY.txt",
+      "url": "REPO-SUMMARY.txt",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 292,
+      "text": "Requirements",
+      "url": "01-GETTING-STARTED/requirements.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 294,
+      "text": "Installation",
+      "url": "01-GETTING-STARTED/installation.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 296,
+      "text": "Quick Start",
+      "url": "01-GETTING-STARTED/quickstart.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 298,
+      "text": "First Steps",
+      "url": "01-GETTING-STARTED/first-steps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 300,
+      "text": "installation.md",
+      "url": "01-GETTING-STARTED/installation.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 302,
+      "text": "quickstart.md",
+      "url": "01-GETTING-STARTED/quickstart.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 304,
+      "text": "requirements.md",
+      "url": "01-GETTING-STARTED/requirements.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 306,
+      "text": "first-steps.md",
+      "url": "01-GETTING-STARTED/first-steps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 308,
+      "text": "docker-compose-basics.md",
+      "url": "01-GETTING-STARTED/docker-compose-basics.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 310,
+      "text": "system-overview.md",
+      "url": "02-ARCHITECTURE/system-overview.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 312,
+      "text": "qemu-configuration.md",
+      "url": "02-ARCHITECTURE/qemu-configuration.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 314,
+      "text": "control-plane.md",
+      "url": "02-ARCHITECTURE/control-plane.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 316,
+      "text": "filesystem-layout.md",
+      "url": "02-ARCHITECTURE/filesystem-layout.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 318,
+      "text": "network-architecture.md",
+      "url": "02-ARCHITECTURE/network-architecture.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 320,
+      "text": "user-setup.md",
+      "url": "03-CONFIGURATION/user-setup.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 322,
+      "text": "port-forwarding.md",
+      "url": "03-CONFIGURATION/port-forwarding.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 324,
+      "text": "custom-features.md",
+      "url": "03-CONFIGURATION/custom-features.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 326,
+      "text": "environment-variables.md",
+      "url": "03-CONFIGURATION/environment-variables.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 328,
+      "text": "mcp-servers.md",
+      "url": "03-CONFIGURATION/mcp-servers.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 330,
+      "text": "deployment.md",
+      "url": "04-OPERATION/deployment.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 332,
+      "text": "monitoring.md",
+      "url": "04-OPERATION/monitoring.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 334,
+      "text": "testing.md",
+      "url": "04-OPERATION/testing.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 336,
+      "text": "interactive-access.md",
+      "url": "04-OPERATION/interactive-access.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 338,
+      "text": "backup-restore.md",
+      "url": "04-OPERATION/backup-restore.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 340,
+      "text": "performance-tuning.md",
+      "url": "04-OPERATION/performance-tuning.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 342,
+      "text": "workflows.md",
+      "url": "05-CI-CD/workflows.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 344,
+      "text": "docker-compose-guide.md",
+      "url": "05-CI-CD/docker-compose-guide.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 346,
+      "text": "image-building.md",
+      "url": "05-CI-CD/image-building.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 348,
+      "text": "release-process.md",
+      "url": "05-CI-CD/release-process.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 350,
+      "text": "testing-automation.md",
+      "url": "05-CI-CD/testing-automation.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 352,
+      "text": "common-issues.md",
+      "url": "06-TROUBLESHOOTING/common-issues.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 354,
+      "text": "kernel-fixes.md",
+      "url": "06-TROUBLESHOOTING/kernel-fixes.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 356,
+      "text": "ssh-problems.md",
+      "url": "06-TROUBLESHOOTING/ssh-problems.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 358,
+      "text": "filesystem-issues.md",
+      "url": "06-TROUBLESHOOTING/filesystem-issues.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 360,
+      "text": "network-debugging.md",
+      "url": "06-TROUBLESHOOTING/network-debugging.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 362,
+      "text": "performance-issues.md",
+      "url": "06-TROUBLESHOOTING/performance-issues.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 364,
+      "text": "findings.md",
+      "url": "07-RESEARCH-AND-LESSONS/findings.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 366,
+      "text": "testing-reports.md",
+      "url": "07-RESEARCH-AND-LESSONS/testing-reports.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 368,
+      "text": "implementation-notes.md",
+      "url": "07-RESEARCH-AND-LESSONS/implementation-notes.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 370,
+      "text": "mach-variants-research.md",
+      "url": "07-RESEARCH-AND-LESSONS/mach-variants-research.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 372,
+      "text": "performance-analysis.md",
+      "url": "07-RESEARCH-AND-LESSONS/performance-analysis.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 374,
+      "text": "security-considerations.md",
+      "url": "07-RESEARCH-AND-LESSONS/security-considerations.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 376,
+      "text": "quick-reference.md",
+      "url": "08-REFERENCE/quick-reference.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 378,
+      "text": "checklists.md",
+      "url": "08-REFERENCE/checklists.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 380,
+      "text": "maps.md",
+      "url": "08-REFERENCE/maps.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 382,
+      "text": "guidelines.md",
+      "url": "08-REFERENCE/guidelines.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 384,
+      "text": "scripts.md",
+      "url": "08-REFERENCE/scripts.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 386,
+      "text": "api-reference.md",
+      "url": "08-REFERENCE/api-reference.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 388,
+      "text": "glossary.md",
+      "url": "08-REFERENCE/glossary.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 390,
+      "text": "quickstart.md",
+      "url": "01-GETTING-STARTED/quickstart.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 392,
+      "text": "interactive-access.md",
+      "url": "04-OPERATION/interactive-access.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 394,
+      "text": "image-building.md",
+      "url": "05-CI-CD/image-building.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 396,
+      "text": "port-forwarding.md",
+      "url": "03-CONFIGURATION/port-forwarding.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 398,
+      "text": "monitoring.md",
+      "url": "04-OPERATION/monitoring.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 400,
+      "text": "common-issues.md",
+      "url": "06-TROUBLESHOOTING/common-issues.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 402,
+      "text": "performance-tuning.md",
+      "url": "04-OPERATION/performance-tuning.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 404,
+      "text": "security-considerations.md",
+      "url": "07-RESEARCH-AND-LESSONS/security-considerations.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 406,
+      "text": "workflows.md",
+      "url": "05-CI-CD/workflows.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 408,
+      "text": "mcp-servers.md",
+      "url": "03-CONFIGURATION/mcp-servers.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 410,
+      "text": "mach-variants-research.md",
+      "url": "07-RESEARCH-AND-LESSONS/mach-variants-research.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 427,
+      "text": "LICENSE",
+      "url": "LICENSE",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 429,
+      "text": "docs/",
+      "url": "docs/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 436,
+      "text": "Related Document 1",
+      "url": "../path/to/document.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 438,
+      "text": "Related Document 2",
+      "url": "../path/to/document.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 443,
+      "text": "DOCUMENT1.md",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 445,
+      "text": "DOCUMENT2.md",
+      "url": "DOCUMENT2.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 447,
+      "text": "DOCUMENT3.md",
+      "url": "DOCUMENT3.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 449,
+      "text": "Link 1",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 451,
+      "text": "Link 2",
+      "url": "DOCUMENT2.md#section",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 453,
+      "text": "Section Name",
+      "url": "../other-section/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 455,
+      "text": "Section Name",
+      "url": "../another-section/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 457,
+      "text": "DOCUMENT1.md",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 459,
+      "text": "DOCUMENT2.md",
+      "url": "DOCUMENT2.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 461,
+      "text": "DOCUMENT3.md",
+      "url": "DOCUMENT3.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 463,
+      "text": "CONTRIBUTING.md",
+      "url": "../03-development/CONTRIBUTING.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 465,
+      "text": "assets/templates/",
+      "url": "../assets/templates/",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 481,
+      "text": "CREDENTIALS.md",
+      "url": "../../03-CONFIGURATION/CREDENTIALS.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 489,
+      "text": "Installation Guide",
+      "url": "../01-getting-started/INSTALLATION.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 494,
+      "text": "Installation Guide",
+      "url": "../../01-GETTING-STARTED/INSTALLATION.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 507,
+      "text": "Wrong",
+      "url": "../../01-GETTING-STARTED/INSTALLATION.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 515,
+      "text": "System Requirements",
+      "url": "../01-getting-started/REQUIREMENTS.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 520,
+      "text": "System Requirements",
+      "url": "../../01-GETTING-STARTED/REQUIREMENTS.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "LINK-FIX-REPORT.md",
+      "line": 533,
+      "text": "Installation",
+      "url": "../../01-GETTING-STARTED/INSTALLATION.md",
+      "reason": "outside_docs_root"
+    },
+    {
+      "file": "archive/deprecated/index.md",
+      "line": 310,
+      "text": "LICENSE",
+      "url": "LICENSE",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "archive/deprecated/index.md",
+      "line": 316,
+      "text": "docs/",
+      "url": "docs/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/DOCUMENT-TEMPLATE.md",
+      "line": 145,
+      "text": "Related Document 1",
+      "url": "../path/to/document.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/DOCUMENT-TEMPLATE.md",
+      "line": 146,
+      "text": "Related Document 2",
+      "url": "../path/to/document.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 14,
+      "text": "DOCUMENT1.md",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 15,
+      "text": "DOCUMENT2.md",
+      "url": "DOCUMENT2.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 16,
+      "text": "DOCUMENT3.md",
+      "url": "DOCUMENT3.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 21,
+      "text": "Link 1",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 22,
+      "text": "Link 2",
+      "url": "DOCUMENT2.md#section",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 25,
+      "text": "Section Name",
+      "url": "../other-section/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 26,
+      "text": "Section Name",
+      "url": "../another-section/",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 31,
+      "text": "DOCUMENT1.md",
+      "url": "DOCUMENT1.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 32,
+      "text": "DOCUMENT2.md",
+      "url": "DOCUMENT2.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 33,
+      "text": "DOCUMENT3.md",
+      "url": "DOCUMENT3.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 43,
+      "text": "CONTRIBUTING.md",
+      "url": "../03-development/CONTRIBUTING.md",
+      "reason": "file_not_found"
+    },
+    {
+      "file": "assets/templates/SECTION-README-TEMPLATE.md",
+      "line": 44,
+      "text": "assets/templates/",
+      "url": "../assets/templates/",
+      "reason": "file_not_found"
+    }
+  ]
+}

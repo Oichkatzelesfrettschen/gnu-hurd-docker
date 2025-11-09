@@ -94,11 +94,11 @@ docker-compose exec gnu-hurd-dev bash
 
 ## Documentation
 
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Detailed design rationale and implementation
-- **[CREDENTIALS.md](docs/CREDENTIALS.md)** - Default root user/password and SSH access
-- **[USER-SETUP.md](docs/USER-SETUP.md)** - Creating and configuring standard user accounts
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Step-by-step deployment procedures
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md)** - Detailed design rationale and implementation
+- **[CREDENTIALS.md](../../03-CONFIGURATION/CREDENTIALS.md)** - Default root user/password and SSH access
+- **[USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md)** - Creating and configuring standard user accounts
+- **[DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md)** - Step-by-step deployment procedures
+- **[TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md)** - Common issues and solutions
 
 ## File Structure
 
@@ -131,12 +131,12 @@ docker-compose exec gnu-hurd-dev bash
 ### Default Root Credentials
 
 - **User:** `root`
-- **Password:** See [CREDENTIALS.md](docs/CREDENTIALS.md)
+- **Password:** See [CREDENTIALS.md](../../03-CONFIGURATION/CREDENTIALS.md)
 - **SSH:** Port 2222
 
 ### Creating Standard User Accounts
 
-See [USER-SETUP.md](docs/USER-SETUP.md) for detailed instructions on:
+See [USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md) for detailed instructions on:
 - Adding new system users
 - Configuring sudo privileges
 - Setting up user environments
@@ -187,7 +187,7 @@ docker image inspect gnu-hurd-dev:latest
 ### Common Issues
 
 **Docker daemon won't start:**
-See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Kernel Configuration section
+See [TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) - Kernel Configuration section
 
 **Container won't start:**
 ```bash
@@ -209,7 +209,7 @@ docker-compose exec gnu-hurd-dev ps aux | grep sshd
 # Check port mapping: docker-compose ps
 ```
 
-See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for complete troubleshooting guide.
+See [TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) for complete troubleshooting guide.
 
 ## Architecture Highlights
 
@@ -332,4 +332,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 **Status:** Production-ready | **Last Updated:** 2025-11-05 | **Maintainer:** Oaich
 
-For comprehensive architecture details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+For comprehensive architecture details, see [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md).

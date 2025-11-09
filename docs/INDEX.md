@@ -1,543 +1,219 @@
-# GNU/Hurd Docker - Complete Documentation Index
+# GNU/Hurd Docker Documentation Index
 
-**Last Updated**: 2025-11-07
-**Total Documents**: 26 (18 content docs + 8 section READMEs)
-**Total Size**: ~824 KB
-**Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)
+> **Version**: 2.0.0 | **Last Updated**: 2025-11-08 | **Status**: Consolidated & Organized
 
----
+## 📚 Welcome to GNU/Hurd Docker Documentation
 
-## Quick Start Paths
-
-Choose your path based on your role and goal:
-
-### New User (First-time setup)
-1. [Installation](01-GETTING-STARTED/INSTALLATION.md) → Install Docker, QEMU, download image
-2. [Quickstart](01-GETTING-STARTED/QUICKSTART.md) → Boot and verify
-3. [Interactive Access](04-OPERATION/INTERACTIVE-ACCESS.md) → Connect via SSH
-
-**Time**: 20-30 minutes
-**Prerequisites**: Linux/macOS/Windows with Docker
+This documentation provides comprehensive guidance for running GNU/Hurd in Docker containers using QEMU virtualization. Whether you're a developer, researcher, or enthusiast, you'll find the resources you need to work with this unique operating system.
 
 ---
 
-### Developer (Daily workflow)
-1. [Operation](04-OPERATION/) → Start/stop, snapshots, monitoring
-2. [Configuration](03-CONFIGURATION/) → Customize environment
-3. [Scripts Reference](08-REFERENCE/SCRIPTS.md) → Automation tools
+## 🚀 Quick Start Path
 
-**Use case**: Build and test software on Hurd
+New to GNU/Hurd Docker? Follow this path:
 
----
-
-### System Administrator (Operations)
-1. [Credentials](08-REFERENCE/CREDENTIALS.md) → Access and security
-2. [Monitoring](04-OPERATION/MONITORING.md) → Performance tracking
-3. [Troubleshooting](06-TROUBLESHOOTING/) → Fix common issues
-
-**Use case**: Maintain production Hurd environments
+1. **[Requirements](01-GETTING-STARTED/REQUIREMENTS.md)** - Check system prerequisites
+2. **[Installation](01-GETTING-STARTED/INSTALLATION.md)** - Set up your environment
+3. **[Quick Start](01-GETTING-STARTED/QUICKSTART.md)** - Get running in minutes
+4. **[First Steps](01-GETTING-STARTED/first-steps.md)** - Essential operations
 
 ---
 
-### DevOps Engineer (CI/CD)
-1. [CI/CD Setup](05-CI-CD/SETUP.md) → GitHub Actions configuration
-2. [Pre-Provisioned Images](05-CI-CD/PROVISIONED-IMAGE.md) → 85% faster CI
-3. [Workflows](05-CI-CD/WORKFLOWS.md) → Advanced automation
+## 📖 How to Use This Documentation
 
-**Use case**: Automate Hurd testing and deployment
+### For Different Roles
+
+- **👨‍💻 Developers**: Start with [Architecture](02-ARCHITECTURE/) → [Configuration](03-CONFIGURATION/) → [CI/CD](05-CI-CD/)
+- **🔬 Researchers**: Focus on [Research & Lessons](07-RESEARCH-AND-LESSONS/) → [Architecture](02-ARCHITECTURE/)
+- **🛠️ Operations**: Priority on [Operation](04-OPERATION/) → [Troubleshooting](06-TROUBLESHOOTING/)
+- **🎓 Learners**: Begin with [Getting Started](01-GETTING-STARTED/) → [Reference](08-REFERENCE/)
+
+### Navigation Tips
+
+- Each section (01-08) is self-contained with its own README
+- Documents are cross-linked where relevant
+- Use the Quick Reference section below for common tasks
+- Historical content is preserved in [archive/](archive/)
 
 ---
 
-### Researcher (Architecture deep-dive)
-1. [System Design](02-ARCHITECTURE/SYSTEM-DESIGN.md) → Mach microkernel
-2. [x86_64 Migration](07-RESEARCH/X86_64-MIGRATION.md) → Architecture evolution
-3. [Lessons Learned](07-RESEARCH/LESSONS-LEARNED.md) → Operational wisdom
-
-**Use case**: Understand Mach/Hurd internals
-
----
-
-## Documentation Structure
+## 📂 Complete Documentation Structure
 
 ### 01-GETTING-STARTED
-**Purpose**: Initial setup and quickstart
+*Everything you need to begin your GNU/Hurd journey*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](01-GETTING-STARTED/README.md) | Section navigation | 8 KB |
-| [INSTALLATION.md](01-GETTING-STARTED/INSTALLATION.md) | Complete installation guide | 68 KB |
-| [QUICKSTART.md](01-GETTING-STARTED/QUICKSTART.md) | Fast-track boot and verify | 42 KB |
-
-**Total**: 3 documents, ~118 KB
-
----
+- **[README](01-GETTING-STARTED/README.md)** - Section overview
+- **[installation.md](01-GETTING-STARTED/INSTALLATION.md)** - Complete setup guide
+- **[quickstart.md](01-GETTING-STARTED/QUICKSTART.md)** - 5-minute getting started
+- **[requirements.md](01-GETTING-STARTED/REQUIREMENTS.md)** - System prerequisites
+- **[first-steps.md](01-GETTING-STARTED/first-steps.md)** - Initial operations
+- **[docker-compose-basics.md](01-GETTING-STARTED/docker-compose-basics.md)** - Container orchestration
 
 ### 02-ARCHITECTURE
-**Purpose**: System design and technical architecture
+*System design and technical foundations*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](02-ARCHITECTURE/README.md) | Section navigation | 9 KB |
-| [SYSTEM-DESIGN.md](02-ARCHITECTURE/SYSTEM-DESIGN.md) | Mach microkernel architecture | 85 KB |
-| [QEMU-CONFIGURATION.md](02-ARCHITECTURE/QEMU-CONFIGURATION.md) | QEMU setup and tuning | 72 KB |
-| [CONTROL-PLANE.md](02-ARCHITECTURE/CONTROL-PLANE.md) | Docker and orchestration | 54 KB |
-
-**Total**: 4 documents, ~220 KB
-
----
+- **[README](02-ARCHITECTURE/README.md)** - Architecture overview
+- **[system-overview.md](02-ARCHITECTURE/OVERVIEW.md)** - Complete system design
+- **[qemu-configuration.md](02-ARCHITECTURE/QEMU-CONFIGURATION.md)** - Virtualization layer
+- **[control-plane.md](02-ARCHITECTURE/CONTROL-PLANE.md)** - Management infrastructure
+- **[filesystem-layout.md](02-ARCHITECTURE/filesystem-layout.md)** - Storage organization
+- **[network-architecture.md](02-ARCHITECTURE/network-architecture.md)** - Networking design
 
 ### 03-CONFIGURATION
-**Purpose**: Environment customization
+*Customization and setup options*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](03-CONFIGURATION/README.md) | Section navigation | 10 KB |
-| [PORT-FORWARDING.md](03-CONFIGURATION/PORT-FORWARDING.md) | Port mapping and networking | 48 KB |
-| [USER-CONFIGURATION.md](03-CONFIGURATION/USER-CONFIGURATION.md) | User and sudo management | 56 KB |
-| [CUSTOM-FEATURES.md](03-CONFIGURATION/CUSTOM-FEATURES.md) | Advanced customizations | 62 KB |
-
-**Total**: 4 documents, ~176 KB
-
----
+- **[README](03-CONFIGURATION/README.md)** - Configuration guide
+- **[user-setup.md](03-CONFIGURATION/USER-CONFIGURATION.md)** - User management
+- **[port-forwarding.md](03-CONFIGURATION/PORT-FORWARDING.md)** - Network configuration
+- **[custom-features.md](03-CONFIGURATION/CUSTOM-FEATURES.md)** - Advanced customization
+- **[environment-variables.md](03-CONFIGURATION/environment-variables.md)** - Runtime settings
+- **[mcp-servers.md](03-CONFIGURATION/mcp-servers.md)** - MCP server setup
 
 ### 04-OPERATION
-**Purpose**: Day-to-day operations and management
+*Day-to-day operations and management*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](04-OPERATION/README.md) | Section navigation | 11 KB |
-| [INTERACTIVE-ACCESS.md](04-OPERATION/INTERACTIVE-ACCESS.md) | SSH, serial, file transfers | 64 KB |
-| [SNAPSHOTS.md](04-OPERATION/SNAPSHOTS.md) | Snapshot management | 58 KB |
-| [MONITORING.md](04-OPERATION/MONITORING.md) | Performance monitoring | 52 KB |
-
-**Total**: 4 documents, ~185 KB
-
----
+- **[README](04-OPERATION/README.md)** - Operations overview
+- **[deployment.md](04-OPERATION/deployment/DEPLOYMENT.md)** - Production deployment
+- **[monitoring.md](04-OPERATION/MONITORING.md)** - System monitoring
+- **[testing.md](04-OPERATION/testing.md)** - Test procedures
+- **[interactive-access.md](04-OPERATION/INTERACTIVE-ACCESS.md)** - Shell access
+- **[backup-restore.md](04-OPERATION/backup-restore.md)** - Data management
+- **[performance-tuning.md](04-OPERATION/performance-tuning.md)** - Optimization
 
 ### 05-CI-CD
-**Purpose**: Continuous integration and deployment
+*Automation and continuous integration*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](05-CI-CD/README.md) | Section navigation | 12 KB |
-| [SETUP.md](05-CI-CD/SETUP.md) | GitHub Actions environment | 46 KB |
-| [WORKFLOWS.md](05-CI-CD/WORKFLOWS.md) | Advanced workflow patterns | 58 KB |
-| [PROVISIONED-IMAGE.md](05-CI-CD/PROVISIONED-IMAGE.md) | Pre-provisioned images (85% faster) | 54 KB |
-
-**Total**: 4 documents, ~170 KB
-
----
+- **[README](05-CI-CD/README.md)** - CI/CD overview
+- **[workflows.md](05-CI-CD/WORKFLOWS.md)** - GitHub Actions
+- **[docker-compose-guide.md](05-CI-CD/DOCKER-COMPOSE-GUIDE.md)** - Container orchestration
+- **[image-building.md](05-CI-CD/image-building.md)** - Custom images
+- **[release-process.md](05-CI-CD/release-process.md)** - Release management
+- **[testing-automation.md](05-CI-CD/testing-automation.md)** - Automated testing
 
 ### 06-TROUBLESHOOTING
-**Purpose**: Diagnose and fix common issues
+*Problem solving and issue resolution*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](06-TROUBLESHOOTING/README.md) | Section navigation | 13 KB |
-| [COMMON-ISSUES.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | Frequent problems and solutions | 72 KB |
-| [SSH-ISSUES.md](06-TROUBLESHOOTING/SSH-ISSUES.md) | SSH connection troubleshooting | 48 KB |
-| [FSCK-ERRORS.md](06-TROUBLESHOOTING/FSCK-ERRORS.md) | Filesystem consistency errors | 38 KB |
+- **[README](06-TROUBLESHOOTING/README.md)** - Troubleshooting guide
+- **[common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md)** - Frequent problems
+- **[kernel-fixes.md](06-TROUBLESHOOTING/kernel-fixes.md)** - Kernel issues
+- **[ssh-problems.md](06-TROUBLESHOOTING/SSH-ISSUES.md)** - SSH connectivity
+- **[filesystem-issues.md](06-TROUBLESHOOTING/FSCK-ERRORS.md)** - Storage problems
+- **[network-debugging.md](06-TROUBLESHOOTING/network-debugging.md)** - Network issues
+- **[performance-issues.md](06-TROUBLESHOOTING/performance-issues.md)** - Speed problems
 
-**Total**: 4 documents, ~171 KB
+### 07-RESEARCH-AND-LESSONS
+*Insights, findings, and deep dives*
 
----
-
-### 07-RESEARCH
-**Purpose**: In-depth research and migration insights
-
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](07-RESEARCH/README.md) | Section navigation | 14 KB |
-| [MACH-QEMU.md](07-RESEARCH/MACH-QEMU.md) | Mach microkernel deep dive | 68 KB |
-| [X86_64-MIGRATION.md](07-RESEARCH/X86_64-MIGRATION.md) | i386 → x86_64 migration | 82 KB |
-| [LESSONS-LEARNED.md](07-RESEARCH/LESSONS-LEARNED.md) | Operational wisdom | 76 KB |
-
-**Total**: 4 documents, ~240 KB
-
----
+- **[README](03-CONFIGURATION/README.md)** - Research overview
+- **[findings.md](07-RESEARCH-AND-LESSONS/FINDINGS.md)** - Key discoveries
+- **[testing-reports.md](07-RESEARCH-AND-LESSONS/testing-reports.md)** - Test results
+- **[implementation-notes.md](07-RESEARCH-AND-LESSONS/implementation-notes.md)** - Technical notes
+- **[mach-variants-research.md](07-RESEARCH-AND-LESSONS/mach-variants-research.md)** - Mach kernel analysis
+- **[performance-analysis.md](07-RESEARCH-AND-LESSONS/performance-analysis.md)** - Benchmarks
+- **[security-considerations.md](07-RESEARCH-AND-LESSONS/security-considerations.md)** - Security analysis
 
 ### 08-REFERENCE
-**Purpose**: Complete reference materials
+*Quick references and technical guides*
 
-| Document | Description | Size |
-|----------|-------------|------|
-| [README.md](08-REFERENCE/README.md) | Section navigation | 12 KB |
-| [SCRIPTS.md](08-REFERENCE/SCRIPTS.md) | All 21 automation scripts | 36 KB |
-| [CREDENTIALS.md](08-REFERENCE/CREDENTIALS.md) | Access credentials and security | 32 KB |
-
-**Total**: 3 documents, ~80 KB
-
----
-
-## Common Tasks and Navigation
-
-### Task: Install and Boot GNU/Hurd
-**Path**: [Installation](01-GETTING-STARTED/INSTALLATION.md) → [Quickstart](01-GETTING-STARTED/QUICKSTART.md)
-
-**Steps**:
-1. Install Docker and QEMU
-2. Download Hurd image (337 MB)
-3. Setup environment (`./scripts/setup-hurd-amd64.sh`)
-4. Boot container (`docker-compose up -d`)
-5. Connect via SSH (`ssh -p 2222 root@localhost`)
-
-**Time**: 20-30 minutes
+- **[README](08-REFERENCE/README.md)** - Reference overview
+- **[quick-reference.md](08-REFERENCE/QUICK-REFERENCE.md)** - Command cheatsheet
+- **[checklists.md](08-REFERENCE/checklists/X86_64-VALIDATION.md)** - Operational checklists
+- **[maps.md](08-REFERENCE/maps.md)** - System maps
+- **[guidelines.md](08-REFERENCE/guidelines.md)** - Best practices
+- **[scripts.md](08-REFERENCE/SCRIPTS.md)** - Utility scripts
+- **[api-reference.md](08-REFERENCE/api-reference.md)** - API documentation
+- **[glossary.md](08-REFERENCE/glossary.md)** - Term definitions
 
 ---
 
-### Task: Configure SSH Access
-**Path**: [User Configuration](03-CONFIGURATION/USER-CONFIGURATION.md) → [Credentials](08-REFERENCE/CREDENTIALS.md)
+## ⚡ Common Tasks Quick Reference
 
-**Steps**:
-1. Check default credentials (root/root, agents/agents)
-2. Configure SSH keys
-3. Test SSH connection
-4. Optional: Disable password auth (production)
+### Essential Operations
 
-**References**: [SSH Issues](06-TROUBLESHOOTING/SSH-ISSUES.md) if problems
+| Task | Documentation | Quick Command |
+|------|--------------|---------------|
+| 🚀 Start GNU/Hurd | [quickstart.md](01-GETTING-STARTED/QUICKSTART.md) | `docker compose up -d` |
+| 🔌 Connect via SSH | [interactive-access.md](04-OPERATION/INTERACTIVE-ACCESS.md) | `ssh user@localhost -p 2222` |
+| 📦 Build custom image | [image-building.md](05-CI-CD/image-building.md) | `docker build -t hurd .` |
+| 🔧 Configure ports | [port-forwarding.md](03-CONFIGURATION/PORT-FORWARDING.md) | Edit `docker-compose.yml` |
+| 📊 Monitor system | [monitoring.md](04-OPERATION/MONITORING.md) | `docker logs hurd-qemu` |
+| 🐛 Debug issues | [common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | Check troubleshooting guide |
 
----
+### Advanced Tasks
 
-### Task: Create Snapshot Before Major Changes
-**Path**: [Snapshots](04-OPERATION/SNAPSHOTS.md)
-
-**Steps**:
-```bash
-# Create snapshot
-./scripts/manage-snapshots.sh create before-kernel-build
-
-# Make changes
-ssh -p 2222 root@localhost
-# [do risky operations]
-
-# If something breaks, restore
-./scripts/manage-snapshots.sh restore before-kernel-build
-```
+| Task | Documentation | Notes |
+|------|--------------|-------|
+| 🎛️ Performance tuning | [performance-tuning.md](04-OPERATION/performance-tuning.md) | CPU/Memory optimization |
+| 🔐 Security hardening | [security-considerations.md](07-RESEARCH-AND-LESSONS/security-considerations.md) | Production recommendations |
+| 🤖 CI/CD setup | [workflows.md](05-CI-CD/WORKFLOWS.md) | GitHub Actions integration |
+| 📡 MCP server config | [mcp-servers.md](03-CONFIGURATION/mcp-servers.md) | Advanced automation |
+| 🔬 Kernel research | [mach-variants-research.md](07-RESEARCH-AND-LESSONS/mach-variants-research.md) | Deep technical analysis |
 
 ---
 
-### Task: Setup CI/CD Pipeline
-**Path**: [CI/CD Setup](05-CI-CD/SETUP.md) → [Pre-Provisioned Images](05-CI-CD/PROVISIONED-IMAGE.md)
+## 📊 Documentation Metadata
 
-**Steps**:
-1. Download pre-provisioned image (85% faster)
-2. Configure GitHub Actions workflow
-3. Test SSH connectivity
-4. Run automated tests
+### Consolidation Information
+- **Consolidation Date**: 2025-11-08
+- **Documentation Version**: 2.0.0
+- **Structure**: 8 main sections + support directories
+- **Total Documents**: 50+ markdown files
+- **Archive Status**: Previous versions preserved in `archive/`
 
-**Time**: 2-5 minutes (vs 20-40 min with serial automation)
+### Directory Purpose
 
----
-
-### Task: Troubleshoot Boot Failures
-**Path**: [Troubleshooting](06-TROUBLESHOOTING/) → [Common Issues](06-TROUBLESHOOTING/COMMON-ISSUES.md) or [FSCK Errors](06-TROUBLESHOOTING/FSCK-ERRORS.md)
-
-**Diagnostic Tree**:
-- Drops to emergency mode? → [FSCK Errors](06-TROUBLESHOOTING/FSCK-ERRORS.md)
-- QEMU crashes? → Check logs (`docker-compose logs`)
-- Hangs on boot? → Wait 5 minutes or check KVM/TCG
+| Directory | Purpose | Status |
+|-----------|---------|--------|
+| `01-08 sections` | Main documentation | ✅ Active |
+| `archive/` | Historical content | 📦 Preserved |
+| `assets/` | Templates & scripts | 🛠️ Support |
+| `logs/` | MCP server logs | 📝 Runtime |
 
 ---
 
-### Task: Understand x86_64 Architecture
-**Path**: [System Design](02-ARCHITECTURE/SYSTEM-DESIGN.md) → [x86_64 Migration](07-RESEARCH/X86_64-MIGRATION.md)
+## 🔗 Additional Resources
 
-**Key Topics**:
-- Binary naming: `qemu-system-x86_64` (underscore!)
-- RAM: 4 GB (vs 1.5 GB on i386)
-- Storage: SATA/AHCI (vs IDE)
-- Machine: pc (vs q35)
+### Internal Links
+- **[Archive](archive/)** - Historical documentation and versions
+- **[Assets](assets/)** - Templates and migration tools
+- **[Project Root](../)** - Main project directory
 
----
-
-### Task: Monitor Performance
-**Path**: [Monitoring](04-OPERATION/MONITORING.md) → [Scripts Reference](08-REFERENCE/SCRIPTS.md)
-
-**Tools**:
-```bash
-# Real-time monitoring
-./scripts/monitor-qemu.sh
-
-# Inside guest
-ssh -p 2222 root@localhost
-htop
-```
+### External Resources
+- [GNU/Hurd Official Site](https://www.gnu.org/software/hurd/)
+- [QEMU Documentation](https://www.qemu.org/documentation/)
+- [Docker Documentation](https://docs.docker.com/)
+- [Project GitHub Repository](https://github.com/yourusername/gnu-hurd-docker)
 
 ---
 
-### Task: Manage Scripts and Automation
-**Path**: [Scripts Reference](08-REFERENCE/SCRIPTS.md)
+## 📈 Documentation Maintenance
 
-**Script Categories**:
-- Setup (3 scripts): Download and setup images
-- Installation (6 scripts): Install software in guest
-- Configuration (3 scripts): Configure users, shell, sources
-- Provisioning (2 scripts): End-to-end automation
-- Management (3 scripts): Snapshots, monitoring, console
-- Testing (3 scripts): Validation and system tests
+### Update Schedule
+- **Weekly**: Review troubleshooting entries
+- **Monthly**: Update performance metrics
+- **Quarterly**: Major documentation review
+- **As Needed**: Add new findings and lessons learned
 
----
-
-## Search by Problem Type
-
-### Cannot SSH to Guest
-**See**: [SSH Issues](06-TROUBLESHOOTING/SSH-ISSUES.md)
-
-**Quick fixes**:
-1. Check container: `docker-compose ps`
-2. Check SSH service: Serial console → `systemctl status ssh`
-3. Verify credentials: root/root or agents/agents
+### Contributing
+To contribute to this documentation:
+1. Follow the existing structure (01-08 sections)
+2. Update the appropriate section's README
+3. Cross-link related content
+4. Update this INDEX when adding major sections
 
 ---
 
-### Boot Drops to Emergency Mode
-**See**: [FSCK Errors](06-TROUBLESHOOTING/FSCK-ERRORS.md)
+## 🎯 Next Steps
 
-**Quick fix**:
-```bash
-# At emergency prompt
-/sbin/fsck.ext2 -y /dev/sd0s2
-reboot
-```
+Based on your role and needs:
 
----
-
-### Slow Performance
-**See**: [Common Issues](06-TROUBLESHOOTING/COMMON-ISSUES.md) → [Monitoring](04-OPERATION/MONITORING.md)
-
-**Quick checks**:
-1. KVM acceleration enabled? (`grep kvm /proc/cpuinfo`)
-2. RAM sufficient? (4GB recommended)
-3. Resource usage: `./scripts/monitor-qemu.sh`
+1. **New Users** → Start with [Getting Started](01-GETTING-STARTED/)
+2. **Developers** → Dive into [Architecture](02-ARCHITECTURE/) and [Configuration](03-CONFIGURATION/)
+3. **Operations** → Focus on [Operation](04-OPERATION/) and [Troubleshooting](06-TROUBLESHOOTING/)
+4. **Researchers** → Explore [Research & Lessons](07-RESEARCH-AND-LESSONS/)
 
 ---
 
-### Port Conflicts
-**See**: [Port Forwarding](03-CONFIGURATION/PORT-FORWARDING.md)
+*Thank you for using GNU/Hurd Docker. This documentation is actively maintained and improved based on user feedback and project evolution.*
 
-**Quick fix**:
-```bash
-# Find process using port
-lsof -i :2222
-
-# Change port in docker-compose.yml
-ports:
-  - "3333:22"  # Use 3333 instead of 2222
-```
-
----
-
-### Filesystem Errors
-**See**: [FSCK Errors](06-TROUBLESHOOTING/FSCK-ERRORS.md)
-
-**Prevention**:
-- Always use clean shutdown: `shutdown -h now`
-- Create snapshots before major changes
-- See [Snapshots](04-OPERATION/SNAPSHOTS.md)
-
----
-
-## Search by User Role
-
-### For Developers
-- [Quickstart](01-GETTING-STARTED/QUICKSTART.md) - Fast boot
-- [Interactive Access](04-OPERATION/INTERACTIVE-ACCESS.md) - SSH and file transfers
-- [Snapshots](04-OPERATION/SNAPSHOTS.md) - State management
-- [Scripts](08-REFERENCE/SCRIPTS.md) - Development automation
-
----
-
-### For System Administrators
-- [Credentials](08-REFERENCE/CREDENTIALS.md) - Access and security
-- [User Configuration](03-CONFIGURATION/USER-CONFIGURATION.md) - User management
-- [Monitoring](04-OPERATION/MONITORING.md) - Performance tracking
-- [Common Issues](06-TROUBLESHOOTING/COMMON-ISSUES.md) - Troubleshooting
-
----
-
-### For DevOps Engineers
-- [CI/CD Setup](05-CI-CD/SETUP.md) - GitHub Actions
-- [Pre-Provisioned Images](05-CI-CD/PROVISIONED-IMAGE.md) - Fast CI (85% faster)
-- [Workflows](05-CI-CD/WORKFLOWS.md) - Advanced automation
-- [Lessons Learned](07-RESEARCH/LESSONS-LEARNED.md) - Best practices
-
----
-
-### For Researchers
-- [System Design](02-ARCHITECTURE/SYSTEM-DESIGN.md) - Mach microkernel
-- [QEMU Configuration](02-ARCHITECTURE/QEMU-CONFIGURATION.md) - Virtualization
-- [Mach-QEMU Deep Dive](07-RESEARCH/MACH-QEMU.md) - Technical research
-- [x86_64 Migration](07-RESEARCH/X86_64-MIGRATION.md) - Architecture evolution
-
----
-
-## Search by Topic
-
-### Architecture and Design
-- [System Design](02-ARCHITECTURE/SYSTEM-DESIGN.md)
-- [QEMU Configuration](02-ARCHITECTURE/QEMU-CONFIGURATION.md)
-- [Control Plane](02-ARCHITECTURE/CONTROL-PLANE.md)
-- [x86_64 Migration](07-RESEARCH/X86_64-MIGRATION.md)
-
-### Configuration and Customization
-- [Port Forwarding](03-CONFIGURATION/PORT-FORWARDING.md)
-- [User Configuration](03-CONFIGURATION/USER-CONFIGURATION.md)
-- [Custom Features](03-CONFIGURATION/CUSTOM-FEATURES.md)
-
-### Operations and Monitoring
-- [Interactive Access](04-OPERATION/INTERACTIVE-ACCESS.md)
-- [Snapshots](04-OPERATION/SNAPSHOTS.md)
-- [Monitoring](04-OPERATION/MONITORING.md)
-
-### Automation and CI/CD
-- [CI/CD Setup](05-CI-CD/SETUP.md)
-- [Workflows](05-CI-CD/WORKFLOWS.md)
-- [Pre-Provisioned Images](05-CI-CD/PROVISIONED-IMAGE.md)
-- [Scripts Reference](08-REFERENCE/SCRIPTS.md)
-
-### Troubleshooting
-- [Common Issues](06-TROUBLESHOOTING/COMMON-ISSUES.md)
-- [SSH Issues](06-TROUBLESHOOTING/SSH-ISSUES.md)
-- [FSCK Errors](06-TROUBLESHOOTING/FSCK-ERRORS.md)
-
-### Research and Deep Dives
-- [Mach-QEMU](07-RESEARCH/MACH-QEMU.md)
-- [x86_64 Migration](07-RESEARCH/X86_64-MIGRATION.md)
-- [Lessons Learned](07-RESEARCH/LESSONS-LEARNED.md)
-
----
-
-## Document Cross-References
-
-### Most Referenced Documents
-1. [Quickstart](01-GETTING-STARTED/QUICKSTART.md) - Referenced 12 times
-2. [SSH Issues](06-TROUBLESHOOTING/SSH-ISSUES.md) - Referenced 10 times
-3. [Credentials](08-REFERENCE/CREDENTIALS.md) - Referenced 8 times
-4. [Scripts](08-REFERENCE/SCRIPTS.md) - Referenced 8 times
-5. [Snapshots](04-OPERATION/SNAPSHOTS.md) - Referenced 7 times
-
-### Key Integration Points
-- **Installation ↔ Quickstart** - Sequential workflow
-- **Operation ↔ Troubleshooting** - Daily use + problem solving
-- **CI/CD ↔ Pre-Provisioned Images** - Optimal automation
-- **Architecture ↔ Research** - Design rationale
-- **Configuration ↔ Reference** - Customization + credentials
-
----
-
-## Documentation Statistics
-
-**Total Documents**: 26
-- Content documents: 18
-- Navigation READMEs: 8
-
-**Total Size**: ~824 KB
-- Largest section: Research (240 KB)
-- Smallest section: Reference (80 KB)
-
-**Architecture Coverage**:
-- Pure x86_64 (i386 deprecated 2025-11-07)
-- All breaking changes documented
-- Migration guide provided
-
-**Completeness**:
-- Getting Started: 100%
-- Architecture: 100%
-- Configuration: 100%
-- Operation: 100%
-- CI/CD: 100%
-- Troubleshooting: 100%
-- Research: 100%
-- Reference: 100%
-
----
-
-## Version History
-
-**2025-11-07** - Documentation Consolidation
-- Consolidated 53 files → 26 files (55% reduction)
-- Created 8-section structure
-- Added comprehensive navigation
-- Updated all content for x86_64-only architecture
-
-**Previous Versions**:
-- See git history for full changelog
-- Major milestones documented in [Lessons Learned](07-RESEARCH/LESSONS-LEARNED.md)
-
----
-
-## Contributing to Documentation
-
-**Making Changes**:
-1. Edit relevant document in appropriate section
-2. Update cross-references if needed
-3. Run validation: `markdown-link-check docs/**/*.md`
-4. Generate TOCs: `markdown-toc -i docs/**/*.md`
-5. Commit with descriptive message
-
-**Adding New Documents**:
-1. Choose appropriate section (01-08)
-2. Create document following existing format
-3. Add entry to section README.md
-4. Update this INDEX.md
-5. Cross-reference from related documents
-
-**Quality Standards**:
-- Markdown formatting (CommonMark)
-- Links validated (markdown-link-check)
-- TOCs generated (markdown-toc)
-- No broken cross-references
-- x86_64-only (no i386 references)
-
----
-
-## Maintenance Schedule
-
-**Monthly**:
-- Verify all links (markdown-link-check)
-- Update version numbers
-- Review and update common issues
-
-**Quarterly**:
-- Review architecture decisions
-- Update performance benchmarks
-- Audit for outdated content
-
-**Annually**:
-- Major documentation restructuring if needed
-- Archive deprecated content
-- Update screenshots and examples
-
----
-
-## Quick Reference
-
-**Default Credentials**:
-- Root: root/root
-- Agents: agents/agents
-
-**Access Ports**:
-- SSH: 2222
-- Serial Console: 5555
-
-**Essential Commands**:
-```bash
-# Start environment
-docker-compose up -d
-
-# Connect via SSH
-ssh -p 2222 root@localhost
-
-# Create snapshot
-./scripts/manage-snapshots.sh create snapshot-name
-
-# Monitor performance
-./scripts/monitor-qemu.sh
-```
-
-**Critical Binary**:
-- QEMU: `qemu-system-x86_64` (underscore, not hyphen!)
-
----
-
-[← Back to Repository Root](../README.md)
+**Happy Hacking! 🐧**

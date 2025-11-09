@@ -13,13 +13,13 @@
 ### I Need To... (Find What You're Looking For)
 
 #### Start Deploying Now
-→ **[EXECUTION-SUMMARY.md](EXECUTION-SUMMARY.md)** - 30-minute deployment timeline with three-step procedure
+→ **[EXECUTION-SUMMARY.md](../../07-RESEARCH-AND-LESSONS/sessions/EXECUTION-SUMMARY.md)** - 30-minute deployment timeline with three-step procedure
 
 #### Understand the Architecture
-→ **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design, decisions, parameters, and rationale
+→ **[docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md)** - System design, decisions, parameters, and rationale
 
 #### Deploy Step-by-Step
-→ **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment procedures with troubleshooting
+→ **[docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md)** - Complete deployment procedures with troubleshooting
 
 #### Fix Docker Issues
 → **[QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt)** - CachyOS kernel fix (3 steps, 30 minutes)
@@ -31,16 +31,16 @@
 → **[REPO-SUMMARY.txt](REPO-SUMMARY.txt)** - One-page summary of everything (504 lines)
 
 #### Access the System
-→ **[docs/CREDENTIALS.md](docs/CREDENTIALS.md)** - Default credentials and access methods
+→ **[docs/CREDENTIALS.md](../CREDENTIALS.md)** - Default credentials and access methods
 
 #### Troubleshoot Problems
-→ **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Diagnostic procedures and solutions
+→ **[docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md)** - Diagnostic procedures and solutions
 
 #### Learn the Research
-→ **[docs/RESEARCH-FINDINGS.md](docs/RESEARCH-FINDINGS.md)** - CachyOS nf_tables issue analysis and solution
+→ **[docs/RESEARCH-FINDINGS.md](../../07-RESEARCH-AND-LESSONS/FINDINGS.md)** - CachyOS nf_tables issue analysis and solution
 
 #### Understand Everything
-→ **[docs/INDEX.md](docs/INDEX.md)** - Documentation navigation by role and topic
+→ **[docs/INDEX.md](../../INDEX.md)** - Documentation navigation by role and topic
 
 ---
 
@@ -209,69 +209,69 @@ scripts/
 ## Documentation Roadmap
 
 ### For First-Time Users
-1. **Start:** [README.md](README.md) (5 min)
-2. **Understand:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (15 min)
-3. **Deploy:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (20 min)
-4. **Reference:** [docs/INDEX.md](docs/INDEX.md) (5 min)
-5. **Help:** [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) (as needed)
+1. **Start:** [README.md](../README.md) (5 min)
+2. **Understand:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) (15 min)
+3. **Deploy:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) (20 min)
+4. **Reference:** [docs/INDEX.md](../../INDEX.md) (5 min)
+5. **Help:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) (as needed)
 
 ### For System Administrators
 1. **Quick Fix:** [QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt) (5 min)
-2. **Plan:** [docs/KERNEL-STANDARDIZATION-PLAN.md](docs/KERNEL-STANDARDIZATION-PLAN.md) (30 min)
-3. **Deploy:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (20 min)
-4. **Access:** [docs/CREDENTIALS.md](docs/CREDENTIALS.md) (5 min)
-5. **Setup:** [docs/USER-SETUP.md](docs/USER-SETUP.md) (15 min)
+2. **Plan:** [docs/KERNEL-STANDARDIZATION-PLAN.md](../../07-RESEARCH-AND-LESSONS/KERNEL-STANDARDIZATION.md) (30 min)
+3. **Deploy:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) (20 min)
+4. **Access:** [docs/CREDENTIALS.md](../CREDENTIALS.md) (5 min)
+5. **Setup:** [docs/USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md) (15 min)
 
 ### For Developers
-1. **Overview:** [README.md](README.md) (5 min)
-2. **Design:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (15 min)
+1. **Overview:** [README.md](../README.md) (5 min)
+2. **Design:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) (15 min)
 3. **Code:** Dockerfile, entrypoint.sh, docker-compose.yml (10 min)
-4. **Build:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Build section (5 min)
-5. **Issues:** [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) (as needed)
+4. **Build:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) - Build section (5 min)
+5. **Issues:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) (as needed)
 
 ### For Researchers
 1. **Problem:** [QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt) (5 min)
-2. **Research:** [docs/RESEARCH-FINDINGS.md](docs/RESEARCH-FINDINGS.md) (25 min)
+2. **Research:** [docs/RESEARCH-FINDINGS.md](../../07-RESEARCH-AND-LESSONS/FINDINGS.md) (25 min)
 3. **Details:** [MACH_QEMU_RESEARCH_REPORT.md](MACH_QEMU_RESEARCH_REPORT.md) (20 min)
 4. **Report:** [SESSION-COMPLETION-REPORT.md](SESSION-COMPLETION-REPORT.md) (20 min)
 
 ### For Support/Troubleshooting
 1. **Quick Fix:** [QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt) (5 min)
-2. **Troubleshoot:** [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) (variable)
+2. **Troubleshoot:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) (variable)
 3. **Validate:** [VALIDATION-AND-TROUBLESHOOTING.md](VALIDATION-AND-TROUBLESHOOTING.md) (15 min)
-4. **Access:** [docs/CREDENTIALS.md](docs/CREDENTIALS.md) (5 min)
+4. **Access:** [docs/CREDENTIALS.md](../CREDENTIALS.md) (5 min)
 
 ---
 
 ## Key Topics Quick Reference
 
 ### Docker & Containerization
-- **Overview:** [README.md](README.md)
-- **Design:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **Deploy:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- **Overview:** [README.md](../README.md)
+- **Design:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md)
+- **Deploy:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md)
 - **Configuration:** `Dockerfile`, `entrypoint.sh`, `docker-compose.yml`
 - **Validation:** `scripts/validate-config.sh`, `scripts/test-docker.sh`
 
 ### Kernel & System Configuration
 - **CachyOS Fix:** [QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt)
-- **Detailed Plan:** [docs/KERNEL-STANDARDIZATION-PLAN.md](docs/KERNEL-STANDARDIZATION-PLAN.md)
-- **Research:** [docs/RESEARCH-FINDINGS.md](docs/RESEARCH-FINDINGS.md)
-- **QEMU Parameters:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System Parameters
+- **Detailed Plan:** [docs/KERNEL-STANDARDIZATION-PLAN.md](../../07-RESEARCH-AND-LESSONS/KERNEL-STANDARDIZATION.md)
+- **Research:** [docs/RESEARCH-FINDINGS.md](../../07-RESEARCH-AND-LESSONS/FINDINGS.md)
+- **QEMU Parameters:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) - System Parameters
 
 ### Disk Images
 - **Download:** [scripts/download-image.sh](scripts/download-image.sh)
 - **Formats:** [STRUCTURAL-MAP.md](STRUCTURAL-MAP.md) - Disk Image Files
-- **Specifications:** [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
+- **Specifications:** [QUICK_START_GUIDE.md](../../01-GETTING-STARTED/archive/QUICK_START_GUIDE.md)
 
 ### Access & Security
-- **Credentials:** [docs/CREDENTIALS.md](docs/CREDENTIALS.md)
-- **User Setup:** [docs/USER-SETUP.md](docs/USER-SETUP.md)
-- **Architecture:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Security Considerations
+- **Credentials:** [docs/CREDENTIALS.md](../CREDENTIALS.md)
+- **User Setup:** [docs/USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md)
+- **Architecture:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) - Security Considerations
 
 ### Troubleshooting
 - **Kernel Issues:** [QUICK-START-KERNEL-FIX.txt](QUICK-START-KERNEL-FIX.txt)
-- **Docker Failures:** [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-- **Deployment Issues:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Troubleshooting Deployment
+- **Docker Failures:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md)
+- **Deployment Issues:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) - Troubleshooting Deployment
 - **Validation:** [VALIDATION-AND-TROUBLESHOOTING.md](VALIDATION-AND-TROUBLESHOOTING.md)
 
 ### CI/CD & Automation
@@ -392,26 +392,26 @@ docker-compose exec gnu-hurd-dev bash
 ### Internal Documentation
 - [Repository Summary](REPO-SUMMARY.txt)
 - [Structural Map](STRUCTURAL-MAP.md)
-- [Documentation Index](docs/INDEX.md)
+- [Documentation Index](../../INDEX.md)
 
 ### Getting Started
-- [README](README.md)
-- [Execution Summary](EXECUTION-SUMMARY.md)
-- [Quick Start Guide](QUICK_START_GUIDE.md)
+- [README](../README.md)
+- [Execution Summary](../../07-RESEARCH-AND-LESSONS/sessions/EXECUTION-SUMMARY.md)
+- [Quick Start Guide](../../01-GETTING-STARTED/archive/QUICK_START_GUIDE.md)
 
 ### Problem Solving
 - [Kernel Fix](QUICK-START-KERNEL-FIX.txt)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Research Findings](docs/RESEARCH-FINDINGS.md)
+- [Troubleshooting](../../06-TROUBLESHOOTING/GENERAL.md)
+- [Research Findings](../../07-RESEARCH-AND-LESSONS/FINDINGS.md)
 
 ### Operations
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Credentials](docs/CREDENTIALS.md)
-- [User Setup](docs/USER-SETUP.md)
+- [Deployment Guide](../../04-OPERATION/deployment/DEPLOYMENT.md)
+- [Credentials](../CREDENTIALS.md)
+- [User Setup](../../03-CONFIGURATION/user/SETUP.md)
 
 ### Technical Details
-- [Architecture](docs/ARCHITECTURE.md)
-- [Kernel Plan](docs/KERNEL-STANDARDIZATION-PLAN.md)
+- [Architecture](../../02-ARCHITECTURE/SYSTEM-DESIGN.md)
+- [Kernel Plan](../../07-RESEARCH-AND-LESSONS/KERNEL-STANDARDIZATION.md)
 - [Research Report](MACH_QEMU_RESEARCH_REPORT.md)
 
 ---
@@ -434,7 +434,7 @@ docker-compose exec gnu-hurd-dev bash
 ## Support & Help
 
 ### For Quick Questions
-→ See [docs/INDEX.md](docs/INDEX.md) "Getting Help" section
+→ See [docs/INDEX.md](../../INDEX.md) "Getting Help" section
 
 ### For Specific Issues
 → Browse by category in **Key Topics Quick Reference** above
@@ -462,7 +462,7 @@ This repository contains a **complete, production-ready implementation** of GNU/
 
 **Status: PRODUCTION-READY**
 
-**Next Action: Read [EXECUTION-SUMMARY.md](EXECUTION-SUMMARY.md) and follow the 3-step kernel upgrade procedure**
+**Next Action: Read [EXECUTION-SUMMARY.md](../../07-RESEARCH-AND-LESSONS/sessions/EXECUTION-SUMMARY.md) and follow the 3-step kernel upgrade procedure**
 
 ---
 

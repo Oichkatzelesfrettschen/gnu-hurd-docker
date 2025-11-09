@@ -13,14 +13,14 @@ LINK SYNTAX STANDARDS
 
 CORRECT:
 ```markdown
-[Installation Guide](../01-getting-started/INSTALLATION.md)
+[Installation Guide](../../01-GETTING-STARTED/INSTALLATION.md)
 [Troubleshooting](../02-user-guide/TROUBLESHOOTING.md)
 [Same Directory](./ANOTHER-DOC.md)
 ```
 
 INCORRECT:
 ```markdown
-[Wrong](/docs/01-getting-started/INSTALLATION.md)  # Absolute path
+[Wrong](../../01-GETTING-STARTED/INSTALLATION.md)  # Absolute path
 [Wrong](https://github.com/.../INSTALLATION.md)    # Full URL for internal
 ```
 
@@ -66,7 +66,7 @@ At the beginning of technical documents:
 ```markdown
 ## Prerequisites
 Before reading this document, ensure you've reviewed:
-- [System Requirements](../01-getting-started/REQUIREMENTS.md)
+- [System Requirements](../../01-GETTING-STARTED/REQUIREMENTS.md)
 - [Basic Concepts](../00-overview/ARCHITECTURE.md#concepts)
 ```
 
@@ -179,8 +179,8 @@ From 01-getting-started/ to 02-user-guide/:
 
 ```markdown
 Within 01-getting-started/:
-[Installation](./INSTALLATION.md)
-[Requirements](./REQUIREMENTS.md)
+[Installation](../../01-GETTING-STARTED/INSTALLATION.md)
+[Requirements](../../01-GETTING-STARTED/REQUIREMENTS.md)
 ```
 
 ### 4. TO ARCHIVE

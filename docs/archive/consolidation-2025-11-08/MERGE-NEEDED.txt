@@ -1,0 +1,128 @@
+================================================================================
+DOCUMENTATION CONSOLIDATION - MERGE REQUIRED
+Generated: 2025-11-08
+================================================================================
+
+This file lists documentation that requires manual merging due to conflicts
+with existing files in the target locations. Each conflict needs human review
+to determine how to best combine the content.
+
+================================================================================
+FILES REQUIRING MANUAL MERGE
+================================================================================
+
+1. QUICKSTART GUIDES
+-------------------
+Source: ./QUICKSTART.md (326 lines)
+Target: ./01-GETTING-STARTED/QUICKSTART.md (452 lines)
+
+Analysis:
+- Both files contain quickstart instructions
+- Target file is newer and more comprehensive (126 more lines)
+- Source file may contain unique content that should be preserved
+
+Recommendation:
+- Review both files for unique content
+- Merge any unique content from source into target
+- Consider whether some content belongs in archive/
+- Delete source file after merge is complete
+
+
+2. INSTALLATION GUIDES
+----------------------
+Source: ./INSTALLATION.md (845 lines)
+Target: ./01-GETTING-STARTED/INSTALLATION.md (991 lines)
+
+Analysis:
+- Both files contain installation instructions
+- Target file is newer and more comprehensive (146 more lines)
+- Source file may contain unique troubleshooting steps or alternative methods
+
+Recommendation:
+- Compare installation methods and prerequisites
+- Merge any unique troubleshooting sections
+- Verify all installation paths are covered
+- Delete source file after merge is complete
+
+
+================================================================================
+FILES KEPT IN ROOT (Special Purpose)
+================================================================================
+
+These files serve specific purposes and should remain in the root docs directory:
+
+1. INDEX.md
+-----------
+Purpose: Main documentation index/landing page
+Status: Keep in root as primary navigation document
+Note: This serves as the main entry point for documentation
+
+
+2. CONSOLIDATION-REPORT.md
+--------------------------
+Purpose: Documentation of the consolidation process
+Status: Keep for reference during consolidation work
+Action: Move to archive/ after consolidation is complete
+
+
+3. DOCUMENTATION-CONSOLIDATION-REPORT.md
+-----------------------------------------
+Purpose: Detailed consolidation analysis
+Status: Keep for reference during consolidation work
+Action: Move to archive/ after consolidation is complete
+
+
+4. DUPLICATION-HEATMAP.md
+-------------------------
+Purpose: Visual map of documentation duplication
+Status: Keep for reference during consolidation work
+Action: Move to archive/ after consolidation is complete
+
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Manual Merge Required:
+   - Compare QUICKSTART.md files and merge unique content
+   - Compare INSTALLATION.md files and merge unique content
+   - Delete source files after merging
+
+2. Final Cleanup:
+   - Move consolidation reports to archive/ when complete
+   - Update INDEX.md to reflect new structure
+   - Verify all cross-references are updated
+
+3. Validation:
+   - Check that no documentation was lost
+   - Verify all links work correctly
+   - Test that documentation flow makes sense
+
+
+================================================================================
+CONSOLIDATION SUMMARY
+================================================================================
+
+Phase 1 Completed:
+- Deleted: CREDENTIALS.txt (duplicate of CREDENTIALS.md)
+- Deleted: ARCHITECTURE.md.bak (backup file)
+- Archived: index.md (moved to archive/deprecated/)
+
+Phase 2 Completed:
+- Moved: 38 files to new organized structure
+- Created: Proper directory hierarchy with subdirectories
+
+Phase 3 Completed:
+- Moved: 5 additional safe files
+- Identified: 2 files requiring manual merge
+- Preserved: 4 special-purpose files in root
+
+Total Files Processed: 50+
+Files Successfully Moved: 43
+Files Requiring Manual Merge: 2
+Files Kept in Root: 4 (special purpose)
+
+
+================================================================================
+END OF MERGE-NEEDED REPORT
+================================================================================

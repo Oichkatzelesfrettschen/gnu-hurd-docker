@@ -274,7 +274,7 @@ id developer
 
 ### Configure SSH Keys
 
-See [CREDENTIALS.md](CREDENTIALS.md) and [USER-SETUP.md](USER-SETUP.md) for SSH key setup.
+See [CREDENTIALS.md](../../03-CONFIGURATION/CREDENTIALS.md) and [USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md) for SSH key setup.
 
 ### Custom Configuration
 
