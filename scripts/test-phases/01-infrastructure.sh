@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/01-infrastructure.sh - Container Infrastructure Tests
 # WHY: Verify Docker container is running before other tests
 # WHAT: Check container status and accessibility

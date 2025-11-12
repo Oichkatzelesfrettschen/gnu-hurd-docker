@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # lib/colors.sh - Standardized color output functions
 # WHY: Eliminate ~200 lines of duplicated color functions across 12+ scripts
 # WHAT: Provides echo_info, echo_success, echo_error, echo_warning, step, pass, fail

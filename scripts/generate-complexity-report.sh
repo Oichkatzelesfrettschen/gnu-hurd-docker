@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Generate complexity report with rankings and recommendations
 # WHY: Process raw metrics into actionable insights
 # WHAT: Analyzes JSON data and produces structured report

@@ -101,7 +101,8 @@ test_info "TEST 2: Verifying package arrays..."
 
 verify_array() {
     local array_name="$1"
-    local array_value=$(eval "echo \"\$$array_name\"")
+    local array_value
+    array_value=$(eval "echo \"\$$array_name\"")
     
     if [ -z "$array_value" ]; then
         test_fail "$array_name is empty or undefined"
@@ -109,7 +110,8 @@ verify_array() {
     fi
     
     # Count number of packages (non-empty lines)
-    local count=$(echo "$array_value" | grep -c -v "^$" || echo "0")
+    local count
+    count=$(echo "$array_value" | grep -c -v "^$" || echo "0")
     
     if [ "$count" -gt 0 ]; then
         test_pass "$array_name has $count packages"
@@ -180,7 +182,8 @@ test_info "TEST 4: Checking package list content..."
 check_package_in_array() {
     local package="$1"
     local array_name="$2"
-    local array_value=$(eval "echo \"\$$array_name\"")
+    local array_value
+    array_value=$(eval "echo \"\$$array_name\"")
     
     if echo "$array_value" | grep -q "$package"; then
         test_pass "$package found in $array_name"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/07-hurd-features.sh - GNU/Hurd Specific Features Tests
 # WHY: Verify Hurd-specific components are accessible
 # WHAT: Check translators, servers, and /hurd directory

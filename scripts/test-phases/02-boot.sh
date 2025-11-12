@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/02-boot.sh - Boot Process Verification
 # WHY: Ensure system has fully booted and SSH is accessible
 # WHAT: Wait for SSH port to become available with timeout

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/common.sh - Shared test utilities and SSH helpers
 # WHY: Centralize common test functions to reduce duplication across phase modules
 # WHAT: SSH connection setup, result tracking, common test utilities

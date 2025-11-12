@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/03-users.sh - User Account Validation
 # WHY: Verify both root and agents users are properly configured
 # WHAT: Test SSH access and sudo permissions for both accounts

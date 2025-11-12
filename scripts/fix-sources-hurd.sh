@@ -3,7 +3,7 @@
 # Requires: sshpass on host; SSH running in guest (root access)
 # Usage: ROOT_PASS=root scripts/fix-sources-hurd.sh [-h host] [-p port]
 set -euo pipefail
-n# Source libraries
+# Source libraries
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/ssh-helpers.sh
 source "$SCRIPT_DIR/lib/ssh-helpers.sh"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/05-packages.sh - Package Management Tests
 # WHY: Verify apt package management functionality
 # WHAT: Test package search and verification

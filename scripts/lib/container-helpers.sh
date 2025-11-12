@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # lib/container-helpers.sh - Docker/QEMU container management
 # WHY: Eliminate duplicated container status checking across multiple scripts
 # WHAT: Functions to check container status, QEMU process, wait for boot

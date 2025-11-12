@@ -82,7 +82,9 @@
 set -euo pipefail
 
 # Configuration
+# shellcheck disable=SC2155  # Template: Declare and assign separately if needed
 readonly SCRIPT_NAME="$(basename "$0")"
+# shellcheck disable=SC2034,SC2155  # Template: Common pattern, may be unused
 readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Default values for options
