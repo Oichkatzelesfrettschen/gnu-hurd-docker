@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/04-compilation.sh - C Compilation Tests
 # WHY: Verify GCC toolchain and compilation capabilities
 # WHAT: Compile and execute a C program that uses system calls

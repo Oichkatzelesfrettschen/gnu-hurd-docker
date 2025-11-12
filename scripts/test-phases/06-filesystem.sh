@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # test-phases/06-filesystem.sh - Filesystem Operations Tests
 # WHY: Verify basic filesystem operations work correctly
 # WHAT: Test directory creation, file I/O, and cleanup

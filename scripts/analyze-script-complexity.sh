@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Script Complexity Analyzer
 # WHY: Establish quantitative baselines for script quality
 # WHAT: Measures LOC, complexity, dependencies, documentation
@@ -7,7 +7,6 @@
 set -euo pipefail
 
 SCRIPTS_DIR="/home/eirikr/Playground/gnu-hurd-docker/scripts"
-OUTPUT_JSON="/tmp/script-metrics.json"
 
 # Analyze a single script
 analyze_script() {
@@ -119,8 +118,8 @@ EOF
 
 # Main analysis
 echo "{"
-echo '  "analysis_timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",'
-echo '  "scripts_analyzed": '$( ls "$SCRIPTS_DIR"/*.sh 2>/dev/null | wc -l )','
+echo "  \"analysis_timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\","
+echo "  \"scripts_analyzed\": $(ls "$SCRIPTS_DIR"/*.sh 2>/dev/null | wc -l),"
 echo '  "per_script_metrics": ['
 
 first=true
