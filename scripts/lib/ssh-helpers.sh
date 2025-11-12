@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # lib/ssh-helpers.sh - SSH connection and waiting utilities
 # WHY: Eliminate ~80 lines of duplicated SSH waiting logic across 5+ scripts
 # WHAT: wait_for_ssh_port, ssh_exec functions with timeout and retry logic

@@ -64,7 +64,7 @@ apt_update() {
 install_packages() {
     local phase="$1"
     shift
-    local packages="$@"
+    local packages="$*"
     
     if [ -z "$phase" ] || [ -z "$packages" ]; then
         echo_error "install_packages: missing arguments"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # GNU/Hurd Docker - Comprehensive System Testing Script
 # WHY: Orchestrate modular test phases for maintainability
 # WHAT: Main test runner that executes all test phases in order

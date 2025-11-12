@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+# shellcheck disable=SC2034  # SCRIPT_DIR used by sourced scripts
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEST_DIR="/tmp/trap-handler-tests-$$"
 RESULTS_FILE="$TEST_DIR/results.txt"
