@@ -296,8 +296,8 @@ jobs:
           docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
           # Download Hurd QCOW2 image
-          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
-          tar xf debian-hurd-amd64-20250807.img.tar.xz
+          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz
+          tar xf debian-hurd.img.tar.xz
 
           # Run
           docker run -d --privileged --name gnu-hurd \

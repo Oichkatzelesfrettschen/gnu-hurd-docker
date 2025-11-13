@@ -16,24 +16,24 @@ echo "================================================================"
 echo ""
 
 # Download if not present
-if [ ! -f "debian-hurd-amd64-20250807.img.tar.xz" ]; then
-    echo_info "Downloading Debian GNU/Hurd amd64 image (337MB)..."
-    curl -L -o debian-hurd-amd64-20250807.img.tar.xz \
-        https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
+if [ ! -f "debian-hurd-amd64.img.tar.xz" ]; then
+    echo_info "Downloading Debian GNU/Hurd amd64 image (~350MB)..."
+    curl -L -o debian-hurd-amd64.img.tar.xz \
+        https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz
     echo_success "Download complete"
 fi
 
 # Extract
-if [ ! -f "debian-hurd-amd64-20250807.img" ]; then
+if [ ! -f "debian-hurd.img" ]; then
     echo_info "Extracting image..."
-    tar -xJf debian-hurd-amd64-20250807.img.tar.xz
+    tar -xJf debian-hurd-amd64.img.tar.xz
     echo_success "Extraction complete"
 fi
 
 # Convert to qcow2 with 80GB dynamic expansion
 if [ ! -f "debian-hurd-amd64-80gb.qcow2" ]; then
     echo_info "Converting to qcow2 with 80GB dynamic expansion..."
-    qemu-img convert -f raw -O qcow2 debian-hurd-amd64-20250807.img debian-hurd-amd64-80gb-base.qcow2
+    qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-amd64-80gb-base.qcow2
     
     echo_info "Resizing to 80GB (dynamic expansion)..."
     qemu-img resize debian-hurd-amd64-80gb-base.qcow2 80G
