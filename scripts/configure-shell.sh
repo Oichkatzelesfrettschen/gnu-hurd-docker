@@ -53,7 +53,7 @@ cat >> "$BASHRC" << 'EOF'
 export MACH_ROOT=/usr/src/gnumach
 export PATH=$PATH:/usr/lib/mig/bin
 export MANPATH=$MANPATH:/usr/share/man/mach
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/lib/i386-gnu/pkgconfig
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/lib/x86_64-gnu/pkgconfig
 
 # Build configuration
 export CC=gcc

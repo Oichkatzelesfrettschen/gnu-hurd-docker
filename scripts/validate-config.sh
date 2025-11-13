@@ -182,12 +182,12 @@ echo ""
 echo "5. Checking disk image..."
 echo ""
 
-if [ -f "debian-hurd-i386-20250807.qcow2" ]; then
-    SIZE=$(du -h "debian-hurd-i386-20250807.qcow2" | cut -f1)
+if [ -f "debian-hurd-amd64-20250807.qcow2" ]; then
+    SIZE=$(du -h "debian-hurd-amd64-20250807.qcow2" | cut -f1)
     pass "QCOW2 image found (size: $SIZE)"
     
     if command -v file &> /dev/null; then
-        if file "debian-hurd-i386-20250807.qcow2" | grep -q "QEMU"; then
+        if file "debian-hurd-amd64-20250807.qcow2" | grep -q "QEMU"; then
             pass "QCOW2 format verified"
         else
             fail "File is not a valid QCOW2 image"
