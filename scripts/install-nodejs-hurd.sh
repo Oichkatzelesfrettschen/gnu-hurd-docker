@@ -1,7 +1,7 @@
 #!/bin/bash
-# Node.js Installation for Debian GNU/Hurd i386
+# Node.js Installation for Debian GNU/Hurd x86_64 (amd64)
 # Attempts multiple installation methods with fallbacks
-# Version: 1.0
+# Version: 2.0
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ echo_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 echo ""
 echo "================================================================"
-echo "  Node.js Installation for Debian GNU/Hurd i386"
+echo "  Node.js Installation for Debian GNU/Hurd x86_64 (amd64)"
 echo "================================================================"
 echo ""
 
@@ -111,8 +111,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
             exit 1
         }
 
-    # Use older, more compatible Node.js version
-    NODE_VERSION="v16.20.2"  # LTS, i386-compatible
+    # Use LTS Node.js version compatible with x86_64
+    NODE_VERSION="v18.20.0"  # LTS, x86_64-compatible
     NODE_DIR="/usr/local/src/node-$NODE_VERSION"
 
     echo_info "Downloading Node.js $NODE_VERSION source..."
@@ -129,14 +129,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo_info "Configuring Node.js build..."
     echo_warning "This may fail on GNU/Hurd due to platform incompatibilities"
 
-    # Configure with conservative flags for i386
+    # Configure for x86_64 architecture
     ./configure \
         --prefix=/usr/local \
         --without-intl \
-        --dest-cpu=ia32 \
         || {
             echo_error "Configuration failed"
-            echo_error "Node.js may not be compatible with GNU/Hurd i386"
+            echo_error "Node.js may not be fully compatible with GNU/Hurd x86_64"
             exit 1
         }
 
@@ -180,9 +179,9 @@ echo "     Then: apt-get update && apt-get install nodejs"
 echo ""
 echo "  2. Build from source manually:"
 echo "     cd /usr/local/src"
-echo "     curl -fsSL https://nodejs.org/dist/v16.20.2/node-v16.20.2.tar.gz | tar xz"
-echo "     cd node-v16.20.2"
-echo "     ./configure --prefix=/usr/local --dest-cpu=ia32"
+echo "     curl -fsSL https://nodejs.org/dist/v18.20.0/node-v18.20.0.tar.gz | tar xz"
+echo "     cd node-v18.20.0"
+echo "     ./configure --prefix=/usr/local"
 echo "     make -j$(nproc)"
 echo "     make install"
 echo ""

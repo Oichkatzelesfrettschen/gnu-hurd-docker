@@ -57,7 +57,7 @@ jobs:
 
             ### System Requirements
             - Docker and Docker Compose installed
-            - Debian GNU/Hurd i386 QCOW2 disk image
+            - Debian GNU/Hurd x86_64 (amd64) QCOW2 disk image
             - 2GB+ available disk space for container
             - 2GB+ available RAM
 

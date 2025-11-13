@@ -13,10 +13,10 @@ echo "=========================================="
 echo ""
 
 # Configuration
-DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz"
+DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz"
 COMPRESSED_FILE="debian-hurd.img.tar.xz"
-RAW_IMAGE="debian-hurd-i386-20250807.img"
-QCOW2_IMAGE="debian-hurd-i386-20250807.qcow2"
+RAW_IMAGE="debian-hurd.img"
+QCOW2_IMAGE="debian-hurd-amd64.qcow2"
 
 # Track cleanup state
 CLEANUP_NEEDED=false

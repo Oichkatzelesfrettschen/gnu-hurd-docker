@@ -281,7 +281,7 @@ jobs:
 
           ### ✨ Features
 
-          - **Debian GNU/Hurd 2025** (i386) with full microkernel support
+          - **Debian GNU/Hurd 2025** (x86_64/amd64) with full microkernel support
           - **QEMU Optimization** - VirtIO devices, KVM acceleration, multiple display modes
           - **Graphics Support** - VNC, SDL/GTK with OpenGL, framebuffer acceleration
           - **Development Ready** - Pre-configured with build tools and packages
@@ -296,7 +296,7 @@ jobs:
           docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
           # Download Hurd QCOW2 image
-          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz
           tar xf debian-hurd.img.tar.xz
 
           # Run

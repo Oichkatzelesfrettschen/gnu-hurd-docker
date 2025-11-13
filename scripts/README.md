@@ -4,6 +4,8 @@ Comprehensive script reference for GNU/Hurd development environment setup, autom
 
 **Total Scripts**: 31 | **Last Updated**: 2025-11-08
 
+**Architecture**: This project is **x86_64-only** as of v2.0.0 (2025-11-08). Any references to i386/i686 in script documentation are legacy and should be considered outdated.
+
 ## Quick Navigation
 
 **I need to...**
@@ -315,7 +317,7 @@ ssh -p 2222 root@localhost
 
 **WHY**: Install Node.js for JavaScript development with multiple fallback methods.
 
-**WHAT**: Attempts Node.js installation via Debian repositories (most reliable), or builds from source (time-consuming). Handles i386 architecture limitations.
+**WHAT**: Attempts Node.js installation via Debian repositories (most reliable), or builds from source (time-consuming). Optimized for x86_64 architecture.
 
 **HOW**:
 ```bash
@@ -331,8 +333,8 @@ ssh -p 2222 root@localhost
 - Configures npm global directory for non-root installs
 
 **Method 2 - Build from Source** (Advanced):
-- Downloads Node.js v16.20.2 source (LTS, i386-compatible)
-- Compiles with conservative flags for i386
+- Downloads Node.js v18.20.0 source (LTS, x86_64-compatible)
+- Compiles for x86_64 architecture
 - Takes 30-60 minutes
 - May fail on Hurd due to platform incompatibilities
 
@@ -344,7 +346,8 @@ node --version
 npm --version
 ```
 
-**Note**: Node.js may not be fully compatible with GNU/Hurd i386. Consider using Python as alternative.
+**Note**: Node.js support on GNU/Hurd x86_64 is improving. Consider using Python as a stable alternative.
+
 
 ---
 
@@ -532,12 +535,12 @@ Management, monitoring, and maintenance tools.
 
 **Configuration file format**:
 ```bash
-ARCH=i386
+ARCH=x86_64
 CPU=host
-MEMORY=1024M
-SMP=1
+MEMORY=4096M
+SMP=2
 ENABLE_KVM=yes
-DISK_IMAGE=/path/to/debian-hurd.qcow2
+DISK_IMAGE=/path/to/debian-hurd-amd64.qcow2
 NETWORK_MODE=user
 NETWORK_DEVICE=e1000
 HOST_FWD_SSH=tcp::2222-:22
@@ -546,8 +549,8 @@ DISPLAY_TYPE=gtk
 ```
 
 **Prerequisites**:
-- qemu-system-i386 or qemu-system-x86_64
-- Valid QCOW2 disk image
+- qemu-system-x86_64
+- Valid QCOW2 disk image (x86_64)
 
 ---
 
@@ -932,8 +935,8 @@ cat /tmp/report.json | jq .
 - Duplicate names
 - Files with GUIDE, QUICKSTART, CI/CD in names
 - Installation-related files
-- i386 references (may be outdated for x86_64)
-- qemu-system-i386 references
+- Legacy i386 references (project is now x86_64-only)
+- Legacy qemu-system-i386 references (now using qemu-system-x86_64)
 - File sizes
 - Total documentation lines
 - Files with "lesson" or "learned"

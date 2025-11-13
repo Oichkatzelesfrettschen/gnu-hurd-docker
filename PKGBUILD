@@ -2,7 +2,7 @@ pkgname=gnu-hurd-docker
 pkgver=2.0.0
 pkgrel=1
 pkgdesc="GNU/Hurd x86_64 microkernel in QEMU within Docker - Complete development environment"
-arch=('x86_64' 'i686')
+arch=('x86_64')
 url="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
 license=('MIT')
 depends=(
@@ -122,6 +122,21 @@ INSTALL_DIR="/opt/gnu-hurd-docker"
 CONFIG_DIR="/etc/gnu-hurd-docker"
 WORK_DIR="${HOME}/.local/share/gnu-hurd-docker"
 
+# Docker Compose v2/v1 compatibility wrapper
+docker_compose() {
+    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        # Docker Compose v2 (integrated into docker CLI)
+        docker compose "$@"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        # Docker Compose v1 (standalone)
+        docker-compose "$@"
+    else
+        echo "Error: Neither 'docker compose' (v2) nor 'docker-compose' (v1) found"
+        echo "Please install Docker Compose: https://docs.docker.com/compose/install/"
+        exit 1
+    fi
+}
+
 # Ensure work directory exists
 mkdir -p "${WORK_DIR}"/{qmp,share,logs}
 
@@ -150,28 +165,28 @@ cd "${WORK_DIR}"
 case "${1:-help}" in
     start|up)
         echo "Starting GNU/Hurd Docker environment..."
-        docker-compose up -d
+        docker_compose up -d
         echo "Container started. Access via:"
         echo "  SSH: ssh -p 2222 root@localhost"
         echo "  Serial: telnet localhost 5555"
-        echo "  Logs: docker-compose logs -f"
+        echo "  Logs: gnu-hurd-docker logs"
         ;;
     stop|down)
         echo "Stopping GNU/Hurd Docker environment..."
-        docker-compose down
+        docker_compose down
         ;;
     logs)
-        docker-compose logs -f
+        docker_compose logs -f
         ;;
     shell)
-        docker-compose exec gnu-hurd-dev bash
+        docker_compose exec gnu-hurd-dev bash
         ;;
     build)
         echo "Building Docker image..."
-        docker-compose build
+        docker_compose build
         ;;
     status)
-        docker-compose ps
+        docker_compose ps
         ;;
     download)
         echo "Downloading Debian GNU/Hurd image..."

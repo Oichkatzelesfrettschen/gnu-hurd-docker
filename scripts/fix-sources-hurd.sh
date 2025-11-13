@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fix and optimize apt sources for Debian GNU/Hurd (i386) on Debian-Ports (Nov 2025 best-practice)
+# Fix and optimize apt sources for Debian GNU/Hurd (x86_64/amd64) on Debian-Ports (Nov 2025 best-practice)
 # Requires: sshpass on host; SSH running in guest (root access)
 # Usage: ROOT_PASS=root scripts/fix-sources-hurd.sh [-h host] [-p port]
 set -euo pipefail
@@ -32,7 +32,7 @@ source "$SCRIPT_DIR/lib/ssh-helpers.sh"
 backup=/etc/apt/sources.list.$(date +%Y%m%d%H%M%S).bak
 [ -f /etc/apt/sources.list ] && cp -f /etc/apt/sources.list "$backup" || true
 cat > /etc/apt/sources.list <<'EOF'
-# Debian-Ports (GNU/Hurd i386) - Best practice (Nov 2025)
+# Debian-Ports (GNU/Hurd x86_64/amd64) - Best practice (Nov 2025)
 # Unofficial port: no security repo; track unstable and unreleased
 # More info: https://www.debian.org/ports/hurd/
 deb http://deb.debian.org/debian-ports unstable main
