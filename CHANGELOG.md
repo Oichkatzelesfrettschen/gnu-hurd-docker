@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2025-11-13 (Repository Harmonization)
+- Created standard directories: `build/`, `logs/`, `src/` with README documentation
+- Created `docs/audits/` subdirectory for audit reports and metrics
+- Created `docs/reports/` subdirectory for project reports and summaries
+- Created `scripts/utils/` subdirectory for utility scripts and tools
+- Added comprehensive Repository Harmonization Report
+
+### Changed - 2025-11-13 (Repository Harmonization)
+- **MAJOR**: Reorganized repository structure for better modularity
+- Moved 12 documentation files from `scripts/` to `docs/` (audits/, reports/, 08-REFERENCE/)
+- Moved 6 utility scripts from `docs/` to `scripts/utils/`
+- Moved 4 project reports from root to `docs/reports/`
+- Updated `.gitignore` to properly exclude build/, logs/, src/ while tracking README files
+
+### Improved - 2025-11-13 (Repository Harmonization)
+- Documentation: Clear separation between active docs and reports
+- Scripts: Better organization with lib/ and utils/ subdirectories
+- Build: Proper artifact management with gitignore rules
+- Quality: All 30+ scripts pass ShellCheck validation
+- Validation: All 9 GitHub Actions workflows pass yamllint
+- All section README files maintain consistent format
+- REQUIREMENTS.md verified as comprehensive and production-ready
+
 ## [2.0.0] - 2025-11-08
 
 ### Added
