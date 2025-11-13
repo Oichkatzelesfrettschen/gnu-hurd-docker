@@ -139,7 +139,7 @@ jobs:
           echo "./download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Option 2: Direct download" >> $GITHUB_STEP_SUMMARY
-          HURD_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64"
+          HURD_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64"
           echo "wget $HURD_URL/debian-hurd-amd64-20250807.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "tar xf debian-hurd-amd64-20250807.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

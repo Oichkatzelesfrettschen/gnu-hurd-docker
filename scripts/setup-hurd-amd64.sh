@@ -19,7 +19,7 @@ echo ""
 if [ ! -f "debian-hurd-amd64-20250807.img.tar.xz" ]; then
     echo_info "Downloading Debian GNU/Hurd amd64 image (337MB)..."
     curl -L -o debian-hurd-amd64-20250807.img.tar.xz \
-        https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
+        https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
     echo_success "Download complete"
 fi
 

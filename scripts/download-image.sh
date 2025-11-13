@@ -13,7 +13,7 @@ echo "=========================================="
 echo ""
 
 # Configuration
-DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz"
+DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz"
 COMPRESSED_FILE="debian-hurd-amd64.img.tar.xz"
 RAW_IMAGE="debian-hurd-amd64-20250807.img"
 QCOW2_IMAGE="debian-hurd-amd64-20250807.qcow2"
