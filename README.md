@@ -90,6 +90,8 @@ ssh -p 2222 root@localhost
 
 ## Architecture
 
+**Important**: This project runs a **full Debian GNU/Hurd system in a QEMU virtual machine**. Docker only hosts the QEMU process—it does *not* run Hurd as a native container. There is no direct/native Hurd-on-Docker support on Linux yet, as this would require a Mach-on-Linux or Hurd-on-Linux port (see [Doing a GNU/Hurd System Port](https://darnassus.sceen.net/~hurd-web/faq/system_port/) for details).
+
 **x86_64-Only** (i386 deprecated 2025-11-07):
 
 | Component | Configuration |

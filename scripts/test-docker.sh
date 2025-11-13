@@ -56,8 +56,8 @@ echo "Test 4: Configuration files..."
 
 # Test 5: QCOW2 image exists
 echo "Test 5: QCOW2 image..."
-if [ -f "debian-hurd-i386-20250807.qcow2" ]; then
-    SIZE=$(du -h "debian-hurd-i386-20250807.qcow2" | cut -f1)
+if [ -f "debian-hurd-amd64.qcow2" ]; then
+    SIZE=$(du -h "debian-hurd-amd64.qcow2" | cut -f1)
     pass "QCOW2 image found ($SIZE)"
 else
     fail "QCOW2 image not found (run ./scripts/download-image.sh)"

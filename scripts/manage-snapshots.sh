@@ -25,7 +25,7 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-QCOW2_IMAGE="${QCOW2_IMAGE:-debian-hurd-i386-20250807.qcow2}"
+QCOW2_IMAGE="${QCOW2_IMAGE:-debian-hurd-amd64.qcow2}"
 
 # Colors
 GREEN='\033[0;32m'

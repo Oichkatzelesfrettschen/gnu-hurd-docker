@@ -104,3 +104,10 @@ jobs:
               fi
             fi
           done
+
+      - name: Validate security configuration
+        run: |
+          echo "=== Validating security configuration ==="
+          chmod +x scripts/validate-security-config.sh
+          ./scripts/validate-security-config.sh docker-compose.yml
+
