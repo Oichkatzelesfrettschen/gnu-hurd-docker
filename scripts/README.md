@@ -4,6 +4,8 @@ Comprehensive script reference for GNU/Hurd development environment setup, autom
 
 **Total Scripts**: 31 | **Last Updated**: 2025-11-08
 
+**Architecture**: This project is **x86_64-only** as of v2.0.0 (2025-11-08). Any references to i386/i686 in script documentation are legacy and should be considered outdated.
+
 ## Quick Navigation
 
 **I need to...**
