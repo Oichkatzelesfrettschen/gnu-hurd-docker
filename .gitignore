@@ -40,8 +40,17 @@ venv/
 /temp/
 *.tmp
 
+# Build artifacts
+build/
+!build/README.md
+
+# Source materials (downloaded upstream files)
+src/*
+!src/README.md
+
 # npm/yarn audit logs
 logs/
+!logs/README.md
 *.audit.json
 *.img.bak.*
 
