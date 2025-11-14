@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - 2025-11-14 (Action Modernization)
+- **Upgraded `actions/setup-python`** from v4 to v5 across all workflows
+  - Updated `deploy-pages.yml` to use v5
+  - Updated `validate.yml` to use v5
+  - All workflows now use consistent v5
+- **Upgraded Python version** from 3.11 to 3.12 (latest stable LTS)
+  - Updated all workflows to Python 3.12
+  - Ensures latest features and security updates
+- **Pinned Trivy action** to specific version (0.28.0)
+  - Changed from unstable `@master` to stable `@0.28.0`
+  - Ensures consistent scanning behavior
+  - Follows best practice of version pinning
+
+### Added - 2025-11-14 (Documentation)
+- **Created comprehensive GitHub Actions Best Practices Guide**
+  - `docs/05-CI-CD/GITHUB-ACTIONS-BEST-PRACTICES.md`
+  - 13,000+ character comprehensive guide
+  - Version management strategies
+  - Security best practices
+  - Optimization techniques
+  - Migration guides
+  - Maintenance checklists
+  - Repository-specific standards
+
 ### Fixed - 2025-11-14 (Critical Workflow Fixes)
 - **CRITICAL**: Replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`
   - Fixed `release.yml` workflow using archived/deprecated action
