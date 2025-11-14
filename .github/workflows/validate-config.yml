@@ -9,7 +9,9 @@ name: Configuration Validation
       - docker-compose.yml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'fix-script.sh'
+      - 'scripts/fix-script.sh'
+      - 'scripts/health-check.sh'
+      - 'scripts/lib/**'
       - '.github/workflows/validate-config.yml'
   pull_request:
     paths:
@@ -18,7 +20,9 @@ name: Configuration Validation
       - docker-compose.yml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'fix-script.sh'
+      - 'scripts/fix-script.sh'
+      - 'scripts/health-check.sh'
+      - 'scripts/lib/**'
 
 jobs:
   validate:
@@ -51,9 +55,9 @@ jobs:
 
       - name: Validate fix-script.sh
         run: |
-          echo "[*] Running shellcheck on fix-script.sh..."
-          shellcheck -S error fix-script.sh || echo "[WARN] Minor style issues (non-blocking)"
-          echo "[OK] fix-script.sh is executable"
+          echo "[*] Running shellcheck on scripts/fix-script.sh..."
+          shellcheck -S error scripts/fix-script.sh || echo "[WARN] Minor style issues (non-blocking)"
+          echo "[OK] scripts/fix-script.sh is executable"
 
       - name: Validate docker-compose.yml
         run: |
@@ -68,7 +72,10 @@ jobs:
           test -f docker-compose.yml && echo "[OK] docker-compose.yml exists"
           test -f PKGBUILD && echo "[OK] PKGBUILD exists"
           test -x entrypoint.sh && echo "[OK] entrypoint.sh is executable"
-          test -x fix-script.sh && echo "[OK] fix-script.sh is executable"
+          test -x scripts/fix-script.sh && echo "[OK] scripts/fix-script.sh is executable"
+          test -x scripts/health-check.sh && echo "[OK] scripts/health-check.sh is executable"
+          test -f scripts/lib/colors.sh && echo "[OK] scripts/lib/colors.sh exists"
+          test -f scripts/lib/container-helpers.sh && echo "[OK] scripts/lib/container-helpers.sh exists"
 
       - name: Summary
         run: |
