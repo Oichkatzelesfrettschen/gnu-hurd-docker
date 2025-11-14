@@ -145,31 +145,51 @@ jobs:
       - name: Run black (code formatting check)
         run: |
           echo "=== Checking Python code formatting with black ==="
-          black --check --diff scripts/*.py || {
-            echo "ERROR: Code formatting issues found"
-            echo "Run 'black scripts/*.py' to fix"
-            exit 1
-          }
+          # Check if any Python files exist
+          if find scripts/ -name "*.py" -type f | grep -q .; then
+            find scripts/ -name "*.py" -type f -exec black --check --diff {} + || {
+              echo "ERROR: Code formatting issues found"
+              echo "Run 'black scripts/**/*.py' to fix"
+              exit 1
+            }
+          else
+            echo "No Python files found to check"
+          fi
 
       - name: Run flake8 (PEP8 compliance)
         run: |
           echo "=== Running flake8 for PEP8 compliance ==="
-          flake8 scripts/*.py --max-line-length=100 --count --statistics || {
-            echo "ERROR: PEP8 violations found"
-            exit 1
-          }
+          # Check if any Python files exist
+          if find scripts/ -name "*.py" -type f | grep -q .; then
+            find scripts/ -name "*.py" -type f -exec flake8 {} + --max-line-length=100 --count --statistics || {
+              echo "ERROR: PEP8 violations found"
+              exit 1
+            }
+          else
+            echo "No Python files found to check"
+          fi
 
       - name: Run pylint (comprehensive linting)
         continue-on-error: true  # Pylint can be very strict
         run: |
           echo "=== Running pylint for comprehensive analysis ==="
-          pylint scripts/*.py --max-line-length=100 --score=yes || true
+          # Check if any Python files exist
+          if find scripts/ -name "*.py" -type f | grep -q .; then
+            find scripts/ -name "*.py" -type f -exec pylint {} + --max-line-length=100 --score=yes || true
+          else
+            echo "No Python files found to check"
+          fi
 
       - name: Run mypy (type checking)
         continue-on-error: true  # Type hints may not be complete
         run: |
           echo "=== Running mypy for type checking ==="
-          mypy scripts/*.py --ignore-missing-imports || true
+          # Check if any Python files exist
+          if find scripts/ -name "*.py" -type f | grep -q .; then
+            find scripts/ -name "*.py" -type f -exec mypy {} + --ignore-missing-imports || true
+          else
+            echo "No Python files found to check"
+          fi
 
   dockerfile-lint:
     runs-on: ubuntu-latest
@@ -317,6 +337,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Comprehensive Repository Validation
     needs: [shellcheck, yaml-lint, dockerfile-lint]
+    if: always()  # Run even if some dependencies fail
 
     steps:
       - name: Checkout code
@@ -333,9 +354,9 @@ jobs:
             "docker-compose.yml"
             "entrypoint.sh"
             "PKGBUILD"
-            "requirements.md"
-            "docs/ARCHITECTURE.md"
-            "docs/CI-CD-GUIDE.md"
+            "docs/01-GETTING-STARTED/REQUIREMENTS.md"
+            "docs/02-ARCHITECTURE/OVERVIEW.md"
+            "docs/05-CI-CD/SETUP.md"
             ".github/workflows/build-x86_64.yml"
           )
 

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-14 (Workflow Fixes)
+- **CRITICAL**: Fixed workflow file path references after harmonization
+  - Updated `quality-and-security.yml` to reference correct documentation paths
+  - Fixed Python linting to find files in `scripts/utils/` directory
+  - Added resilience to `comprehensive-validation` job with `if: always()`
+  - Fixed artifact path inconsistencies in `build-x86_64.yml`
+- Enhanced error handling in workflows with existence checks and clear messages
+- Improved workflow documentation with troubleshooting report
+
 ### Added - 2025-11-13 (Repository Harmonization)
 - Created standard directories: `build/`, `logs/`, `src/` with README documentation
 - Created `docs/audits/` subdirectory for audit reports and metrics
