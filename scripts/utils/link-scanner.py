@@ -8,8 +8,9 @@ import os
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple, Set
+from typing import List, Tuple
 from collections import defaultdict
+
 
 class LinkScanner:
     def __init__(self, docs_root: Path):
@@ -283,14 +284,14 @@ class LinkScanner:
             for i, fix in enumerate(self.fixes_applied[:5], 1):  # Show first 5 examples
                 report.append(f"\n### Example {i}")
                 report.append(f"**File:** `{fix['file']}` (Line {fix['line']})")
-                report.append(f"\n**Before:**")
-                report.append(f"```markdown")
+                report.append("\n**Before:**")
+                report.append("```markdown")
                 report.append(f"[{fix['text']}]({fix['old_url']})")
-                report.append(f"```")
-                report.append(f"\n**After:**")
-                report.append(f"```markdown")
+                report.append("```")
+                report.append("\n**After:**")
+                report.append("```markdown")
                 report.append(f"[{fix['text']}]({fix['new_url']})")
-                report.append(f"```")
+                report.append("```")
 
         return "\n".join(report)
 
@@ -304,7 +305,7 @@ def main():
 
     total, broken, fixed = scanner.scan_and_fix()
 
-    print(f"\nScan complete:")
+    print("\nScan complete:")
     print(f"  Total internal links: {total}")
     print(f"  Broken links found: {broken}")
     print(f"  Links fixed: {fixed}")

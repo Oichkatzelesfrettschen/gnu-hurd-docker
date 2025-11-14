@@ -8,6 +8,7 @@ import json
 import re
 from pathlib import Path
 
+
 def fix_manual_links():
     docs_root = Path("/home/eirikr/Playground/gnu-hurd-docker/docs")
     json_path = docs_root / "link-fix-data.json"
@@ -52,6 +53,7 @@ def fix_manual_links():
             print(f"Error processing {item['file']}: {e}")
 
     return fixes_applied
+
 
 if __name__ == "__main__":
     fixes = fix_manual_links()

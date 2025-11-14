@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-14 (Python Quality Issues)
+- **CRITICAL**: Fixed workflow command structure for Python linting
+  - Changed from `find -exec` to `find -print0 | xargs -0` for proper argument passing
+  - Fixed flake8, black, pylint, and mypy commands in quality-and-security.yml
+- **Fixed 19 PEP8 violations** in utility Python scripts:
+  - `scripts/utils/link-scanner.py`: 7 violations (unused imports, f-strings, blank lines)
+  - `scripts/utils/fix-manual-links.py`: 3 violations (blank lines, newlines)
+  - `scripts/utils/fix-remaining-links.py`: 6 violations (line length, blank lines)
+- All Python files now pass flake8, black, and compilation checks
+
 ### Changed - 2025-11-14 (Action Modernization)
 - **Upgraded `actions/setup-python`** from v4 to v5 across all workflows
   - Updated `deploy-pages.yml` to use v5

@@ -6,6 +6,7 @@ Fix remaining broken links, especially case-sensitive issues.
 import re
 from pathlib import Path
 
+
 def fix_case_sensitive_links():
     docs_root = Path("/home/eirikr/Playground/gnu-hurd-docker/docs")
 
@@ -92,17 +93,27 @@ def fix_case_sensitive_links():
 
                 if new_abs_path.exists():
                     try:
-                        new_rel_path = new_abs_path.relative_to(source_dir).as_posix()
+                        new_rel_path = (
+                            new_abs_path.relative_to(source_dir).as_posix()
+                        )
                     except ValueError:
                         # Need to go up directories
-                        new_rel_path = '../' * (len(source_dir.relative_to(docs_root).parts)) + new_path
+                        new_rel_path = (
+                            '../' * (
+                                len(source_dir.relative_to(docs_root).parts)
+                            ) + new_path
+                        )
 
                     # Replace old path references
                     pattern = f"\\[([^\\]]+)\\]\\({re.escape(old_path)}\\)"
                     if re.search(pattern, content):
-                        content = re.sub(pattern, f"[\\1]({new_rel_path})", content)
+                        content = re.sub(
+                            pattern, f"[\\1]({new_rel_path})", content
+                        )
                         changes_made = True
-                        print(f"Fixed in {md_file.relative_to(docs_root)}: {old_path} -> {new_rel_path}")
+                        fixed_path = md_file.relative_to(docs_root)
+                        print(f"Fixed in {fixed_path}: {old_path} -> "
+                              f"{new_rel_path}")
 
             if changes_made:
                 with open(md_file, 'w', encoding='utf-8') as f:
@@ -110,6 +121,7 @@ def fix_case_sensitive_links():
 
         except Exception as e:
             print(f"Error processing {md_file}: {e}")
+
 
 if __name__ == "__main__":
     print("Fixing remaining broken links...")

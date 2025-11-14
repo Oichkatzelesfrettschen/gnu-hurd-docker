@@ -147,7 +147,7 @@ jobs:
           echo "=== Checking Python code formatting with black ==="
           # Check if any Python files exist
           if find scripts/ -name "*.py" -type f | grep -q .; then
-            find scripts/ -name "*.py" -type f -exec black --check --diff {} + || {
+            find scripts/ -name "*.py" -type f -print0 | xargs -0 black --check --diff || {
               echo "ERROR: Code formatting issues found"
               echo "Run 'black scripts/**/*.py' to fix"
               exit 1
@@ -161,7 +161,7 @@ jobs:
           echo "=== Running flake8 for PEP8 compliance ==="
           # Check if any Python files exist
           if find scripts/ -name "*.py" -type f | grep -q .; then
-            find scripts/ -name "*.py" -type f -exec flake8 {} + --max-line-length=100 --count --statistics || {
+            find scripts/ -name "*.py" -type f -print0 | xargs -0 flake8 --max-line-length=100 --count --statistics || {
               echo "ERROR: PEP8 violations found"
               exit 1
             }
@@ -175,7 +175,7 @@ jobs:
           echo "=== Running pylint for comprehensive analysis ==="
           # Check if any Python files exist
           if find scripts/ -name "*.py" -type f | grep -q .; then
-            find scripts/ -name "*.py" -type f -exec pylint {} + --max-line-length=100 --score=yes || true
+            find scripts/ -name "*.py" -type f -print0 | xargs -0 pylint --max-line-length=100 --score=yes || true
           else
             echo "No Python files found to check"
           fi
@@ -186,7 +186,7 @@ jobs:
           echo "=== Running mypy for type checking ==="
           # Check if any Python files exist
           if find scripts/ -name "*.py" -type f | grep -q .; then
-            find scripts/ -name "*.py" -type f -exec mypy {} + --ignore-missing-imports || true
+            find scripts/ -name "*.py" -type f -print0 | xargs -0 mypy --ignore-missing-imports || true
           else
             echo "No Python files found to check"
           fi
