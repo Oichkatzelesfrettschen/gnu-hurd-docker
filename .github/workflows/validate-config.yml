@@ -59,6 +59,12 @@ jobs:
           shellcheck -S error scripts/fix-script.sh || echo "[WARN] Minor style issues (non-blocking)"
           echo "[OK] scripts/fix-script.sh is executable"
 
+      - name: Validate health-check.sh
+        run: |
+          echo "[*] Running shellcheck on scripts/health-check.sh..."
+          shellcheck -S error scripts/health-check.sh || echo "[WARN] Minor style issues (non-blocking)"
+          echo "[OK] scripts/health-check.sh is executable"
+
       - name: Validate docker-compose.yml
         run: |
           echo "[*] Validating YAML syntax..."
