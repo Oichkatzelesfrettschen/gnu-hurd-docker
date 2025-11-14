@@ -27,15 +27,17 @@ class LinkScanner:
             rel_path = file_path.relative_to(self.docs_root)
             self.all_md_files.add(str(rel_path))
 
-    def extract_links(self, content: str, file_path: Path) -> List[Tuple[str, str, int]]:
+    def extract_links(
+        self, content: str, file_path: Path
+    ) -> List[Tuple[str, str, int]]:
         """Extract markdown links from content
         Returns: List of (link_text, link_url, line_number)
         """
         links = []
         # Match markdown links [text](url)
-        pattern = r'\[([^\]]+)\]\(([^\)]+)\)'
+        pattern = r"\[([^\]]+)\]\(([^\)]+)\)"
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         for line_num, line in enumerate(lines, 1):
             for match in re.finditer(pattern, line):
                 link_text = match.group(1)
@@ -46,23 +48,23 @@ class LinkScanner:
 
     def is_internal_link(self, url: str) -> bool:
         """Check if link is internal (not http/https/ftp)"""
-        if url.startswith(('http://', 'https://', 'ftp://', 'mailto:', '#')):
+        if url.startswith(("http://", "https://", "ftp://", "mailto:", "#")):
             return False
         return True
 
     def resolve_link_path(self, link_url: str, source_file: Path) -> Path:
         """Resolve relative link to absolute path"""
         # Remove anchor fragments
-        if '#' in link_url:
-            link_url = link_url.split('#')[0]
+        if "#" in link_url:
+            link_url = link_url.split("#")[0]
 
         if not link_url:
             return None
 
         # Handle absolute paths within docs
-        if link_url.startswith('/'):
+        if link_url.startswith("/"):
             # Assume it's from docs root
-            return self.docs_root / link_url.lstrip('/')
+            return self.docs_root / link_url.lstrip("/")
 
         # Relative path from source file's directory
         source_dir = source_file.parent
@@ -86,12 +88,12 @@ class LinkScanner:
         # If multiple matches, try to find best match based on path similarity
         if len(candidates) > 1:
             # Look for similar path patterns
-            old_parts = old_path.split('/')
+            old_parts = old_path.split("/")
             best_match = None
             best_score = 0
 
             for candidate in candidates:
-                cand_parts = candidate.split('/')
+                cand_parts = candidate.split("/")
                 # Score based on common path elements
                 score = len(set(old_parts) & set(cand_parts))
                 if score > best_score:
@@ -116,7 +118,7 @@ class LinkScanner:
             file_path = self.docs_root / md_file
 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     original_content = f.read()
             except Exception as e:
                 print(f"Error reading {md_file}: {e}")
@@ -142,12 +144,14 @@ class LinkScanner:
 
                 # Check if file exists
                 if resolved_path.exists():
-                    self.link_report['valid'].append({
-                        'file': str(md_file),
-                        'line': line_num,
-                        'text': link_text,
-                        'url': link_url
-                    })
+                    self.link_report["valid"].append(
+                        {
+                            "file": str(md_file),
+                            "line": line_num,
+                            "text": link_text,
+                            "url": link_url,
+                        }
+                    )
                 else:
                     broken_links += 1
 
@@ -157,13 +161,15 @@ class LinkScanner:
                         rel_from_docs = resolved_path.relative_to(self.docs_root)
                     except ValueError:
                         # Path is outside docs root
-                        self.link_report['broken'].append({
-                            'file': str(md_file),
-                            'line': line_num,
-                            'text': link_text,
-                            'url': link_url,
-                            'reason': 'outside_docs_root'
-                        })
+                        self.link_report["broken"].append(
+                            {
+                                "file": str(md_file),
+                                "line": line_num,
+                                "text": link_text,
+                                "url": link_url,
+                                "reason": "outside_docs_root",
+                            }
+                        )
                         continue
 
                     new_location = self.find_file_new_location(str(rel_from_docs))
@@ -175,54 +181,64 @@ class LinkScanner:
                         try:
                             new_rel_path = os.path.relpath(new_abs_path, source_dir)
                             # Use forward slashes for consistency
-                            new_rel_path = new_rel_path.replace('\\', '/')
+                            new_rel_path = new_rel_path.replace("\\", "/")
 
                             # Replace in content
-                            old_link = f'[{link_text}]({link_url})'
-                            new_link = f'[{link_text}]({new_rel_path})'
+                            old_link = f"[{link_text}]({link_url})"
+                            new_link = f"[{link_text}]({new_rel_path})"
 
                             if old_link in modified_content:
-                                modified_content = modified_content.replace(old_link, new_link)
+                                modified_content = modified_content.replace(
+                                    old_link, new_link
+                                )
                                 file_has_changes = True
                                 fixed_links += 1
 
-                                self.fixes_applied.append({
-                                    'file': str(md_file),
-                                    'line': line_num,
-                                    'text': link_text,
-                                    'old_url': link_url,
-                                    'new_url': new_rel_path
-                                })
+                                self.fixes_applied.append(
+                                    {
+                                        "file": str(md_file),
+                                        "line": line_num,
+                                        "text": link_text,
+                                        "old_url": link_url,
+                                        "new_url": new_rel_path,
+                                    }
+                                )
                             else:
-                                self.manual_review.append({
-                                    'file': str(md_file),
-                                    'line': line_num,
-                                    'text': link_text,
-                                    'url': link_url,
-                                    'suggested': new_rel_path,
-                                    'reason': 'pattern_not_found'
-                                })
+                                self.manual_review.append(
+                                    {
+                                        "file": str(md_file),
+                                        "line": line_num,
+                                        "text": link_text,
+                                        "url": link_url,
+                                        "suggested": new_rel_path,
+                                        "reason": "pattern_not_found",
+                                    }
+                                )
                         except Exception as e:
-                            self.manual_review.append({
-                                'file': str(md_file),
-                                'line': line_num,
-                                'text': link_text,
-                                'url': link_url,
-                                'reason': f'path_calculation_error: {e}'
-                            })
+                            self.manual_review.append(
+                                {
+                                    "file": str(md_file),
+                                    "line": line_num,
+                                    "text": link_text,
+                                    "url": link_url,
+                                    "reason": f"path_calculation_error: {e}",
+                                }
+                            )
                     else:
-                        self.link_report['broken'].append({
-                            'file': str(md_file),
-                            'line': line_num,
-                            'text': link_text,
-                            'url': link_url,
-                            'reason': 'file_not_found'
-                        })
+                        self.link_report["broken"].append(
+                            {
+                                "file": str(md_file),
+                                "line": line_num,
+                                "text": link_text,
+                                "url": link_url,
+                                "reason": "file_not_found",
+                            }
+                        )
 
             # Write back modified content if changes were made
             if file_has_changes:
                 try:
-                    with open(file_path, 'w', encoding='utf-8') as f:
+                    with open(file_path, "w", encoding="utf-8") as f:
                         f.write(modified_content)
                     print(f"Fixed links in: {md_file}")
                 except Exception as e:
@@ -230,7 +246,9 @@ class LinkScanner:
 
         return total_links, broken_links, fixed_links
 
-    def generate_report(self, total_links: int, broken_links: int, fixed_links: int) -> str:
+    def generate_report(
+        self, total_links: int, broken_links: int, fixed_links: int
+    ) -> str:
         """Generate markdown report"""
         report = []
         report.append("# Link Fix Report")
@@ -246,9 +264,9 @@ class LinkScanner:
         if self.fixes_applied:
             report.append("\n## Successfully Fixed Links\n")
             current_file = None
-            for fix in sorted(self.fixes_applied, key=lambda x: (x['file'], x['line'])):
-                if current_file != fix['file']:
-                    current_file = fix['file']
+            for fix in sorted(self.fixes_applied, key=lambda x: (x["file"], x["line"])):
+                if current_file != fix["file"]:
+                    current_file = fix["file"]
                     report.append(f"\n### {current_file}\n")
                 report.append(f"- Line {fix['line']}: `[{fix['text']}]`")
                 report.append(f"  - Old: `{fix['old_url']}`")
@@ -258,24 +276,32 @@ class LinkScanner:
         if self.manual_review:
             report.append("\n## Links Requiring Manual Review\n")
             current_file = None
-            for item in sorted(self.manual_review, key=lambda x: (x['file'], x['line'])):
-                if current_file != item['file']:
-                    current_file = item['file']
+            for item in sorted(
+                self.manual_review, key=lambda x: (x["file"], x["line"])
+            ):
+                if current_file != item["file"]:
+                    current_file = item["file"]
                     report.append(f"\n### {current_file}\n")
-                report.append(f"- Line {item['line']}: `[{item['text']}]({item['url']})`")
+                report.append(
+                    f"- Line {item['line']}: `[{item['text']}]({item['url']})`"
+                )
                 report.append(f"  - Reason: {item.get('reason', 'unknown')}")
-                if 'suggested' in item:
+                if "suggested" in item:
                     report.append(f"  - Suggested: `{item['suggested']}`")
 
         # Still broken links
-        if self.link_report['broken']:
+        if self.link_report["broken"]:
             report.append("\n## Remaining Broken Links\n")
             current_file = None
-            for item in sorted(self.link_report['broken'], key=lambda x: (x['file'], x['line'])):
-                if current_file != item['file']:
-                    current_file = item['file']
+            for item in sorted(
+                self.link_report["broken"], key=lambda x: (x["file"], x["line"])
+            ):
+                if current_file != item["file"]:
+                    current_file = item["file"]
                     report.append(f"\n### {current_file}\n")
-                report.append(f"- Line {item['line']}: `[{item['text']}]({item['url']})`")
+                report.append(
+                    f"- Line {item['line']}: `[{item['text']}]({item['url']})`"
+                )
                 report.append(f"  - Reason: {item.get('reason', 'unknown')}")
 
         # Example fixes
@@ -315,26 +341,26 @@ def main():
     report = scanner.generate_report(total, broken, fixed)
     report_path = docs_root / "LINK-FIX-REPORT.md"
 
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
 
     print(f"\nReport saved to: {report_path}")
 
     # Also save JSON data for further processing if needed
     json_data = {
-        'summary': {
-            'total_links': total,
-            'broken_links': broken,
-            'fixed_links': fixed,
-            'manual_review': len(scanner.manual_review)
+        "summary": {
+            "total_links": total,
+            "broken_links": broken,
+            "fixed_links": fixed,
+            "manual_review": len(scanner.manual_review),
         },
-        'fixes_applied': scanner.fixes_applied,
-        'manual_review': scanner.manual_review,
-        'broken_links': scanner.link_report['broken']
+        "fixes_applied": scanner.fixes_applied,
+        "manual_review": scanner.manual_review,
+        "broken_links": scanner.link_report["broken"],
     }
 
     json_path = docs_root / "link-fix-data.json"
-    with open(json_path, 'w', encoding='utf-8') as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=2)
 
     print(f"JSON data saved to: {json_path}")

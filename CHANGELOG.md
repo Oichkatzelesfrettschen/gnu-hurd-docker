@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-14 (Final Workflow Fixes)
+- **CRITICAL**: Fixed invalid Docker tag format in push-ghcr.yml
+  - Added `format=short` parameter to `type=sha` tag configuration
+  - Prevents invalid tags starting with hyphen (e.g., `-c9545aa`)
+  - Ensures tags follow RFC 3986 (must start with alphanumeric)
+- **Fixed Python code formatting** with black formatter
+  - Reformatted 3 files: link-scanner.py, fix-manual-links.py, fix-remaining-links.py
+  - Converted to consistent double-quote style
+  - Fixed dict/list formatting and line continuations
+- **Fixed template file permissions**
+  - scripts/SCRIPT-HEADER-TEMPLATE.sh is now non-executable (as it should be)
+  - Templates are documentation, not runnable scripts
+
 ### Fixed - 2025-11-14 (Python Quality Issues)
 - **CRITICAL**: Fixed workflow command structure for Python linting
   - Changed from `find -exec` to `find -print0 | xargs -0` for proper argument passing

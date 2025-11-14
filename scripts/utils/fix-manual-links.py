@@ -14,25 +14,27 @@ def fix_manual_links():
     json_path = docs_root / "link-fix-data.json"
 
     # Load the manual review items
-    with open(json_path, 'r', encoding='utf-8') as f:
+    with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    manual_items = data.get('manual_review', [])
+    manual_items = data.get("manual_review", [])
     fixes_applied = []
 
     for item in manual_items:
-        if item.get('reason') != 'pattern_not_found':
+        if item.get("reason") != "pattern_not_found":
             continue
 
-        file_path = docs_root / item['file']
+        file_path = docs_root / item["file"]
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # The issue is that some links have the link text and URL concatenated
             # Look for the pattern where link text and URL are the same
-            old_pattern = f"\\[{re.escape(item['text'])}\\]\\({re.escape(item['url'])}\\)"
+            old_pattern = (
+                f"\\[{re.escape(item['text'])}\\]\\({re.escape(item['url'])}\\)"
+            )
 
             # Check if pattern exists
             if re.search(old_pattern, content):
@@ -41,7 +43,7 @@ def fix_manual_links():
                 content = re.sub(old_pattern, new_link, content)
 
                 # Write back
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
 
                 print(f"Fixed: {item['file']} line {item['line']}")
