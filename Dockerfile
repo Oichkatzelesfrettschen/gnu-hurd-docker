@@ -91,9 +91,11 @@ RUN if id -u 1000 >/dev/null 2>&1; then \
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Copy health check script
-COPY scripts/health-check.sh /opt/scripts/health-check.sh
-RUN chmod +x /opt/scripts/health-check.sh
+# Copy scripts directory (including health-check and all library dependencies)
+# This ensures health-check.sh can source its required lib files
+COPY scripts/ /opt/scripts/
+RUN chmod +x /opt/scripts/*.sh && \
+    find /opt/scripts/lib -type f -exec chmod +x {} \;
 
 # Expose ports for container->host mapping
 # 2222: SSH to Hurd guest (forwards to guest port 22)
