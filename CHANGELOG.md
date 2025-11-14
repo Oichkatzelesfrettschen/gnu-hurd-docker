@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-14 (Critical Workflow Fixes)
+- **CRITICAL**: Replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`
+  - Fixed `release.yml` workflow using archived/deprecated action
+  - Added explicit `permissions: contents: write` for release creation
+  - Added `fetch-depth: 0` for proper changelog generation
+  - Updated to modern `github.ref_name` syntax
+- **CRITICAL**: Upgraded `softprops/action-gh-release` from v1 to v2 in `release-artifacts.yml`
+  - Ensures consistency across all release workflows
+  - Provides latest security updates and features
+- Added comprehensive workflow failure analysis documentation
+
 ### Fixed - 2025-11-14 (Workflow Fixes)
 - **CRITICAL**: Fixed workflow file path references after harmonization
   - Updated `quality-and-security.yml` to reference correct documentation paths
