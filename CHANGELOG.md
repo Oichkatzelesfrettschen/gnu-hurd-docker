@@ -13,13 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `docs/reports/` subdirectory for project reports and summaries
 - Created `scripts/utils/` subdirectory for utility scripts and tools
 - Added comprehensive Repository Harmonization Report
+- Merged main branch updates including security validation script
 
 ### Changed - 2025-11-13 (Repository Harmonization)
 - **MAJOR**: Reorganized repository structure for better modularity
-- Moved 12 documentation files from `scripts/` to `docs/` (audits/, reports/, 08-REFERENCE/)
+- Moved 14 documentation files from `scripts/` and root to `docs/` (audits/, reports/, 08-REFERENCE/)
 - Moved 6 utility scripts from `docs/` to `scripts/utils/`
-- Moved 4 project reports from root to `docs/reports/`
+- Moved 6 project reports from root to `docs/reports/`:
+  - CHATGPT-ANALYSIS-AND-ROADMAP.md
+  - TRAP-HANDLERS-SUMMARY.md
+  - QEMU-LAUNCHER-TEST-REPORT.md
+  - V2.0.0-RELEASE-SUMMARY.md
+  - IMPLEMENTATION-SUMMARY.md (from main merge)
+  - X86_64-MIGRATION-FINAL-REPORT.md (from main merge)
 - Updated `.gitignore` to properly exclude build/, logs/, src/ while tracking README files
+- Fixed yamllint warning in validate.yml workflow
 
 ### Improved - 2025-11-13 (Repository Harmonization)
 - Documentation: Clear separation between active docs and reports
@@ -29,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validation: All 9 GitHub Actions workflows pass yamllint
 - All section README files maintain consistent format
 - REQUIREMENTS.md verified as comprehensive and production-ready
+- Integrated changes from main branch (security validation, script updates)
 
 ## [2.0.0] - 2025-11-08
 
