@@ -24,10 +24,21 @@ jobs:
           # Try to download from GitHub Releases first
           if ./scripts/download-released-image.sh 2>/dev/null; then
             echo "Successfully downloaded image from GitHub Releases"
+            # Ensure consistent naming for artifact upload
+            if [ -f images/debian-hurd-amd64.qcow2 ]; then
+              cp images/debian-hurd-amd64.qcow2 debian-hurd-amd64-80gb.qcow2
+            fi
           else
             echo "No release found, building image from source..."
             ./scripts/setup-hurd-amd64.sh
-            mv debian-hurd-amd64-80gb.qcow2 images/debian-hurd-amd64.qcow2
+            # Ensure the file exists with expected name
+            if [ -f debian-hurd-amd64-80gb.qcow2 ]; then
+              echo "Image created successfully"
+            else
+              echo "ERROR: Expected image file not found"
+              ls -la *.qcow2 || echo "No qcow2 files found"
+              exit 1
+            fi
           fi
 
       - name: Build Docker image

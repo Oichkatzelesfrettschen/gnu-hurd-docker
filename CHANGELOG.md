@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-14 (Final Workflow Fixes)
+- **CRITICAL**: Fixed invalid Docker tag format in push-ghcr.yml
+  - Added `format=short` parameter to `type=sha` tag configuration
+  - Prevents invalid tags starting with hyphen (e.g., `-c9545aa`)
+  - Ensures tags follow RFC 3986 (must start with alphanumeric)
+- **Fixed Python code formatting** with black formatter
+  - Reformatted 3 files: link-scanner.py, fix-manual-links.py, fix-remaining-links.py
+  - Converted to consistent double-quote style
+  - Fixed dict/list formatting and line continuations
+- **Fixed template file permissions**
+  - scripts/SCRIPT-HEADER-TEMPLATE.sh is now non-executable (as it should be)
+  - Templates are documentation, not runnable scripts
+
+### Fixed - 2025-11-14 (Python Quality Issues)
+- **CRITICAL**: Fixed workflow command structure for Python linting
+  - Changed from `find -exec` to `find -print0 | xargs -0` for proper argument passing
+  - Fixed flake8, black, pylint, and mypy commands in quality-and-security.yml
+- **Fixed 19 PEP8 violations** in utility Python scripts:
+  - `scripts/utils/link-scanner.py`: 7 violations (unused imports, f-strings, blank lines)
+  - `scripts/utils/fix-manual-links.py`: 3 violations (blank lines, newlines)
+  - `scripts/utils/fix-remaining-links.py`: 6 violations (line length, blank lines)
+- All Python files now pass flake8, black, and compilation checks
+
+### Changed - 2025-11-14 (Action Modernization)
+- **Upgraded `actions/setup-python`** from v4 to v5 across all workflows
+  - Updated `deploy-pages.yml` to use v5
+  - Updated `validate.yml` to use v5
+  - All workflows now use consistent v5
+- **Upgraded Python version** from 3.11 to 3.12 (latest stable LTS)
+  - Updated all workflows to Python 3.12
+  - Ensures latest features and security updates
+- **Pinned Trivy action** to specific version (0.28.0)
+  - Changed from unstable `@master` to stable `@0.28.0`
+  - Ensures consistent scanning behavior
+  - Follows best practice of version pinning
+
+### Added - 2025-11-14 (Documentation)
+- **Created comprehensive GitHub Actions Best Practices Guide**
+  - `docs/05-CI-CD/GITHUB-ACTIONS-BEST-PRACTICES.md`
+  - 13,000+ character comprehensive guide
+  - Version management strategies
+  - Security best practices
+  - Optimization techniques
+  - Migration guides
+  - Maintenance checklists
+  - Repository-specific standards
+
+### Fixed - 2025-11-14 (Critical Workflow Fixes)
+- **CRITICAL**: Replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`
+  - Fixed `release.yml` workflow using archived/deprecated action
+  - Added explicit `permissions: contents: write` for release creation
+  - Added `fetch-depth: 0` for proper changelog generation
+  - Updated to modern `github.ref_name` syntax
+- **CRITICAL**: Upgraded `softprops/action-gh-release` from v1 to v2 in `release-artifacts.yml`
+  - Ensures consistency across all release workflows
+  - Provides latest security updates and features
+- Added comprehensive workflow failure analysis documentation
+
+### Fixed - 2025-11-14 (Workflow Fixes)
+- **CRITICAL**: Fixed workflow file path references after harmonization
+  - Updated `quality-and-security.yml` to reference correct documentation paths
+  - Fixed Python linting to find files in `scripts/utils/` directory
+  - Added resilience to `comprehensive-validation` job with `if: always()`
+  - Fixed artifact path inconsistencies in `build-x86_64.yml`
+- Enhanced error handling in workflows with existence checks and clear messages
+- Improved workflow documentation with troubleshooting report
+
+### Added - 2025-11-13 (Repository Harmonization)
+- Created standard directories: `build/`, `logs/`, `src/` with README documentation
+- Created `docs/audits/` subdirectory for audit reports and metrics
+- Created `docs/reports/` subdirectory for project reports and summaries
+- Created `scripts/utils/` subdirectory for utility scripts and tools
+- Added comprehensive Repository Harmonization Report
+- Merged main branch updates including security validation script
+
+### Changed - 2025-11-13 (Repository Harmonization)
+- **MAJOR**: Reorganized repository structure for better modularity
+- Moved 14 documentation files from `scripts/` and root to `docs/` (audits/, reports/, 08-REFERENCE/)
+- Moved 6 utility scripts from `docs/` to `scripts/utils/`
+- Moved 6 project reports from root to `docs/reports/`:
+  - CHATGPT-ANALYSIS-AND-ROADMAP.md
+  - TRAP-HANDLERS-SUMMARY.md
+  - QEMU-LAUNCHER-TEST-REPORT.md
+  - V2.0.0-RELEASE-SUMMARY.md
+  - IMPLEMENTATION-SUMMARY.md (from main merge)
+  - X86_64-MIGRATION-FINAL-REPORT.md (from main merge)
+- Updated `.gitignore` to properly exclude build/, logs/, src/ while tracking README files
+- Fixed yamllint warning in validate.yml workflow
+
+### Improved - 2025-11-13 (Repository Harmonization)
+- Documentation: Clear separation between active docs and reports
+- Scripts: Better organization with lib/ and utils/ subdirectories
+- Build: Proper artifact management with gitignore rules
+- Quality: All 30+ scripts pass ShellCheck validation
+- Validation: All 9 GitHub Actions workflows pass yamllint
+- All section README files maintain consistent format
+- REQUIREMENTS.md verified as comprehensive and production-ready
+- Integrated changes from main branch (security validation, script updates)
+
 ## [2.0.0] - 2025-11-08
 
 ### Added
