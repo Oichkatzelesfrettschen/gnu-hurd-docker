@@ -73,7 +73,7 @@ gnu-hurd-dev  Up 4 minutes    0.0.0.0:2222->2222/tcp, 0.0.0.0:5555->5555/tcp,
 ======================================================================
 
 Configuration:
-  - Image: /opt/hurd-image/debian-hurd-i386-20250807.qcow2
+  - Image: /opt/hurd-image/debian-hurd-i386-20251105.qcow2
   - Memory: 2048 MB
   - CPU: Pentium3 (i686, SSE support)
   - SMP: 1 core(s)
@@ -97,7 +97,7 @@ Control Channels:
 
 ## Phase 3: QCOW2 Image Detection
 
-**File:** debian-hurd-i386-20250807.qcow2
+**File:** debian-hurd-i386-20251105.qcow2
 **Size:** 2.1 GB
 **Location:** /home/eirikr/Playground/gnu-hurd-docker/
 **Status:** ✅ DETECTED
@@ -106,7 +106,7 @@ Control Channels:
 ```bash
 /usr/libexec/qemu-system-i386 -enable-kvm -m 2048 -cpu pentium3 \
   -machine pc-i440fx-7.2,usb=off -smp 1 \
-  -drive file=/opt/hurd-image/debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
+  -drive file=/opt/hurd-image/debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
   -netdev user,id=net0,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::9999-:9999 \
   -device e1000,netdev=net0 -nographic \
   -monitor unix:/qmp/monitor.sock,server,nowait \

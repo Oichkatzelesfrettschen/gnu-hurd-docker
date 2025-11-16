@@ -37,7 +37,7 @@ This document consolidates all research conducted on:
 
 #### Debian GNU/Hurd 2025 (x86_64) - ACTIVELY MAINTAINED
 
-**Official Status**: Released August 2025
+**Official Status**: Released November 2025
 **Type**: Complete GNU/Hurd distribution with GNU Mach microkernel
 **Architectures**: i386 (legacy) and **x86_64 (amd64) - CURRENT**
 
@@ -57,7 +57,7 @@ wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd6
 wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
 ```
 
-**Verification**: YES - August 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
+**Verification**: YES - November 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
 
 **Release Specification**:
 - **Release Date**: August 10, 2025
@@ -123,7 +123,7 @@ wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd6
 tar -xf debian-hurd-amd64.img.tar.xz
 
 # Result:
-# - File: debian-hurd-amd64-20250807.img (4.8 GB)
+# - File: debian-hurd-amd64-20251105.img (4.8 GB)
 # - Format: RAW disk image (ext2/3 filesystem)
 ```
 
@@ -133,11 +133,11 @@ tar -xf debian-hurd-amd64.img.tar.xz
 
 ```bash
 qemu-img convert -f raw -O qcow2 \
-    debian-hurd-amd64-20250807.img \
-    debian-hurd-amd64-20250807.qcow2
+    debian-hurd-amd64-20251105.img \
+    debian-hurd-amd64-20251105.qcow2
 
 # Result:
-# - File: debian-hurd-amd64-20250807.qcow2 (2.3 GB)
+# - File: debian-hurd-amd64-20251105.qcow2 (2.3 GB)
 # - Format: QEMU QCOW Image v3
 # - Compression Ratio: ~52% (4.8 GB → 2.3 GB)
 # - Time Taken: 0.9 seconds
@@ -154,7 +154,7 @@ qemu-system-x86_64 \
     -m 4096 \
     -smp 2 \
     -cpu max \
-    -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback,if=virtio \
+    -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback,if=virtio \
     -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
     -nographic \
     -monitor none \
@@ -199,12 +199,12 @@ System initialization ✓
 ```bash
 # With KVM acceleration (x86_64 host)
 kvm -m 4G -smp 2 \
-    -drive cache=writeback,file=debian-hurd-amd64-20250807.img
+    -drive cache=writeback,file=debian-hurd-amd64-20251105.img
 
 # Without KVM (TCG emulation)
 qemu-system-x86_64 -m 4G -smp 2 \
     -cpu max \
-    -drive cache=writeback,file=debian-hurd-amd64-20250807.img
+    -drive cache=writeback,file=debian-hurd-amd64-20251105.img
 ```
 
 **Key Points (x86_64-Specific)**:
@@ -245,15 +245,15 @@ environment:
 
 ```bash
 # Check image format and integrity
-file debian-hurd-amd64-20250807.img
+file debian-hurd-amd64-20251105.img
 # Expected: "DOS/MBR boot sector"
 
-qemu-img info debian-hurd-amd64-20250807.qcow2
+qemu-img info debian-hurd-amd64-20251105.qcow2
 # Expected: "file format: qcow2, virtual size: 80G"
 
 # Verify QCOW2 conversion
-ls -lh debian-hurd-amd64-20250807.qcow2
-qemu-img check debian-hurd-amd64-20250807.qcow2
+ls -lh debian-hurd-amd64-20251105.qcow2
+qemu-img check debian-hurd-amd64-20251105.qcow2
 # Expected: "No errors were found on the image"
 ```
 
@@ -275,16 +275,16 @@ sha256sum -c SHA256SUMS --ignore-missing
 | File | Size | Format | Purpose |
 |------|------|--------|---------|
 | debian-hurd-amd64.img.tar.xz | 450 MB | XZ archive | Official download |
-| debian-hurd-amd64-20250807.img | 4.8 GB | RAW image | Extracted image |
-| debian-hurd-amd64-20250807.qcow2 | 2.3 GB | QCOW2 v3 | Converted image |
+| debian-hurd-amd64-20251105.img | 4.8 GB | RAW image | Extracted image |
+| debian-hurd-amd64-20251105.qcow2 | 2.3 GB | QCOW2 v3 | Converted image |
 | hurd_serial.log | Variable | Text log | QEMU serial output |
 
 **Directory Structure**:
 ```
 /home/eirikr/Playground/
 ├── debian-hurd-amd64.img.tar.xz          (downloaded)
-├── debian-hurd-amd64-20250807.img        (extracted)
-├── debian-hurd-amd64-20250807.qcow2      (converted) ← READY TO USE
+├── debian-hurd-amd64-20251105.img        (extracted)
+├── debian-hurd-amd64-20251105.qcow2      (converted) ← READY TO USE
 └── hurd_serial.log                       (boot output)
 ```
 
@@ -674,7 +674,7 @@ apt-get install -y build-essential libc6-dev
 **Option A (Easiest)**: Graphical Boot
 ```bash
 qemu-system-x86_64 -m 4G -smp 2 \
-  -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback \
   -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
   -vga vmware \
   -enable-kvm     # if available
@@ -684,7 +684,7 @@ qemu-system-x86_64 -m 4G -smp 2 \
 **Option B (Advanced)**: TTY Serial Console
 ```bash
 qemu-system-x86_64 -m 4G -smp 2 \
-  -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback \
   -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
   -nographic \
   -monitor none \
@@ -776,7 +776,7 @@ jobs:
 
 ### Key Facts Established
 
-1. ✓ Debian GNU/Hurd 2025 officially released (August 2025) with x86_64 support
+1. ✓ Debian GNU/Hurd 2025 officially released (November 2025) with x86_64 support
 2. ✓ Pre-built disk images publicly available on cdimage.debian.org (both i386 and x86_64)
 3. ✓ Images work in QEMU with standard x86_64 emulation
 4. ✓ Conversion to QCOW2 is instantaneous (~1 second)
@@ -810,7 +810,7 @@ jobs:
 ```bash
 # Configuration 1: Minimal (File Logging)
 qemu-system-x86_64 -m 4G -smp 2 -cpu max \
-  -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback,if=virtio \
+  -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback,if=virtio \
   -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
   -nographic -monitor none \
   -serial file:serial.log
@@ -820,7 +820,7 @@ Result: Boots successfully, SSH accessible
 # Configuration 2: With KVM Acceleration
 qemu-system-x86_64 -m 4G -smp 2 -cpu host \
   -enable-kvm \
-  -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback,if=virtio \
+  -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback,if=virtio \
   -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
   -nographic -monitor none \
   -serial file:serial.log
@@ -830,7 +830,7 @@ Result: 5-10x faster boot, same functionality
 
 # Configuration 3: Graphical Mode
 qemu-system-x86_64 -m 4G -smp 2 -cpu max \
-  -drive file=debian-hurd-amd64-20250807.qcow2,format=qcow2,cache=writeback,if=virtio \
+  -drive file=debian-hurd-amd64-20251105.qcow2,format=qcow2,cache=writeback,if=virtio \
   -net user,hostfwd=tcp::2222-:22 -net nic,model=e1000 \
   -vga vmware
 

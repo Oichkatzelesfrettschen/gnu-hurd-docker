@@ -589,7 +589,7 @@ services:
 **Purpose**: Download and prepare Hurd x86_64 image
 
 **Functionality**:
-1. Download debian-hurd-amd64-20250807.img.tar.xz (~355 MB)
+1. Download debian-hurd-amd64-20251105.img.tar.xz (~355 MB)
 2. Extract to raw IMG format (~4.2 GB)
 3. Convert to QCOW2 format (~2.2 GB)
 4. Verify integrity

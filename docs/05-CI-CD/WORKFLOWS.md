@@ -310,7 +310,7 @@ Cache images between runs:
 
 - name: Download image if not cached
   run: |
-    if [ ! -f debian-hurd-amd64-20250807.qcow2 ]; then
+    if [ ! -f debian-hurd-amd64-20251105.qcow2 ]; then
       ./scripts/download-image.sh
     fi
 ```

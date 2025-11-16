@@ -21,9 +21,10 @@
 # 1. Pull pre-built image
 docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
 
-# 2. Download Hurd x86_64 image (~355 MB download, ~4 GB extracted)
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
-tar xJf debian-hurd-amd64-20250807.img.tar.xz
+# 2. Download Debian GNU/Hurd 2025 "Trixie" image (~355 MB download, ~4 GB extracted)
+# Official Debian 13 release, snapshot 2025-11-05
+wget http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
+tar xJf debian-hurd.img.tar.xz
 
 # 3. Run it
 docker run -d \

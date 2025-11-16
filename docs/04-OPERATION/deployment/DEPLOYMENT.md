@@ -87,28 +87,28 @@ wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.t
 
 # Extract
 tar xf debian-hurd.img.tar.xz
-# Creates: debian-hurd-i386-20250807.img (4.2 GB)
+# Creates: debian-hurd-i386-20251105.img (4.2 GB)
 
 # Convert to QCOW2 format
-qemu-img convert -f raw -O qcow2 debian-hurd-i386-20250807.img debian-hurd-i386-20250807.qcow2
-# Creates: debian-hurd-i386-20250807.qcow2 (2.1 GB)
+qemu-img convert -f raw -O qcow2 debian-hurd-i386-20251105.img debian-hurd-i386-20251105.qcow2
+# Creates: debian-hurd-i386-20251105.qcow2 (2.1 GB)
 ```
 
 **Option C: Use existing image**
 ```bash
 # If you already have the QCOW2 image:
-cp /path/to/debian-hurd-i386-20250807.qcow2 ./
+cp /path/to/debian-hurd-i386-20251105.qcow2 ./
 ```
 
 ### Verify Image
 
 ```bash
 # Check file exists and size is correct
-ls -lh debian-hurd-i386-20250807.qcow2
-# Should show: 2.1G ... debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
+# Should show: 2.1G ... debian-hurd-i386-20251105.qcow2
 
 # Verify QCOW2 format
-file debian-hurd-i386-20250807.qcow2
+file debian-hurd-i386-20251105.qcow2
 # Should output: QEMU QCOW2 Image
 ```
 
@@ -371,7 +371,7 @@ df -h
 docker-compose logs --tail=100
 
 # Verify QCOW2 image exists
-ls -lh debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
 
 # Check Docker daemon status
 sudo systemctl status docker
@@ -480,10 +480,10 @@ docker run -d --name restore-container my-backup:latest
 
 ```bash
 # Copy QCOW2 image
-cp debian-hurd-i386-20250807.qcow2 debian-hurd-i386-20250807.qcow2.backup
+cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
 
 # Create snapshot
-qemu-img snapshot -c backup debian-hurd-i386-20250807.qcow2
+qemu-img snapshot -c backup debian-hurd-i386-20251105.qcow2
 ```
 
 ## Production Deployment

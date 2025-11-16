@@ -4,6 +4,117 @@
 
 GNU/Hurd Docker implements a **QEMU-in-Docker** pattern that enables running the complete GNU/Mach microkernel inside isolated Docker containers. This document details the architectural decisions, design rationale, and technical implementation.
 
+**Release**: Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
+**Architecture**: Pure x86_64/amd64 (i386 deprecated as of 2025-11-07)
+
+## Hurd 2025 Architecture Improvements
+
+### Major Features in 2025 Release
+
+The Debian GNU/Hurd 2025 "Trixie" release introduces significant architectural improvements:
+
+#### 1. NetBSD Rump Drivers
+
+**What Changed**: User-space disk drivers via NetBSD Rump kernel layer
+
+**Technical Details**:
+- **Previous**: Linux 2.6.x drivers compiled into GNU Mach kernel
+- **New**: NetBSD Rump drivers running in user-space
+- **Benefits**:
+  - Kernel isolation - driver crashes don't crash kernel
+  - Easier development - drivers are user-space processes
+  - Better security - capability-based access control
+  - Modern drivers - NetBSD's up-to-date driver set
+
+**Device Naming Change**:
+- **Old**: `/dev/hd0`, `/dev/hd0s1` (IDE nomenclature)
+- **New**: `/dev/wd0`, `/dev/wd0s1` (NetBSD nomenclature)
+- **Impact**: GRUB config and `/etc/fstab` must use new names
+
+#### 2. ACPI and APIC Support
+
+**What Changed**: Modern hardware initialization
+
+**ACPI (Advanced Configuration and Power Interface)**:
+- Proper power management
+- Device enumeration
+- Thermal management
+- Battery status (for laptops)
+
+**APIC (Advanced Programmable Interrupt Controller)**:
+- Required for multiprocessor systems
+- Better interrupt routing
+- Enables SMP support
+
+**Configuration**: Enable APIC when building custom Mach:
+```bash
+./configure --enable-apic --enable-ncpus=4
+```
+
+#### 3. SMP (Symmetric Multiprocessing) Support
+
+**Status**: Experimental, 1-2 cores stable
+
+**Technical Details**:
+- **Cores Supported**: 1-4 CPUs (configurable at compile time)
+- **Stability**: 1 core production, 2 cores testing, 4+ experimental
+- **Kernel Option**: `--enable-ncpus=N` during Mach build
+
+**Known Issues**:
+- Race conditions with >2 CPUs
+- Possible deadlocks under heavy load
+- VirtualBox particularly unstable with SMP
+
+**Recommendation**: Use 1 CPU for production, 2 for development/testing
+
+#### 4. 64-bit (amd64) Native Support
+
+**What Changed**: First official 64-bit Hurd release
+
+**Benefits**:
+- Native 64-bit performance
+- >4GB RAM support
+- Modern compiler optimizations
+- Better compatibility with current software
+
+**Architecture**:
+- CPU: x86_64 (AMD64/Intel 64)
+- ABI: LP64 (long and pointers are 64-bit)
+- Syscalls: 64-bit native
+
+#### 5. Rust and LLVM Support
+
+**What Changed**: Modern toolchain support
+
+**Rust**:
+- Official Rust compiler port since LLVM 8.0
+- Full cargo support
+- Standard library ported to Hurd
+- `rustc --version` shows `hurd-amd64` target
+
+**LLVM/Clang**:
+- Full LLVM optimization pipeline
+- Clang static analyzer
+- LLD linker
+- LLDB debugger
+
+**Use Cases**:
+- Memory-safe kernel modules
+- Modern translator development
+- Systems programming with safety
+
+#### 6. Package Coverage
+
+**Statistics**:
+- **Total Packages**: ~72% of Debian archive
+- **Approximate Count**: ~65,000+ packages
+- **Notable Additions**: Firefox ESR, LibreOffice (partial), LXDE desktop
+
+**What's Missing**:
+- Packages requiring systemd
+- Packages requiring Linux-specific syscalls
+- Some hardware-dependent packages (WiFi, sound)
+
 ## Problem Statement
 
 ### The Microkernel Kernel-Swap Problem
@@ -39,7 +150,7 @@ Host System (CachyOS Linux)
             |
             +-- Volume Mount: /opt/hurd-image
             |   |
-            |   +-- debian-hurd-i386-20250807.qcow2 (2.1 GB)
+            |   +-- debian-hurd-i386-20251105.qcow2 (2.1 GB)
             |   |   |
             |   |   +-- ext2/3 Filesystem
             |   |   +-- GNU/Hurd System Files
@@ -235,8 +346,8 @@ gnu-hurd-docker/
 │       └── release.yml              # Release workflow
 │
 └── Disk Images (git-ignored)
-    ├── debian-hurd-i386-20250807.qcow2      (2.1 GB)
-    ├── debian-hurd-i386-20250807.img        (4.2 GB)
+    ├── debian-hurd-i386-20251105.qcow2      (2.1 GB)
+    ├── debian-hurd-i386-20251105.img        (4.2 GB)
     └── debian-hurd.img.tar.xz               (355 MB)
 ```
 
@@ -264,14 +375,14 @@ ENTRYPOINT ["/entrypoint.sh"]
 ```bash
 #!/bin/bash
 set -e
-if [ ! -f /opt/hurd-image/debian-hurd-i386-20250807.qcow2 ]; then
+if [ ! -f /opt/hurd-image/debian-hurd-i386-20251105.qcow2 ]; then
     echo "ERROR: QCOW2 not found"
     exit 1
 fi
 exec qemu-system-i386 \
     -m 1.5G \
     -cpu pentium \
-    -drive file=/opt/hurd-image/debian-hurd-i386-20250807.qcow2,...
+    -drive file=/opt/hurd-image/debian-hurd-i386-20251105.qcow2,...
     -net user,hostfwd=tcp::2222-:22 \
     -net nic,model=e1000 \
     -nographic \

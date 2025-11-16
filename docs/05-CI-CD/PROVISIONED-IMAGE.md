@@ -90,7 +90,7 @@ cd gnu-hurd-docker
 
 # 2. Download base x86_64 image
 ./scripts/setup-hurd-amd64.sh
-# Downloads: debian-hurd-amd64-20250807.img.tar.xz (~355 MB)
+# Downloads: debian-hurd-amd64-20251105.img.tar.xz (~355 MB)
 # Extracts to: debian-hurd-amd64-80gb.qcow2 (~4 GB)
 
 # 3. Build provisioning environment
@@ -568,15 +568,15 @@ jobs:
 
 ```bash
 # Download official Debian GNU/Hurd x86_64 image
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
+wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20251105.img.tar.xz
 
 # Extract
-tar xJf debian-hurd-amd64-20250807.img.tar.xz
-# Creates: debian-hurd-amd64-20250807.img (~4 GB)
+tar xJf debian-hurd-amd64-20251105.img.tar.xz
+# Creates: debian-hurd-amd64-20251105.img (~4 GB)
 
 # Convert to QCOW2 (if raw)
 qemu-img convert -f raw -O qcow2 \
-    debian-hurd-amd64-20250807.img \
+    debian-hurd-amd64-20251105.img \
     debian-hurd-amd64-80gb.qcow2
 
 # Or resize existing qcow2

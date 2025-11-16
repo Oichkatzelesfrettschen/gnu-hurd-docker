@@ -760,7 +760,7 @@ services:
     privileged: true
 
     volumes:
-      - ./debian-hurd-i386-20250807.qcow2:/opt/hurd-image/debian-hurd-i386-20250807.qcow2:ro
+      - ./debian-hurd-i386-20251105.qcow2:/opt/hurd-image/debian-hurd-i386-20251105.qcow2:ro
       - ./scripts:/opt/scripts:ro
 
     ports:

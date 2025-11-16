@@ -104,7 +104,7 @@ docker-compose up -d
 docker-compose logs --tail=100
 
 # Verify QCOW2 image exists
-ls -lh debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
 
 # Check volume mount paths
 grep -A 3 "volumes:" docker-compose.yml
@@ -306,17 +306,17 @@ docker-compose exec gnu-hurd-dev cat /etc/passwd | head -5
 **Solutions:**
 ```bash
 # Check QCOW2 integrity
-qemu-img check debian-hurd-i386-20250807.qcow2
+qemu-img check debian-hurd-i386-20251105.qcow2
 
 # Repair if needed
-qemu-img check -r all debian-hurd-i386-20250807.qcow2
+qemu-img check -r all debian-hurd-i386-20251105.qcow2
 
 # Create backup
-cp debian-hurd-i386-20250807.qcow2 debian-hurd-i386-20250807.qcow2.backup
+cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
 
 # Convert back to raw and reconvert
-qemu-img convert -f qcow2 debian-hurd-i386-20250807.qcow2 temp.img
-qemu-img convert -f raw -O qcow2 temp.img debian-hurd-i386-20250807.qcow2
+qemu-img convert -f qcow2 debian-hurd-i386-20251105.qcow2 temp.img
+qemu-img convert -f raw -O qcow2 temp.img debian-hurd-i386-20251105.qcow2
 rm temp.img
 
 # Or redownload image
@@ -348,7 +348,7 @@ docker-compose exec gnu-hurd-dev rm -f /var/log/*.log
 df -h /
 
 # Remove old backups
-rm -f debian-hurd-i386-20250807.qcow2.backup
+rm -f debian-hurd-i386-20251105.qcow2.backup
 rm -f debian-hurd.img.tar.xz
 ```
 

@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The official Debian GNU/Hurd image (debian-hurd-i386-20250807.img) **does NOT** include SSH server by default. To enable SSH access, you must first access the system via serial console, then manually install and configure OpenSSH.
+The official Debian GNU/Hurd image (debian-hurd-i386-20251105.img) **does NOT** include SSH server by default. To enable SSH access, you must first access the system via serial console, then manually install and configure OpenSSH.
 
 **Access Methods Available:**
 1. ✅ **Serial Console (telnet)** - PRIMARY method for initial setup

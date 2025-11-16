@@ -20,8 +20,8 @@ Successfully modernized the entire gnu-hurd-docker repository from i386 to x86_6
 **Changes**:
 - URL: `cdimage.debian.org/cdimage/ports/latest/hurd-i386` → `ports/13.0/hurd-amd64`
 - Compressed file: `debian-hurd.img.tar.xz` → `debian-hurd-amd64.img.tar.xz`
-- Raw image: `debian-hurd-i386-20250807.img` → `debian-hurd-amd64-20250807.img`
-- QCOW2 image: `debian-hurd-i386-20250807.qcow2` → `debian-hurd-amd64-20250807.qcow2`
+- Raw image: `debian-hurd-i386-20251105.img` → `debian-hurd-amd64-20251105.img`
+- QCOW2 image: `debian-hurd-i386-20251105.qcow2` → `debian-hurd-amd64-20251105.qcow2`
 
 **Impact**: Users will now download the correct x86_64 image
 
@@ -49,19 +49,19 @@ Successfully modernized the entire gnu-hurd-docker repository from i386 to x86_6
 
 #### 5. scripts/manage-snapshots.sh
 **Changes**:
-- Default image: `debian-hurd-i386-20250807.qcow2` → `debian-hurd-amd64-20250807.qcow2`
+- Default image: `debian-hurd-i386-20251105.qcow2` → `debian-hurd-amd64-20251105.qcow2`
 
 **Impact**: Snapshot management uses correct image name
 
 #### 6. scripts/validate-config.sh
 **Changes**:
-- Image check: `debian-hurd-i386-20250807.qcow2` → `debian-hurd-amd64-20250807.qcow2`
+- Image check: `debian-hurd-i386-20251105.qcow2` → `debian-hurd-amd64-20251105.qcow2`
 
 **Impact**: Configuration validation checks for correct image
 
 #### 7. scripts/test-docker.sh
 **Changes**:
-- Image check: `debian-hurd-i386-20250807.qcow2` → `debian-hurd-amd64-20250807.qcow2`
+- Image check: `debian-hurd-i386-20251105.qcow2` → `debian-hurd-amd64-20251105.qcow2`
 
 **Impact**: Docker tests validate correct image
 
@@ -79,7 +79,7 @@ Successfully modernized the entire gnu-hurd-docker repository from i386 to x86_6
 #### 9. .github/workflows/push-ghcr.yml
 **Changes**:
 - HURD_URL: `hurd-i386` → `hurd-amd64`
-- Download instructions: `debian-hurd.img.tar.xz` → `debian-hurd-amd64-20250807.img.tar.xz`
+- Download instructions: `debian-hurd.img.tar.xz` → `debian-hurd-amd64-20251105.img.tar.xz`
 - Features: "Debian GNU/Hurd 2025 (i386)" → "Debian GNU/Hurd 2025 (x86_64/amd64)"
 
 **Impact**: Correct instructions in GitHub Container Registry workflow
@@ -88,7 +88,7 @@ Successfully modernized the entire gnu-hurd-docker repository from i386 to x86_6
 **Changes**:
 - Features: "(i386)" → "(x86_64/amd64)"
 - Download URL: `hurd-i386` → `hurd-amd64`
-- Filename: `debian-hurd.img.tar.xz` → `debian-hurd-amd64-20250807.img.tar.xz`
+- Filename: `debian-hurd.img.tar.xz` → `debian-hurd-amd64-20251105.img.tar.xz`
 
 **Impact**: Release artifacts use correct architecture
 
@@ -181,11 +181,11 @@ All workflow and configuration YAML files valid:
 
 ### Image URLs
 **Before**: `https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz`  
-**After**: `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz`
+**After**: `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd-amd64-20251105.img.tar.xz`
 
 ### Image Names
-**Before**: `debian-hurd-i386-20250807.{img,qcow2}`  
-**After**: `debian-hurd-amd64-20250807.{img,qcow2}`
+**Before**: `debian-hurd-i386-20251105.{img,qcow2}`  
+**After**: `debian-hurd-amd64-20251105.{img,qcow2}`
 
 ### Library Paths
 **Before**: `/usr/lib/i386-gnu/pkgconfig`  

@@ -89,7 +89,7 @@ sleep 30
 docker-compose down
 
 # Copy provisioned image
-cp debian-hurd-amd64-20250807.qcow2 debian-hurd-amd64-provisioned.qcow2
+cp debian-hurd-amd64-20251105.qcow2 debian-hurd-amd64-provisioned.qcow2
 ```
 
 ### Step 2: Compress and Upload
@@ -151,7 +151,7 @@ jobs:
         run: |
           # Move image to expected location
           mkdir -p images
-          mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64-20250807.qcow2
+          mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64-20251105.qcow2
 
           # Build and start
           docker-compose build
@@ -466,10 +466,10 @@ jobs:
 docker-compose config
 
 # Verify image exists
-ls -lh debian-hurd-amd64-20250807.qcow2
+ls -lh debian-hurd-amd64-20251105.qcow2
 
 # Check image integrity
-qemu-img check debian-hurd-amd64-20250807.qcow2
+qemu-img check debian-hurd-amd64-20251105.qcow2
 
 # Test locally
 docker-compose up

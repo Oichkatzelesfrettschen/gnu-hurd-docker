@@ -13,7 +13,8 @@ echo "=========================================="
 echo ""
 
 # Configuration
-DEBIAN_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz"
+# Official Debian GNU/Hurd 2025 "Trixie" Release (Debian 13, snapshot 2025-11-05)
+DEBIAN_URL="http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz"
 COMPRESSED_FILE="debian-hurd.img.tar.xz"
 RAW_IMAGE="debian-hurd.img"
 QCOW2_IMAGE="debian-hurd-amd64.qcow2"

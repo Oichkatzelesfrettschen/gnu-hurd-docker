@@ -16,8 +16,8 @@ All Docker Compose configuration files for native i386 GNU/Mach containerization
 
 ```
 GNUHurd2025/
-├── debian-hurd-i386-20250807.qcow2    (2.1 GB - QEMU disk image)
-├── debian-hurd-i386-20250807.img       (4.2 GB - raw disk image)
+├── debian-hurd-i386-20251105.qcow2    (2.1 GB - QEMU disk image)
+├── debian-hurd-i386-20251105.img       (4.2 GB - raw disk image)
 ├── debian-hurd.img.tar.xz              (355 MB - source archive)
 ├── Dockerfile                          (Docker image specification)
 ├── entrypoint.sh                       (QEMU launcher script)
@@ -42,7 +42,7 @@ sudo usermod -a -G docker $USER
 newgrp docker
 
 # Verify QCOW2 image exists
-ls -lh debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
 ```
 
 ### Build Docker Image

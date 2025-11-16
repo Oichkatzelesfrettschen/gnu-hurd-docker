@@ -21,14 +21,14 @@ The original thesis is **misleading**. A working QEMU-compatible image DOES exis
 ### 1.1 Working Images VERIFIED TO EXIST
 
 #### A. Debian GNU/Hurd 2025 (ACTIVELY MAINTAINED)
-- **Official Status:** Released August 2025
+- **Official Status:** Released November 2025
 - **Type:** Complete GNU/Hurd distribution with GNU Mach microkernel
 - **Download URL (RAW):** https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
 - **File Sizes:**
   - Compressed (.tar.xz): 338 MB
   - Uncompressed (.img): 3.9-4.2 GB
 - **Architectures:** i386 and x86_64 (amd64)
-- **Verified Working:** YES - August 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
+- **Verified Working:** YES - November 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
 
 #### B. xMach/Lites Virtual Machine
 - **Image:** MachUK22-lites.vmdk
@@ -78,7 +78,7 @@ tar -xf debian-hurd.img.tar.xz
 ```
 
 **Result:**
-- File: `debian-hurd-i386-20250807.img` (4.2 GB)
+- File: `debian-hurd-i386-20251105.img` (4.2 GB)
 - Format: RAW disk image (ext2/3 filesystem)
 - Status: ✓ SUCCESSFUL
 
@@ -88,11 +88,11 @@ tar -xf debian-hurd.img.tar.xz
 
 **Command:**
 ```bash
-qemu-img convert -f raw -O qcow2 debian-hurd-i386-20250807.img debian-hurd-i386-20250807.qcow2
+qemu-img convert -f raw -O qcow2 debian-hurd-i386-20251105.img debian-hurd-i386-20251105.qcow2
 ```
 
 **Result:**
-- File: `debian-hurd-i386-20250807.qcow2` (2.1 GB)
+- File: `debian-hurd-i386-20251105.qcow2` (2.1 GB)
 - Format: QEMU QCOW Image v3
 - Compression Ratio: 50% (4.2 GB → 2.1 GB)
 - Time Taken: 0.7 seconds
@@ -108,7 +108,7 @@ qemu-img convert -f raw -O qcow2 debian-hurd-i386-20250807.img debian-hurd-i386-
 qemu-system-i386 \
     -m 1536 \
     -cpu pentium \
-    -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+    -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
     -net user -net nic,model=e1000 \
     -nographic \
     -monitor none \
@@ -224,12 +224,12 @@ qemu-system-i386 -m 1G -drive cache=writeback,file=debian-hurd-*.img
 ### Verification Commands
 ```bash
 # Check image format and integrity
-file debian-hurd-i386-20250807.img
-qemu-img info debian-hurd-i386-20250807.qcow2
+file debian-hurd-i386-20251105.img
+qemu-img info debian-hurd-i386-20251105.qcow2
 
 # Verify QCOW2 conversion
-ls -lh debian-hurd-i386-20250807.qcow2
-qemu-img check debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
+qemu-img check debian-hurd-i386-20251105.qcow2
 ```
 
 ---
@@ -240,16 +240,16 @@ qemu-img check debian-hurd-i386-20250807.qcow2
 | File | Size | Format | Purpose |
 |------|------|--------|---------|
 | debian-hurd.img.tar.xz | 355 MB | XZ archive | Official download |
-| debian-hurd-i386-20250807.img | 4.2 GB | RAW image | Extracted image |
-| debian-hurd-i386-20250807.qcow2 | 2.1 GB | QCOW2 v3 | Converted image |
+| debian-hurd-i386-20251105.img | 4.2 GB | RAW image | Extracted image |
+| debian-hurd-i386-20251105.qcow2 | 2.1 GB | QCOW2 v3 | Converted image |
 | hurd_serial.log | Variable | Text log | QEMU serial output |
 
 ### Directory Structure
 ```
 /home/eirikr/Playground/
 ├── debian-hurd.img.tar.xz          (downloaded)
-├── debian-hurd-i386-20250807.img   (extracted)
-├── debian-hurd-i386-20250807.qcow2 (converted) ← READY TO USE
+├── debian-hurd-i386-20251105.img   (extracted)
+├── debian-hurd-i386-20251105.qcow2 (converted) ← READY TO USE
 ├── hurd_serial.log                 (boot output)
 └── MACH_QEMU_RESEARCH_REPORT.md    (this file)
 ```
@@ -271,7 +271,7 @@ qemu-img check debian-hurd-i386-20250807.qcow2
 
 ### Key Facts Established
 
-1. ✓ Debian GNU/Hurd 2025 officially released (August 2025)
+1. ✓ Debian GNU/Hurd 2025 officially released (November 2025)
 2. ✓ Pre-built disk images publicly available on cdimage.debian.org
 3. ✓ Images work in QEMU with standard i386 emulation
 4. ✓ Conversion to QCOW2 is instantaneous (0.7 seconds)
@@ -297,7 +297,7 @@ To complete the boot sequence, implement one of these approaches:
 **Option A (Easiest):** Graphical Boot
 ```bash
 qemu-system-i386 -m 1.5G \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
   -net user -net nic,model=e1000 \
   -vga vmware \
   -enable-kvm     # if available
@@ -307,7 +307,7 @@ qemu-system-i386 -m 1.5G \
 **Option B (Advanced):** TTY Serial Console
 ```bash
 qemu-system-i386 -m 1.5G \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
   -net user -net nic,model=e1000 \
   -nographic \
   -monitor none \
@@ -350,7 +350,7 @@ screen /dev/pts/N    # where N is the PTY number shown
 ```bash
 # Configuration 1: Minimal (File Logging)
 qemu-system-i386 -m 1.5G \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
   -net user -net nic,model=e1000 \
   -nographic -monitor none \
   -serial file:serial.log
@@ -359,7 +359,7 @@ Result: Boots to GRUB, waits for input
 
 # Configuration 2: With CPU Model
 qemu-system-i386 -m 1.5G -cpu pentium \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
   -net user -net nic,model=e1000 \
   -nographic -monitor none \
   -serial file:serial.log
@@ -368,7 +368,7 @@ Result: Same - Boots to GRUB, waits for input
 
 # Configuration 3: KVM Attempt (Failed - no KVM available)
 qemu-system-i386 -m 1.5G -enable-kvm -cpu host \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback \
   -net user -net nic,model=e1000 \
   -nographic -monitor none \
   -serial file:serial.log
@@ -385,7 +385,7 @@ To verify you have the correct official image:
 
 ```bash
 cd ~/Playground
-sha256sum debian-hurd-i386-20250807.img
+sha256sum debian-hurd-i386-20251105.img
 # Compare with official hashes at:
 # https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/SHA256SUMS
 ```

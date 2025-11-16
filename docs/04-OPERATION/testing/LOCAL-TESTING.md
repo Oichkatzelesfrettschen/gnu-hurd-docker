@@ -18,7 +18,7 @@ qemu-system-i386 \
   -enable-kvm \
   -m 2048 \
   -cpu pentium3 \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device e1000,netdev=net0 \
   -display gtk \

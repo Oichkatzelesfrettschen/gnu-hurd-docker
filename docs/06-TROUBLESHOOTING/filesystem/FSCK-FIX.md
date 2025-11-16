@@ -74,13 +74,13 @@ If QEMU won't boot at all, fix the QCOW2 from host:
 pkill qemu-system-i386
 
 # Check QCOW2 integrity
-qemu-img check debian-hurd-i386-20250807.qcow2
+qemu-img check debian-hurd-i386-20251105.qcow2
 
 # If corruption detected, try to repair:
-qemu-img check -r all debian-hurd-i386-20250807.qcow2
+qemu-img check -r all debian-hurd-i386-20251105.qcow2
 
 # If that fails, restore from backup or re-download
-cp debian-hurd-i386-20250807.qcow2 debian-hurd-i386-20250807.qcow2.backup
+cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
 # Then re-download original image
 ```
 

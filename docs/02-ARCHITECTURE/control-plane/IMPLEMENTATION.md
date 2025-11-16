@@ -100,7 +100,7 @@
 set -e
 
 # Configuration
-QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-i386-20250807.qcow2}"
+QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-i386-20251105.qcow2}"
 QEMU_RAM="${QEMU_RAM:-2048}"
 QEMU_SMP="${QEMU_SMP:-1}"
 QEMU_CPU="${QEMU_CPU:-pentium3}"

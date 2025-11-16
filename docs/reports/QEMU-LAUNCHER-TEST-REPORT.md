@@ -135,7 +135,7 @@ LISTEN 0  1  0.0.0.0:9999  users:(("qemu-system-x86",pid=358597,fd=3))
      - `scripts/full-automated-setup.sh`
 
 3. **Default Image**:
-   - Uses official Debian Hurd snapshot (debian-hurd-amd64-20250807)
+   - Uses official Debian Hurd snapshot (debian-hurd-amd64-20251105)
    - Not pre-provisioned (intentional - clean base image)
    - Provisioning scripts available in repository
 
