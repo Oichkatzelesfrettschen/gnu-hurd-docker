@@ -1,0 +1,255 @@
+---
+name: Interactive Hurd with VNC Access
+
+# This workflow creates an interactive Hurd instance with VNC access
+# Useful for GUI testing, debugging, and demonstrations
+
+"on":
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Session duration in minutes'
+        required: true
+        default: '30'
+        type: choice
+        options:
+          - '15'
+          - '30'
+          - '60'
+          - '120'
+      enable_gui:
+        description: 'Install GUI (LXDE)'
+        required: true
+        default: 'false'
+        type: boolean
+
+jobs:
+  interactive-hurd:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(github.event.inputs.duration) + 10 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU and VNC tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qemu-system-x86 \
+            qemu-utils \
+            socat \
+            netcat-openbsd \
+            tigervnc-standalone-server
+
+      - name: Download Hurd image
+        run: |
+          if ./scripts/download-released-image.sh 2>/dev/null; then
+            echo "Downloaded from releases"
+            cp images/debian-hurd-amd64.qcow2 debian-hurd-amd64.qcow2
+          else
+            echo "Building from source"
+            ./scripts/setup-hurd-amd64.sh
+          fi
+
+      - name: Setup VNC environment
+        run: |
+          # Create VNC password file
+          mkdir -p ~/.vnc
+          echo "hurdvnc" | vncpasswd -f > ~/.vnc/passwd
+          chmod 600 ~/.vnc/passwd
+
+      - name: Create required directories
+        run: |
+          mkdir -p secrets share logs images
+          echo "root" > secrets/root_password.txt
+          echo "agents" > secrets/agents_password.txt
+
+      - name: Update docker-compose for VNC
+        run: |
+          # Enable VNC in environment
+          cat >> docker-compose.override.yml <<EOF
+          services:
+            hurd-x86_64:
+              environment:
+                ENABLE_VNC: 1
+              ports:
+                - "5900:5900"  # VNC
+                - "6080:6080"  # noVNC web interface
+          EOF
+
+      - name: Build and start Hurd with VNC
+        run: |
+          docker compose build
+          docker compose up -d
+
+      - name: Wait for boot
+        run: |
+          echo "Waiting for Hurd to boot..."
+          for i in {1..60}; do
+            if timeout 5 ssh -p 2222 -o StrictHostKeyChecking=no \
+               -o ConnectTimeout=2 root@localhost "echo ready" 2>/dev/null; then
+              echo "Hurd is ready!"
+              break
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 5
+          done
+
+      - name: Setup noVNC web interface
+        run: |
+          # Download noVNC
+          git clone https://github.com/novnc/noVNC.git
+          cd noVNC
+
+          # Start websockify to proxy VNC
+          ./utils/novnc_proxy --vnc localhost:5900 --listen 6080 &
+
+          echo "noVNC started on http://localhost:6080/vnc.html"
+
+      - name: Install GUI if requested
+        if: ${{ github.event.inputs.enable_gui == 'true' }}
+        run: |
+          echo "Installing LXDE desktop environment..."
+          ssh -p 2222 -o StrictHostKeyChecking=no root@localhost <<'EOF'
+          set -e
+
+          # Configure APT sources
+          cat > /etc/apt/sources.list <<'APT'
+          deb http://deb.debian.org/debian-ports unstable main
+          deb http://deb.debian.org/debian-ports unreleased main
+          APT
+
+          apt update || true
+
+          # Install X11 and LXDE
+          apt install -y --no-install-recommends \
+            xorg \
+            lxde-core \
+            xdm || echo "Some packages may have failed"
+
+          # Configure X11
+          dpkg-reconfigure -f noninteractive x11-common
+
+          # Enable Hurd console
+          sed -i 's/ENABLE=.*/ENABLE="true"/' /etc/default/hurd-console || true
+
+          # Start X11
+          service xdm start || startx &
+
+          echo "GUI installation complete"
+          EOF
+
+      - name: Display connection information
+        run: |
+          echo "============================================"
+          echo "Hurd Instance is Running!"
+          echo "============================================"
+          echo ""
+          echo "Connection Methods:"
+          echo ""
+          echo "1. SSH Access:"
+          echo "   ssh -p 2222 root@localhost"
+          echo "   Password: root"
+          echo ""
+          echo "2. VNC Access (GUI):"
+          echo "   Connect VNC client to: localhost:5900"
+          echo "   Password: hurdvnc"
+          echo ""
+          echo "3. noVNC Web Access:"
+          echo "   (Would be http://localhost:6080/vnc.html in local setup)"
+          echo ""
+          echo "4. Serial Console:"
+          echo "   telnet localhost 5555"
+          echo ""
+          echo "5. QEMU Monitor:"
+          echo "   telnet localhost 9999"
+          echo ""
+          echo "Session will run for ${{ github.event.inputs.duration }} minutes"
+          echo "============================================"
+
+      - name: System information
+        run: |
+          ssh -p 2222 -o StrictHostKeyChecking=no root@localhost <<'EOF'
+          echo "=== System Information ==="
+          uname -a
+          echo ""
+          echo "=== Memory ==="
+          free -h
+          echo ""
+          echo "=== Disk ==="
+          df -h
+          echo ""
+          echo "=== Processes ==="
+          ps aux | head -20
+          echo ""
+          echo "=== Network ==="
+          ip a
+          EOF
+
+      - name: Keep session alive
+        run: |
+          echo "Session active for ${{ github.event.inputs.duration }} minutes"
+          echo "Monitor logs: docker compose logs -f"
+
+          # Keep alive for specified duration
+          DURATION_SECONDS=$(( ${{ github.event.inputs.duration }} * 60 ))
+
+          for ((i=0; i<$DURATION_SECONDS; i+=60)); do
+            REMAINING=$(( ($DURATION_SECONDS - i) / 60 ))
+            echo "Session time remaining: ${REMAINING} minutes"
+
+            # Check if Hurd is still responsive
+            if timeout 5 ssh -p 2222 -o StrictHostKeyChecking=no \
+               root@localhost "uptime" 2>/dev/null; then
+              echo "Hurd is responsive"
+            else
+              echo "WARNING: Hurd not responding"
+            fi
+
+            sleep 60
+          done
+
+      - name: Collect logs before shutdown
+        if: always()
+        run: |
+          echo "=== Docker Logs ==="
+          docker compose logs --tail=200
+
+          echo "=== Hurd System Logs ==="
+          ssh -p 2222 -o StrictHostKeyChecking=no root@localhost \
+            "dmesg" || echo "Could not retrieve dmesg"
+
+      - name: Create snapshot before shutdown
+        if: always()
+        run: |
+          echo "Creating final snapshot..."
+          echo "savevm session-end-$(date +%Y%m%d-%H%M%S)" | nc localhost 9999
+
+      - name: Graceful shutdown
+        if: always()
+        run: |
+          echo "Shutting down Hurd gracefully..."
+          ssh -p 2222 -o StrictHostKeyChecking=no root@localhost \
+            "shutdown -h now" || echo "Shutdown command sent"
+
+          sleep 30
+          docker compose down
+
+      - name: Upload session logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hurd-session-logs-${{ github.run_id }}
+          path: |
+            logs/
+            *.log
+          retention-days: 7
+
+      - name: Upload final image state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hurd-image-final-${{ github.run_id }}
+          path: debian-hurd-amd64.qcow2
+          retention-days: 3
