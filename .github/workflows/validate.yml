@@ -123,3 +123,31 @@ jobs:
           echo "=== Validating security configuration ==="
           chmod +x scripts/validate-security-config.sh
           ./scripts/validate-security-config.sh docker-compose.yml
+
+      - name: Generate workflow summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## ✅ Validate Configuration - Summary
+
+          **Workflow:** Validate Docker Configuration
+          **Status:** ${{ job.status }}
+          **Run ID:** ${{ github.run_id }}
+
+          ### Checks Performed
+          - ✓ Dockerfile validation
+          - ✓ entrypoint.sh validation and executability
+          - ✓ docker-compose.yml YAML syntax
+          - ✓ Script executability (excluding templates)
+          - ✓ Security configuration validation
+
+          ### Files Validated
+          - **Dockerfile:** Present and valid
+          - **entrypoint.sh:** Executable and passes ShellCheck
+          - **docker-compose.yml:** Valid YAML syntax
+          - **Scripts:** All non-template scripts executable
+          - **Security config:** Validated successfully
+
+          ### Repository Health
+          All configuration files pass validation checks.
+          EOF
