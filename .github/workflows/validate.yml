@@ -103,6 +103,11 @@ jobs:
         run: |
           echo "=== Checking script executability ==="
           for script in scripts/*.sh; do
+            # Skip template and example files
+            if [[ "$script" =~ TEMPLATE|template|EXAMPLE|example ]]; then
+              echo "SKIP: $script (template/example file)"
+              continue
+            fi
             if [ -f "$script" ]; then
               if [ -x "$script" ]; then
                 echo "OK: $script is executable"
