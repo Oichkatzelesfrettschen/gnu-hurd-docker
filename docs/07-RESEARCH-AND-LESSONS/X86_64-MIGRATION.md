@@ -69,9 +69,9 @@ This document consolidates all research and execution details from the **BREAKIN
 
 **Disk Images (Deleted - 14.9 GB)**:
 ```
-debian-hurd-i386-20250807.img              4.2 GB
-debian-hurd-i386-20250807.img.bak          4.2 GB
-debian-hurd-i386-20250807.qcow2.bak        2.3 GB
+debian-hurd-i386-20251105.img              4.2 GB
+debian-hurd-i386-20251105.img.bak          4.2 GB
+debian-hurd-i386-20251105.qcow2.bak        2.3 GB
 scripts/debian-hurd.img                    4.2 GB
 TOTAL:                                    14.9 GB
 ```
@@ -180,7 +180,7 @@ RUN ! dpkg --get-selections | grep -E ':i386|i386-' || exit 1
 set -e
 
 # BEFORE (hardcoded i386):
-QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-i386-20250807.qcow2}"
+QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-i386-20251105.qcow2}"
 QEMU_ARCH="${QEMU_ARCH:-i386}"
 CPU_MODEL="${QEMU_CPU:-pentium3}"
 
@@ -337,9 +337,9 @@ grep -r "i386" *.md docs/*.md | grep -v "MIGRATION" | wc -l
 
 ```bash
 # Delete i386 disk images (14.9 GB freed)
-rm -fv debian-hurd-i386-20250807.img                    # 4.2 GB
-rm -fv debian-hurd-i386-20250807.img.bak.1762464911     # 4.2 GB
-rm -fv debian-hurd-i386-20250807.qcow2.bak.1762464911   # 2.3 GB
+rm -fv debian-hurd-i386-20251105.img                    # 4.2 GB
+rm -fv debian-hurd-i386-20251105.img.bak.1762464911     # 4.2 GB
+rm -fv debian-hurd-i386-20251105.qcow2.bak.1762464911   # 2.3 GB
 rm -fv scripts/debian-hurd.img                          # 4.2 GB (if i386)
 
 # Verification
@@ -352,9 +352,9 @@ du -sh debian-hurd-amd64*
 
 **Retained x86_64 Images**:
 ```
-debian-hurd-amd64-20250807.img             4.2 GB (source)
+debian-hurd-amd64-20251105.img             4.2 GB (source)
 debian-hurd-amd64-80gb.qcow2               2.2 GB (active VM)
-debian-hurd-amd64-20250807.img.tar.xz      354 MB (compressed)
+debian-hurd-amd64-20251105.img.tar.xz      354 MB (compressed)
 TOTAL:                                     6.8 GB
 ```
 
@@ -747,8 +747,8 @@ cp -r backup-*/.github .
 
 ```bash
 # If you kept i386 images elsewhere
-cp /backup/debian-hurd-i386-20250807.img .
-cp /backup/debian-hurd-i386-20250807.qcow2.bak.* .
+cp /backup/debian-hurd-i386-20251105.img .
+cp /backup/debian-hurd-i386-20251105.qcow2.bak.* .
 
 # Or re-download
 wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz

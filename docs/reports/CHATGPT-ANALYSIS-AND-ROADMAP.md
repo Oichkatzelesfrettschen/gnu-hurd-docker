@@ -96,7 +96,7 @@ ChatGPT's analysis recommends creating a **streamlined, dual-mode workflow** for
 
 #### 8. **Official Debian Hurd Image**
 - **Source**: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
-- **File**: `debian-hurd-amd64-20250807.img` (337 MB compressed)
+- **File**: `debian-hurd-amd64-20251105.img` (337 MB compressed)
 - **Format**: QCOW2 (80 GB virtual, ~533 MB actual)
 - **Content**: Debian GNU/Hurd 2025 amd64 (~72% of archive available)
 - **Status**: Downloaded and converted by `setup-hurd-amd64.sh`

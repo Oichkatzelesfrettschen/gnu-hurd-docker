@@ -26,7 +26,7 @@ This repository contains 21 automation scripts for setting up, configuring, test
 **Total Scripts**: 21
 **Location**: `scripts/` directory (project root)
 **Requirements**: bash 4.0+, docker-compose, QEMU/qemu-img, expect, sshpass
-**Tested On**: Debian GNU/Hurd 2025 x86_64 (amd64), August 2025 release
+**Tested On**: Debian GNU/Hurd 2025 x86_64 (amd64), November 2025 release
 
 ---
 
@@ -115,7 +115,7 @@ This repository contains 21 automation scripts for setting up, configuring, test
 **Purpose**: Setup Debian GNU/Hurd x86_64 (amd64) with 80GB dynamic QCOW2 disk
 
 **What it does**:
-1. Downloads `debian-hurd-amd64-20250807.img.tar.xz` (337 MB) if not present
+1. Downloads `debian-hurd-amd64-20251105.img.tar.xz` (337 MB) if not present
 2. Extracts raw image (3.5 GB)
 3. Converts to QCOW2 format
 4. Resizes to 80 GB dynamic expansion (only uses space as needed)
@@ -825,7 +825,7 @@ Provisioning complete. Try:
 
 **Environment**:
 ```bash
-# Specify QCOW2 image (default: debian-hurd-amd64-20250807.qcow2)
+# Specify QCOW2 image (default: debian-hurd-amd64-20251105.qcow2)
 export QCOW2_IMAGE=debian-hurd-amd64-80gb.qcow2
 ./scripts/manage-snapshots.sh list
 ```

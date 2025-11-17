@@ -1,0 +1,161 @@
+# =============================================================================
+# VNC-Enabled Docker Compose Configuration for GNU/Hurd
+# =============================================================================
+# PURPOSE:
+# - Extends base docker-compose.yml with VNC and noVNC support
+# - Enables graphical access to Hurd desktop via web browser
+# - Adds QEMU monitor and enhanced debugging capabilities
+# =============================================================================
+#
+# USAGE:
+#   docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+#
+# ACCESS:
+#   - SSH: ssh -p 2222 root@localhost
+#   - VNC: vncviewer localhost:5900
+#   - noVNC Web: http://localhost:6080/vnc.html
+#   - QEMU Monitor: telnet localhost 9999
+#   - Serial Console: telnet localhost 5555
+# =============================================================================
+
+---
+services:
+  hurd-x86_64:
+    # Enable VNC display
+    environment:
+      ENABLE_VNC: 1
+      VNC_PASSWORD: ${VNC_PASSWORD:-hurdvnc}
+      QEMU_DISPLAY: vnc=:0
+
+    # Expose additional ports
+    ports:
+      - "${VNC_PORT:-5900}:5900"      # VNC direct access
+      - "${NOVNC_PORT:-6080}:6080"    # noVNC web interface (via novnc service)
+
+    # Add labels for better organization
+    labels:
+      com.docker.compose.vnc: "enabled"
+      com.docker.compose.novnc: "available"
+
+  # noVNC Web Interface Service
+  novnc:
+    image: theasp/novnc:latest
+    container_name: hurd-novnc
+    restart: unless-stopped
+
+    environment:
+      # Display settings
+      DISPLAY_WIDTH: ${DISPLAY_WIDTH:-1024}
+      DISPLAY_HEIGHT: ${DISPLAY_HEIGHT:-768}
+      RUN_XTERM: "no"
+
+      # VNC connection
+      VNC_HOST: hurd-x86_64
+      VNC_PORT: 5900
+
+    ports:
+      - "${NOVNC_PORT:-6080}:8080"
+
+    depends_on:
+      - hurd-x86_64
+
+    networks:
+      - hurd-net
+
+    # Health check for noVNC
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/vnc.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    labels:
+      com.docker.compose.service: "novnc-web-interface"
+      org.opencontainers.image.description: "noVNC web-based VNC client for Hurd"
+
+  # Optional: VNC Recorder (for demonstrations/tutorials)
+  vnc-recorder:
+    image: dorowu/ubuntu-desktop-lxde-vnc:latest
+    container_name: hurd-vnc-recorder
+    restart: "no"  # Manual start only
+
+    environment:
+      VNC_PASSWORD: ${VNC_PASSWORD:-hurdvnc}
+      RESOLUTION: ${DISPLAY_WIDTH:-1024}x${DISPLAY_HEIGHT:-768}
+
+    volumes:
+      - ./recordings:/recordings
+
+    networks:
+      - hurd-net
+
+    profiles:
+      - recording  # Only start with: docker compose --profile recording up
+
+    labels:
+      com.docker.compose.service: "vnc-recorder"
+      org.opencontainers.image.description: "VNC session recorder"
+
+# Shared network (already defined in base docker-compose.yml, but ensuring it exists)
+networks:
+  hurd-net:
+    driver: bridge
+
+# =============================================================================
+# USAGE EXAMPLES:
+# =============================================================================
+#
+# 1. Start with VNC enabled:
+#    docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+#
+# 2. Access via web browser:
+#    Open http://localhost:6080/vnc.html
+#    Click "Connect" button
+#
+# 3. Access via VNC client:
+#    vncviewer localhost:5900
+#    Password: hurdvnc (or value of VNC_PASSWORD env var)
+#
+# 4. Custom resolution:
+#    DISPLAY_WIDTH=1920 DISPLAY_HEIGHT=1080 \
+#      docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+#
+# 5. With recording capability:
+#    docker compose -f docker-compose.yml -f docker-compose.vnc.yml \
+#      --profile recording up -d
+#
+# 6. Environment variables:
+#    Create .env file:
+#      VNC_PASSWORD=mysecretpassword
+#      VNC_PORT=5901
+#      NOVNC_PORT=6081
+#      DISPLAY_WIDTH=1920
+#      DISPLAY_HEIGHT=1080
+#
+# 7. Stop VNC services:
+#    docker compose -f docker-compose.yml -f docker-compose.vnc.yml down
+#
+# =============================================================================
+# TROUBLESHOOTING:
+# =============================================================================
+#
+# Issue: Cannot connect to VNC
+# Solution: Check if VNC is enabled:
+#   docker exec hurd-x86_64-qemu printenv ENABLE_VNC
+#   docker compose -f docker-compose.yml -f docker-compose.vnc.yml logs novnc
+#
+# Issue: Black screen in VNC
+# Solution: Hurd console might not be started. Connect via SSH:
+#   ssh -p 2222 root@localhost
+#   console -d vga -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd -c /dev/vcs
+#
+# Issue: noVNC shows "Failed to connect"
+# Solution: Check if hurd-x86_64 service is running:
+#   docker compose ps
+#   docker compose -f docker-compose.yml -f docker-compose.vnc.yml restart novnc
+#
+# Issue: Want to install GUI in Hurd:
+# Solution: See docs/04-OPERATION/GUI-SETUP.md
+#
+# =============================================================================

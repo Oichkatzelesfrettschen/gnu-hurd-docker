@@ -122,18 +122,18 @@ Or download manually:
 mkdir -p images
 
 # Download from mirror
-wget -O images/debian-hurd-amd64-20250807.img.tar.xz \
-  https://darnassus.sceen.net/~hurd-web/debian-amd64-debian-installer/2025-08-07/debian-hurd-amd64-20250807.img.tar.xz
+wget -O images/debian-hurd-amd64-20251105.img.tar.xz \
+  https://darnassus.sceen.net/~hurd-web/debian-amd64-debian-installer/2025-11-05/debian-hurd-amd64-20251105.img.tar.xz
 
 # Extract (creates .img file)
 cd images
-tar xf debian-hurd-amd64-20250807.img.tar.xz
+tar xf debian-hurd-amd64-20251105.img.tar.xz
 
 # Convert to QCOW2 for better performance
-qemu-img convert -O qcow2 debian-hurd-amd64-20250807.img debian-hurd-amd64.qcow2
+qemu-img convert -O qcow2 debian-hurd-amd64-20251105.img debian-hurd-amd64.qcow2
 
 # Optional: Remove original files to save space
-rm debian-hurd-amd64-20250807.img debian-hurd-amd64-20250807.img.tar.xz
+rm debian-hurd-amd64-20251105.img debian-hurd-amd64-20251105.img.tar.xz
 ```
 
 ---

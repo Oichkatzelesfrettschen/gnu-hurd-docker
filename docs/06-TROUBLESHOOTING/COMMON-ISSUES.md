@@ -40,6 +40,142 @@ qemu-img check debian-hurd-amd64-80gb.qcow2
 
 ---
 
+## Hardware Limitations and Known Issues
+
+### Overview
+
+Debian GNU/Hurd 2025 has specific hardware limitations due to missing drivers and microkernel architecture constraints.
+
+### Supported Hardware
+
+✅ **What Works**:
+- SATA/AHCI disks (in AHCI mode, NOT RAID)
+- E1000 and compatible Ethernet NICs
+- PS/2 keyboards and mice
+- VGA/VESA graphics (no 3D acceleration)
+- Serial ports (for console)
+- PC speaker (basic beep)
+
+### Unsupported Hardware
+
+❌ **What Doesn't Work**:
+- **USB Devices**: NO USB HID support (no USB keyboards/mice)
+- **Wireless Networking**: NO WiFi support
+- **Sound Cards**: NO audio drivers yet
+- **Non-Free Firmware**: NO firmware loading support
+- **Thunderbolt/Firewire**: Not supported
+- **Modern NVMe**: Limited support (use AHCI SATA instead)
+- **RAID Controllers**: Must use AHCI mode, NOT hardware RAID
+
+### Virtual Machine Specific
+
+#### QEMU/KVM (Recommended)
+
+✅ **Recommended Settings**:
+```bash
+qemu-system-x86_64 \
+    -m 2G \                              # 2-8GB RAM
+    -smp cores=2 \                       # 1-2 CPUs (stable)
+    -drive file=hurd.img,cache=writeback \  # SATA/AHCI
+    -net nic,model=e1000 \               # E1000 NIC
+    -net user \                          # User-mode networking
+    -vga std                             # Standard VGA
+```
+
+❌ **Avoid**:
+- More than 2 CPUs (SMP experimental)
+- virtio drivers (not fully supported)
+- USB devices (USB HID not supported)
+- q35 machine type (use 'pc' instead)
+
+#### VirtualBox (Less Tested)
+
+✅ **Required Settings**:
+```bash
+# Enable HPET (REQUIRED!)
+VBoxManage modifyvm "Hurd VM" --hpet on
+
+# Other settings
+- CPU: 1 core (SMP causes crashes)
+- RAM: 2GB minimum, 4GB recommended
+- Disk: IDE or SATA (AHCI mode)
+- Network: Intel PRO/1000 MT or AMD PCnet
+- Input: PS/2 only (disable USB tablet!)
+- Graphics: VBoxVGA or VMSVGA
+```
+
+❌ **Common VirtualBox Issues**:
+- **No HPET**: Timer issues, system instability
+- **USB Input**: System won't recognize keyboard/mouse
+- **SMP > 1**: Crashes, kernel panics, deadlocks
+- **SATA (RAID mode)**: Boot failures, disk not found
+
+### Filesystem Limitations
+
+⚠️ **Important**:
+- **ext2 only**: Hurd uses ext2 (with xattr for translators)
+- **No separate /usr**: /usr or /usr/local on separate partition NOT supported
+- **Proper shutdown required**: ext2 is fragile - always shutdown cleanly!
+- **fsck on crashes**: After crashes, may need manual fsck
+
+**Safe shutdown**:
+```bash
+# Inside Hurd
+sudo poweroff
+
+# Or from host
+ssh -p 2222 root@localhost "shutdown -h now"
+```
+
+### Performance Expectations
+
+⚠️ **Realistic Performance**:
+- **Boot Time**: 30-60s with KVM, 3-5min with TCG emulation
+- **Package Installation**: Slower than Linux (apt may take longer)
+- **GUI Performance**: Usable but not optimized (LXDE recommended)
+- **Compilation**: Slower than Linux (use -j1 or -j2 for make)
+
+### Network Limitations
+
+⚠️ **Network Issues**:
+- **No WiFi**: Ethernet only (wired or emulated)
+- **Limited Protocols**: Standard TCP/IP works, advanced features may not
+- **DHCP**: Works in QEMU/VirtualBox user-mode networking
+- **Static IP**: Supported but requires manual configuration
+
+### Development Limitations
+
+⚠️ **For Developers**:
+- **strace doesn't exist**: Use `trace` for RPC tracing instead
+- **systemd not available**: Init scripts only
+- **Limited procfs**: Basic /proc exists but minimal
+- **No cgroups**: Process control different from Linux
+
+### Workarounds
+
+#### No Sound?
+**Workaround**: None currently. Sound drivers not implemented yet.
+
+#### No USB keyboard?
+**Workaround**: Use PS/2 emulation in QEMU/VirtualBox.
+
+```bash
+# QEMU automatically provides PS/2
+# VirtualBox: Disable "USB tablet" in VM settings
+```
+
+#### Wireless needed?
+**Workaround**: Use Ethernet or USB-to-Ethernet adapter on host, pass through as E1000 to guest.
+
+#### System crashes frequently?
+**Workarounds**:
+1. Reduce CPUs to 1 (disable SMP)
+2. Use 'pc' machine type, not 'q35'
+3. Enable proper shutdown, never force kill
+4. Use snapshots before risky operations
+
+---
+
 ## Docker Daemon Issues
 
 ### Docker Daemon Won't Start
@@ -706,7 +842,7 @@ df -h /
 
 # Remove old backups
 rm -f debian-hurd-amd64-80gb.qcow2.backup
-rm -f debian-hurd-amd64-20250807.img.tar.xz
+rm -f debian-hurd-amd64-20251105.img.tar.xz
 
 # Clean Docker system
 docker system prune -af

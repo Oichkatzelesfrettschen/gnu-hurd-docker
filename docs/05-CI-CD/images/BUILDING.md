@@ -49,7 +49,7 @@ This method boots a vanilla Debian Hurd image, runs all setup scripts automatica
 cd /path/to/gnu-hurd-docker
 
 # Ensure you have the vanilla Debian Hurd image
-ls -lh debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
 
 # If not present, download it:
 ./scripts/download-image.sh
@@ -130,11 +130,11 @@ docker-compose down
 ./scripts/manage-snapshots.sh create pre-rice
 
 # The QCOW2 now contains all changes (copy-on-write)
-ls -lh debian-hurd-i386-20250807.qcow2
+ls -lh debian-hurd-i386-20251105.qcow2
 
 # Optional: Compress image (reduces size by ~30%)
 qemu-img convert -O qcow2 -c \
-  debian-hurd-i386-20250807.qcow2 \
+  debian-hurd-i386-20251105.qcow2 \
   debian-hurd-riced-$(date +%Y%m%d).qcow2
 ```
 
@@ -142,7 +142,7 @@ qemu-img convert -O qcow2 -c \
 
 ```bash
 # Update entrypoint.sh to use new image name (if renamed)
-sed -i 's/debian-hurd-i386-20250807.qcow2/debian-hurd-riced-20251105.qcow2/' entrypoint.sh
+sed -i 's/debian-hurd-i386-20251105.qcow2/debian-hurd-riced-20251105.qcow2/' entrypoint.sh
 
 # Update docker-compose.yml (no changes needed if using same filename)
 
@@ -166,7 +166,7 @@ Run QEMU directly without Docker, configure manually, then import into Docker.
 qemu-system-i386 \
   -m 2048 \
   -cpu pentium3 \
-  -drive file=debian-hurd-i386-20250807.qcow2,format=qcow2 \
+  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2 \
   -net user,hostfwd=tcp::2222-:22 \
   -net nic,model=e1000 \
   -nographic \
@@ -184,7 +184,7 @@ qemu-system-i386 \
 # (From inside Hurd: shutdown -h now)
 
 # Move riced image to Docker directory
-mv debian-hurd-i386-20250807.qcow2 /path/to/gnu-hurd-docker/
+mv debian-hurd-i386-20251105.qcow2 /path/to/gnu-hurd-docker/
 
 # Build Docker image
 cd /path/to/gnu-hurd-docker
@@ -377,7 +377,7 @@ apt-get update
 **Solution:**
 ```bash
 # Resize QCOW2 (on host, while VM is shut down)
-qemu-img resize debian-hurd-i386-20250807.qcow2 +5G
+qemu-img resize debian-hurd-i386-20251105.qcow2 +5G
 
 # Boot Hurd and resize filesystem
 # (Inside Hurd)

@@ -19,7 +19,7 @@ The root account in the official Debian GNU/Hurd 2025 image is typically either:
 2. **Empty password** (press Enter at login prompt)
 3. **Default password:** Check Debian release notes at https://www.debian.org/ports/hurd/
 
-For the official Debian GNU/Hurd 2025 release (August 2025):
+For the official Debian GNU/Hurd 2025 release (November 2025):
 - **Login Method:** SSH with key-based authentication preferred
 - **Password Authentication:** See official documentation or trial access
 

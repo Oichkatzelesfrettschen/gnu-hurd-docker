@@ -18,7 +18,7 @@ Successfully completed the full Docker Compose architecture and implementation f
 
 ### Phase 1: Research and Architecture Design
 - Investigated GNU/Mach availability on the internet
-- Discovered Debian GNU/Hurd 2025 official release (August 2025)
+- Discovered Debian GNU/Hurd 2025 official release (November 2025)
 - Analyzed three architectural options for containerization
 - Identified QEMU-in-Docker as optimal solution
 - Created comprehensive architecture design document (DOCKER-ARCHITECTURE-DESIGN.md)
@@ -92,8 +92,8 @@ Successfully completed the full Docker Compose architecture and implementation f
 ```
 /home/eirikr/GNUHurd2025/
 ├── Disk Images
-│   ├── debian-hurd-i386-20250807.qcow2      (2.1 GB - PRODUCTION)
-│   ├── debian-hurd-i386-20250807.img        (4.2 GB - Raw format)
+│   ├── debian-hurd-i386-20251105.qcow2      (2.1 GB - PRODUCTION)
+│   ├── debian-hurd-i386-20251105.img        (4.2 GB - Raw format)
 │   └── debian-hurd.img.tar.xz               (355 MB - Source archive)
 │
 ├── Docker Configuration (IMPLEMENTED)
@@ -136,7 +136,7 @@ Host System (CachyOS Linux)
             |
             +-- Volume Mount: /opt/hurd-image
             |   |
-            |   +-- debian-hurd-i386-20250807.qcow2 (host bind-mount)
+            |   +-- debian-hurd-i386-20251105.qcow2 (host bind-mount)
             |
             +-- Network Ports
                 |
@@ -233,8 +233,8 @@ networks:
 
 | File | Size | Format | Source | Status |
 |------|------|--------|--------|--------|
-| debian-hurd-i386-20250807.qcow2 | 2.1 GB | QCOW2 v3 | Converted locally | PRODUCTION |
-| debian-hurd-i386-20250807.img | 4.2 GB | Raw IMG | Extracted from tar | Reference |
+| debian-hurd-i386-20251105.qcow2 | 2.1 GB | QCOW2 v3 | Converted locally | PRODUCTION |
+| debian-hurd-i386-20251105.img | 4.2 GB | Raw IMG | Extracted from tar | Reference |
 | debian-hurd.img.tar.xz | 355 MB | Compressed | cdimage.debian.org | Source |
 
 **Total Disk Space Used:** ~6.5 GB (includes copies and sources)

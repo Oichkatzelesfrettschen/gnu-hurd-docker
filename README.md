@@ -8,6 +8,8 @@
 
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
+**Release**: Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
+
 **Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)
 
 ---
@@ -97,11 +99,14 @@ ssh -p 2222 root@localhost
 | Component | Configuration |
 |-----------|---------------|
 | **QEMU Binary** | `qemu-system-x86_64` (underscore!) |
-| **Image** | debian-hurd-amd64-20250807.img (337 MB download, 80 GB dynamic) |
+| **Release** | Debian GNU/Hurd 2025 "Trixie" (Debian 13) |
+| **Snapshot Date** | 2025-11-05 (November 5, 2025) |
+| **Image** | debian-hurd.img.tar.xz (355 MB compressed, 4.2 GB raw) |
+| **Image URL** | http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/ |
 | **CPU** | `-cpu max` or `-cpu host` (KVM acceleration) |
-| **RAM** | 4 GB (configurable: 2-8 GB) |
-| **SMP** | 1-2 cores (stable) |
-| **Storage** | SATA/AHCI (recommended) |
+| **RAM** | 4 GB (minimum 2 GB, recommended 4-8 GB) |
+| **SMP** | 1-2 cores (stable), 4+ experimental |
+| **Storage** | SATA/AHCI with NetBSD Rump drivers |
 | **Machine** | pc (stable, not q35) |
 | **Network** | E1000 (proven Hurd compatibility) |
 
@@ -143,12 +148,24 @@ telnet localhost 5555
 
 ## Features
 
+### Core Features
+- ✅ **Debian 13 "Trixie"**: Official 2025 release (snapshot 2025-11-05)
 - ✅ **x86_64 Native**: Full 64-bit architecture (i386 removed)
+- ✅ **72% Package Coverage**: ~65,000+ Debian packages available
 - ✅ **KVM Acceleration**: 30-60s boot (vs 3-5 min TCG)
-- ✅ **Official Debian Image**: debian-hurd-amd64-20250807
+- ✅ **Official Debian Image**: debian-hurd-amd64 from ports/13.0
+
+### New in Hurd 2025
+- 🎉 **NetBSD Rump Drivers**: User-space disk drivers (no Linux drivers in Mach!)
+- 🎉 **ACPI/APIC Support**: Modern hardware initialization
+- 🎉 **SMP Support**: Experimental multi-core (1-2 cores stable)
+- 🎉 **Rust/LLVM/Clang**: Full modern toolchain support
+- 🎉 **64-bit Performance**: Native amd64 execution
+
+### Infrastructure
 - ✅ **SATA/AHCI Storage**: Stable x86_64 Hurd support
 - ✅ **Pre-Provisioned CI**: 85% faster, 95% reliable
-- ✅ **Comprehensive Docs**: 26 documents, 8 sections
+- ✅ **Comprehensive Docs**: 26+ documents, 8 sections
 - ✅ **21 Automation Scripts**: Setup, install, configure, test
 - ✅ **Snapshot Management**: QCOW2 snapshots for rollback
 

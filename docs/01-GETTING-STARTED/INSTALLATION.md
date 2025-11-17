@@ -461,14 +461,14 @@ This script will:
 ### Manual Download
 
 ```bash
-# Download from Debian
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20250807.img.tar.xz
+# Download Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
+wget http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract
-tar xJf debian-hurd-amd64-20250807.img.tar.xz
+tar xJf debian-hurd-amd64-20251105.img.tar.xz
 
 # Convert to QCOW2 (for snapshot support)
-qemu-img convert -f raw -O qcow2 -o preallocation=metadata debian-hurd-amd64-20250807.img debian-hurd-amd64.qcow2
+qemu-img convert -f raw -O qcow2 -o preallocation=metadata debian-hurd-amd64-20251105.img debian-hurd-amd64.qcow2
 
 # Move to images directory
 mv debian-hurd-amd64.qcow2 images/
@@ -985,7 +985,7 @@ ssh -p 2222 root@localhost 'uname -m'
 
 - **GNU/Hurd**: https://www.gnu.org/software/hurd/
 - **Debian GNU/Hurd**: https://www.debian.org/ports/hurd/
-- **Debian Hurd x86_64**: https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/
+- **Debian Hurd 2025 "Trixie"**: http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
 - **QEMU Documentation**: https://www.qemu.org/documentation/
 - **Docker Documentation**: https://docs.docker.com/
 - **Hurd Cloud Guide**: https://www.gnu.org/software/hurd/hurd/running/cloud.html

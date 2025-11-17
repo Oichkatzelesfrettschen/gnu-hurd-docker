@@ -116,8 +116,8 @@ gnu-hurd-docker/
 │   └── docker-compose.yml (27 lines, container orchestration)
 │
 ├── Disk Images (PRESENT ✓)
-│   ├── debian-hurd-i386-20250807.qcow2 (2.1 GB, production format)
-│   ├── debian-hurd-i386-20250807.img (4.2 GB, raw reference)
+│   ├── debian-hurd-i386-20251105.qcow2 (2.1 GB, production format)
+│   ├── debian-hurd-i386-20251105.img (4.2 GB, raw reference)
 │   └── debian-hurd.img.tar.xz (355 MB, compressed source)
 │
 ├── Documentation (COMPREHENSIVE ✓)
@@ -280,8 +280,8 @@ Based on `ls -la ~/GNUHurd2025/`:
 
 ```
 ~/GNUHurd2025/
-├── debian-hurd-i386-20250807.img (4.2 GB)       [DUPLICATE - exists in repo]
-├── debian-hurd-i386-20250807.qcow2 (2.1 GB)    [DUPLICATE - exists in repo]
+├── debian-hurd-i386-20251105.img (4.2 GB)       [DUPLICATE - exists in repo]
+├── debian-hurd-i386-20251105.qcow2 (2.1 GB)    [DUPLICATE - exists in repo]
 ├── debian-hurd.img.tar.xz (355 MB)             [DUPLICATE - exists in repo]
 ├── DEPLOYMENT-STATUS.md                        [DUPLICATE - exists in repo]
 ├── docker-compose.yml                          [DUPLICATE - exists in repo]

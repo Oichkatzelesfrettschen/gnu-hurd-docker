@@ -17,9 +17,10 @@ echo ""
 
 # Download if not present
 if [ ! -f "debian-hurd-amd64.img.tar.xz" ]; then
-    echo_info "Downloading Debian GNU/Hurd amd64 image (~350MB)..."
+    echo_info "Downloading Debian GNU/Hurd 2025 'Trixie' amd64 image (~350MB)..."
+    echo_info "Release: Debian 13 snapshot from 2025-11-05"
     curl -L -o debian-hurd-amd64.img.tar.xz \
-        https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz
+        http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
     echo_success "Download complete"
 fi
 
