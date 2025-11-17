@@ -37,6 +37,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-mkdocs-${{ hashFiles('**/requirements*.txt', 'mkdocs.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-mkdocs-
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |

@@ -30,6 +30,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-shellcheck-${{ hashFiles('.github/workflows/quality-and-security.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-shellcheck-
+            ${{ runner.os }}-apt-
+
       - name: Install ShellCheck
         run: |
           sudo apt-get update
@@ -72,6 +83,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-yamllint-${{ hashFiles('.github/workflows/quality-and-security.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-yamllint-
+            ${{ runner.os }}-apt-
 
       - name: Install yamllint
         run: |
@@ -146,6 +168,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install linting tools
         run: |
@@ -210,12 +241,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache Hadolint
+        id: cache-hadolint
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/hadolint
+          key: ${{ runner.os }}-hadolint-v2.12.0
+
       - name: Install Hadolint
+        if: steps.cache-hadolint.outputs.cache-hit != 'true'
         run: |
           HADOLINT_URL="https://github.com/hadolint/hadolint/releases/download"
-          wget -O /usr/local/bin/hadolint $HADOLINT_URL/v2.12.0/hadolint-Linux-x86_64
-          chmod +x /usr/local/bin/hadolint
-          hadolint --version
+          sudo wget -O /usr/local/bin/hadolint $HADOLINT_URL/v2.12.0/hadolint-Linux-x86_64
+          sudo chmod +x /usr/local/bin/hadolint
+
+      - name: Verify Hadolint
+        run: hadolint --version
 
       - name: Run Hadolint on Dockerfile
         run: |
@@ -234,6 +275,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache npm global packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-markdownlint-${{ hashFiles('.github/workflows/quality-and-security.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-markdownlint-
+            ${{ runner.os }}-npm-
 
       - name: Install markdownlint-cli
         run: |
