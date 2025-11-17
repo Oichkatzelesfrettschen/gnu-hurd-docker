@@ -31,6 +31,9 @@ jobs:
   interactive-hurd:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ fromJSON(github.event.inputs.duration) + 10 }}
+    permissions:
+      contents: read
+      actions: write
 
     steps:
       - name: Checkout
