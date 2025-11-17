@@ -1,0 +1,85 @@
+name: 'ShellCheck Validation'
+description: 'Run ShellCheck on shell scripts with configurable severity'
+author: 'GNU/Hurd Docker Team'
+
+inputs:
+  scripts-path:
+    description: 'Path to search for shell scripts (relative to repository root)'
+    required: false
+    default: '.'
+  severity:
+    description: 'Minimum severity level (error, warning, info, style)'
+    required: false
+    default: 'warning'
+  exclude-patterns:
+    description: 'Regex patterns to exclude (e.g., "TEMPLATE|example")'
+    required: false
+    default: ''
+
+outputs:
+  scripts-checked:
+    description: 'Number of scripts checked'
+    value: ${{ steps.check.outputs.scripts-checked }}
+  result:
+    description: 'Validation result (pass/fail)'
+    value: ${{ steps.check.outputs.result }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache ShellCheck
+      id: cache-shellcheck
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/bin/shellcheck
+        key: ${{ runner.os }}-shellcheck-0.9.0
+        
+    - name: Install ShellCheck
+      if: steps.cache-shellcheck.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y shellcheck
+        
+    - name: Run ShellCheck
+      id: check
+      shell: bash
+      run: |
+        echo "=== Running ShellCheck with severity: ${{ inputs.severity }} ==="
+        
+        # Find all shell scripts
+        SCRIPTS=$(find ${{ inputs.scripts-path }} -name "*.sh" -type f ! -path "./.git/*")
+        
+        FAILED=0
+        CHECKED=0
+        
+        for script in $SCRIPTS; do
+          # Skip excluded patterns
+          if [[ -n "${{ inputs.exclude-patterns }}" ]] && [[ "$script" =~ ${{ inputs.exclude-patterns }} ]]; then
+            echo "⊘ SKIP: $script (excluded pattern)"
+            continue
+          fi
+          
+          if ! shellcheck -S ${{ inputs.severity }} "$script"; then
+            echo "✗ FAILED: $script"
+            FAILED=1
+          else
+            echo "✓ PASSED: $script"
+          fi
+          ((CHECKED++))
+        done
+        
+        echo "scripts-checked=$CHECKED" >> $GITHUB_OUTPUT
+        
+        if [ $FAILED -eq 1 ]; then
+          echo "result=fail" >> $GITHUB_OUTPUT
+          echo "ERROR: ShellCheck found issues"
+          exit 1
+        fi
+        
+        echo "result=pass" >> $GITHUB_OUTPUT
+        echo "✓ All $CHECKED scripts passed ShellCheck"
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
