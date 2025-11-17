@@ -23,6 +23,10 @@ name: Interactive Hurd with VNC Access
         default: 'false'
         type: boolean
 
+concurrency:
+  group: interactive-vnc-${{ github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   interactive-hurd:
     runs-on: ubuntu-latest

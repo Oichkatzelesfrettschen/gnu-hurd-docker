@@ -17,9 +17,14 @@ name: Validate Configuration
       - 'docker-compose.yml'
       - '.github/workflows/validate.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     name: Validate Docker Configuration
 
     steps:

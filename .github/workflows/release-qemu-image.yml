@@ -17,9 +17,14 @@ name: Release QEMU Image
     tags:
       - 'v*.*.*'
 
+concurrency:
+  group: release-qemu-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release-image:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     permissions:
       contents: write  # Required for creating releases
 
