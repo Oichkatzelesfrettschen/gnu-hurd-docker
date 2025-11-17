@@ -12,12 +12,17 @@ name: Create Release with Artifacts
         required: true
         type: string
 
+concurrency:
+  group: release-artifacts-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   RELEASE_NAME: gnu-hurd-docker-release
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       packages: read

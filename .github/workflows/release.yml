@@ -6,12 +6,17 @@ name: Release
     tags:
       - 'v*'
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     name: Create Release
 
     steps:

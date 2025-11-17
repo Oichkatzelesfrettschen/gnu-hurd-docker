@@ -1,0 +1,69 @@
+name: 'YAML Validation'
+description: 'Validate YAML files using Python YAML parser'
+author: 'GNU/Hurd Docker Team'
+
+inputs:
+  yaml-files:
+    description: 'Space-separated list of YAML files to validate'
+    required: false
+    default: 'docker-compose.yml mkdocs.yml .github/workflows/*.yml'
+  strict:
+    description: 'Enable strict validation mode'
+    required: false
+    default: 'true'
+
+outputs:
+  files-checked:
+    description: 'Number of files checked'
+    value: ${{ steps.validate.outputs.files-checked }}
+  result:
+    description: 'Validation result (pass/fail)'
+    value: ${{ steps.validate.outputs.result }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Validate YAML files
+      id: validate
+      shell: bash
+      run: |
+        echo "=== Validating YAML files ==="
+        
+        FAILED=0
+        CHECKED=0
+        
+        for pattern in ${{ inputs.yaml-files }}; do
+          for file in $pattern; do
+            if [ -f "$file" ]; then
+              echo "Validating: $file"
+              if python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>&1; then
+                echo "✓ PASSED: $file"
+                ((CHECKED++))
+              else
+                echo "✗ FAILED: $file"
+                FAILED=1
+                ((CHECKED++))
+              fi
+            fi
+          done
+        done
+        
+        echo "files-checked=$CHECKED" >> $GITHUB_OUTPUT
+        
+        if [ $FAILED -eq 1 ]; then
+          echo "result=fail" >> $GITHUB_OUTPUT
+          echo "ERROR: YAML validation failed"
+          exit 1
+        fi
+        
+        echo "result=pass" >> $GITHUB_OUTPUT
+        echo "✓ All $CHECKED YAML files are valid"
+
+branding:
+  icon: 'file-text'
+  color: 'blue'
