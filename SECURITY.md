@@ -279,9 +279,90 @@ For security-related questions or concerns:
 
 For general questions, use [GitHub Discussions](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/discussions).
 
+## CI/CD and Workflow Security
+
+### GitHub Actions Security
+
+This project uses GitHub Actions for CI/CD automation with the following security measures:
+
+#### 1. Dependency Management
+- **Dependabot**: Automated dependency updates for GitHub Actions, Docker, Python, and npm
+  - Weekly updates on Mondays at 09:00 UTC
+  - Automatic security vulnerability alerts
+  - Pull requests auto-assigned to maintainers
+
+#### 2. Action Version Pinning
+- All GitHub Actions use semantic versioning (e.g., `@v4`)
+- Verified publishers for all third-party actions
+- Regular updates through Dependabot
+
+#### 3. Workflow Permissions
+- **Least-privilege principle**: All workflows have explicit permissions
+- **Read-only by default**: `contents: read` for most workflows
+- **Write permissions**: Only where necessary (`packages: write`, `security-events: write`)
+- **Token scope**: Minimal GITHUB_TOKEN permissions
+
+#### 4. Security Scanning
+- **Trivy**: Scans Docker images for vulnerabilities
+  - Version: 0.28.0
+  - Runs on: Push to main, PRs, weekly schedule
+  - Reports uploaded to GitHub Security tab
+- **ShellCheck**: All shell scripts validated with warnings as errors
+- **Hadolint**: Dockerfile best practices validation
+
+#### 5. Concurrency Control
+- Duplicate workflow runs automatically cancelled
+- Prevents resource exhaustion attacks
+- Configured per workflow type (dev vs. release)
+
+#### 6. Timeout Protection
+- All jobs have timeout limits (10-180 minutes)
+- Prevents infinite loops and hanging workflows
+- Resource consumption safeguards
+
+#### 7. Artifact Security
+- Build provenance attestation enabled
+- Artifacts retention limited to 7-30 days
+- Access controlled through workflow permissions
+
+### Security Policies in Workflows
+
+```yaml
+# Example: Minimal permissions
+permissions:
+  contents: read       # Read repository contents
+  packages: write      # Push to GHCR (only when needed)
+  security-events: write  # Upload security scan results
+```
+
+### Reporting Workflow Security Issues
+
+If you discover security vulnerabilities in our CI/CD workflows:
+
+1. **Scope**: Workflow security, secrets exposure, permission escalation
+2. **Report**: Use the same process as general vulnerabilities (see above)
+3. **Include**: Workflow file name, specific step, potential impact
+
+### Best Practices for Contributors
+
+When contributing workflow changes:
+
+1. **Minimal Permissions**: Use least-privilege permissions
+2. **No Secrets**: Never hardcode secrets in workflows
+3. **Verify Actions**: Use actions from verified publishers
+4. **Test in Forks**: Test workflow changes in your fork first
+5. **Review Changes**: Request security review for workflow modifications
+
+### Automated Security Updates
+
+- **Dependabot PRs**: Reviewed and merged weekly
+- **Security Patches**: Applied within 48 hours of availability
+- **Breaking Changes**: Tested in feature branches before merging
+
 ## References
 
 - [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
 - [CIS Docker Benchmark](https://www.cisecurity.org/benchmark/docker)
 - [QEMU Security Process](https://www.qemu.org/contribute/security-process/)
 - [GNU/Hurd Security](https://www.gnu.org/software/hurd/community/weblogs/antrik/hurd-security.html)
+- [GitHub Actions Security Hardening](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
