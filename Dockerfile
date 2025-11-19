@@ -1,7 +1,8 @@
-# Pure x86_64-only Debian GNU/Hurd QEMU Docker Image
+# Multi-Platform Debian GNU/Hurd QEMU Docker Image
 # =============================================================================
 # DESIGN PHILOSOPHY:
-# - ZERO i386 support - this is a pure x86_64 implementation
+# - GNU/Hurd runs on x86_64 only (emulated via QEMU)
+# - Container can run on amd64 OR arm64 hosts (multi-platform support)
 # - Ubuntu 24.04 LTS base for stability and modern tooling
 # - Minimal attack surface - only essential packages
 # - Smart KVM detection with graceful TCG fallback
@@ -12,18 +13,24 @@ FROM ubuntu:24.04
 
 # OCI labels for GHCR metadata and container registry
 LABEL org.opencontainers.image.source="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
-LABEL org.opencontainers.image.description="Pure x86_64 GNU/Hurd microkernel QEMU environment - NO i386"
+LABEL org.opencontainers.image.description="Multi-platform GNU/Hurd x86_64 QEMU environment (runs on amd64 and arm64 hosts)"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.authors="x86_64-hurd-team"
-LABEL org.opencontainers.image.architecture="x86_64"
 LABEL qemu.binary="/usr/bin/qemu-system-x86_64"
+LABEL qemu.guest.architecture="x86_64"
+LABEL container.platforms="linux/amd64,linux/arm64"
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Architecture enforcement - FAIL FAST if not x86_64
-RUN [ "$(dpkg --print-architecture)" = "amd64" ] || \
-    (echo "ERROR: This Dockerfile requires x86_64/amd64 architecture" && exit 1)
+# Multi-platform support - container runs on amd64 or arm64, QEMU emulates x86_64
+# Note: GNU/Hurd itself only runs on x86_64 (via QEMU emulation)
+RUN ARCH=$(dpkg --print-architecture) && \
+    echo "Building for container architecture: $ARCH" && \
+    echo "QEMU will emulate x86_64 for GNU/Hurd guest" && \
+    if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then \
+      echo "ERROR: This Dockerfile supports amd64 and arm64 hosts only" && exit 1; \
+    fi
 
 # Update and install ONLY x86_64 packages
 # WHY each package:

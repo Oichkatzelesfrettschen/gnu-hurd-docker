@@ -3,14 +3,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-24.0+-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/)
 [![QEMU](https://img.shields.io/badge/QEMU-x86__64-FF6600?logo=qemu&logoColor=white)](https://www.qemu.org/)
-[![Architecture](https://img.shields.io/badge/Architecture-x86__64%20only-success)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
+[![Architecture](https://img.shields.io/badge/Container-amd64%20%7C%20arm64-success)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
+[![Guest](https://img.shields.io/badge/Guest-x86__64%20only-blue)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
 [![Documentation](https://img.shields.io/badge/docs-comprehensive-brightgreen)](docs/INDEX.md)
 
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
 **Release**: Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
 
-**Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)
+**Guest Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)
+
+**Container Platforms**: linux/amd64, linux/arm64 (Apple Silicon supported)
 
 ---
 
@@ -94,7 +97,9 @@ ssh -p 2222 root@localhost
 
 **Important**: This project runs a **full Debian GNU/Hurd system in a QEMU virtual machine**. Docker only hosts the QEMU process—it does *not* run Hurd as a native container. There is no direct/native Hurd-on-Docker support on Linux yet, as this would require a Mach-on-Linux or Hurd-on-Linux port (see [Doing a GNU/Hurd System Port](https://darnassus.sceen.net/~hurd-web/faq/system_port/) for details).
 
-**x86_64-Only** (i386 deprecated 2025-11-07):
+**Multi-Platform Container Support**: The Docker container runs on both `linux/amd64` and `linux/arm64` hosts (e.g., Apple Silicon Macs, ARM servers). QEMU inside the container emulates x86_64 for the GNU/Hurd guest regardless of host architecture.
+
+**x86_64-Only Guest** (i386 deprecated 2025-11-07):
 
 | Component | Configuration |
 |-----------|---------------|
