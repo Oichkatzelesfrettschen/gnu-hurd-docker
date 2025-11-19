@@ -28,8 +28,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN ARCH=$(dpkg --print-architecture) && \
     echo "Building for container architecture: $ARCH" && \
     echo "QEMU will emulate x86_64 for GNU/Hurd guest" && \
-    ([ "$ARCH" = "amd64" ] || [ "$ARCH" = "arm64" ]) || \
-    (echo "ERROR: This Dockerfile supports amd64 and arm64 hosts only" && exit 1)
+    if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then \
+      echo "ERROR: This Dockerfile supports amd64 and arm64 hosts only" && exit 1; \
+    fi
 
 # Update and install ONLY x86_64 packages
 # WHY each package:
