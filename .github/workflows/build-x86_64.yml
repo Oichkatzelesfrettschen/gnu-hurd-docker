@@ -79,7 +79,7 @@ jobs:
         run: docker compose down
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: hurd-x86_64-image
           path: debian-hurd-amd64-80gb.qcow2
