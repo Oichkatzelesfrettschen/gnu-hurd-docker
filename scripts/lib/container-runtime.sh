@@ -277,24 +277,25 @@ container_run() {
     local kvm_flags
     kvm_flags=$(get_kvm_device_flags "$runtime")
     if [[ -n "$kvm_flags" ]]; then
-        # shellcheck disable=SC2086,SC2206
-        cmd+=($kvm_flags)
+        # Properly handle space-separated flags
+        read -ra kvm_array <<< "$kvm_flags"
+        cmd+=("${kvm_array[@]}")
     fi
     
     # Add security options
     local sec_opts
     sec_opts=$(get_security_opts "$runtime")
     if [[ -n "$sec_opts" ]]; then
-        # shellcheck disable=SC2086,SC2206
-        cmd+=($sec_opts)
+        read -ra sec_array <<< "$sec_opts"
+        cmd+=("${sec_array[@]}")
     fi
     
     # Add user namespace options
     local userns_opts
     userns_opts=$(get_userns_opts "$runtime")
     if [[ -n "$userns_opts" ]]; then
-        # shellcheck disable=SC2086,SC2206
-        cmd+=($userns_opts)
+        read -ra userns_array <<< "$userns_opts"
+        cmd+=("${userns_array[@]}")
     fi
     
     # Add user-provided args and image
@@ -311,8 +312,9 @@ container_compose_up() {
     compose_cmd=$(get_compose_command)
     
     echo_info "Starting containers with: $compose_cmd"
-    # shellcheck disable=SC2086
-    $compose_cmd up "$@"
+    # Properly handle multi-word compose command
+    read -ra cmd_array <<< "$compose_cmd"
+    "${cmd_array[@]}" up "$@"
 }
 
 # Compose down
@@ -321,8 +323,9 @@ container_compose_down() {
     compose_cmd=$(get_compose_command)
     
     echo_info "Stopping containers with: $compose_cmd"
-    # shellcheck disable=SC2086
-    $compose_cmd down "$@"
+    # Properly handle multi-word compose command
+    read -ra cmd_array <<< "$compose_cmd"
+    "${cmd_array[@]}" down "$@"
 }
 
 # =============================================================================
