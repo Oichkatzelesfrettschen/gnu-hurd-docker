@@ -33,8 +33,10 @@ theme:
 
 nav:
   - Home: index.md
-  - Quick Start:
-      - Overview: QUICK_START_GUIDE.md
+  - Getting Started:
+      - Quick Start: QUICK_START_GUIDE.md
+      - Platform Setup: 01-GETTING-STARTED/PLATFORM-SETUP.md
+      - Podman Support: 01-GETTING-STARTED/PODMAN-SUPPORT.md
       - Kernel Fix: QUICK-START-KERNEL-FIX.txt
   - Architecture:
       - Design Overview: ARCHITECTURE.md
@@ -52,8 +54,10 @@ nav:
       - User Setup: USER-SETUP.md
       - Credentials: CREDENTIALS.md
       - Troubleshooting: TROUBLESHOOTING.md
-  - Research:
+  - Research & Analysis:
       - Research Findings: RESEARCH-FINDINGS.md
+      - Architectural Analysis: 07-RESEARCH-AND-LESSONS/ARCHITECTURAL-ANALYSIS.md
+      - Static Analysis Framework: 07-RESEARCH-AND-LESSONS/STATIC-ANALYSIS-FRAMEWORK.md
       - Kernel Standardization: KERNEL-STANDARDIZATION-PLAN.md
       - Kernel Fix Guide: KERNEL-FIX-GUIDE.md
       - Tools Assessment: MCP-TOOLS-ASSESSMENT-MATRIX.md
