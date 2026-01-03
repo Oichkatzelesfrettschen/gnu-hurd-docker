@@ -13,7 +13,7 @@ set -euo pipefail
 
 # Source colors for output
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/colors.sh
+# shellcheck source=lib/colors.sh disable=SC1091
 source "${SCRIPT_DIR}/colors.sh" 2>/dev/null || {
     # Fallback if colors.sh not available
     echo_info() { echo "[INFO] $*"; }
@@ -74,6 +74,7 @@ get_container_runtime() {
 }
 
 # Get compose command for the runtime
+# shellcheck disable=SC2120
 get_compose_command() {
     local runtime="${1:-$(get_container_runtime)}"
     
@@ -276,7 +277,7 @@ container_run() {
     local kvm_flags
     kvm_flags=$(get_kvm_device_flags "$runtime")
     if [[ -n "$kvm_flags" ]]; then
-        # shellcheck disable=SC2086
+        # shellcheck disable=SC2086,SC2206
         cmd+=($kvm_flags)
     fi
     
@@ -284,7 +285,7 @@ container_run() {
     local sec_opts
     sec_opts=$(get_security_opts "$runtime")
     if [[ -n "$sec_opts" ]]; then
-        # shellcheck disable=SC2086
+        # shellcheck disable=SC2086,SC2206
         cmd+=($sec_opts)
     fi
     
@@ -292,7 +293,7 @@ container_run() {
     local userns_opts
     userns_opts=$(get_userns_opts "$runtime")
     if [[ -n "$userns_opts" ]]; then
-        # shellcheck disable=SC2086
+        # shellcheck disable=SC2086,SC2206
         cmd+=($userns_opts)
     fi
     
