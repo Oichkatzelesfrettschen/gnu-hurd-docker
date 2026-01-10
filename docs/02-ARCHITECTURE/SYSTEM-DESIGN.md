@@ -594,7 +594,7 @@ services:
 3. Convert to QCOW2 format (~2.2 GB)
 4. Verify integrity
 
-**Source**: https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/
+**Source**: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
 
 #### Validation Script (validate-config.sh)
 **Purpose**: Comprehensive configuration validation
