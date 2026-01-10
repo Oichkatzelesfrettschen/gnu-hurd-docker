@@ -74,24 +74,24 @@ cd gnu-hurd-docker
 
 The QCOW2 image is not included in the repository (too large).
 
-**Option A: Use provided script**
+**Option A: Use provided script (Recommended)**
 ```bash
 ./scripts/download-image.sh
-# Downloads from: cdimage.debian.org/cdimage/ports/latest/hurd-i386/
+# Downloads from: cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
 ```
 
 **Option B: Manual download**
 ```bash
-# Download compressed image (355 MB)
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+# Download compressed image (~350 MB) - Debian 13 "Trixie" 2025-11-05
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract
-tar xf debian-hurd.img.tar.xz
-# Creates: debian-hurd-i386-20251105.img (4.2 GB)
+tar xJf debian-hurd.img.tar.xz
+# Creates: debian-hurd.img (~4.2 GB)
 
 # Convert to QCOW2 format
-qemu-img convert -f raw -O qcow2 debian-hurd-i386-20251105.img debian-hurd-i386-20251105.qcow2
-# Creates: debian-hurd-i386-20251105.qcow2 (2.1 GB)
+qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-amd64.qcow2
+# Creates: debian-hurd-amd64.qcow2 (~2.1 GB)
 ```
 
 **Option C: Use existing image**

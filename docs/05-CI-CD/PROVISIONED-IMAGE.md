@@ -567,12 +567,12 @@ jobs:
 ### Layer 1: Base Image (Provided by Debian)
 
 ```bash
-# Download official Debian GNU/Hurd x86_64 image
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64-20251105.img.tar.xz
+# Download official Debian GNU/Hurd x86_64 image (Debian 13 "Trixie" 2025-11-05)
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract
-tar xJf debian-hurd-amd64-20251105.img.tar.xz
-# Creates: debian-hurd-amd64-20251105.img (~4 GB)
+tar xJf debian-hurd.img.tar.xz
+# Creates: debian-hurd.img (~4 GB)
 
 # Convert to QCOW2 (if raw)
 qemu-img convert -f raw -O qcow2 \

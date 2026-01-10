@@ -423,13 +423,13 @@ The Docker image includes all required QEMU components:
 
 **Image Source:**
 ```bash
-# Automated download script
+# Automated download script (recommended)
 ./scripts/download-image.sh
 
-# Manual download
-wget https://cdimage.debian.org/cdimage/ports/current/hurd-i386/debian-hurd-sid-i386.img.tar.gz
-tar xzf debian-hurd-sid-i386.img.tar.gz
-qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-i386.qcow2
+# Manual download (Debian 13 "Trixie" x86_64 - 2025-11-05 release)
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
+tar xJf debian-hurd.img.tar.xz
+qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-amd64.qcow2
 ```
 
 ---

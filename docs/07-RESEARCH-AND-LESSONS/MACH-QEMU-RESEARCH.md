@@ -20,12 +20,13 @@ The original thesis is **misleading**. A working QEMU-compatible image DOES exis
 
 ### 1.1 Working Images VERIFIED TO EXIST
 
-#### A. Debian GNU/Hurd 2025 (ACTIVELY MAINTAINED)
-- **Official Status:** Released November 2025
+#### A. Debian GNU/Hurd 2025 "Trixie" (ACTIVELY MAINTAINED)
+- **Official Status:** Released November 5, 2025
 - **Type:** Complete GNU/Hurd distribution with GNU Mach microkernel
-- **Download URL (RAW):** https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+- **Download URL (x86_64/amd64):** https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
+- **Download URL (i386):** https://cdimage.debian.org/cdimage/ports/13.0/hurd-i386/debian-hurd.img.tar.xz
 - **File Sizes:**
-  - Compressed (.tar.xz): 338 MB
+  - Compressed (.tar.xz): ~350 MB
   - Uncompressed (.img): 3.9-4.2 GB
 - **Architectures:** i386 and x86_64 (amd64)
 - **Verified Working:** YES - November 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
@@ -58,9 +59,9 @@ The original thesis is **misleading**. A working QEMU-compatible image DOES exis
 
 ### 2.1 Step 1: Download
 
-**Command:**
+**Command (x86_64 - Recommended):**
 ```bash
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 ```
 
 **Result:** 
