@@ -1,0 +1,366 @@
+---
+name: Create Release
+
+# This workflow allows maintainers to create a new release by:
+# 1. Creating a git tag for the version
+# 2. Creating a GitHub release
+# 3. Pushing Docker images to GHCR
+# 4. Generating release artifacts
+
+"on":
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 2.0.0 or v2.0.0)'
+        required: true
+        type: string
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - release
+          - prerelease
+        default: release
+      skip_docker:
+        description: 'Skip Docker image build/push'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: create-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      version_clean: ${{ steps.version.outputs.version_clean }}
+    steps:
+      - name: Validate and normalize version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          # Remove 'v' prefix if present for clean version
+          VERSION_CLEAN="${VERSION#v}"
+
+          # Validate semver format
+          if ! echo "$VERSION_CLEAN" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "::error::Invalid version format: $VERSION"
+            echo "Version must follow semantic versioning (e.g., 2.0.0, 2.1.0-beta.1)"
+            exit 1
+          fi
+
+          # Set outputs
+          echo "version=$VERSION_CLEAN" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION_CLEAN" >> $GITHUB_OUTPUT
+          echo "version_clean=$VERSION_CLEAN" >> $GITHUB_OUTPUT
+
+          echo "Normalized version: $VERSION_CLEAN"
+          echo "Tag: v$VERSION_CLEAN"
+
+  create-tag-and-release:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG="${{ needs.prepare.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag $TAG does not exist, will be created"
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="${{ needs.prepare.outputs.tag }}"
+
+          # Get the previous tag if it exists
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD 2>/dev/null || echo "")
+
+          echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+          # Generate changelog
+          if [ -n "$PREV_TAG" ]; then
+            echo "Generating changelog from $PREV_TAG to HEAD"
+            {
+              echo "changelog<<EOF"
+              git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD
+              echo ""
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "Generating changelog for initial release"
+            {
+              echo "changelog<<EOF"
+              git log --pretty=format:"- %s (%h)" --max-count=50
+              echo ""
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Release ${{ needs.prepare.outputs.tag }}
+          body: |
+            # GNU/Hurd Docker ${{ needs.prepare.outputs.tag }}
+
+            Release Date: ${{ steps.changelog.outputs.date }}
+
+            ## 🐳 Docker Image
+
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}
+            docker pull ghcr.io/${{ github.repository }}:latest
+            ```
+
+            ## Changes
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Contents
+
+            - **Dockerfile**: Docker image specification for QEMU-based GNU/Hurd
+            - **entrypoint.sh**: QEMU launcher script with KVM acceleration
+            - **docker-compose.yml**: Container orchestration configuration
+            - **PKGBUILD**: Arch Linux package definition
+            - **scripts/**: Utility scripts for setup, testing, and management
+
+            ## Prerequisites
+
+            ### System Requirements
+            - Docker and Docker Compose v2 installed
+            - Debian GNU/Hurd x86_64 (amd64) QCOW2 disk image
+            - 2GB+ available disk space for container
+            - 2GB+ available RAM
+
+            ### Quick Start
+
+            ```bash
+            # Clone and setup
+            git clone https://github.com/${{ github.repository }}.git
+            cd gnu-hurd-docker
+
+            # Download Debian GNU/Hurd image
+            ./scripts/download-image.sh
+
+            # Build and run
+            docker compose up -d
+
+            # Access via SSH (after ~60s boot)
+            ssh -p 2222 root@localhost
+            ```
+
+            ## Documentation
+
+            - [README.md](https://github.com/${{ github.repository }}#readme)
+            - [Installation Guide](docs/INSTALLATION.md)
+            - [QEMU Optimization Guide](docs/QEMU-OPTIMIZATION-2025.md)
+            - [Troubleshooting](docs/TROUBLESHOOTING.md)
+
+            ## Repository
+
+            https://github.com/${{ github.repository }}
+          draft: false
+          prerelease: ${{ inputs.release_type == 'prerelease' }}
+
+  build-and-push-docker:
+    needs: [prepare, create-tag-and-release]
+    if: ${{ inputs.skip_docker != true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.prepare.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.prepare.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Test Docker image
+        run: |
+          echo "=== Testing Docker image ==="
+          docker images | grep gnu-hurd
+
+          # Get the first tag for testing
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "Testing with tag: $TAG"
+
+          # Verify QEMU is installed
+          docker run --rm --entrypoint qemu-system-x86_64 $TAG --version
+
+          # Verify health check script exists
+          docker run --rm --entrypoint ls $TAG -la /opt/scripts/health-check.sh
+
+          # Verify entrypoint is executable
+          docker run --rm --entrypoint ls $TAG -la /entrypoint.sh
+
+          echo "=== Docker image test passed ==="
+
+      # Note: Testing is done on amd64 only. The arm64 build is tested implicitly
+      # via the build process. Both architectures use the same Dockerfile and
+      # architecture-agnostic scripts. This matches the pattern in push-ghcr.yml.
+      - name: Push Docker image to GHCR
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Generate attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  create-artifacts:
+    needs: [prepare, create-tag-and-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release artifacts directory
+        run: |
+          mkdir -p release-artifacts/scripts
+          mkdir -p release-artifacts/docs
+
+      - name: Package files
+        run: |
+          VER="${{ needs.prepare.outputs.version_clean }}"
+
+          # Copy core files
+          cp -v Dockerfile release-artifacts/
+          cp -v docker-compose.yml release-artifacts/
+          cp -v entrypoint.sh release-artifacts/
+          cp -v PKGBUILD release-artifacts/
+          cp -v gnu-hurd-docker.install release-artifacts/
+          cp -v README.md release-artifacts/
+          cp -v LICENSE release-artifacts/ 2>/dev/null || true
+
+          # Copy scripts
+          cp -v scripts/*.sh release-artifacts/scripts/ 2>/dev/null || true
+          cp -v scripts/*.py release-artifacts/scripts/ 2>/dev/null || true
+
+          # Copy docs
+          cp -rv docs/ release-artifacts/
+
+          # Create archive
+          cd release-artifacts
+          tar -czf ../gnu-hurd-docker-$VER.tar.gz .
+          cd ..
+
+          # Create checksum
+          sha256sum gnu-hurd-docker-$VER.tar.gz > gnu-hurd-docker-$VER.tar.gz.sha256
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          files: |
+            gnu-hurd-docker-${{ needs.prepare.outputs.version_clean }}.tar.gz
+            gnu-hurd-docker-${{ needs.prepare.outputs.version_clean }}.tar.gz.sha256
+
+  summary:
+    needs: [prepare, create-tag-and-release, build-and-push-docker, create-artifacts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Generate summary
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="${{ needs.prepare.outputs.tag }}"
+
+          echo "## 🎉 Release Created Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** $TAG" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${{ inputs.release_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 🐳 Docker Image" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ github.repository }}:$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ github.repository }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 📦 Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "- \`gnu-hurd-docker-$VERSION.tar.gz\` - Complete package" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA256 checksums included" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/$TAG)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Docker Package](https://github.com/${{ github.repository }}/pkgs/container/gnu-hurd-docker)" >> $GITHUB_STEP_SUMMARY
