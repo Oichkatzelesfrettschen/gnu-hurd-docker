@@ -74,6 +74,7 @@ get_container_runtime() {
 }
 
 # Get compose command for the runtime
+# Note: SC2120 disabled because this function can be called without arguments (uses default)
 # shellcheck disable=SC2120
 get_compose_command() {
     local runtime="${1:-$(get_container_runtime)}"
@@ -343,16 +344,16 @@ check_runtime_compatibility() {
     
     get_platform_notes "$platform" "$runtime"
     
-    # Version checks
+    # Version checks (use client version which doesn't require daemon)
     case "$runtime" in
         docker)
             local docker_version
-            docker_version=$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "unknown")
+            docker_version=$(docker version --format '{{.Client.Version}}' 2>/dev/null || echo "unknown")
             echo_info "Docker version: $docker_version"
             ;;
         podman)
             local podman_version
-            podman_version=$(podman version --format '{{.Version}}' 2>/dev/null || echo "unknown")
+            podman_version=$(podman version --format '{{.Client.Version}}' 2>/dev/null || echo "unknown")
             echo_info "Podman version: $podman_version"
             ;;
     esac
