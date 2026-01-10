@@ -32,9 +32,8 @@ Debian GNU/Hurd 2025 supports X11 and graphical desktop environments. While not 
 ✅ Hurd Console (text mode with VT support)
 ✅ **Xfce Desktop Environment (recommended - lightweight and stable)**
 ✅ LXDE Desktop Environment
-✅ MATE Desktop Environment
 ✅ Lightweight window managers (IceWM, Openbox, Fluxbox)
-✅ **LightDM display manager (best practice for Xfce/MATE)**
+✅ **LightDM display manager (best practice for Xfce)**
 ✅ XDM display manager
 ✅ Basic X11 applications (xterm, firefox-esr, etc.)
 
@@ -286,23 +285,6 @@ startx /usr/bin/startxfce4
 
 ---
 
-### MATE Desktop (Alternative)
-
-MATE is a continuation of GNOME 2 - more feature-rich than Xfce but still lightweight.
-
-```bash
-# Install MATE
-sudo apt install mate-desktop-environment
-
-# Or core only
-sudo apt install mate-desktop-environment-core
-
-# Start MATE
-startx /usr/bin/mate-session
-```
-
----
-
 ### LXDE (Legacy)
 
 LXDE remains functional and is the lightest option:
@@ -400,9 +382,9 @@ sudo apt install kde-plasma-desktop  # Many missing packages
 
 Display managers provide graphical login screens.
 
-### LightDM (Recommended for Xfce/MATE)
+### LightDM (Recommended for Xfce)
 
-LightDM is the best practice display manager for Xfce and MATE on Debian GNU/Hurd 2025.
+LightDM is the best practice display manager for Xfce on Debian GNU/Hurd 2025.
 
 ```bash
 # Install LightDM with GTK greeter

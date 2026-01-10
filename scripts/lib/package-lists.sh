@@ -178,17 +178,6 @@ X11_DESKTOP_PKGS="
     parole
 "
 
-# MATE Desktop (alternative option)
-MATE_DESKTOP_PKGS="
-    mate-desktop-environment
-    mate-desktop-environment-extras
-    mate-terminal
-    caja
-    pluma
-    eom
-    atril
-"
-
 GUI_DEV_TOOLS_PKGS="
     emacs
     geany
@@ -242,5 +231,5 @@ pkglist_to_array() {
 # Export for subshells if needed (optional)
 export MINIMAL_PKGS NETTOOLS_PKGS BROWSERS_PKGS DEV_PKGS COMPILERS_PKGS
 export LANGUAGES_PKGS HURD_PKGS DEBUG_PKGS BUILD_SYSTEMS_PKGS DOC_TOOLS_PKGS
-export X11_PKGS X11_DESKTOP_PKGS DISPLAY_MANAGER_PKGS MATE_DESKTOP_PKGS
+export X11_PKGS X11_DESKTOP_PKGS DISPLAY_MANAGER_PKGS
 export GUI_DEV_TOOLS_PKGS GUI_APPS_PKGS SYS_UTILS_PKGS ENTROPY_PKGS
