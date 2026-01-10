@@ -84,8 +84,8 @@ jobs:
           =============================================================================
           Image Details
           =============================================================================
-          Base Image: Debian GNU/Hurd x86_64 (amd64) 2025 snapshot
-          Source: https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/
+          Base Image: Debian GNU/Hurd x86_64 (amd64) 2025 "Trixie" (snapshot 2025-11-05)
+          Source: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
           Architecture: x86_64 (amd64)
           Machine Type: pc (i440fx)
           Virtual Size: ${{ steps.image_info.outputs.virtual_size }}

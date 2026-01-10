@@ -40,14 +40,14 @@ Install GNU/Hurd packages in various configurations.
 OPTIONS:
     --minimal       SSH, networking, basic tools (~50 packages)
     --dev           Minimal + compilers, build tools, Hurd dev packages (~150 packages)
-    --gui           Dev + X11, Xfce, browsers (~300 packages)
-    --full          Everything including optional languages and tools (~400 packages)
+    --gui           Dev + X11, Xfce, LightDM, browsers (~350 packages)
+    --full          Everything including optional languages and tools (~450 packages)
     --help          Show this help message
 
 EXAMPLES:
     install-hurd-environment.sh --minimal    # Quick setup for SSH access
     install-hurd-environment.sh --dev        # Complete development environment
-    install-hurd-environment.sh --gui        # Full desktop environment
+    install-hurd-environment.sh --gui        # Full desktop environment with LightDM
     install-hurd-environment.sh --full       # Everything
 
 DEFAULT: --dev if no option specified
@@ -56,21 +56,28 @@ PACKAGE CATEGORIES:
     Minimal:  SSH, networking, text editors, basic utilities
     Dev:      Compilers (GCC, Clang), build tools (Make, CMake), debuggers (GDB),
               Hurd development (gnumach-dev, hurd-dev, mig), version control (Git)
-    GUI:      X11, Xfce desktop, Firefox, text browsers, development IDEs
+    GUI:      X11/Xorg, Xfce desktop, LightDM display manager, Firefox, IDEs
     Full:     Everything + additional languages (Ruby, Go, Java), optional tools
+
+DESKTOP ENVIRONMENT:
+    - Xfce is the recommended desktop for GNU/Hurd (lightweight, stable)
+    - LightDM provides graphical login (best practice display manager)
+    - X11/Xorg is the only supported display server on Hurd (no Wayland)
+    - VNC access is supported for Docker/QEMU environments
 
 MODES:
     minimal = MINIMAL_PKGS + NETTOOLS_PKGS + ENTROPY_PKGS + SYS_UTILS_PKGS
     dev     = minimal + DEV_PKGS + COMPILERS_PKGS + HURD_PKGS + DEBUG_PKGS +
               BUILD_SYSTEMS_PKGS + DOC_TOOLS_PKGS + BROWSERS_PKGS (text only)
-    gui     = dev + X11_PKGS + X11_DESKTOP_PKGS + GUI_DEV_TOOLS_PKGS + GUI_APPS_PKGS
+    gui     = dev + X11_PKGS + X11_DESKTOP_PKGS + DISPLAY_MANAGER_PKGS +
+              GUI_DEV_TOOLS_PKGS + GUI_APPS_PKGS
     full    = gui + LANGUAGES_PKGS (Python, Perl, Ruby, Go, Java)
 
 DISK SPACE:
     minimal: ~500 MB
     dev:     ~1.5 GB
-    gui:     ~3.5 GB
-    full:    ~4.5 GB
+    gui:     ~4.0 GB
+    full:    ~5.0 GB
 EOF
 }
 
@@ -118,7 +125,7 @@ install_dev() {
 }
 
 install_gui() {
-    echo_info "INSTALLATION MODE: GUI (Dev + X11 + Xfce desktop)"
+    echo_info "INSTALLATION MODE: GUI (Dev + X11 + Xfce desktop + LightDM)"
     
     install_dev || return 1
     
@@ -127,12 +134,15 @@ install_gui() {
     # shellcheck disable=SC2086
     install_packages "Xfce Desktop" $X11_DESKTOP_PKGS || return 1
     # shellcheck disable=SC2086
+    install_packages "Display Manager (LightDM)" $DISPLAY_MANAGER_PKGS || return 1
+    # shellcheck disable=SC2086
     install_packages "GUI Development Tools" $GUI_DEV_TOOLS_PKGS || return 1
     
     # GUI applications (Firefox, GIMP) - install optionally
     batch_install "GUI Applications" "$GUI_APPS_PKGS"
     
     configure_gui_environment
+    configure_lightdm
     return 0
 }
 
@@ -233,6 +243,84 @@ XINITRC_EOF
     
     echo_success "GUI environment configured"
     echo_info "  Start Xfce: startxfce4"
+}
+
+configure_lightdm() {
+    echo ""
+    echo_info "Configuring LightDM display manager..."
+    
+    # Create LightDM configuration directory if needed
+    mkdir -p /etc/lightdm/lightdm.conf.d
+    
+    # Configure LightDM for best practices with Xfce
+    cat > /etc/lightdm/lightdm.conf.d/50-hurd-defaults.conf << 'LIGHTDM_EOF'
+# GNU/Hurd Docker - LightDM Configuration
+# Best practices for Xfce desktop environment
+
+[Seat:*]
+# Auto-login disabled by default (security best practice)
+# Uncomment to enable auto-login:
+# autologin-user=root
+# autologin-user-timeout=0
+
+# Default session is Xfce
+user-session=xfce
+
+# Greeter configuration
+greeter-session=lightdm-gtk-greeter
+greeter-hide-users=false
+greeter-allow-guest=false
+
+# Allow VNC connections (for Docker/QEMU access)
+# xserver-command=X -listen tcp
+
+[LightDM]
+# Log file for debugging
+logind-check-graphical=false
+LIGHTDM_EOF
+
+    # Configure LightDM GTK greeter for clean appearance
+    if [ -d /etc/lightdm ]; then
+        cat > /etc/lightdm/lightdm-gtk-greeter.conf << 'GREETER_EOF'
+# GNU/Hurd Docker - LightDM GTK Greeter Configuration
+
+[greeter]
+# Theme configuration
+theme-name=Adwaita
+icon-theme-name=Adwaita
+font-name=Sans 11
+
+# Background (default to a simple color)
+background=#2c3e50
+
+# Position
+position=50%,center 50%,center
+
+# Clock format
+clock-format=%H:%M
+
+# Panel indicators
+indicators=~host;~spacer;~clock;~spacer;~session;~language;~a11y;~power
+
+# Allow username input (not just selection)
+default-user-image=/usr/share/icons/Adwaita/64x64/status/avatar-default-symbolic.symbolic.png
+GREETER_EOF
+    fi
+    
+    # Enable LightDM to start on boot
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl enable lightdm 2>/dev/null || true
+        echo_info "  LightDM enabled via systemctl"
+    else
+        # For SysV init (more likely on Hurd)
+        update-rc.d lightdm defaults 2>/dev/null || true
+        echo_info "  LightDM enabled via update-rc.d"
+    fi
+    
+    echo_success "LightDM display manager configured"
+    echo_info "  Default session: Xfce"
+    echo_info "  Greeter: lightdm-gtk-greeter"
+    echo_info "  Start GUI: service lightdm start (or reboot)"
 }
 
 create_motd() {
@@ -349,10 +437,11 @@ print_summary() {
         gui)
             echo "Installed Components:"
             echo "  Everything in Dev +"
-            echo "  X11 Window System"
+            echo "  X11/Xorg Window System"
             echo "  Xfce Desktop Environment"
-            echo "  GUI Applications (Firefox, GIMP)"
-            echo "  Development IDEs (Emacs, Geany)"
+            echo "  LightDM Display Manager (graphical login)"
+            echo "  GUI Applications (Firefox, GIMP, File Manager)"
+            echo "  Development IDEs (Emacs, Geany, Meld)"
             ;;
         full)
             echo "Installed Components:"
@@ -371,7 +460,11 @@ print_summary() {
     fi
     
     if [ "$MODE" = "gui" ] || [ "$MODE" = "full" ]; then
-        echo "  4. Start GUI: startxfce4"
+        echo ""
+        echo "GUI Access:"
+        echo "  Option 1: service lightdm start  (graphical login via VNC)"
+        echo "  Option 2: startxfce4             (direct Xfce session)"
+        echo "  VNC port: 5900 (ENABLE_VNC=1 in docker-compose.yml)"
     fi
     
     echo ""
@@ -379,6 +472,10 @@ print_summary() {
     echo "  Bash aliases added to ~/.bashrc (source ~/.bashrc to load)"
     echo "  9p mount point: /mnt/host"
     echo "  Development directories: ~/workspace, ~/projects"
+    if [ "$MODE" = "gui" ] || [ "$MODE" = "full" ]; then
+        echo "  LightDM config: /etc/lightdm/lightdm.conf.d/50-hurd-defaults.conf"
+        echo "  Default session: Xfce"
+    fi
     echo ""
     echo "================================================================"
 }

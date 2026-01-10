@@ -54,13 +54,13 @@ wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd6
 **i386 Download (LEGACY - DEPRECATED 2025-11-07)**:
 ```bash
 # Legacy i386 image (NOT USED in this project)
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.tar.xz
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-i386/debian-hurd.img.tar.xz
 ```
 
 **Verification**: YES - November 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
 
 **Release Specification**:
-- **Release Date**: August 10, 2025
+- **Release Date**: November 5, 2025
 - **Debian Base**: Trixie (Debian 13)
 - **Archive Coverage**: 72% of Debian packages
 - **Architecture**: x86_64 (amd64) - full 64-bit support
@@ -105,13 +105,13 @@ wget https://cdimage.debian.org/cdimage/ports/latest/hurd-i386/debian-hurd.img.t
 
 ### Step 1: Download
 
-**x86_64 Image (CURRENT)**:
+**x86_64 Image (CURRENT - Debian 13 "Trixie" 2025-11-05)**:
 ```bash
 # Download official x86_64 Hurd image
-wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd-amd64.img.tar.xz
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
-# File: debian-hurd-amd64.img.tar.xz (~450 MB)
-# Verification: file debian-hurd-amd64.img.tar.xz
+# File: debian-hurd.img.tar.xz (~350 MB)
+# Verification: file debian-hurd.img.tar.xz
 # Expected: "XZ compressed data, checksum CRC64"
 ```
 

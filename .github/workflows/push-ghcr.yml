@@ -162,8 +162,8 @@ jobs:
           echo "chmod +x download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "./download-image.sh" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Option 2: Direct download" >> $GITHUB_STEP_SUMMARY
-          HURD_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64"
+          echo "# Option 2: Direct download (Debian 13 Trixie 2025-11-05 release)" >> $GITHUB_STEP_SUMMARY
+          HURD_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64"
           echo "wget $HURD_URL/debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "tar xf debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

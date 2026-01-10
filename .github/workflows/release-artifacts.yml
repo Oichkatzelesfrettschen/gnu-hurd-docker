@@ -300,8 +300,8 @@ jobs:
           # Pull the image
           docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
-          # Download Hurd QCOW2 image
-          wget https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/debian-hurd.img.tar.xz
+          # Download Hurd QCOW2 image (Debian 13 "Trixie" 2025-11-05 release)
+          wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
           tar xf debian-hurd.img.tar.xz
 
           # Run

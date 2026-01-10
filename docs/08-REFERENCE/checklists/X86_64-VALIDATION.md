@@ -187,7 +187,7 @@ docker exec hurd-x86_64-qemu cat /proc/meminfo | grep MemTotal
 
 ### Issue: Guest shows i386 architecture
 **Solution**: Download correct x86_64/amd64 Hurd image from:
-- https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/
+- https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
 
 ## Automated Validation Script
 

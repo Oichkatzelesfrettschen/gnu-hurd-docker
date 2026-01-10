@@ -152,24 +152,43 @@ X11_PKGS="
     x11-xserver-utils
     xterm
     xinit
+    x11-apps
+    xfonts-base
 "
 
+# Display manager (LightDM is best practice for Hurd/Xfce)
+DISPLAY_MANAGER_PKGS="
+    lightdm
+    lightdm-gtk-greeter
+    lightdm-gtk-greeter-settings
+"
+
+# Xfce Desktop (recommended for Hurd - lightweight and stable)
 X11_DESKTOP_PKGS="
     xfce4
     xfce4-goodies
     xfce4-terminal
+    xfce4-power-manager
+    xfce4-screenshooter
+    xfce4-taskmanager
     thunar
+    thunar-archive-plugin
     mousepad
+    ristretto
+    parole
 "
 
 GUI_DEV_TOOLS_PKGS="
     emacs
     geany
+    meld
 "
 
 GUI_APPS_PKGS="
     firefox-esr
     gimp
+    evince
+    file-roller
 "
 
 # ============================================================================
@@ -212,5 +231,5 @@ pkglist_to_array() {
 # Export for subshells if needed (optional)
 export MINIMAL_PKGS NETTOOLS_PKGS BROWSERS_PKGS DEV_PKGS COMPILERS_PKGS
 export LANGUAGES_PKGS HURD_PKGS DEBUG_PKGS BUILD_SYSTEMS_PKGS DOC_TOOLS_PKGS
-export X11_PKGS X11_DESKTOP_PKGS GUI_DEV_TOOLS_PKGS GUI_APPS_PKGS SYS_UTILS_PKGS
-export ENTROPY_PKGS
+export X11_PKGS X11_DESKTOP_PKGS DISPLAY_MANAGER_PKGS
+export GUI_DEV_TOOLS_PKGS GUI_APPS_PKGS SYS_UTILS_PKGS ENTROPY_PKGS

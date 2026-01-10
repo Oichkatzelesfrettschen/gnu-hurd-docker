@@ -30,16 +30,18 @@ Debian GNU/Hurd 2025 supports X11 and graphical desktop environments. While not 
 
 ✅ X.Org Server (using VESA driver)
 ✅ Hurd Console (text mode with VT support)
-✅ LXDE Desktop Environment (recommended)
+✅ **Xfce Desktop Environment (recommended - lightweight and stable)**
+✅ LXDE Desktop Environment
 ✅ Lightweight window managers (IceWM, Openbox, Fluxbox)
+✅ **LightDM display manager (best practice for Xfce)**
 ✅ XDM display manager
 ✅ Basic X11 applications (xterm, firefox-esr, etc.)
 
 ### What Doesn't Work
 
-❌ GNOME (not fully functional)
-❌ KDE Plasma (not fully functional)
-❌ GDM / LightDM display managers
+❌ GNOME (requires systemd, not fully functional)
+❌ KDE Plasma (requires systemd, not fully functional)
+❌ GDM display manager (requires systemd)
 ❌ Hardware 3D acceleration
 ❌ Wayland (X11 only)
 ❌ USB input devices (PS/2 only)
@@ -227,9 +229,65 @@ If successful:
 
 ## Desktop Environments
 
-### LXDE (Recommended)
+### Xfce (Recommended)
 
-LXDE is the **only fully functional desktop environment** on Hurd 2025.
+**Xfce is the recommended desktop for Debian GNU/Hurd** - it's lightweight, stable, and well-tested on Hurd.
+
+#### Installation (Automated)
+
+Use the unified installer script for best results:
+
+```bash
+# Install full GUI environment with Xfce and LightDM
+./scripts/install-hurd-environment.sh --gui
+```
+
+This installs:
+- X11/Xorg
+- Xfce desktop and applications
+- LightDM display manager
+- Development tools
+- Firefox, GIMP, etc.
+
+#### Manual Installation
+
+```bash
+# Update packages
+sudo apt update
+
+# Install Xfce desktop
+sudo apt install xfce4 xfce4-goodies xfce4-terminal thunar mousepad
+
+# Install LightDM (recommended display manager)
+sudo apt install lightdm lightdm-gtk-greeter
+
+# Enable LightDM
+sudo systemctl enable lightdm  # If systemd available
+# Or: sudo update-rc.d lightdm defaults
+```
+
+**Packages included**:
+- Xfwm4 (window manager)
+- Xfce4-panel (panel/taskbar)
+- Thunar (file manager)
+- Xfce4-terminal (terminal emulator)
+- Mousepad (text editor)
+
+#### Starting Xfce
+
+```bash
+# Via LightDM (graphical login)
+sudo service lightdm start
+
+# Or manually
+startx /usr/bin/startxfce4
+```
+
+---
+
+### LXDE (Legacy)
+
+LXDE remains functional and is the lightest option:
 
 #### Installation
 
@@ -324,7 +382,42 @@ sudo apt install kde-plasma-desktop  # Many missing packages
 
 Display managers provide graphical login screens.
 
-### XDM (Recommended - Only One That Works)
+### LightDM (Recommended for Xfce)
+
+LightDM is the best practice display manager for Xfce on Debian GNU/Hurd 2025.
+
+```bash
+# Install LightDM with GTK greeter
+sudo apt install lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+
+# Start LightDM
+sudo service lightdm start
+
+# Enable on boot
+sudo systemctl enable lightdm  # If systemd available
+# Or: sudo update-rc.d lightdm defaults
+```
+
+**Configuration**:
+
+The installer script creates `/etc/lightdm/lightdm.conf.d/50-hurd-defaults.conf`:
+
+```ini
+[Seat:*]
+user-session=xfce
+greeter-session=lightdm-gtk-greeter
+greeter-hide-users=false
+greeter-allow-guest=false
+
+[LightDM]
+logind-check-graphical=false
+```
+
+**Customize**: Edit `/etc/lightdm/lightdm-gtk-greeter.conf` for appearance settings.
+
+### XDM (Legacy Alternative)
+
+XDM is a simple, traditional display manager:
 
 ```bash
 # Install XDM
@@ -340,17 +433,16 @@ sudo systemctl enable xdm  # If systemd available
 
 **Configuration**: Edit `/etc/X11/xdm/Xsession` to set default session
 
-### GDM / LightDM (DO NOT USE)
+### GDM (NOT SUPPORTED)
 
-**Do NOT install GDM or LightDM** - they require systemd features not available on Hurd:
+**Do NOT install GDM** - it requires systemd features not available on Hurd:
 
 ```bash
-# BROKEN - DO NOT INSTALL
+# NOT SUPPORTED - DO NOT INSTALL
 sudo apt install gdm3       # Will fail to start
-sudo apt install lightdm    # Will fail to start
 ```
 
-If accidentally installed, remove and use XDM:
+If accidentally installed, remove and use LightDM or XDM:
 
 ```bash
 sudo apt remove gdm3 lightdm
