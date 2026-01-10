@@ -29,7 +29,7 @@ The original thesis is **misleading**. A working QEMU-compatible image DOES exis
   - Compressed (.tar.xz): ~350 MB
   - Uncompressed (.img): 3.9-4.2 GB
 - **Architectures:** i386 and x86_64 (amd64)
-- **Verified Working:** YES - November 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
+- **Verified Working:** YES - August 2025 PostgreSQL compilation blog post (https://www.thatguyfromdelhi.com/2025/08/testing-postgresql-on-debianhurd.html)
 
 #### B. xMach/Lites Virtual Machine
 - **Image:** MachUK22-lites.vmdk

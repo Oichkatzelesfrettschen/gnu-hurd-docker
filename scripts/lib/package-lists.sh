@@ -156,14 +156,14 @@ X11_PKGS="
     xfonts-base
 "
 
-# Display manager (LightDM is best practice for Hurd/XFCE)
+# Display manager (LightDM is best practice for Hurd/Xfce)
 DISPLAY_MANAGER_PKGS="
     lightdm
     lightdm-gtk-greeter
     lightdm-gtk-greeter-settings
 "
 
-# XFCE Desktop (recommended for Hurd - lightweight and stable)
+# Xfce Desktop (recommended for Hurd - lightweight and stable)
 X11_DESKTOP_PKGS="
     xfce4
     xfce4-goodies
