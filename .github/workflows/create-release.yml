@@ -337,8 +337,8 @@ jobs:
             gnu-hurd-docker-${{ needs.prepare.outputs.version_clean }}.tar.gz.sha256
 
   summary:
-    needs: [prepare, create-tag-and-release, build-and-push-docker, create-artifacts]
-    if: always()
+    needs: [prepare, create-tag-and-release, create-artifacts]
+    if: always() && !cancelled()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
