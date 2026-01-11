@@ -1,6 +1,6 @@
 # GNU/Hurd Docker - CI/CD Workflow Patterns
 
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-01-10
 **Consolidated From**:
 - CI-CD-GUIDE.md (workflow examples)
 - .github/workflows/*.yml (actual workflows)
@@ -112,15 +112,47 @@ ghcr.io/owner/gnu-hurd-docker:sha-abc1234    # Commit SHA
 
 **Triggers**: Tags matching `v*`
 
-### 6. deploy-pages.yml - Documentation Deployment
+### 6. create-release.yml - Manual Release Creation
+
+**Purpose**: Create releases via workflow dispatch (without requiring local git access)
+
+**Triggers**: Manual dispatch only
+
+**Features**:
+- Version validation (semver format)
+- Automatic tag creation
+- GitHub release with changelog
+- Docker image build and push to GHCR
+- Release artifact packaging
+
+**Usage**:
+```bash
+# Via GitHub CLI
+gh workflow run create-release.yml -f version=2.0.0 -f release_type=release
+
+# Or via GitHub UI:
+# 1. Go to Actions tab
+# 2. Select "Create Release" workflow
+# 3. Click "Run workflow"
+# 4. Enter version (e.g., 2.0.0)
+# 5. Select release type
+# 6. Click "Run workflow"
+```
+
+**Inputs**:
+- `version`: Release version (e.g., 2.0.0 or v2.0.0)
+- `release_type`: `release` or `prerelease`
+- `skip_docker`: Skip Docker image build/push (optional)
+
+### 7. deploy-pages.yml - Documentation Deployment
 
 **Purpose**: Deploy docs to GitHub Pages
 
-### 7. quality-and-security.yml - Security Scanning
+### 8. quality-and-security.yml - Security Scanning
 
 **Purpose**: Security and quality checks
 
-### 8. release-artifacts.yml - Artifact Packaging
+### 9. release-artifacts.yml - Artifact Packaging
 
 **Purpose**: Package and upload release artifacts
 
@@ -685,5 +717,5 @@ on:
 ---
 
 **Status**: Production Ready (x86_64-only)
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-01-10
 **Architecture**: Pure x86_64

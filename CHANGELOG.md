@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2025-01-10 (Release Automation)
+- **NEW**: Added `create-release.yml` workflow for manual release creation
+  - Enables maintainers to publish releases without local git/tag access
+  - Triggered via GitHub Actions UI or `gh workflow run`
+  - Automatic tag creation for specified version
+  - Creates GitHub release with auto-generated changelog
+  - Builds and pushes Docker images to GHCR
+  - Generates release artifacts with SHA256 checksums
+  - Supports both `release` and `prerelease` types
+  - **Usage**: Actions → Create Release → Run workflow → Enter version
+
 ### Changed - 2025-11-17 (Workflow Modernization - Complete)
 - **Phase 1: Core Modernization**
   - Upgraded `docker/build-push-action` from v5 to v6 in push-ghcr.yml
