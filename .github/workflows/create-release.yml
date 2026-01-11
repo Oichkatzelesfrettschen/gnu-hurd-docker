@@ -29,7 +29,7 @@ name: Create Release
         default: false
 
 concurrency:
-  group: create-release-${{ github.ref }}
+  group: create-release-${{ inputs.version }}
   cancel-in-progress: false
 
 permissions:
