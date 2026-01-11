@@ -96,6 +96,11 @@ jobs:
             echo "Tag $TAG does not exist, will be created"
           fi
 
+      - name: Fail if tag already exists
+        if: steps.check_tag.outputs.exists == 'true'
+        run: |
+          echo "::error::Tag ${{ needs.prepare.outputs.tag }} already exists. Aborting release."
+          exit 1
       - name: Generate changelog
         id: changelog
         run: |
