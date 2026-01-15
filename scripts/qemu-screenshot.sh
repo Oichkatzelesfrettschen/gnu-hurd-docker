@@ -44,6 +44,7 @@ fi
 
 runtime="$(get_container_runtime)"
 echo "[*] Copying PPM out of container (${SERVICE_NAME})..."
+# shellcheck disable=SC2034  # attempt is used implicitly as loop counter
 for attempt in 1 2 3 4 5; do
   if "$runtime" exec "${SERVICE_NAME}" test -s "${ppm_in_container}" >/dev/null 2>&1; then
     break
