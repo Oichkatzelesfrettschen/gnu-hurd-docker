@@ -1,0 +1,224 @@
+# =============================================================================
+# Docker Compose Configuration for GNU/Hurd via Libvirt
+# =============================================================================
+# PURPOSE:
+# - Alternative to direct Docker/Podman orchestration
+# - Manages libvirt domain lifecycle via container service
+# - Useful for CI/CD integration and complex infrastructure
+#
+# WARNING:
+# This is an EXPERIMENTAL alternative for advanced users.
+# The simpler approach is to use libvirt directly:
+#   ./scripts/libvirt-hurd.sh define && ./scripts/libvirt-hurd.sh start
+#
+# USAGE:
+#   # Start Hurd VM via libvirt (managed by this compose file)
+#   docker compose -f docker-compose.libvirt.yml up -d
+#
+#   # Access VM
+#   ssh -p 2222 root@localhost
+#   # Or: docker compose -f docker-compose.libvirt.yml exec hurd-manager \
+#          virsh console gnu-hurd-dev
+#
+#   # Stop VM
+#   docker compose -f docker-compose.libvirt.yml down
+#
+# REQUIREMENTS:
+# - Docker or Podman (with socket available)
+# - Libvirt daemon running on host
+# - /var/run/libvirt/libvirt-sock accessible from container
+# - Disk image at /var/lib/libvirt/images/debian-hurd-amd64.qcow2
+#
+# NOTES:
+# - This service provides a "libvirt management container"
+# - The actual Hurd VM runs on the host hypervisor, not in a container
+# - Port mappings are configured in the domain XML, not in this compose file
+# =============================================================================
+
+version: "3.9"
+
+services:
+  hurd-manager:
+    image: ubuntu:22.04
+    container_name: gnu-hurd-libvirt-manager
+
+    # Required for libvirt socket access
+    privileged: false
+    cap_add:
+      - NET_ADMIN
+
+    # Mount libvirt socket from host
+    volumes:
+      # Libvirt control socket (read-only is sufficient for most operations)
+      - /var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock:rw
+
+      # Libvirt configuration directory
+      - /etc/libvirt:/etc/libvirt:ro
+
+      # Domain definitions
+      - /var/lib/libvirt/qemu:/var/lib/libvirt/qemu:ro
+
+      # Disk images directory (read-only - images are on host)
+      - /var/lib/libvirt/images:/var/lib/libvirt/images:ro
+
+      # Project configuration and scripts
+      - ./config/libvirt:/opt/hurd/config:ro
+      - ./scripts:/opt/hurd/scripts:ro
+      - ./docs:/opt/hurd/docs:ro
+
+    # Port mappings for VM access
+    ports:
+      # SSH to Hurd VM
+      - "2222:2222"
+
+      # HTTP from Hurd VM
+      - "8080:8080"
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Startup command
+    entrypoint: |
+      bash -c '
+        set -e
+
+        echo "[*] Hurd Libvirt Manager Container Starting..."
+
+        # Install required tools
+        echo "[*] Installing libvirt-clients and utilities..."
+        apt-get update > /dev/null 2>&1
+        apt-get install -y libvirt-clients openssh-client curl > /dev/null 2>&1
+
+        # Test libvirt connection
+        echo "[*] Testing libvirt daemon connection..."
+        virsh -c qemu:///system list > /dev/null 2>&1 || {
+          echo "[ERROR] Cannot connect to libvirt daemon"
+          echo "  Ensure libvirtd is running on host: sudo systemctl start libvirtd"
+          exit 1
+        }
+
+        # Check if domain exists
+        if virsh -c qemu:///system dominfo gnu-hurd-dev > /dev/null 2>&1; then
+          echo "[*] Domain ''gnu-hurd-dev'' already defined"
+        else
+          echo "[*] Domain not defined. Defining from template..."
+          if [ -f /opt/hurd/config/gnu-hurd.xml ]; then
+            virsh -c qemu:///system define /opt/hurd/config/gnu-hurd.xml
+            echo "[SUCCESS] Domain defined"
+          else
+            echo "[ERROR] Domain template not found: /opt/hurd/config/gnu-hurd.xml"
+            exit 1
+          fi
+        fi
+
+        # Start domain if not running
+        if ! virsh -c qemu:///system list --running 2>/dev/null | grep -q gnu-hurd-dev; then
+          echo "[*] Starting domain..."
+          virsh -c qemu:///system start gnu-hurd-dev
+          echo "[SUCCESS] Domain started (booting - wait 1-5 minutes)"
+        else
+          echo "[*] Domain already running"
+        fi
+
+        # Print status
+        echo ""
+        echo "=========================================="
+        echo "GNU/Hurd Libvirt Management Container"
+        echo "=========================================="
+        echo "[*] Domain Status:"
+        virsh -c qemu:///system dominfo gnu-hurd-dev
+        echo ""
+        echo "[*] Access Methods:"
+        echo "  SSH:    ssh -p 2222 root@localhost"
+        echo "  HTTP:   curl http://localhost:8080"
+        echo "  Console: docker compose -f docker-compose.libvirt.yml exec hurd-manager \\"
+        echo "             virsh -c qemu:///system console gnu-hurd-dev"
+        echo ""
+        echo "[*] Useful Commands:"
+        echo "  docker compose -f docker-compose.libvirt.yml exec hurd-manager virsh -c qemu:///system domstats"
+        echo "  docker compose -f docker-compose.libvirt.yml exec hurd-manager virsh -c qemu:///system screenshot"
+        echo ""
+        echo "Press Ctrl+C to exit (container will keep running in background)"
+        echo "=========================================="
+        echo ""
+
+        # Keep container running
+        sleep infinity
+      '
+
+    # Resource limits
+    mem_limit: 1GB
+    cpus: "1"
+
+    # Health check
+    healthcheck:
+      test: |
+        bash -c '
+          virsh -c qemu:///system domstate gnu-hurd-dev 2>/dev/null | grep -q "running"
+        '
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional: management network (not required, but allows custom networking)
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-hurd
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+
+# =============================================================================
+# NOTES
+# =============================================================================
+#
+# 1. SOCKET ACCESS:
+#    This compose file mounts /var/run/libvirt/libvirt-sock from the host,
+#    allowing the container to communicate with libvirtd.
+#    Make sure libvirtd is running:
+#      sudo systemctl enable --now libvirtd
+#
+# 2. DOMAIN DEFINITION:
+#    The compose file checks if the domain is defined. If not, it defines it
+#    from the template at config/libvirt/gnu-hurd.xml.
+#
+# 3. PORT FORWARDING:
+#    SSH (2222) and HTTP (8080) mappings are defined in the domain XML
+#    (config/libvirt/gnu-hurd.xml), not in this compose file.
+#    Port 2222 → VM port 22 (SSH)
+#    Port 8080 → VM port 80 (HTTP)
+#
+# 4. VOLUMES:
+#    - Libvirt socket: RW (needed for virsh commands)
+#    - Config/scripts: RO (read-only, for safety)
+#    - Domain data: RO (VMs are defined on host, not in container)
+#
+# 5. PRIVILEGED MODE:
+#    We do NOT run this container as privileged.
+#    Instead, we mount the libvirt socket.
+#    This is more secure than running privileged.
+#
+# 6. RESOURCE LIMITS:
+#    The manager container uses minimal resources (1GB RAM, 1 CPU).
+#    The actual VM resource usage is configured in the domain XML.
+#
+# 7. WHEN TO USE:
+#    - CI/CD environments where you want to orchestrate Hurd via compose
+#    - Complex multi-service setups with Hurd as one service
+#    - Testing and automation
+#
+# 8. WHEN NOT TO USE:
+#    - Simple one-off Hurd testing (use ./scripts/libvirt-hurd.sh instead)
+#    - Systems without Docker/Podman (use libvirt-hurd.sh directly)
+#    - When you need the lowest overhead (Docker/Podman is lighter)
+#
+# =============================================================================
