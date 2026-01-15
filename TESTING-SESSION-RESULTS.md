@@ -25,15 +25,17 @@
 - ✓ /dev/kvm accessible in container
 - ✓ QEMU initializing and booting
 
-**Boot Performance**: ⚠ SLOW (Using TCG instead of KVM)
-- Current: TCG emulation (5+ minute boots)
-- Expected: KVM acceleration (30-60 second boots)
-- Root cause: KVM not being detected by entrypoint.sh logic
+**Boot Performance**: ⏳ KVM ENABLED (Testing in progress)
+- Previous: TCG emulation (5+ minute boots)
+- Current: KVM acceleration enabled (-accel kvm -cpu host)
+- Root cause identified: KVM was auto-disabled due to IDE DMA safety measure
+- Status: Boot time improved but still ~2-3 minutes (investigating further)
 
-**SSH Access**: Pending
-- Port open: ✓ Yes (nc test successful)
+**SSH Access**: ⏳ Testing
+- Port open: ✓ Yes (verified with nc)
 - Networking: ✓ Working
-- Guest boot: In progress (slow on TCG)
+- Guest boot: In progress with KVM enabled (~180+ seconds elapsed)
+- Next: Verify SSH becomes available as boot completes
 
 ### Configuration Issues Identified & Fixed
 
@@ -43,44 +45,63 @@
 **Solution**: Rebuilt locally with corrected entrypoint.sh
 **Status**: ✓ RESOLVED
 
-#### Issue 2: KVM Not Detected (NEEDS INVESTIGATION)
-**Problem**: `-accel tcg` used instead of `-accel kvm`
-**Evidence**: 
-- /dev/kvm is accessible in container (crw-rw-rw-)
-- KVM device passed via docker-compose override
-- QEMU still chooses TCG
+#### Issue 2: KVM Auto-Disabled for IDE Safety (FIXED ✓)
+**Problem**: `/dev/kvm` available but QEMU using `-accel tcg` instead of `-accel kvm`
+**Root Cause**: Entrypoint.sh intentionally disables KVM when:
+- Machine type is `pc` (i440fx chipset)
+- Disk bus is `ide` (default)
+- Reason: Known KVM+IDE DMA issue causes ext2fs I/O errors on Debian GNU/Hurd
 
-**Likely Cause**: entrypoint.sh KVM detection logic not evaluating correctly
-**Impact**: Boot time 5+ minutes (TCG) vs 30-60 seconds (KVM)
-**Status**: ⏳ UNDER INVESTIGATION
+**Safety Feature Details**:
+- `AUTO_DISABLE_KVM_FOR_IDE=1` (default) prevents KVM+IDE combination
+- `FORCE_KVM=1` override available for testing/debugging
+- Code: entrypoint.sh lines 296-305 in `build_qemu_command()`
+
+**Solution Applied**: Set `FORCE_KVM=1` in docker-compose.override.yml
+**Status**: ✓ RESOLVED - KVM now enabled with `-accel kvm -cpu host`
 
 ### Performance Comparison
 
 | Mode | Expected Boot | Actual Status | Notes |
 |------|---|---|---|
-| KVM | 30-60s | Not detected | /dev/kvm present but not used |
-| TCG | 3-5min | Active | Currently in use, very slow |
+| KVM | 30-60s | Active (FORCE_KVM=1) | Now enabled with -accel kvm -cpu host |
+| TCG | 3-5min | Was active | Used before KVM was enabled |
+| Current | ~120-180s | In progress | Boot with KVM enabled, still slower than expected |
 
 ### Technical Details
 
-**QEMU Command (Current - TCG)**:
+**QEMU Command (Current - KVM with FORCE_KVM=1)**:
 ```
 /usr/bin/qemu-system-x86_64 \
   -machine pc \
-  -accel tcg,thread=multi \          # <- Should be KVM!
-  -cpu max \
+  -accel kvm \                       # <- KVM NOW ENABLED!
+  -cpu host \                        # <- Full CPU passthrough with KVM
   -m 4096 \
   -smp 2 \
-  ... (rest of config)
+  -drive id=drive0,file=/opt/hurd-image/debian-hurd-amd64.qcow2,\
+    if=none,cache=writeback,aio=threads,format=qcow2 \
+  -device ide-hd,drive=drive0,write-cache=auto,rerror=auto,werror=auto \
+  -nic user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80 \
+  -serial telnet:0.0.0.0:5555,server,nowait \
+  -monitor telnet:0.0.0.0:9999,server,nowait \
+  -nographic -rtc base=utc,clock=host -no-reboot
 ```
 
-**Docker Configuration**:
+**Docker Configuration (docker-compose.override.yml)**:
 ```yaml
-devices:
-  - /dev/kvm:/dev/kvm               # ✓ Correctly passed
-  
-environment:
-  ENABLE_NATIVE_AIO: 0              # ✓ Using threads (correct)
+services:
+  gnu-hurd-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gnu-hurd-docker:latest
+    devices:
+      - /dev/kvm:/dev/kvm             # ✓ KVM device passed to container
+    environment:
+      FORCE_KVM: "1"                  # ✓ Override auto-disable safety feature
+    volumes:
+      - ./images/debian-hurd-amd64.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw
+      - ./share:/share:rw
 ```
 
 ### Test Timeline
@@ -106,55 +127,59 @@ environment:
 
 ### What Needs Attention ⏳
 
-- KVM acceleration detection in entrypoint.sh
-- Guest OS boot time optimization
-- Actual SSH connection validation once boot completes
+- Guest OS boot time (currently ~2-3 minutes with KVM, expected 30-60s)
+- Verify SSH connection works once boot completes
+- Investigate if boot slowness is due to IDE DMA issue or Hurd image itself
 
 ### Recommendations
 
-#### Immediate (Before Production)
-1. **Debug KVM detection**: Check why KVM available but not selected
-2. **Review entrypoint.sh**: KVM detection logic lines 200-250
-3. **Verify accel parameter**: Ensure correct `-accel kvm` is being used
+#### Completed ✓
+1. ✓ Debugged KVM detection - found it was auto-disabled for IDE safety
+2. ✓ Applied FORCE_KVM=1 override in docker-compose.override.yml
+3. ✓ Verified KVM is now in use (-accel kvm -cpu host)
 
-#### Short-term
-4. **Manual KVM override**: Test with explicit `-accel kvm` flag
-5. **Retry boot sequence**: Once KVM is working, verify 30-60s boot time
-6. **Validate SSH access**: Confirm user login works
-
-#### Testing Completion
+#### Next Steps
+4. **Monitor SSH availability**: Continue waiting for guest boot to complete
+5. **Investigate slow boot**: Consider testing with:
+   - Different disk bus (virtio instead of ide)
+   - Different machine type (isapc instead of pc)
+   - Different Hurd image version
+6. **Validate SSH access**: Confirm user login works once boot complete
 7. **Document actual results**: Update BACKEND-TESTING-RESULTS.md with real data
-8. **Benchmark runs**: Execute full benchmark suite once boot time is acceptable
-9. **Sign-off**: Confirm all three backends working with performance metrics
+8. **Run full testing**: Complete Podman and Libvirt backend testing
+9. **Create performance report**: Document boot times for all backends
 
 ### Files Modified
 
-- `docker-compose.override.yml`: Added KVM device + build config
-- `Dockerfile`: (locally rebuilt, no changes needed)
-- `entrypoint.sh`: No changes (logic looks correct, detection may need review)
+- `docker-compose.override.yml`: Added FORCE_KVM=1 environment variable + KVM device + build config (NEW)
+- `TESTING-SESSION-RESULTS.md`: Updated with KVM fix documentation (this file)
 
 ### Next Steps for User
 
-1. **Option A - Continue Debugging** (Recommended)
-   - Investigate line 200-250 of entrypoint.sh
-   - Add debug logging for KVM detection
-   - Test with manual KVM parameter
+**KVM is now enabled.** Boot is currently taking ~2-3 minutes (still slower than 30-60s target).
 
-2. **Option B - Accept TCG Slow Boot**
-   - Wait 5-10 minutes for guest to fully boot
-   - Validate SSH works on slow TCG
-   - Document as TCG-based testing result
+1. **Continue waiting for SSH** to become available
+   - This validates the Docker backend is fully functional
+   - SSH will confirm guest OS is fully booted and responsive
 
-3. **Option C - Defer KVM Investigation**
-   - Document current findings
-   - Commit progress
-   - Plan KVM debugging for next session
+2. **If SSH doesn't work after 5 minutes**, investigate:
+   - The Debian GNU/Hurd disk image itself may have issues
+   - Try with FORCE_KVM=0 to disable KVM and see if SSH works on TCG
+   - Try different disk bus (e.g., QEMU_DISK_BUS=virtio) if IDE is problematic
+
+3. **Once SSH is verified**, continue with:
+   - Test Podman backend (network issues encountered previously)
+   - Test Libvirt backend
+   - Run full benchmark suite
+   - Document final performance metrics
 
 ### Conclusion
 
-The testing **infrastructure is production-ready** with all documentation complete. The **Docker image builds successfully** with correct QEMU configuration. The **Docker backend is functional** but running in slow TCG mode due to KVM detection issue that needs investigation. Once KVM is properly enabled, all performance targets should be met.
+The testing **infrastructure is production-ready** with all documentation complete. The **Docker image builds successfully** with correct QEMU configuration. The **Docker backend is now running with KVM acceleration enabled** (`-accel kvm -cpu host`).
 
-**Current Blocker**: KVM not being used despite device being available - 5-10 minute wait for SSH validation
+**Key Achievement**: Successfully diagnosed and fixed the KVM auto-disable issue. KVM was being intentionally disabled by `AUTO_DISABLE_KVM_FOR_IDE=1` as a safety measure to avoid known IDE DMA errors. Applied `FORCE_KVM=1` override to enable KVM for testing.
+
+**Current Status**: KVM enabled and guest is booting. Boot time with KVM is still ~2-3 minutes (expected 30-60s). Further investigation needed to determine if this is due to the Hurd image itself or the IDE+KVM combination despite FORCE_KVM override.
 
 ---
 

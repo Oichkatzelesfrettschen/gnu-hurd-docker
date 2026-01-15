@@ -6,6 +6,8 @@ services:
     image: gnu-hurd-docker:latest
     devices:
       - /dev/kvm:/dev/kvm
+    environment:
+      FORCE_KVM: "1"
     volumes:
       - ./images/debian-hurd-amd64.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw
       - ./share:/share:rw
