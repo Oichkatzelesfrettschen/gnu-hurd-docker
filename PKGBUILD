@@ -73,6 +73,17 @@ for f in files:
         return 1
     }
     
+    # Validate Python files
+    echo "Validating Python files..."
+    for pyfile in $(find scripts -type f -name "*.py" 2>/dev/null | sort); do
+        if [ -f "$pyfile" ]; then
+            echo "  Checking $pyfile..."
+            python3 -m flake8 "$pyfile" --max-line-length=100 --extend-ignore=E203,W503 || {
+                echo "WARNING: flake8 issues found in $pyfile (non-critical)"
+            }
+        fi
+    done
+
     echo "=== Build validation complete ==="
 }
 
