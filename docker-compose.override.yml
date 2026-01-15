@@ -1,5 +1,9 @@
 services:
   gnu-hurd-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gnu-hurd-docker:latest
     devices:
       - /dev/kvm:/dev/kvm
     volumes:
