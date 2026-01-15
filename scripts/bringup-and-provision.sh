@@ -16,9 +16,9 @@ source "$SCRIPT_DIR/lib/container-helpers.sh"
 ROOT_PASS=${ROOT_PASS:-root}
 AGENTS_PASS=${AGENTS_PASS:-agents}
 HOST=localhost
-SSH_PORT=2222
+SSH_PORT=${SSH_PORT:-2222}
 SERIAL_PORT=${SERIAL_PORT:-5555}
-CONTAINER_NAME="gnu-hurd-dev"
+CONTAINER_NAME="${SERVICE_NAME:-gnu-hurd-dev}"
 
 # Track cleanup state
 CLEANUP_NEEDED=false
@@ -42,9 +42,9 @@ cleanup() {
         
         # Stop container only if this script started it
         if [ "$CONTAINER_STARTED_BY_SCRIPT" = true ]; then
-            if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+            if is_container_running "$CONTAINER_NAME"; then
                 echo "  [INFO] Stopping container: $CONTAINER_NAME"
-                docker compose down 2>/dev/null || true
+                ./scripts/docker-orchestration.sh down 2>/dev/null || true
             fi
         fi
     fi
@@ -55,10 +55,10 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # 1) Boot container
-if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-  docker compose up -d
-  CONTAINER_STARTED_BY_SCRIPT=true
-  CLEANUP_NEEDED=true
+if ! is_container_running "$CONTAINER_NAME"; then
+    ensure_container_running "$CONTAINER_NAME"
+    CONTAINER_STARTED_BY_SCRIPT=true
+    CLEANUP_NEEDED=true
 fi
 
 echo "Waiting for serial (telnet $HOST:$SERIAL_PORT) ..."

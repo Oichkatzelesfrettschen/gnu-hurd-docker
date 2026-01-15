@@ -298,7 +298,7 @@ docker-compose ps
 docker-compose logs | tail -100
 
 # Enter container shell (NOT guest!)
-docker-compose exec hurd-x86_64 /bin/bash
+docker-compose exec gnu-hurd-dev /bin/bash
 ```
 
 ---

@@ -17,6 +17,7 @@ Comprehensive script reference for GNU/Hurd development environment setup, autom
 - [Manage snapshots](#utility-scripts) → `manage-snapshots.sh`
 - [Connect to console](#utility-scripts) → `connect-console.sh`
 - [Monitor QEMU](#utility-scripts) → `monitor-qemu.sh`
+- [Type into QEMU console](#utility-scripts) → `qemu-type.sh`
 
 ## Script Categories
 
@@ -516,6 +517,38 @@ ROOT_PASS=root ./fix-sources-hurd.sh -h localhost -p 2222
 ## Utility Scripts
 
 Management, monitoring, and maintenance tools.
+
+### qemu-type.sh
+
+**WHY**: Some upstream Hurd images have unreliable/blank serial consoles and may have a broken `sshd` at boot. This provides a best-effort way to type into the VGA console via the QEMU monitor.
+
+**WHAT**: Sends ASCII text by mapping characters to QEMU `sendkey` sequences.
+
+**HOW**:
+```bash
+MONITOR_PORT=9998 ./qemu-type.sh "root\n"
+MONITOR_PORT=9998 ./qemu-type.sh --enter "root"
+```
+
+**Notes**:
+- Not all characters are supported.
+- Use it to bootstrap SSH and a better automation channel.
+
+---
+
+### qemu-login-run.sh
+
+**WHY**: Bootstrap and run commands when SSH isn’t working yet.
+
+**WHAT**: Types a login sequence and then one or more commands.
+
+**HOW**:
+```bash
+MONITOR_PORT=9998 ./qemu-login-run.sh --user root --pass root \
+  --cmd 'mount -t tmpfs tmpfs /run || true' \
+  --cmd 'mount -t tmpfs tmpfs /tmp || true' \
+  --cmd '/etc/init.d/ssh restart || true'
+```
 
 ### boot_hurd.sh
 

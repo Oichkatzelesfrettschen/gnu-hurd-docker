@@ -5,6 +5,8 @@
 # WHAT: QMP commands, snapshots, state management, debugging
 # HOW: Telnet/netcat to QEMU monitor socket
 
+set -euo pipefail
+
 MONITOR_PORT="${MONITOR_PORT:-9999}"
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 
@@ -49,7 +51,7 @@ EOF
 send_command() {
     local cmd="$1"
     echo -e "${BLUE}[QEMU Monitor]${NC} Sending: ${YELLOW}$cmd${NC}"
-    echo "$cmd" | nc -q 1 localhost $MONITOR_PORT 2>/dev/null || {
+    echo "$cmd" | nc -q 1 localhost "$MONITOR_PORT" 2>/dev/null || {
         echo -e "${YELLOW}[WARNING]${NC} Monitor not available. Is QEMU running?"
         return 1
     }
@@ -120,12 +122,12 @@ case "${1:-}" in
     console)
         echo -e "${BLUE}[Serial Console]${NC} Connecting to localhost:$SERIAL_PORT"
         echo -e "${YELLOW}Press Ctrl-] then 'quit' to exit${NC}"
-        telnet localhost $SERIAL_PORT
+        telnet localhost "$SERIAL_PORT"
         ;;
     monitor)
         echo -e "${BLUE}[QEMU Monitor]${NC} Connecting to localhost:$MONITOR_PORT"
         echo -e "${YELLOW}Press Ctrl-] then 'quit' to exit${NC}"
-        telnet localhost $MONITOR_PORT
+        telnet localhost "$MONITOR_PORT"
         ;;
     send)
         if [ -z "${2:-}" ]; then

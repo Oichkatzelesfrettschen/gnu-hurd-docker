@@ -1,6 +1,6 @@
 # GNU/Hurd Docker - Quick Start Guide
 
-**Last Updated**: 2025-11-08
+**Status**: Quickstart (see git history for updates)
 **Consolidated From**:
 - QUICKSTART.md (2025-11-06, i386-focused with GUI and custom features)
 - QUICKSTART-CI-SETUP.md (CI-focused)
@@ -9,7 +9,7 @@
 
 **Purpose**: Get Debian GNU/Hurd running in under 10 minutes
 
-**Scope**: Primary focus on x86_64 (future direction), with i386 legacy support notes
+**Scope**: x86_64 guest only. Legacy i386 material (if any) is archived.
 
 ---
 
@@ -19,20 +19,20 @@
 
 ```bash
 # 1. Pull pre-built image
-docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
+docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
-# 2. Download Debian GNU/Hurd 2025 "Trixie" image (~355 MB download, ~4 GB extracted)
-# Official Debian 13 release, snapshot 2025-11-05
-wget http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
-tar xJf debian-hurd.img.tar.xz
+# 2. Run it (will download the disk image on first boot if enabled)
+mkdir -p images
 
-# 3. Run it
 docker run -d \
-  --name hurd-x86_64 \
+  --name gnu-hurd-dev \
   -p 2222:2222 -p 5555:5555 -p 8080:8080 \
-  -v $(pwd):/opt/hurd-image \
-  --device /dev/kvm:/dev/kvm:rw \
-  ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
+  -v "$(pwd)/images:/opt/hurd-image:rw" \
+  -e AUTO_DOWNLOAD_IMAGE=1 \
+  ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+
+# Optional (Linux x86_64 only): add KVM for faster boot
+#   --device /dev/kvm:/dev/kvm:rw
 ```
 
 **Wait 5-10 minutes for boot**, then connect via SSH:
@@ -52,15 +52,15 @@ ssh -p 2222 root@localhost
 git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 
-# 2. Download Hurd image
-./scripts/download-image.sh  # Automatically detects x86_64 or i386
+# 2. Download Hurd image to ./images (for bind-mount mode)
+./scripts/setup-hurd-amd64.sh
 
 # 3. Build and start
 docker compose build
-docker compose up -d
+./scripts/docker-orchestration.sh up
 
 # 4. Monitor boot (optional)
-docker compose logs -f
+./scripts/docker-orchestration.sh logs
 ```
 
 **Wait 5-10 minutes for boot**, then connect via SSH:
@@ -108,10 +108,11 @@ ssh -p 2222 root@localhost
 telnet localhost 5555
 ```
 
-**Via VNC (if ENABLE_VNC=1 in docker-compose.yml):**
+**Via VNC/noVNC (recommended for first boot):**
 ```bash
-# Install VNC client first
-vncviewer localhost:5900  # or port 5901 for i386 images
+./scripts/docker-orchestration.sh up-vnc
+vncviewer localhost:5900
+# Or open: http://localhost:6080/vnc.html
 ```
 
 ### Verify Architecture
@@ -119,10 +120,10 @@ vncviewer localhost:5900  # or port 5901 for i386 images
 ```bash
 # Inside guest
 uname -m
-# Expected: x86_64 (or i586 for i386 images)
+# Expected: x86_64
 
 uname -a
-# Expected: GNU/Hurd ... x86_64 (or GNU ... i586)
+# Expected: GNU/Hurd ... x86_64
 ```
 
 ---
@@ -156,50 +157,6 @@ startx
 
 ---
 
-## Custom Shell Features (i386 Images)
-
-After login on i386 images, these custom commands are available:
-
-### System Information Commands
-```bash
-mach-sysinfo          # Complete Hurd system info
-mach-info             # CPU and kernel info
-mach-memory           # Memory usage
-mig-version           # MIG (Mach Interface Generator) version
-```
-
-### Development Shortcuts
-```bash
-mach-rebuild          # Auto-detect and rebuild project
-cmake-debug           # Configure cmake in debug mode
-cmake-release         # Configure cmake in release mode
-configure-debug       # Configure autotools in debug
-configure-release     # Configure autotools in release
-```
-
-### Git Shortcuts
-```bash
-gs                    # git status
-ga                    # git add
-gc                    # git commit
-gp                    # git push
-gl                    # git log --oneline --graph
-gd                    # git diff
-```
-
-### File Operations
-```bash
-ll                    # ls -lahF --color
-la                    # ls -AF --color
-```
-
-### Safety Features
-```bash
-rm, cp, mv            # All ask for confirmation (interactive)
-```
-
----
-
 ## File Sharing (Host ↔ Guest)
 
 ### 9p Filesystem Mount
@@ -212,15 +169,15 @@ cp myfile.txt share/
 
 # Inside Hurd VM:
 mkdir -p /mnt/host
-mount -t 9p -o trans=virtio scripts /mnt/host
+mount -t 9p -o trans=virtio hostshare /mnt/host
 ls /mnt/host
 cat /mnt/host/myfile.txt
 ```
 
 ### 9p Mount Details
 ```
-Tag: scripts
-Host Path: ./share/
+Tag: hostshare
+Host Path: ./share/ (mounted into container as /share)
 Guest Mount: /mnt/host
 Protocol: 9p over virtio
 ```
@@ -228,7 +185,7 @@ Protocol: 9p over virtio
 ### Making Mount Permanent
 ```bash
 # Inside guest
-echo "scripts /mnt/host 9p trans=virtio,version=9p2000.L 0 0" >> /etc/fstab
+echo "hostshare /mnt/host 9p trans=virtio,version=9p2000.L 0 0" >> /etc/fstab
 ```
 
 ---
@@ -245,10 +202,10 @@ Password: root (or empty - varies by Debian release)
 ```
 SSH:     localhost:2222 -> guest:22
 HTTP:    localhost:8080 -> guest:80
-Custom:  localhost:9999 -> guest:9999
 Serial:  telnet localhost:5555
 Monitor: telnet localhost:9999
-VNC:     localhost:5900 (x86_64) or :5901 (i386)
+VNC:     localhost:5900 (when using up-vnc)
+noVNC:   http://localhost:6080/vnc.html (when using up-vnc)
 ```
 
 ---
@@ -257,44 +214,24 @@ VNC:     localhost:5900 (x86_64) or :5901 (i386)
 
 ### x86_64 Configuration (Primary)
 ```yaml
-Architecture: x86_64 (pure, no i386)
-System:       Debian GNU/Hurd 2025 (hurd-amd64)
+Architecture: x86_64
+System:       Debian GNU/Hurd (ports/13.0, hurd-amd64)
 CPU:          qemu64 or host (with KVM)
 RAM:          4 GB (default, configurable)
-SMP:          2 cores (Hurd 2025 has SMP support)
+SMP:          2 cores (configurable; higher counts may be unstable)
 Acceleration: KVM (Linux) or TCG (macOS/Windows)
 Disk:         IDE interface (Hurd-compatible)
 Network:      e1000 NIC (Hurd-compatible)
 Display:      nographic (default) or VNC
 ```
 
-### i386 Configuration (Legacy/80GB Image)
-```yaml
-Image:        debian-hurd-i386-80gb.qcow2 (80GB virtual, ~2.4GB actual)
-System:       Debian GNU/Hurd 13 i386
-CPU:          Pentium 3 (1 core for stability)
-RAM:          4 GB
-Acceleration: KVM (if available)
-Display:      VNC on port 5901
-Features:     Pre-installed GUI, development tools, custom shell
-```
-
----
-
 ## Post-Installation Setup
 
-### Mount Shared Directory
+### File Sharing (Host ↔ Guest)
 
-Share files between host and guest via 9p:
-
-```bash
-# Inside guest
-mkdir -p /mnt/host
-mount -t 9p -o trans=virtio scripts /mnt/host
-ls /mnt/host
-```
-
-**On host**, place files in `./share/` to access from guest at `/mnt/host/`.
+- **Host ↔ Container**: `./share` is mounted to `/share` inside the container.
+- **Host ↔ Guest (recommended)**: use SSH/SCP once SSH is up.
+- **Host ↔ Guest (experimental)**: enable QEMU 9p by setting `ENABLE_9P=1` (see troubleshooting if mount fails).
 
 ### Install Development Tools
 
@@ -330,7 +267,7 @@ dpkg -l | grep -E "gnumach-dev|hurd-dev|mig"
 
 # Check architecture
 uname -m
-# Expected: x86_64 (or i586 for i386)
+# Expected: x86_64
 
 # Check development tools
 which gcc g++ make cmake git
@@ -338,9 +275,6 @@ which gcc g++ make cmake git
 # Check MIG (Mach Interface Generator)
 which mig
 # Expected: /usr/bin/mig
-
-# Test custom functions (i386 images)
-type mach-rebuild mach-sysinfo
 
 # Test network
 ping -c 3 debian.org
@@ -412,8 +346,6 @@ Responsiveness: Adequate for development
 Requirements:  None (works anywhere)
 ```
 
-**Note**: x86_64 is slower than i386 (less optimized Hurd port), but it's the future direction.
-
 ---
 
 ## Troubleshooting
@@ -458,21 +390,11 @@ which startxfce4
 startx -- :0
 ```
 
-### Shell Customizations Not Loading (i386)
-
-```bash
-# Reload .bashrc
-source ~/.bashrc
-
-# Verify customizations present
-grep "Mach development" ~/.bashrc
-```
-
 ### 9p Mount Not Working
 
 ```bash
 # Manual mount
-mount -t 9p -o trans=virtio scripts /mnt/host
+mount -t 9p -o trans=virtio hostshare /mnt/host
 
 # Check QEMU config
 docker compose logs | grep virtfs
@@ -484,10 +406,8 @@ cat /etc/fstab | grep 9p
 ### Slow Boot / Performance
 
 ```bash
-# Enable KVM (Linux only)
-# In docker-compose.yml, uncomment:
-devices:
-  - /dev/kvm:/dev/kvm:rw
+# Enable KVM acceleration (Linux x86_64 only)
+./scripts/docker-orchestration.sh up-kvm
 
 # Increase resources
 # In docker-compose.yml:
@@ -503,7 +423,7 @@ environment:
 docker compose ps
 
 # Check VNC port is open
-ss -tlnp | grep 590[01]
+ss -tlnp | grep 5900
 
 # Restart container
 docker compose restart
@@ -571,28 +491,11 @@ For detailed installation and configuration:
 
 ## Architecture Notes
 
-### Why x86_64 Primary?
+### Supported platforms
 
-As of 2025-11-07, this repository focuses primarily on x86_64:
-
-**Reasons:**
-- Debian GNU/Hurd 2025 officially supports x86_64 (hurd-amd64)
-- x86_64 is the future of Hurd development
-- Cleaner architecture (no multi-arch complexity)
-- Better alignment with modern hardware
-
-**Trade-offs:**
-- Slower boot/performance than i386 (less optimized)
-- Higher memory usage
-- Some packages may have fewer optimizations
-
-### i386 Support (Legacy)
-
-The 80GB pre-configured i386 image remains available for:
-- Users needing maximum performance
-- Testing i386-specific code
-- Educational purposes
-- Legacy compatibility
+- Guest: x86_64 only (runs inside QEMU)
+- Container: `linux/amd64` and `linux/arm64`
+- Acceleration: KVM only on Linux x86_64 hosts; other hosts use TCG emulation
 
 ---
 
@@ -625,7 +528,7 @@ docker rmi gnu-hurd-docker
 
 ---
 
-**Status**: Production Ready
+**Status**: Development/experimental
 **Last Updated**: 2025-11-08
 **Maintainer**: Oichkatzelesfrettschen
-**Architecture**: x86_64 primary, i386 legacy support
+**Architecture**: x86_64 guest only

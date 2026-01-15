@@ -33,6 +33,96 @@ log_error() {
 }
 
 # =============================================================================
+# PRIVILEGE/OWNERSHIP MANAGEMENT
+# =============================================================================
+ensure_kvm_group_membership() {
+    if [ "$(id -u)" -ne 0 ]; then
+        return 0
+    fi
+    if [ ! -e /dev/kvm ]; then
+        return 0
+    fi
+
+    local kvm_gid group_name
+    kvm_gid="$(stat -c %g /dev/kvm 2>/dev/null || echo "")"
+    if [ -z "$kvm_gid" ]; then
+        return 0
+    fi
+
+    group_name="$(getent group "$kvm_gid" | cut -d: -f1 || true)"
+    if [ -z "$group_name" ]; then
+        group_name="kvm"
+        groupadd -g "$kvm_gid" "$group_name" 2>/dev/null || true
+    fi
+
+    usermod -aG "$group_name" hurd 2>/dev/null || true
+}
+
+mount_is_bind() {
+    # Returns 0 when PATH is a bind mount (subtree mount), 1 otherwise.
+    # Heuristic: in /proc/self/mountinfo, bind mounts typically have a "root"
+    # different than "/". Engine-managed volumes typically mount with root "/".
+    local target="${1:?path required}"
+    local line root mount_point
+    while IFS= read -r line; do
+        # mountinfo fields: id parent major:minor root mount_point ...
+        # We only need root (4th) and mount_point (5th).
+        root="$(printf '%s\n' "$line" | awk '{print $4}')"
+        mount_point="$(printf '%s\n' "$line" | awk '{print $5}')"
+        if [ "$mount_point" = "$target" ]; then
+            [ "$root" != "/" ] && return 0
+            return 1
+        fi
+    done < /proc/self/mountinfo
+    return 1
+}
+
+ensure_volume_ownership() {
+    if [ "$(id -u)" -ne 0 ]; then
+        return 0
+    fi
+
+    mkdir -p /opt/hurd-image /var/log/qemu
+    # IMPORTANT: Avoid `chown` on bind mounts because it mutates host file
+    # ownership. For engine-managed volumes, it's safe and often required.
+    if ! mount_is_bind /opt/hurd-image; then
+        chown hurd:hurd /opt/hurd-image 2>/dev/null || true
+    fi
+    if ! mount_is_bind /var/log/qemu; then
+        chown hurd:hurd /var/log/qemu 2>/dev/null || true
+    fi
+
+    if [ -f "$QCOW2_IMAGE" ]; then
+        # Only chown images on non-bind mounts (avoid changing host bind mounts).
+        local image_dir
+        image_dir="$(dirname "$QCOW2_IMAGE")"
+        if ! mount_is_bind "$image_dir"; then
+            chown hurd:hurd "$QCOW2_IMAGE" 2>/dev/null || true
+        fi
+    fi
+}
+
+drop_privileges_and_exec() {
+    if [ "$(id -u)" -eq 0 ]; then
+        if command -v gosu >/dev/null 2>&1; then
+            # Only drop privileges when the disk image path is writable by 'hurd'.
+            # IMPORTANT: For bind mounts, "root can write" does not imply the non-root
+            # user can write, and `chown` would mutate host ownership. Prefer running
+            # QEMU as root over breaking host permissions.
+            local image_dir
+            image_dir="$(dirname "$QCOW2_IMAGE")"
+            if gosu hurd test -w "$image_dir" 2>/dev/null \
+                && { [ ! -e "$QCOW2_IMAGE" ] || gosu hurd test -w "$QCOW2_IMAGE" 2>/dev/null; }; then
+                exec gosu hurd "${QEMU_CMD[@]}" "$@"
+            fi
+            log_warn "Not dropping privileges: ${image_dir} is not writable by 'hurd' (running QEMU as root)"
+        fi
+        exec "${QEMU_CMD[@]}" "$@"
+    fi
+    exec "${QEMU_CMD[@]}" "$@"
+}
+
+# =============================================================================
 # RESOURCE DETECTION AND SMART DEFAULTS
 # =============================================================================
 # Detect host resources for optimal allocation
@@ -108,22 +198,34 @@ detect_host_resources
 
 # All configuration via environment variables for Docker flexibility
 QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-amd64.qcow2}"
-QEMU_RAM=$(calculate_optimal_ram "$HOST_MEM_MB")
-QEMU_SMP=$(calculate_optimal_smp "$HOST_CPUS")
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 MONITOR_PORT="${MONITOR_PORT:-9999}"
+
+# Advanced overrides:
+# - Some upstream Hurd images can hit IDE DMA I/O errors on i440fx+PIIX.
+#   `QEMU_MACHINE=isapc` uses ISA IDE and can be more reliable.
+# - Network model must match the selected machine (e.g. `ne2k_isa` for `isapc`).
+QEMU_MACHINE="${QEMU_MACHINE:-pc}"
+QEMU_NET_MODEL="${QEMU_NET_MODEL:-}"
+QEMU_VGA_DEVICE="${QEMU_VGA_DEVICE:-}"
+
+QEMU_RAM=$(calculate_optimal_ram "$HOST_MEM_MB")
+QEMU_SMP=$(calculate_optimal_smp "$HOST_CPUS")
+
+# Machine-specific constraints
+if [ "${QEMU_MACHINE}" = "isapc" ] && [ "${QEMU_SMP}" -gt 1 ]; then
+    log_warn "Machine '${QEMU_MACHINE}' supports max 1 CPU; forcing QEMU_SMP=1"
+    QEMU_SMP=1
+fi
 
 log_info "Optimized settings: ${QEMU_SMP} CPUs, ${QEMU_RAM} MB RAM"
 
 # =============================================================================
-# ARCHITECTURE VERIFICATION - x86_64 ONLY!
+# ARCHITECTURE VERIFICATION
 # =============================================================================
-verify_x86_64_only() {
-    # Verify host architecture
-    if [ "$(uname -m)" != "x86_64" ]; then
-        log_error "This container requires x86_64 host architecture"
-        exit 1
-    fi
+verify_requirements() {
+    # GNU/Hurd guest is x86_64-only, but the container may run on multiple host CPU archs.
+    # On non-x86_64 hosts, QEMU will run in TCG (software emulation) mode.
 
     # Verify QEMU x86_64 binary exists (with underscore!)
     if [ ! -x /usr/bin/qemu-system-x86_64 ]; then
@@ -132,7 +234,15 @@ verify_x86_64_only() {
         exit 1
     fi
 
-    log_info "Architecture verified: x86_64-only configuration"
+    local host_arch
+    host_arch="$(uname -m)"
+
+    if [ "$host_arch" != "x86_64" ]; then
+        log_warn "Host architecture is '$host_arch' (not x86_64)"
+        log_warn "KVM acceleration is not available for an x86_64 guest on this host; using TCG emulation"
+    fi
+
+    log_info "QEMU target verified: x86_64 guest via /usr/bin/qemu-system-x86_64"
 }
 
 # =============================================================================
@@ -142,7 +252,18 @@ detect_acceleration() {
     # Try KVM first, fall back to TCG
     # This matches the recommended pattern: -accel kvm -accel tcg,thread=multi
 
-    if [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+    local host_arch
+    host_arch="$(uname -m)"
+
+    # KVM is only usable for an x86_64 guest on an x86_64 host.
+    if [ "${DISABLE_KVM:-0}" = "1" ]; then
+        echo "tcg"
+        log_warn "KVM disabled (DISABLE_KVM=1); using TCG software emulation"
+        log_info "CPU model: max (all emulated features enabled)"
+        return 0
+    fi
+
+    if [ "$host_arch" = "x86_64" ] && [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
         # KVM is available
         echo "kvm"
         log_info "KVM hardware acceleration detected and will be used"
@@ -150,8 +271,10 @@ detect_acceleration() {
     else
         # Fall back to TCG
         echo "tcg"
-        log_warn "KVM not available, using TCG software emulation"
-        log_warn "To enable KVM, run container with: --device=/dev/kvm"
+        log_warn "KVM not available for this host/guest combination; using TCG software emulation"
+        if [ "$host_arch" = "x86_64" ]; then
+            log_warn "To enable KVM, run container with: --device=/dev/kvm"
+        fi
         log_info "CPU model: max (all emulated features enabled)"
     fi
 }
@@ -160,19 +283,40 @@ detect_acceleration() {
 # BUILD QEMU COMMAND LINE
 # =============================================================================
 build_qemu_command() {
-    local accel_mode
-    accel_mode=$(detect_acceleration)
+	local accel_mode
+	accel_mode=$(detect_acceleration)
 
-    # Start with base command - ALWAYS x86_64 binary
-    local -a cmd=(/usr/bin/qemu-system-x86_64)
+	# Known issue (observed with Debian GNU/Hurd amd64 images): KVM + PIIX IDE can
+	# trigger repeated "bus-master DMA error: missing interrupt" and ext2fs I/O
+	# errors (guest corruption symptoms, even when the host qcow2 is fine).
+	#
+	# Prefer reliability over speed by auto-disabling KVM for IDE on pc/i440fx,
+	# unless the user explicitly overrides it.
+	local disk_bus_hint="${QEMU_DISK_BUS:-ide}"
+		if [ "$accel_mode" = "kvm" ] && [ "${AUTO_DISABLE_KVM_FOR_IDE:-1}" = "1" ] && [ "${FORCE_KVM:-0}" != "1" ]; then
+			case "${QEMU_MACHINE}" in
+				pc*)
+					if [ "$disk_bus_hint" = "ide" ]; then
+						accel_mode="tcg"
+						log_warn "Auto-disabling KVM: detected KVM + IDE on '${QEMU_MACHINE}' (set FORCE_KVM=1 to override)"
+					fi
+					;;
+			esac
+		fi
 
-    # Machine type: pc (i440fx) for Hurd compatibility
-    # WHY: Hurd has better support for legacy PC hardware than Q35
-    cmd+=(-machine pc)
+	# Start with base command - ALWAYS x86_64 binary
+	local -a cmd=(/usr/bin/qemu-system-x86_64)
 
-    # Acceleration with automatic fallback
-    # This follows the ChatGPT guide recommendation
-    cmd+=(-accel kvm -accel "tcg,thread=multi")
+    # Machine type: pc (i440fx) by default for Hurd compatibility.
+    # Some images are more reliable under `isapc` (ISA IDE, no PCI bus mastering).
+    cmd+=(-machine "${QEMU_MACHINE}")
+
+	# Acceleration (KVM on x86_64 hosts; TCG everywhere else)
+	if [ "$accel_mode" = "kvm" ]; then
+		cmd+=(-accel kvm)
+	else
+        cmd+=(-accel "tcg,thread=multi")
+    fi
 
     # CPU model based on acceleration with performance flags
     if [ "$accel_mode" = "kvm" ]; then
@@ -208,59 +352,204 @@ build_qemu_command() {
 
     # Disk configuration - IDE for Hurd compatibility with optimized I/O
     # WHY: Hurd doesn't have good virtio-blk support
+    if [ ! -f "$QCOW2_IMAGE" ] && [ "${AUTO_DOWNLOAD_IMAGE:-0}" = "1" ]; then
+        log_warn "Disk image missing; AUTO_DOWNLOAD_IMAGE=1 set, attempting download into /opt/hurd-image"
+        if [ -x /opt/scripts/download-image.sh ]; then
+            IMAGE_DIR=/opt/hurd-image /opt/scripts/download-image.sh || true
+        else
+            log_error "Missing /opt/scripts/download-image.sh inside container"
+        fi
+    fi
+
     if [ -f "$QCOW2_IMAGE" ]; then
-        # Optimize AIO backend based on KVM availability
-        local aio_backend="threads"  # Default for TCG
+        # Disk I/O defaults:
+        # - Use aio=threads for maximum compatibility (works with cache=writeback).
+        # - aio=native requires cache.direct=on (typically achieved via cache=none),
+        #   so only enable it explicitly.
+        local aio_backend="threads"
         local cache_mode="writeback"
 
-        if [ "$accel_mode" = "kvm" ]; then
-            # KVM: try io_uring (best performance), fallback to native
-            if grep -q io_uring /proc/filesystems 2>/dev/null || command -v qemu-system-x86_64 2>&1 | grep -q io_uring; then
-                aio_backend="io_uring"
-                log_info "Disk I/O: io_uring (optimal for KVM)"
-            else
-                aio_backend="native"
-                log_info "Disk I/O: native AIO (good for KVM)"
-            fi
+        if [ "$accel_mode" = "kvm" ] && [ "${ENABLE_NATIVE_AIO:-0}" = "1" ]; then
+            aio_backend="native"
+            cache_mode="none"
+            log_info "Disk I/O: native AIO enabled (KVM) with cache=none"
         else
-            # TCG: use threads
-            log_info "Disk I/O: threads (optimal for TCG)"
+            log_info "Disk I/O: threads (default)"
         fi
 
-        # Adjust cache mode based on display mode (unsafe cache for testing)
+        # Adjust cache mode for testing (unsafe cache)
         if [ "${UNSAFE_CACHE:-0}" = "1" ]; then
             cache_mode="unsafe"
             log_warn "Using UNSAFE cache mode - faster but risk of data loss"
+            aio_backend="threads"
         fi
 
+        # Some upstream Hurd images can hit IDE DMA-related I/O errors on i440fx+PIIX.
+        # Workaround (when supported by the host QEMU build): raise bounce buffer sizes
+        # for DMA mapping limitations on some controllers.
+        local piix_bounce="${QEMU_PIIX_IDE_BOUNCE_SIZE:-}"
+        if [ -n "$piix_bounce" ] && [ "${QEMU_MACHINE}" != "isapc" ]; then
+            if /usr/bin/qemu-system-x86_64 -device piix3-ide,help 2>/dev/null | grep -q "x-max-bounce-buffer-size"; then
+                cmd+=(-global "piix3-ide.x-max-bounce-buffer-size=${piix_bounce}")
+                log_info "PIIX3 IDE: bounce buffer size set to ${piix_bounce}"
+            else
+                log_warn "PIIX3 IDE bounce buffer workaround not supported by this QEMU build; ignoring QEMU_PIIX_IDE_BOUNCE_SIZE"
+            fi
+        fi
+
+        local ahci_bounce="${QEMU_AHCI_BOUNCE_SIZE:-}"
+        if [ -n "$ahci_bounce" ]; then
+            if /usr/bin/qemu-system-x86_64 -device ich9-ahci,help 2>/dev/null | grep -q "x-max-bounce-buffer-size"; then
+                cmd+=(-global "ich9-ahci.x-max-bounce-buffer-size=${ahci_bounce}")
+                log_info "ICH9 AHCI: bounce buffer size set to ${ahci_bounce}"
+            else
+                log_warn "ICH9 AHCI bounce buffer workaround not supported by this QEMU build; ignoring QEMU_AHCI_BOUNCE_SIZE"
+            fi
+        fi
+
+        # Prefer explicit -drive + -device wiring so we can tune device properties
+        # and allow switching away from IDE when it triggers guest I/O errors.
+        local disk_bus="${QEMU_DISK_BUS:-ide}"
         cmd+=(
-            -drive "file=${QCOW2_IMAGE},if=ide,cache=${cache_mode},aio=${aio_backend},format=qcow2"
+            -drive "id=drive0,file=${QCOW2_IMAGE},if=none,cache=${cache_mode},aio=${aio_backend},format=qcow2"
         )
-        log_info "Disk: IDE interface with QCOW2 image, cache=${cache_mode}"
+
+        case "$disk_bus" in
+            ide)
+                local ide_controller="${QEMU_IDE_CONTROLLER:-piix}"
+                if [ "${QEMU_MACHINE}" = "isapc" ]; then
+                    ide_controller="isa"
+                fi
+
+                local ide_write_cache="${QEMU_IDE_WRITE_CACHE:-auto}"
+                local ide_rerror="${QEMU_IDE_RERROR:-auto}"
+                local ide_werror="${QEMU_IDE_WERROR:-auto}"
+
+                case "$ide_controller" in
+                    piix)
+                        cmd+=(-device "ide-hd,drive=drive0,write-cache=${ide_write_cache},rerror=${ide_rerror},werror=${ide_werror}")
+                        log_info "Disk: IDE (piix, ide-hd) with QCOW2 backend, cache=${cache_mode}, write-cache=${ide_write_cache}"
+                        ;;
+                    isa)
+                        # Workaround: Some upstream Hurd images can hit IDE DMA-related I/O errors on i440fx+PIIX.
+                        # Use an ISA IDE controller which is PIO-only (no bus-master DMA).
+                        cmd+=(
+                            -device "isa-ide,id=isaide0"
+                            -device "ide-hd,drive=drive0,bus=isaide0.0,unit=0,write-cache=${ide_write_cache},rerror=${ide_rerror},werror=${ide_werror}"
+                        )
+                        log_info "Disk: IDE (isa-ide, PIO) with QCOW2 backend, cache=${cache_mode}, write-cache=${ide_write_cache}"
+                        ;;
+                    *)
+                        log_error "Unsupported QEMU_IDE_CONTROLLER='${ide_controller}' (supported: piix, isa)"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            scsi)
+                # Alternative bus: SCSI via LSI 53C895A (often more reliable than IDE DMA paths).
+                # Guest device names usually become sd0/sd0s1.
+                cmd+=(
+                    -device "lsi53c895a,id=scsi0"
+                    -device "scsi-hd,drive=drive0,bus=scsi0.0"
+                )
+                log_info "Disk: SCSI (lsi53c895a + scsi-hd) with QCOW2 backend, cache=${cache_mode}"
+                ;;
+            ahci)
+                # Alternative bus: SATA/AHCI via ICH9 AHCI (PCI). This avoids the PIIX IDE DMA path
+                # and can be more reliable on some host/QEMU combinations. Guest device naming varies.
+                cmd+=(
+                    -device "ich9-ahci,id=ahci0"
+                    -device "ide-hd,drive=drive0,bus=ahci0.0,unit=0"
+                )
+                log_info "Disk: AHCI/SATA (ich9-ahci + ide-hd) with QCOW2 backend, cache=${cache_mode}"
+                ;;
+            *)
+                log_error "Unsupported QEMU_DISK_BUS='${disk_bus}' (supported: ide, scsi, ahci)"
+                exit 1
+                ;;
+        esac
     else
         log_error "Disk image not found: $QCOW2_IMAGE"
         log_error "Please download or create a Debian GNU/Hurd x86_64 image"
+        log_error "Hint: run ./scripts/setup-hurd-amd64.sh on the host, or set AUTO_DOWNLOAD_IMAGE=1"
         exit 1
     fi
 
-    # Network: e1000 NIC (NOT virtio - Hurd doesn't support it well)
-    # Port forwarding for SSH and HTTP with performance tuning
-    local net_opts="user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80"
+    # Network: default is e1000 (NOT virtio - Hurd doesn't support it well)
+    # Port forwarding defaults are safe for most setups; customize with QEMU_HOSTFWDS.
+    #
+    # QEMU_HOSTFWDS format (comma-separated):
+    #   tcp::2222-:22,tcp::8080-:80,tcp::8443-:443
+    #
+    # Note: host port selection is typically handled by Compose port mappings; changing the
+    # host->container port does NOT require changing QEMU_HOSTFWDS.
+    local hostfwds="${QEMU_HOSTFWDS:-tcp::2222-:22,tcp::8080-:80}"
 
-    # Add performance optimizations for user-mode networking
-    if [ "$accel_mode" = "kvm" ]; then
-        # Increase network buffer sizes for better throughput
-        net_opts="${net_opts},net=192.168.76.0/24,dhcpstart=192.168.76.9"
+    local net_model="${QEMU_NET_MODEL}"
+    if [ -z "$net_model" ] && [ "${QEMU_MACHINE}" = "isapc" ]; then
+        net_model="ne2k_isa"
+    fi
+    if [ -z "$net_model" ]; then
+        net_model="e1000"
+    fi
+
+    local net_opts="user,model=${net_model}"
+
+    if [ -n "$hostfwds" ]; then
+        local IFS=,
+        local fwd
+        for fwd in $hostfwds; do
+            [ -z "$fwd" ] && continue
+            fwd="${fwd#hostfwd=}"
+            net_opts="${net_opts},hostfwd=${fwd}"
+        done
+    fi
+
+    # Slirp user networking:
+    # - Keep defaults unless explicitly overridden; forcing a custom subnet here can
+    #   break in-container connectivity (seen as repeated "Slirp: Failed to send packet").
+    # - If you want a custom subnet, set QEMU_SLIRP_NET (e.g. 192.168.76.0/24) and
+    #   optionally QEMU_SLIRP_DHCPSTART (e.g. 192.168.76.9).
+    local slirp_net="${QEMU_SLIRP_NET:-}"
+    local slirp_dhcp="${QEMU_SLIRP_DHCPSTART:-}"
+    if [ -n "$slirp_net" ]; then
+        net_opts="${net_opts},net=${slirp_net}"
+    fi
+    if [ -n "$slirp_dhcp" ]; then
+        net_opts="${net_opts},dhcpstart=${slirp_dhcp}"
     fi
 
     cmd+=(-nic "$net_opts")
-    log_info "Network: e1000 NIC with user-mode NAT and optimized buffers"
+    log_info "Network: ${net_model} NIC with user-mode NAT"
 
-    # Serial console and monitor
-    cmd+=(
-        -serial "telnet:0.0.0.0:${SERIAL_PORT},server,nowait"
-        -monitor "telnet:0.0.0.0:${MONITOR_PORT},server,nowait"
-    )
+    # Serial console and monitor (disable explicitly for hardened deployments)
+    if [ "${DISABLE_SERIAL:-0}" != "1" ]; then
+        cmd+=(-serial "telnet:0.0.0.0:${SERIAL_PORT},server,nowait")
+    else
+        log_warn "Serial console disabled (DISABLE_SERIAL=1)"
+    fi
+
+    if [ "${DISABLE_MONITOR:-0}" != "1" ]; then
+        cmd+=(-monitor "telnet:0.0.0.0:${MONITOR_PORT},server,nowait")
+    else
+        log_warn "QEMU monitor disabled (DISABLE_MONITOR=1)"
+    fi
+
+    # Optional 9p host share (best-effort; guest support may vary)
+    if [ "${ENABLE_9P:-0}" = "1" ] && [ -d /share ]; then
+        cmd+=(-virtfs "local,path=/share,mount_tag=hostshare,security_model=none")
+        log_info "9p share enabled: mount_tag=hostshare (path=/share)"
+    fi
+
+    # VGA device selection (needed for ISA-only machines like isapc)
+    local vga_dev="${QEMU_VGA_DEVICE}"
+    if [ -z "$vga_dev" ] && [ "${QEMU_MACHINE}" = "isapc" ]; then
+        vga_dev="isa-vga"
+    fi
+    if [ -n "$vga_dev" ]; then
+        cmd+=(-device "$vga_dev")
+        log_info "Display device: ${vga_dev}"
+    fi
 
     # Display options
     if [ "${ENABLE_VNC:-0}" = "1" ]; then
@@ -280,7 +569,8 @@ build_qemu_command() {
     # Enable guest error logging (to /tmp which is writable)
     cmd+=(-d guest_errors -D /tmp/qemu-guest-errors.log)
 
-    echo "${cmd[@]}"
+    QEMU_CMD=("${cmd[@]}")
+    return 0
 }
 
 # =============================================================================
@@ -293,42 +583,65 @@ main() {
     echo "=============================================================================="
     echo ""
 
-    # Verify x86_64-only setup
-    verify_x86_64_only
+    # Verify required tools and guest-target invariants
+    verify_requirements
+
+    # If running as root, ensure mounts and KVM device are usable by the 'hurd' user.
+    ensure_kvm_group_membership
+    ensure_volume_ownership
 
     # Build command
-    local qemu_cmd
-    qemu_cmd=$(build_qemu_command)
+    build_qemu_command
 
     echo "Configuration:"
     echo "  - Binary: /usr/bin/qemu-system-x86_64"
     echo "  - Image: ${QCOW2_IMAGE}"
     echo "  - Memory: ${QEMU_RAM} MB"
     echo "  - CPUs: ${QEMU_SMP}"
-    echo "  - Machine: pc (i440fx)"
-    echo "  - Disk: IDE interface (Hurd compatible)"
-    echo "  - Network: e1000 (Hurd compatible)"
+    echo "  - Machine: ${QEMU_MACHINE}"
+    echo "  - Disk: ${QEMU_DISK_BUS:-ide} (guest-visible root device may differ)"
+    echo "  - Network: ${QEMU_NET_MODEL:-auto} (Hurd compatible)"
     echo ""
     echo "Port Forwarding:"
-    echo "  - SSH: localhost:2222 -> guest:22"
-    echo "  - HTTP: localhost:8080 -> guest:80"
+    if [ -n "${HOST_SSH_PORT:-}" ]; then
+        echo "  - SSH: host localhost:${HOST_SSH_PORT} -> container:2222 -> guest:22"
+    else
+        echo "  - SSH: container:2222 -> guest:22"
+    fi
+    if [ -n "${HOST_HTTP_PORT:-}" ]; then
+        echo "  - HTTP: host localhost:${HOST_HTTP_PORT} -> container:8080 -> guest:80"
+    else
+        echo "  - HTTP: container:8080 -> guest:80"
+    fi
     echo ""
     echo "Management:"
-    echo "  - Serial: telnet localhost:${SERIAL_PORT}"
-    echo "  - Monitor: telnet localhost:${MONITOR_PORT}"
+    if [ -n "${HOST_SERIAL_PORT:-}" ]; then
+        echo "  - Serial: host telnet localhost:${HOST_SERIAL_PORT} (container:${SERIAL_PORT})"
+    else
+        echo "  - Serial: telnet localhost:${SERIAL_PORT}"
+    fi
+    if [ -n "${HOST_MONITOR_PORT:-}" ]; then
+        echo "  - Monitor: host telnet localhost:${HOST_MONITOR_PORT} (container:${MONITOR_PORT})"
+    else
+        echo "  - Monitor: telnet localhost:${MONITOR_PORT}"
+    fi
     echo ""
     echo "=============================================================================="
     echo ""
     echo "Starting QEMU..."
     echo ""
 
-    # Ensure log directory exists with correct permissions
-    mkdir -p /var/log/qemu
-    chown -R hurd:hurd /var/log/qemu 2>/dev/null || true
+    # Ensure ownership of any downloaded/created image before dropping privileges.
+    ensure_volume_ownership
 
-    # Execute QEMU (run as root for testing - volume permission issues)
-    # shellcheck disable=SC2086
-    exec $qemu_cmd "$@"
+    if [ "${PRINT_QEMU_CMD:-0}" = "1" ]; then
+        echo "QEMU command:"
+        printf '  %q' "${QEMU_CMD[@]}"
+        echo ""
+    fi
+
+    # Execute QEMU (prefer non-root; falls back to current user if not root)
+    drop_privileges_and_exec "$@"
 }
 
 # Signal handling for graceful shutdown

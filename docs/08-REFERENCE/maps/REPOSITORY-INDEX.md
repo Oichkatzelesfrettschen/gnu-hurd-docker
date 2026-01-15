@@ -126,9 +126,9 @@ fix-script.sh                          Fix utility script
 
 | File | Size | Format | Purpose | Status |
 |------|------|--------|---------|--------|
-| `debian-hurd-i386-20251105.qcow2` | 1.97 GB | QCOW2 | Production | ✓ Active |
-| `debian-hurd-i386-20251105.img` | 3.91 GB | Raw IMG | Reference | ✓ Available |
-| `debian-hurd.img.tar.xz` | 338 MB | Compressed | Source | ✓ Available |
+| `debian-hurd-amd64.qcow2` | ~2–4 GB | QCOW2 | Guest disk image | ✓ Active |
+| `debian-hurd-amd64.img` | ~3–4 GB | Raw IMG | Extracted raw image | ✓ Available |
+| `debian-hurd.img.tar.xz` | ~337 MB | Compressed | Source | ✓ Available |
 
 ### Documentation Directory (`docs/`)
 
@@ -200,8 +200,8 @@ scripts/
 - Special: Research findings, completion reports
 
 #### System Images
-- `debian-hurd-i386-20251105.qcow2` (production)
-- `debian-hurd-i386-20251105.img` (raw reference)
+- `debian-hurd-amd64.qcow2` (guest disk image)
+- `debian-hurd-amd64.img` (raw reference)
 - `debian-hurd.img.tar.xz` (source archive)
 
 ---
@@ -259,7 +259,7 @@ scripts/
 - **QEMU Parameters:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) - System Parameters
 
 ### Disk Images
-- **Download:** [scripts/download-image.sh](scripts/download-image.sh)
+- **Download:** [scripts/download-image.sh](../../../scripts/download-image.sh)
 - **Formats:** [STRUCTURAL-MAP.md](STRUCTURAL-MAP.md) - Disk Image Files
 - **Specifications:** [QUICK_START_GUIDE.md](../../01-GETTING-STARTED/archive/QUICK_START_GUIDE.md)
 

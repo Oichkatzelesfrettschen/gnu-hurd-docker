@@ -67,10 +67,10 @@ git clone https://github.com/YOUR_USERNAME/gnu-hurd-docker.git
 cd gnu-hurd-docker
 
 # Download Debian GNU/Hurd x86_64 image
-./scripts/download-image.sh
+IMAGE_DIR=images ./scripts/download-image.sh
 
 # Start Hurd VM and provision it
-docker-compose up -d
+./scripts/docker-orchestration.sh up
 
 # Wait for boot (5-10 minutes)
 sleep 600
@@ -86,10 +86,10 @@ exit
 # Shutdown gracefully
 ssh -p 2222 root@localhost 'shutdown -h now'
 sleep 30
-docker-compose down
+./scripts/docker-orchestration.sh down
 
 # Copy provisioned image
-cp debian-hurd-amd64-20251105.qcow2 debian-hurd-amd64-provisioned.qcow2
+cp images/debian-hurd-amd64.qcow2 images/debian-hurd-amd64-provisioned.qcow2
 ```
 
 ### Step 2: Compress and Upload
@@ -151,7 +151,7 @@ jobs:
         run: |
           # Move image to expected location
           mkdir -p images
-          mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64-20251105.qcow2
+          mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64.qcow2
 
           # Build and start
           docker-compose build
@@ -180,7 +180,7 @@ jobs:
       - name: Run tests
         run: |
           # Copy test files
-          docker cp ./tests gnu-hurd-x86_64:/tmp/
+          docker cp ./tests gnu-hurd-dev:/tmp/
 
           # Run tests
           ssh -o StrictHostKeyChecking=no -p 2222 root@localhost << 'EOF'
@@ -191,7 +191,7 @@ jobs:
       - name: Collect results
         if: always()
         run: |
-          docker cp gnu-hurd-x86_64:/tmp/test-results.xml ./
+          docker cp gnu-hurd-dev:/tmp/test-results.xml ./
           docker-compose logs > docker-logs.txt
 
       - name: Upload artifacts
@@ -291,7 +291,7 @@ jobs:
 - name: Cleanup QEMU
   if: always()  # Always run
   run: |
-    docker-compose down || true
+    docker compose down || true
     docker system prune -f || true
 ```
 
@@ -302,7 +302,7 @@ jobs:
   uses: actions/cache@v3
   with:
     path: images/
-    key: hurd-x86_64-${{ hashFiles('scripts/download-image.sh') }}
+    key: gnu-hurd-dev-${{ hashFiles('scripts/download-image.sh') }}
 ```
 
 ### 4. Artifact Collection
@@ -311,7 +311,7 @@ jobs:
 - name: Collect logs
   if: always()
   run: |
-    docker-compose logs > docker-logs.txt
+    docker compose logs > docker-logs.txt
     tar czf logs.tar.gz *.log *.txt
 
 - name: Upload artifacts
@@ -334,7 +334,7 @@ steps:
   - name: Test with ${{ matrix.memory }}MB RAM
     run: |
       QEMU_RAM=${{ matrix.memory }} QEMU_SMP=${{ matrix.smp }} \
-        docker-compose up -d
+        docker compose up -d
 ```
 
 ---
@@ -466,10 +466,10 @@ jobs:
 docker-compose config
 
 # Verify image exists
-ls -lh debian-hurd-amd64-20251105.qcow2
+ls -lh images/debian-hurd-amd64.qcow2
 
 # Check image integrity
-qemu-img check debian-hurd-amd64-20251105.qcow2
+qemu-img check images/debian-hurd-amd64.qcow2
 
 # Test locally
 docker-compose up

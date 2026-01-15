@@ -1,5 +1,5 @@
 # =============================================================================
-# Pure x86_64 Debian GNU/Hurd QEMU-in-Docker Compose Configuration
+# Debian GNU/Hurd (x86_64 guest) QEMU-in-Container Compose Configuration
 # =============================================================================
 # PURPOSE:
 # - Single x86_64-only service (NO i386 contamination)
@@ -11,18 +11,18 @@
 ---
 services:
   # Single x86_64 Hurd service - NO i386 variants
-  hurd-x86_64:
+  gnu-hurd-dev:
     # Production: Pull pre-built image from GHCR
     # Local development: docker-compose.override.yml will override this with build section
     image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
     # Container naming (descriptive and unique)
-    container_name: hurd-x86_64-qemu
+    container_name: gnu-hurd-dev
 
     # Runtime configuration
     restart: unless-stopped  # Auto-restart on failure
 
-    # Privileged mode NOT required if using proper device mapping
+    # Privileged mode NOT required (QEMU uses user-mode networking by default)
     privileged: false
 
     # Security hardening (best practices)
@@ -31,26 +31,25 @@ services:
     cap_drop:
       - ALL                     # Drop all capabilities by default
     cap_add:
-      - NET_ADMIN               # Required for network configuration
-      - SYS_ADMIN               # Required for KVM device access
-
-    # Device access for KVM acceleration (optional but recommended)
-    # If KVM not available, QEMU will fall back to TCG automatically
-    devices:
-      - /dev/kvm:/dev/kvm:rw  # KVM device with read/write permissions
+      # Minimal capabilities needed for a root entrypoint that may chown volumes
+      # and optionally drop privileges via gosu.
+      - CHOWN
+      - SETUID
+      - SETGID
+      # Needed for bind-mount mode when the host QCOW2 is not world-writable.
+      - DAC_OVERRIDE
 
     # Port mappings
     # Format: "host:container" - container ports forward to guest via QEMU
     ports:
-      - "2222:2222"   # SSH: host:2222 -> container:2222 -> guest:22
-      - "8080:8080"   # HTTP: host:8080 -> container:8080 -> guest:80
-      - "5555:5555"   # Serial console (telnet)
-      - "9999:9999"   # QEMU monitor (telnet)
-      - "5900:5900"   # VNC display :0 (optional, when ENABLE_VNC=1)
+      - "127.0.0.1:${SSH_PORT:-2222}:2222"     # SSH: host:${SSH_PORT} -> container:2222 -> guest:22
+      - "127.0.0.1:${HTTP_PORT:-8080}:8080"    # HTTP: host:${HTTP_PORT} -> container:8080 -> guest:80
+      - "127.0.0.1:${SERIAL_PORT:-5555}:${SERIAL_PORT:-5555}"     # Serial console (telnet)
+      - "127.0.0.1:${MONITOR_PORT:-9999}:${MONITOR_PORT:-9999}"   # QEMU monitor (telnet)
 
     # Volume mounts for persistence
     volumes:
-      # Hurd disk image - persists across container recreations
+      # Default: store QCOW2 inside an engine-managed volume (portable)
       - hurd-disk:/opt/hurd-image:rw
 
       # Optional: Mount local QCOW2 image instead of volume
@@ -59,27 +58,76 @@ services:
       # Shared directory for file exchange with host
       - ./share:/share:rw
 
-      # QEMU logs for debugging
-      - ./logs:/var/log/qemu:rw
-
     # Environment variables for QEMU configuration
     environment:
       # Disk image path (inside container)
       QEMU_DRIVE: /opt/hurd-image/debian-hurd-amd64.qcow2
 
       # Memory allocation (MB)
-      QEMU_RAM: 4096
+      QEMU_RAM: ${QEMU_RAM:-4096}
 
       # CPU cores (Hurd 2025 has SMP support)
-      QEMU_SMP: 2
+      QEMU_SMP: ${QEMU_SMP:-2}
 
       # Display configuration
       # Set to 1 to enable VNC on port 5900
-      ENABLE_VNC: 0
+      ENABLE_VNC: ${ENABLE_VNC:-0}
 
       # Port configurations
-      SERIAL_PORT: 5555
-      MONITOR_PORT: 9999
+      SERIAL_PORT: ${SERIAL_PORT:-5555}
+      MONITOR_PORT: ${MONITOR_PORT:-9999}
+
+      # Advanced QEMU overrides (see entrypoint.sh for details)
+      QEMU_MACHINE: ${QEMU_MACHINE:-pc}
+      QEMU_NET_MODEL: ${QEMU_NET_MODEL:-}
+      QEMU_VGA_DEVICE: ${QEMU_VGA_DEVICE:-}
+
+      # KVM behavior:
+      # - AUTO_DISABLE_KVM_FOR_IDE=1 (default) disables KVM when QEMU_DISK_BUS=ide on pc/i440fx,
+      #   because some Hurd images hit IDE DMA I/O errors under KVM.
+      # - Set FORCE_KVM=1 to override.
+      AUTO_DISABLE_KVM_FOR_IDE: ${AUTO_DISABLE_KVM_FOR_IDE:-1}
+      FORCE_KVM: ${FORCE_KVM:-0}
+
+      # Disk bus selection:
+      # - ide (default): matches upstream images, but can hit IDE DMA bugs on some hosts.
+      # - scsi: alternative via lsi53c895a + scsi-hd.
+      # - ahci: SATA via ich9-ahci + ide-hd (often more reliable than PIIX IDE on some hosts).
+      QEMU_DISK_BUS: ${QEMU_DISK_BUS:-ide}
+
+      # IDE controller selection (only used when QEMU_DISK_BUS=ide):
+      # - piix (default): uses the machine's default IDE controller (PCI, bus-master DMA enabled).
+      # - isa: adds an ISA IDE controller (PIO-only) and attaches the disk to it (workaround for IDE DMA I/O errors).
+      QEMU_IDE_CONTROLLER: ${QEMU_IDE_CONTROLLER:-piix}
+
+      # Optional IDE tuning (only used when QEMU_DISK_BUS=ide)
+      QEMU_IDE_WRITE_CACHE: ${QEMU_IDE_WRITE_CACHE:-auto}
+      QEMU_IDE_RERROR: ${QEMU_IDE_RERROR:-auto}
+      QEMU_IDE_WERROR: ${QEMU_IDE_WERROR:-auto}
+
+      # Workaround: some Hurd images can trigger IDE DMA I/O errors with PIIX3.
+      # Raising the bounce buffer size improves reliability.
+      QEMU_PIIX_IDE_BOUNCE_SIZE: ${QEMU_PIIX_IDE_BOUNCE_SIZE:-}
+      # Workaround: AHCI bounce buffer size (only used when QEMU_DISK_BUS=ahci)
+      QEMU_AHCI_BOUNCE_SIZE: ${QEMU_AHCI_BOUNCE_SIZE:-}
+
+      # Disk I/O experiment toggles (opt-in):
+      # - ENABLE_NATIVE_AIO=1 forces aio=native + cache=none when running under KVM.
+      # - UNSAFE_CACHE=1 forces cache=unsafe (not recommended for real data).
+      ENABLE_NATIVE_AIO: ${ENABLE_NATIVE_AIO:-0}
+      UNSAFE_CACHE: ${UNSAFE_CACHE:-0}
+
+      # Debug
+      PRINT_QEMU_CMD: ${PRINT_QEMU_CMD:-0}
+
+      # Host share via 9p (opt-in; requires guest support).
+      ENABLE_9P: ${ENABLE_9P:-0}
+
+      # Host-side published ports (for logging/debug output only)
+      HOST_SSH_PORT: ${SSH_PORT:-2222}
+      HOST_HTTP_PORT: ${HTTP_PORT:-8080}
+      HOST_SERIAL_PORT: ${SERIAL_PORT:-5555}
+      HOST_MONITOR_PORT: ${MONITOR_PORT:-9999}
 
       # Optional: Download and create disk on first run
       # CREATE_DISK: 1
@@ -114,21 +162,9 @@ services:
     # Labels for container metadata
     labels:
       com.docker.compose.project: "gnu-hurd"
-      com.docker.compose.service: "hurd-x86_64"
-      org.opencontainers.image.architecture: "x86_64"
+      com.docker.compose.service: "gnu-hurd-dev"
+      com.gnu-hurd.guest.arch: "x86_64"
       org.opencontainers.image.description: "Pure x86_64 GNU/Hurd QEMU environment"
-
-    # Docker secrets for secure credential management
-    secrets:
-      - root_password
-      - agents_password
-
-# Secrets definition (credentials stored outside git)
-secrets:
-  root_password:
-    file: ./secrets/root_password.txt
-  agents_password:
-    file: ./secrets/agents_password.txt
 
 # Network definition
 networks:
@@ -139,14 +175,9 @@ networks:
         - subnet: 172.25.0.0/24
           gateway: 172.25.0.1
 
-# Volume definition for persistent storage
+# Persistent volumes
 volumes:
   hurd-disk:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/images  # Store images in ./images directory
 
 # =============================================================================
 # USAGE EXAMPLES:
@@ -155,16 +186,16 @@ volumes:
 #   docker-compose up -d
 #
 # View logs:
-#   docker-compose logs -f hurd-x86_64
+#   docker-compose logs -f gnu-hurd-dev
 #
 # SSH into Hurd VM:
-#   ssh -p 2222 root@localhost
+#   ssh -p ${SSH_PORT:-2222} root@localhost
 #
 # Access QEMU monitor:
-#   telnet localhost 9999
+#   telnet localhost ${MONITOR_PORT:-9999}
 #
 # Access serial console:
-#   telnet localhost 5555
+#   telnet localhost ${SERIAL_PORT:-5555}
 #
 # Stop the container:
 #   docker-compose down
@@ -176,9 +207,8 @@ volumes:
 #   docker-compose build --no-cache
 #
 # Run with KVM acceleration:
-#   docker-compose up -d  # Automatically detects /dev/kvm
+#   docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
 #
 # Run without KVM (TCG only):
-#   # Remove or comment out the 'devices:' section above
 #   docker-compose up -d
 # =============================================================================

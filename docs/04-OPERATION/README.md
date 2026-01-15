@@ -61,6 +61,40 @@ This section covers daily operations for managing the GNU/Hurd x86_64 Docker env
 
 ---
 
+### [REMOTE-NOVNC.md](REMOTE-NOVNC.md)
+**Connect to noVNC from another machine**
+
+- SSH tunnel method (recommended)
+- LAN bind method (firewall-restricted)
+- Security caveats (no auth by default)
+
+**When to use**: Access noVNC from another PC on your network
+
+---
+
+### [HOST-NETWORK-INFO.md](HOST-NETWORK-INFO.md)
+**Host IP/firewall notes (LAN access)**
+
+- Current host IP and interface
+- Firewall posture and what needs opening
+- Recommended binding and access patterns
+
+**When to use**: You want to connect from another machine
+
+---
+
+### [WORKSTATION-XFCE.md](WORKSTATION-XFCE.md)
+**Best-effort guest workstation bootstrap**
+
+- Recommended boot path (VNC/noVNC first)
+- Installing SSH + entropy helpers
+- Installing Xorg + XFCE (best-effort)
+- Automation via `bootstrap-workstation-hurd.sh` after SSH works
+
+**When to use**: Turning the guest into a dev workstation
+
+---
+
 ## Daily Operation Workflows
 
 ### Workflow 1: Start/Stop Environment
@@ -305,7 +339,7 @@ docker-compose logs -f
 **Capacity Planning**:
 - **Disk**: QCOW2 grows to 80GB max (monitor with `qemu-img info`)
 - **RAM**: 4GB recommended minimum, 8GB for desktop/heavy workloads
-- **CPU**: 2 cores sufficient, KVM acceleration critical for performance
+- **CPU**: 2 cores sufficient. KVM can improve performance when it works for the selected guest image; some images require TCG for reliability.
 
 **Monitoring Metrics**:
 - CPU usage: < 50% average (via `monitor-qemu.sh`)

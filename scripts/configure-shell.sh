@@ -24,7 +24,13 @@ if [ "$TARGET_USER" = "root" ] && [ "$EUID" -eq 0 ]; then
     TARGET_HOME="/root"
 else
     echo "Configuring for: $TARGET_USER"
-    TARGET_HOME=$(eval echo ~$TARGET_USER)
+    TARGET_HOME="${HOME:-}"
+    if [ "$EUID" -eq 0 ] && [ -n "${SUDO_USER:-}" ]; then
+        TARGET_HOME="$(getent passwd "$SUDO_USER" 2>/dev/null | cut -d: -f6 || true)"
+    fi
+    if [ -z "$TARGET_HOME" ] || [ ! -d "$TARGET_HOME" ]; then
+        TARGET_HOME="/home/${TARGET_USER}"
+    fi
 fi
 
 BASHRC="$TARGET_HOME/.bashrc"

@@ -7,7 +7,7 @@
 
 **Purpose**: Complete guide to user account management, credentials, and access configuration
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 

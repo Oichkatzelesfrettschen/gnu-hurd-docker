@@ -1,0 +1,6 @@
+This is a compatibility stub for older documentation links.
+
+See:
+- docs/06-TROUBLESHOOTING/kernel/QUICK-FIX.txt
+- docs/06-TROUBLESHOOTING/kernel/FIX-GUIDE.md
+

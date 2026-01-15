@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# GNU/Hurd Docker Compose - Host Bind Mount Override
+# =============================================================================
+# Use this when you want the QCOW2 image to live in the repo (./images) instead
+# of an engine-managed volume.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+#
+# Notes:
+# - Bind mounts preserve host permissions; ensure the container can read/write
+#   `./images/debian-hurd-amd64.qcow2`.
+# =============================================================================
+
+services:
+  gnu-hurd-dev:
+    volumes:
+      - ./images:/opt/hurd-image:rw

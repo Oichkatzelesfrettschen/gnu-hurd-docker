@@ -839,29 +839,19 @@ Result: GUI window, interactive GRUB, full desktop
 
 ---
 
-## Appendix B: Docker-Compose Configuration (x86_64)
+## Appendix B: Compose configuration (current)
 
-```yaml
-version: '3.8'
+This repository no longer recommends a privileged container for QEMU. Use the canonical Compose files instead:
 
-services:
-  hurd-x86_64:
-    build: .
-    image: gnu-hurd-dev:latest
-    container_name: hurd-x86_64
-    privileged: true
-    volumes:
-      - ./vm:/vm
-      - ./share:/share
-    ports:
-      - "2222:2222"  # SSH
-      - "5555:5555"  # Serial console
-    environment:
-      QEMU_RAM: 4096
-      QEMU_SMP: 2
-      QEMU_STORAGE: virtio
-      QEMU_EXTRA_ARGS: "-cpu max -machine type=pc,accel=kvm:tcg"
-    restart: unless-stopped
+- `docker-compose.yml` (portable baseline)
+- `docker-compose.bind.yml` (dev: bind-mount `./images`)
+- `docker-compose.kvm.yml` (Linux x86_64 KVM overlay via `/dev/kvm` device mapping)
+
+Examples:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.bind.yml -f docker-compose.kvm.yml up -d
 ```
 
 ---

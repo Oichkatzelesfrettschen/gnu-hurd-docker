@@ -6,7 +6,7 @@
 
 **Purpose**: Diagnose and fix filesystem consistency errors
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 
@@ -41,6 +41,48 @@ fsck.ext2: /dev/hd0s2: Superblock has invalid timestamp
 - `/dev/vda1` - VirtIO disk, partition 1
 
 **What this means**: The filesystem needs repair before the system can boot.
+
+---
+
+### I/O Error at Boot (ext2fs / device I/O)
+
+If you see errors like:
+
+```
+ext2fs: part:1:device:wd0: Input/output error
+```
+
+This can be caused by either:
+
+1. Real filesystem inconsistencies inside the guest image, or
+2. An emulated IDE/DMA interaction bug under KVM (guest sees I/O errors even though the host image is fine).
+
+**Triage**:
+
+- If you are using KVM (`./scripts/docker-orchestration.sh up-kvm*`), stop and retry without KVM (TCG is slower but far more reliable for this image):
+  - `DISABLE_KVM=1 ./scripts/docker-orchestration.sh up-vnc`
+  - Or simply use `./scripts/docker-orchestration.sh up-vnc` (no KVM overlay).
+- Optional: try `QEMU_IDE_CONTROLLER=isa` (experimental). Note: on some QEMU builds the guest still attaches to the machine's PIIX IDE path even when an ISA IDE is added, so this may not help.
+- SCSI mode is currently **experimental** for the Debian GNU/Hurd amd64 qcow2 used here; the guest may not probe the expected `sd0` device even if GRUB is patched. Treat it as a debugging path, not a default.
+- If the error persists even under TCG, run an offline `e2fsck` on the qcow2 from the host using `guestfish`.
+
+**Offline check/repair (host)** (qcow2 stored in `./images`):
+
+```bash
+guestfish --ro -a ./images/debian-hurd-amd64.qcow2 <<'EOF'
+run
+e2fsck /dev/sda1 forceno:true
+EOF
+```
+
+To attempt automatic repair (recommended only after taking a backup of the qcow2):
+
+```bash
+guestfish -a ./images/debian-hurd-amd64.qcow2 <<'EOF'
+run
+e2fsck /dev/sda1 correct:true
+EOF
+```
 
 ---
 

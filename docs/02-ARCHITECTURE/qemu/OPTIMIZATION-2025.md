@@ -183,7 +183,7 @@ mount -t 9p -o trans=virtio,version=9p2000.L scripts /mnt
 
 ### Example 1: CLI Development (Headless)
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -enable-kvm \
     -m 4096 \
     -cpu host \
@@ -203,7 +203,7 @@ qemu-system-i386 \
 
 ### Example 2: GUI Development with SDL/OpenGL
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -enable-kvm \
     -m 4096 \
     -cpu host \
@@ -225,7 +225,7 @@ qemu-system-i386 \
 
 ### Example 3: VNC Access (Remote Development)
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
     -enable-kvm \
     -m 4096 \
     -cpu host \
@@ -460,7 +460,7 @@ docker-compose up
 sudo apt-get install qemu-system-gui
 
 # Test display backends
-qemu-system-i386 -display help
+qemu-system-x86_64 -display help
 ```
 
 ### Issue: Poor Graphics Performance

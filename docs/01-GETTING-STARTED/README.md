@@ -56,7 +56,7 @@ This section provides everything you need to get started with the GNU/Hurd x86_6
 
 **Advanced Topics**:
 - [CI/CD](../05-CI-CD/) - Automated workflows
-- [Research](../07-RESEARCH/) - Deep dives and lessons learned
+- [Research](../07-RESEARCH-AND-LESSONS/) - Deep dives and lessons learned
 
 ---
 

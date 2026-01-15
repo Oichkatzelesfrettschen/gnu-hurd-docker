@@ -102,7 +102,7 @@ sudo usermod -aG kvm $USER
 ### Step 1: Clone Repository
 ```bash
 # Clone the project
-git clone https://github.com/your-repo/gnu-hurd-docker.git
+git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 ```
 
@@ -110,7 +110,7 @@ cd gnu-hurd-docker
 
 Use the provided setup script:
 ```bash
-# Download x86_64 image (337 MB download, expands to 80 GB sparse)
+# Download and convert the x86_64 guest image
 ./scripts/setup-hurd-amd64.sh
 
 # Image will be saved to: images/debian-hurd-amd64.qcow2
@@ -121,19 +121,20 @@ Or download manually:
 # Create images directory
 mkdir -p images
 
-# Download from mirror
-wget -O images/debian-hurd-amd64-20251105.img.tar.xz \
-  https://darnassus.sceen.net/~hurd-web/debian-amd64-debian-installer/2025-11-05/debian-hurd-amd64-20251105.img.tar.xz
+# Download from Debian Ports cdimage
+wget -O images/debian-hurd.img.tar.xz \
+  https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract (creates .img file)
 cd images
-tar xf debian-hurd-amd64-20251105.img.tar.xz
+tar xJf debian-hurd.img.tar.xz
 
 # Convert to QCOW2 for better performance
-qemu-img convert -O qcow2 debian-hurd-amd64-20251105.img debian-hurd-amd64.qcow2
+img_file="$(ls -1 debian-hurd*.img | head -n1)"
+qemu-img convert -f raw -O qcow2 "${img_file}" debian-hurd-amd64.qcow2
 
 # Optional: Remove original files to save space
-rm debian-hurd-amd64-20251105.img debian-hurd-amd64-20251105.img.tar.xz
+rm -f "${img_file}" debian-hurd.img.tar.xz
 ```
 
 ---

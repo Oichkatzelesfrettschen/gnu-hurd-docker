@@ -47,16 +47,17 @@ RUN ARCH=$(dpkg --print-architecture) && \
 # - procps: Process monitoring (ps, top)
 # hadolint ignore=DL3008
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        qemu-system-x86 \
-        qemu-utils \
-        curl \
-        wget \
-        ca-certificates \
-        socat \
-        netcat-openbsd \
-        screen \
-        tmux \
+	    apt-get install -y --no-install-recommends \
+	        qemu-system-x86 \
+	        qemu-utils \
+	        curl \
+	        wget \
+	        ca-certificates \
+	        gosu \
+	        socat \
+	        netcat-openbsd \
+	        screen \
+	        tmux \
         expect \
         sshpass \
         iproute2 \
@@ -70,10 +71,10 @@ RUN apt-get update && \
 RUN test -x /usr/bin/qemu-system-x86_64 || \
     (echo "ERROR: qemu-system-x86_64 binary not found" && exit 1)
 
-# Verify NO i386 contamination
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN ! dpkg --get-selections | grep -E ':i386|i386-' || \
-    (echo "ERROR: i386 packages detected - this must be x86_64-only" && exit 1)
+# Enforce a clean dpkg architecture configuration (no foreign architectures)
+# (More robust than grepping dpkg selections, and avoids false positives.)
+RUN test -z "$(dpkg --print-foreign-architectures)" || \
+    (echo "ERROR: foreign dpkg architectures enabled: $(dpkg --print-foreign-architectures | tr '\n' ' ')" && exit 1)
 
 # Create directory structure
 # WHY this layout:
@@ -121,9 +122,6 @@ VOLUME ["/opt/hurd-image"]
 # - retries=3: Allow 3 failures before marking unhealthy
 HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
     CMD /opt/scripts/health-check.sh || exit 1
-
-# Switch to non-root user for security (runs QEMU as hurd:hurd)
-USER hurd
 
 # Default entrypoint - launches QEMU with smart KVM/TCG detection
 ENTRYPOINT ["/entrypoint.sh"]

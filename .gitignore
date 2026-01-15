@@ -18,7 +18,6 @@ hurd_serial.log
 
 # Docker artifacts
 .docker/
-docker-compose.override.yml
 
 # Editor and IDE
 .vscode/
@@ -41,6 +40,10 @@ venv/
 /tmp/
 /temp/
 *.tmp
+
+# Local/generated audit artifacts
+docs/audits/LINK-SCAN-REPORT.md
+docs/audits/link-scan-data.json
 
 # Build artifacts
 build/

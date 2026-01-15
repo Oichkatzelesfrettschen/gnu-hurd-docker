@@ -1,0 +1,7 @@
+This is a compatibility stub for older documentation links.
+
+See:
+- docs/08-REFERENCE/maps/STRUCTURAL-MAP.md
+- docs/INDEX.md
+- README.md
+

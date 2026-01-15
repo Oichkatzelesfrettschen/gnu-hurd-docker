@@ -156,52 +156,32 @@ jobs:
           echo "# Pull the latest image" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Download Debian GNU/Hurd QCOW2 image (first time only)" >> $GITHUB_STEP_SUMMARY
-          echo "# Option 1: Use our download script" >> $GITHUB_STEP_SUMMARY
-          echo "curl -O https://raw.githubusercontent.com/$REPO/main/scripts/download-image.sh" >> $GITHUB_STEP_SUMMARY
-          echo "chmod +x download-image.sh" >> $GITHUB_STEP_SUMMARY
-          echo "./download-image.sh" >> $GITHUB_STEP_SUMMARY
+          echo "# Download and prepare the Debian GNU/Hurd disk image (first time only)" >> $GITHUB_STEP_SUMMARY
+          echo "git clone https://github.com/${{ github.repository }}.git" >> $GITHUB_STEP_SUMMARY
+          echo "cd $(basename ${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
+          echo "./scripts/setup-hurd-amd64.sh" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Option 2: Direct download (Debian 13 Trixie 2025-11-05 release)" >> $GITHUB_STEP_SUMMARY
-          HURD_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64"
-          echo "wget $HURD_URL/debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
-          echo "tar xf debian-hurd.img.tar.xz" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Run the container" >> $GITHUB_STEP_SUMMARY
-          echo "docker run -d --privileged \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --name gnu-hurd \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -p 2222:2222 -p 5555:5555 -p 5901:5901 \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -v \$(pwd):/opt/hurd-image \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --device /dev/kvm \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -e QEMU_RAM=4096 \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -e QEMU_SMP=4 \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -e DISPLAY_MODE=vnc \\" >> $GITHUB_STEP_SUMMARY
-          echo "  ghcr.io/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "# Run (dev bind mode)" >> $GITHUB_STEP_SUMMARY
+          echo "./scripts/docker-orchestration.sh up" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Access via SSH (once booted, ~60 seconds)" >> $GITHUB_STEP_SUMMARY
           echo "ssh -p 2222 root@localhost  # Password: root" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Or use docker-compose for easier management" >> $GITHUB_STEP_SUMMARY
-          echo "git clone https://github.com/${{ github.repository }}.git" >> $GITHUB_STEP_SUMMARY
-          echo "cd $(basename ${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
-          echo "./scripts/download-image.sh" >> $GITHUB_STEP_SUMMARY
-          echo "docker-compose up -d" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### 📚 Documentation" >> $GITHUB_STEP_SUMMARY
           BASE="https://github.com/$REPO/blob/main"
-          echo "- [Installation Guide]($BASE/INSTALLATION.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [QEMU Optimization Guide]($BASE/docs/QEMU-OPTIMIZATION-2025.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Testing Report]($BASE/docs/HURD-TESTING-REPORT.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Requirements]($BASE/requirements.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Documentation Index]($BASE/docs/INDEX.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Quickstart]($BASE/docs/01-GETTING-STARTED/QUICKSTART.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [System Design]($BASE/docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### 🎯 Features" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Debian GNU/Hurd 2025 (x86_64/amd64)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ QEMU with KVM acceleration support" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ VirtIO storage and networking (2-3x faster)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Multiple display modes: VNC, SDL/GTK with OpenGL" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Debian GNU/Hurd (ports/13.0) x86_64 guest" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ QEMU with KVM (Linux x86_64) and TCG fallback" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Guest-compatible defaults (IDE disk + e1000 NIC)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Optional VNC/noVNC for GUI access" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Optimized for CLI and GUI development" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Pre-configured with development tools" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

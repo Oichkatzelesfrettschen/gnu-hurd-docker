@@ -112,14 +112,12 @@ This repository contains 21 automation scripts for setting up, configuring, test
 
 ### 2. setup-hurd-amd64.sh
 
-**Purpose**: Setup Debian GNU/Hurd x86_64 (amd64) with 80GB dynamic QCOW2 disk
+**Purpose**: Download + convert the official Debian GNU/Hurd hurd-amd64 image into `./images/debian-hurd-amd64.qcow2`
 
 **What it does**:
-1. Downloads `debian-hurd-amd64-20251105.img.tar.xz` (337 MB) if not present
-2. Extracts raw image (3.5 GB)
-3. Converts to QCOW2 format
-4. Resizes to 80 GB dynamic expansion (only uses space as needed)
-5. Reports final image information
+1. Runs `scripts/download-image.sh` with `IMAGE_DIR=images`
+2. Verifies integrity via `SHA256SUMS` (unless `SKIP_CHECKSUM=1`)
+3. Converts the extracted `.img` into `images/debian-hurd-amd64.qcow2`
 
 **Usage**:
 ```bash
@@ -127,15 +125,12 @@ This repository contains 21 automation scripts for setting up, configuring, test
 ```
 
 **Output**:
-- `debian-hurd-amd64-80gb.qcow2` - 80GB dynamic QCOW2 image
-
-**Initial size**: ~3.5 GB actual (80 GB virtual)
-**Expansion**: Grows dynamically as needed (up to 80 GB)
+- `images/debian-hurd-amd64.qcow2` - QCOW2 guest disk image
 
 **Requirements**:
 - curl (download)
 - tar (extraction)
-- qemu-img (conversion, resize)
+- qemu-img (conversion)
 
 **Time**: 10-15 minutes (download + conversion)
 
@@ -825,8 +820,8 @@ Provisioning complete. Try:
 
 **Environment**:
 ```bash
-# Specify QCOW2 image (default: debian-hurd-amd64-20251105.qcow2)
-export QCOW2_IMAGE=debian-hurd-amd64-80gb.qcow2
+# Specify QCOW2 image (default: images/debian-hurd-amd64.qcow2)
+export QCOW2_IMAGE=images/debian-hurd-amd64.qcow2
 ./scripts/manage-snapshots.sh list
 ```
 

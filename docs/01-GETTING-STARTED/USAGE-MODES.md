@@ -239,7 +239,7 @@ ssh -p 2222 root@localhost
 
 ### Docker Mode
 - **Isolation**: Container namespace isolation
-- **Privileges**: Requires `--privileged` for KVM
+- **Privileges**: KVM acceleration (Linux x86_64) requires `/dev/kvm` device access; full `--privileged` is not required
 - **Network**: Docker network policies apply
 - **Updates**: Container image updates
 
@@ -256,6 +256,8 @@ ssh -p 2222 root@localhost
 **For Docker Mode**:
 - Continue to [INSTALLATION.md](INSTALLATION.md)
 - See [QUICKSTART.md](QUICKSTART.md) for fast setup
+  - Dev default (bind): `./scripts/docker-orchestration.sh up`
+  - Portable default (volume): `AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume`
 
 **For Standalone Mode**:
 - Continue to [STANDALONE-QEMU.md](STANDALONE-QEMU.md)

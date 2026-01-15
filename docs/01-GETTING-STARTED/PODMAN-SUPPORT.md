@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project supports both **Docker** and **Podman** as container runtimes, providing true platform agnosticism across Linux, macOS, Windows, and BSD systems. The build system automatically detects the available runtime and adjusts accordingly.
+This project supports both **Docker** and **Podman** as container runtimes. Podman support is best on Linux; on macOS/Windows it runs via a VM (Podman Machine) and performance/feature parity depends on that layer.
 
 ## What is Podman?
 
@@ -58,45 +58,34 @@ pip3 install podman-compose
 # Download from: https://podman-desktop.io/
 ```
 
-### BSD
+### BSD (Not Officially Supported)
 
-#### FreeBSD
-```bash
-pkg install podman
-pip3 install podman-compose
-```
+This project does not currently validate Podman/Docker operation on BSD hosts. If you run an OCI runtime layer on BSD, expect to debug host-specific issues and run the Hurd guest in TCG mode.
 
 ## Quick Start with Podman
 
 ### Using Container Runtime Abstraction (Recommended)
 
-The project includes a container runtime abstraction layer that auto-detects Podman:
+The canonical wrapper auto-detects Docker vs Podman and chooses the correct compose frontend:
 
 ```bash
-# Source the abstraction layer
-source scripts/lib/container-runtime.sh
-
-# Check runtime detection
-check_runtime_compatibility
-
-# Start containers
-container_compose_up -d
-
-# Stop containers
-container_compose_down
+./scripts/docker-orchestration.sh check
+./scripts/docker-orchestration.sh up
+./scripts/docker-orchestration.sh logs
+./scripts/docker-orchestration.sh down
 ```
 
 ### Using Podman Compose Directly
 
 ```bash
 # Start services
-podman-compose up -d
+podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
 
 # View logs
 podman-compose logs -f
 
 # Stop services
-podman-compose down
+podman-compose -f docker-compose.yml -f docker-compose.bind.yml down
 ```
 
 ### Using Podman CLI Directly
@@ -105,15 +94,27 @@ podman-compose down
 # Build image
 podman build -t gnu-hurd-docker .
 
-# Run container
+# Run container (TCG, works on non-x86_64 hosts too)
 podman run -d \
-  --name hurd-x86_64 \
-  --device /dev/kvm \
-  -p 2222:2222 \
-  -p 5555:5555 \
-  -v ./share:/opt/hurd-image \
+  --name gnu-hurd-dev \
+  -p 127.0.0.1:2222:2222 \
+  -p 127.0.0.1:5555:5555 \
+  -v hurd-disk:/opt/hurd-image:rw \
+  -v ./share:/share:rw \
   gnu-hurd-docker
+
+# Bind-mount QCOW2 from repo instead of a volume:
+#   -v ./images:/opt/hurd-image:rw
+
+# Optional: add KVM on Linux x86_64 hosts
+#   --device /dev/kvm
 ```
+
+## Rootless Podman notes (important)
+
+- Rootless Podman is a good default for **TCG mode** (no `/dev/kvm`).
+- KVM acceleration requires `/dev/kvm` device access; rootless setups may need host-specific configuration (group membership, user namespace handling, SELinux labels) or a rootful Podman run.
+- By default, this repo’s Compose files bind ports to `127.0.0.1` to avoid exposing SSH/serial/monitor on the LAN. If you need remote access, explicitly change the port bindings.
 
 ## Podman vs Docker: Key Differences
 
@@ -340,7 +341,7 @@ Generate systemd units for automatic startup:
 
 ```bash
 # Generate systemd unit
-podman generate systemd --name hurd-x86_64 > ~/.config/systemd/user/hurd.service
+podman generate systemd --name gnu-hurd-dev > ~/.config/systemd/user/gnu-hurd-dev.service
 
 # Enable and start
 systemctl --user enable hurd.service
@@ -365,14 +366,14 @@ systemctl --user start hurd.service
 
 3. Use existing docker-compose.yml:
    ```bash
-   podman-compose up -d
+   podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
    ```
 
 ### Full Migration
 
 1. **Stop Docker services**:
    ```bash
-   docker-compose down
+   podman-compose -f docker-compose.yml -f docker-compose.bind.yml down
    ```
 
 2. **Export images** (optional):
@@ -389,7 +390,7 @@ systemctl --user start hurd.service
 
 4. **Use Podman**:
    ```bash
-   podman-compose up -d
+   podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
    ```
 
 ## Best Practices

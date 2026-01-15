@@ -328,7 +328,7 @@ jobs:
         run: |
           cat >> docker-compose.override.yml <<EOF
           services:
-            hurd-x86_64:
+            gnu-hurd-dev:
               environment:
                 QEMU_SMP: ${{ matrix.cpu }}
                 QEMU_RAM: ${{ matrix.ram }}
@@ -346,7 +346,7 @@ jobs:
         run: |
           # Record boot time, performance metrics
           ssh -p 2222 root@localhost "uptime" > metrics.txt
-          docker stats --no-stream hurd-x86_64-qemu >> metrics.txt
+          docker stats --no-stream gnu-hurd-dev >> metrics.txt
 
       - name: Upload metrics
         uses: actions/upload-artifact@v4

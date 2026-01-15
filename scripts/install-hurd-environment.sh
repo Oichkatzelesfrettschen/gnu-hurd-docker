@@ -219,7 +219,7 @@ BASHRC_EOF
         mkdir -p /mnt/host
         cat >> /etc/fstab << 'FSTAB_EOF'
 # 9p filesystem sharing from Docker host
-scripts /mnt/host 9p trans=virtio,version=9p2000.L,nofail 0 0
+hostshare /mnt/host 9p trans=virtio,version=9p2000.L,nofail 0 0
 FSTAB_EOF
     fi
     

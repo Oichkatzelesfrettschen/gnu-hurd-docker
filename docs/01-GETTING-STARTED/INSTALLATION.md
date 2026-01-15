@@ -9,9 +9,9 @@
 
 **Purpose**: Complete guide for installing and setting up the Debian GNU/Hurd x86_64 QEMU development environment
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (runs inside QEMU)
 
-**Status**: Production Ready
+**Status**: Development/experimental
 
 ---
 
@@ -36,7 +36,7 @@
 
 | Component | Requirement | Notes |
 |-----------|-------------|-------|
-| **CPU** | 2 cores (x86_64) | Any modern 64-bit processor |
+| **CPU** | 2 cores (amd64 or arm64 host) | Guest is x86_64-only (via QEMU) |
 | **RAM** | 4 GB total | 4 GB for QEMU + overhead |
 | **Disk** | 10 GB free | For Docker images and QCOW2 |
 | **OS** | Linux, macOS, Windows | With Docker support |
@@ -97,11 +97,11 @@ cd gnu-hurd-docker
 ./scripts/download-image.sh
 
 # 4. Build and start
-docker-compose build
-docker-compose up -d
+docker compose build
+./scripts/docker-orchestration.sh up
 
 # 5. View logs
-docker-compose logs -f
+./scripts/docker-orchestration.sh logs
 ```
 
 ### macOS
@@ -318,8 +318,8 @@ brew install git
 git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 ./scripts/download-image.sh
-docker-compose build
-docker-compose up -d
+docker compose build
+./scripts/docker-orchestration.sh up
 ```
 
 **Note:** macOS uses TCG emulation (no KVM). Expect slower performance but full functionality.
@@ -368,8 +368,8 @@ cd gnu-hurd-docker
 
 # Continue with standard Linux steps
 ./scripts/download-image.sh
-docker-compose build
-docker-compose up -d
+docker compose build
+./scripts/docker-orchestration.sh up
 ```
 
 **WSL Performance Tips:**
@@ -393,7 +393,7 @@ mkdir -p qmp share logs images
 
 ### Configuration
 
-Edit `docker-compose.yml` to customize:
+Prefer environment variables (or a `.env` file) over editing `docker-compose.yml` directly:
 
 ```yaml
 environment:
@@ -402,9 +402,6 @@ environment:
 
   # CPU cores (Hurd 2025 has SMP support)
   QEMU_SMP: 2             # Change to 4 for more cores
-
-  # Display mode
-  ENABLE_VNC: 0           # Change to 1 for VNC access on port 5900
 
   # Serial port
   SERIAL_PORT: 5555       # Change if port conflicts
@@ -417,13 +414,15 @@ Default ports:
 - **8080:** HTTP to guest (guest port 80)
 - **5555:** Serial console (telnet)
 - **9999:** QEMU monitor (telnet)
-- **5900:** VNC (if ENABLE_VNC=1)
+- **5900:** VNC (only when starting with the VNC overlay)
+- **6080:** noVNC web UI (only when starting with the VNC overlay)
 
-To change ports, edit `docker-compose.yml`:
+To change *host* ports without editing YAML, set environment variables:
 ```yaml
-ports:
-  - "2222:2222"  # Change host port (left side)
-  - "8080:8080"
+SSH_PORT: 2223
+HTTP_PORT: 8081
+SERIAL_PORT: 5556
+MONITOR_PORT: 9998
 ```
 
 ### KVM Acceleration (Linux Only)
@@ -438,7 +437,7 @@ devices:
 
 Verify KVM works:
 ```bash
-docker-compose logs | grep -i kvm
+./scripts/docker-orchestration.sh logs | grep -i kvm
 # Should show: "KVM acceleration detected"
 ```
 
@@ -461,14 +460,15 @@ This script will:
 ### Manual Download
 
 ```bash
-# Download Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
-wget http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
+# Download Debian GNU/Hurd (ports/13.0, hurd-amd64)
+wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract
-tar xJf debian-hurd-amd64-20251105.img.tar.xz
+tar xJf debian-hurd.img.tar.xz
 
 # Convert to QCOW2 (for snapshot support)
-qemu-img convert -f raw -O qcow2 -o preallocation=metadata debian-hurd-amd64-20251105.img debian-hurd-amd64.qcow2
+img_file="$(ls -1 debian-hurd*.img | head -n1)"
+qemu-img convert -f raw -O qcow2 -o preallocation=metadata "${img_file}" debian-hurd-amd64.qcow2
 
 # Move to images directory
 mv debian-hurd-amd64.qcow2 images/
@@ -493,8 +493,8 @@ qemu-img info images/debian-hurd-amd64.qcow2
 ### Start the Container
 
 ```bash
-docker-compose build
-docker-compose up -d
+docker compose build
+./scripts/docker-orchestration.sh up
 ```
 
 ### Monitor Boot Process
@@ -502,7 +502,7 @@ docker-compose up -d
 **Via Logs:**
 ```bash
 # Watch container logs
-docker-compose logs -f
+./scripts/docker-orchestration.sh logs
 
 # Look for:
 # - "Pure x86_64 Debian GNU/Hurd QEMU Environment"
@@ -517,8 +517,11 @@ telnet localhost 5555
 ./scripts/connect-console.sh
 ```
 
-**Via VNC (if enabled):**
+**Via VNC/noVNC (recommended for first boot):**
 ```bash
+# Start the VNC/noVNC overlay
+./scripts/docker-orchestration.sh up-vnc
+
 # Install VNC client first
 sudo pacman -S tigervnc  # Arch Linux
 sudo apt-get install tigervnc-viewer  # Ubuntu/Debian
@@ -526,17 +529,18 @@ brew install tiger-vnc  # macOS
 
 # Connect to VNC
 vncviewer localhost:5900
+# Or open: http://localhost:6080/vnc.html
 ```
 
 ### Wait for Boot (5-10 minutes)
 
 **Expected boot times:**
-- First boot: 5-10 minutes (filesystem initialization, x86_64 slower than i386)
+- First boot: 5-10 minutes (filesystem initialization)
 - Subsequent boots: 2-5 minutes
-- With KVM: 2-3 minutes
+- With KVM (when supported by the guest image): 2-3 minutes
 - Without KVM (TCG): 5-10 minutes
 
-**Boot stages visible in logs:**
+**Boot stages visible via the console (VNC/noVNC recommended):**
 1. GRUB bootloader menu
 2. GNU Mach kernel messages
 3. Hurd bootstrap messages
@@ -565,6 +569,8 @@ telnet localhost 5555
 # login: root
 # Password: root
 ```
+
+Note: On many upstream Debian GNU/Hurd images, the serial login prompt is blank; prefer VNC/noVNC for first boot provisioning.
 
 ### Initial Configuration (Inside Guest)
 
@@ -687,11 +693,11 @@ git config --global user.email "you@example.com"
 
 ```bash
 # On host
-docker-compose ps
-# Should show: hurd-x86_64-qemu running
+./scripts/docker-orchestration.sh ps
+# Should show: gnu-hurd-dev running
 
 # Check QEMU process
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu-system-x86_64
+docker exec gnu-hurd-dev ps aux | grep qemu-system-x86_64
 ```
 
 ### Verify Network Access
@@ -721,7 +727,7 @@ uname -m
 # Expected: x86_64
 
 # Verify QEMU binary
-docker-compose exec hurd-x86_64-qemu which qemu-system-x86_64
+docker exec gnu-hurd-dev which qemu-system-x86_64
 # Expected: /usr/bin/qemu-system-x86_64
 ```
 
@@ -747,8 +753,8 @@ EOF
 **Check Docker:**
 ```bash
 docker ps
-docker-compose ps
-docker-compose logs
+./scripts/docker-orchestration.sh ps
+./scripts/docker-orchestration.sh logs
 ```
 
 **Check Disk Space:**
@@ -776,7 +782,7 @@ qemu-img check images/debian-hurd-amd64*.qcow2
 
 **Check Logs:**
 ```bash
-docker-compose logs | tail -50
+./scripts/docker-orchestration.sh logs | tail -50
 # Look for errors
 ```
 
@@ -791,7 +797,7 @@ free -h
 **Wait for Full Boot:**
 ```bash
 # Boot takes 5-10 minutes for x86_64
-docker-compose logs -f | grep -i "ssh\|login"
+./scripts/docker-orchestration.sh logs | grep -i "ssh\\|login"
 ```
 
 **Check SSH is Running (inside guest):**
@@ -805,7 +811,7 @@ service ssh start
 
 **Check Port Forwarding:**
 ```bash
-docker-compose ps
+./scripts/docker-orchestration.sh ps
 # Verify 2222:2222 mapping
 ```
 
@@ -819,7 +825,7 @@ ssh -v -p 2222 root@localhost
 
 **Solution:**
 - Press Enter several times to wake up the console
-- Or use VNC instead: `vncviewer localhost:5900` (if ENABLE_VNC=1)
+- Or use VNC/noVNC: `./scripts/docker-orchestration.sh up-vnc` then `vncviewer localhost:5900` or `http://localhost:6080/vnc.html`
 - Check if boot is still in progress (can take 10+ minutes on first boot)
 
 ### 9p Mount Fails
@@ -827,13 +833,13 @@ ssh -v -p 2222 root@localhost
 **Diagnosis:**
 ```bash
 # Check if virtfs is configured in QEMU
-docker-compose exec hurd-x86_64-qemu ps aux | grep virtfs
+docker exec gnu-hurd-dev ps aux | grep virtfs
 # Should see: -virtfs local,path=/share,mount_tag=scripts,...
 ```
 
 **Solution:**
 - Verify `share/` directory exists on host
-- Restart container: `docker-compose restart`
+- Restart container: `docker compose restart`
 
 ### Package Installation Fails
 
@@ -888,7 +894,7 @@ iostat -x 1
 ### First Boot Taking Too Long
 
 **Expected Behavior:**
-- x86_64 Hurd is slower than i386 (less optimized port)
+- Performance varies by host and acceleration mode (KVM vs TCG)
 - First boot: 5-15 minutes (filesystem initialization)
 - Subsequent boots: 2-5 minutes with KVM, 5-10 without
 
@@ -901,7 +907,7 @@ vncviewer localhost:5900
 telnet localhost 5555
 
 # Check QEMU is running
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu
+docker exec gnu-hurd-dev ps aux | grep qemu
 ```
 
 ---
@@ -966,10 +972,10 @@ When reporting issues, include:
 # System info
 uname -a
 docker --version
-docker-compose --version
+docker compose version
 
 # Container logs
-docker-compose logs > logs.txt
+docker compose logs > logs.txt
 
 # System resources
 free -h
@@ -985,7 +991,7 @@ ssh -p 2222 root@localhost 'uname -m'
 
 - **GNU/Hurd**: https://www.gnu.org/software/hurd/
 - **Debian GNU/Hurd**: https://www.debian.org/ports/hurd/
-- **Debian Hurd 2025 "Trixie"**: http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
+- **Debian Hurd (ports/13.0)**: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
 - **QEMU Documentation**: https://www.qemu.org/documentation/
 - **Docker Documentation**: https://docs.docker.com/
 - **Hurd Cloud Guide**: https://www.gnu.org/software/hurd/hurd/running/cloud.html
@@ -999,4 +1005,4 @@ ssh -p 2222 root@localhost 'uname -m'
 **Status**: Complete and Validated (x86_64-only)
 **Last Updated**: 2025-11-07
 **Maintainer**: Oichkatzelesfrettschen
-**Architecture**: Pure x86_64 (i386 deprecated)
+**Architecture**: x86_64 guest (via QEMU)

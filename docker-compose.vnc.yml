@@ -20,17 +20,14 @@
 
 ---
 services:
-  hurd-x86_64:
+  gnu-hurd-dev:
     # Enable VNC display
     environment:
       ENABLE_VNC: 1
-      VNC_PASSWORD: ${VNC_PASSWORD:-hurdvnc}
-      QEMU_DISPLAY: vnc=:0
 
-    # Expose additional ports
+    # Expose VNC port only when VNC is enabled
     ports:
-      - "${VNC_PORT:-5900}:5900"      # VNC direct access
-      - "${NOVNC_PORT:-6080}:6080"    # noVNC web interface (via novnc service)
+      - "${VNC_BIND:-127.0.0.1}:${VNC_PORT:-5900}:5900"      # VNC display :0
 
     # Add labels for better organization
     labels:
@@ -39,7 +36,7 @@ services:
 
   # noVNC Web Interface Service
   novnc:
-    image: theasp/novnc:latest
+    image: theasp/novnc@sha256:6fbc9663a54bed0c32b7813fd6735222fe3c49f1dc4814d131f236bab23c3f85
     container_name: hurd-novnc
     restart: unless-stopped
 
@@ -50,14 +47,14 @@ services:
       RUN_XTERM: "no"
 
       # VNC connection
-      VNC_HOST: hurd-x86_64
+      VNC_HOST: gnu-hurd-dev
       VNC_PORT: 5900
 
     ports:
-      - "${NOVNC_PORT:-6080}:8080"
+      - "${NOVNC_BIND:-127.0.0.1}:${NOVNC_PORT:-6080}:8080"
 
     depends_on:
-      - hurd-x86_64
+      - gnu-hurd-dev
 
     networks:
       - hurd-net
@@ -76,7 +73,7 @@ services:
 
   # Optional: VNC Recorder (for demonstrations/tutorials)
   vnc-recorder:
-    image: dorowu/ubuntu-desktop-lxde-vnc:latest
+    image: dorowu/ubuntu-desktop-lxde-vnc@sha256:775184eaa5bbc01bc4261a6c9596a642b3b43a433c1508637567bc724575964b
     container_name: hurd-vnc-recorder
     restart: "no"  # Manual start only
 
@@ -142,7 +139,7 @@ networks:
 #
 # Issue: Cannot connect to VNC
 # Solution: Check if VNC is enabled:
-#   docker exec hurd-x86_64-qemu printenv ENABLE_VNC
+#   docker exec gnu-hurd-dev printenv ENABLE_VNC
 #   docker compose -f docker-compose.yml -f docker-compose.vnc.yml logs novnc
 #
 # Issue: Black screen in VNC
@@ -151,7 +148,7 @@ networks:
 #   console -d vga -d pc_mouse --repeat=mouse -d pc_kbd --repeat=kbd -c /dev/vcs
 #
 # Issue: noVNC shows "Failed to connect"
-# Solution: Check if hurd-x86_64 service is running:
+# Solution: Check if gnu-hurd-dev service is running:
 #   docker compose ps
 #   docker compose -f docker-compose.yml -f docker-compose.vnc.yml restart novnc
 #

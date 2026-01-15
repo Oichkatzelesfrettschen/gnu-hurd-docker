@@ -93,12 +93,12 @@ If deploying this environment beyond local development, you **MUST**:
 - [ ] Disable unused ports (VNC, QEMU monitor)
 
 #### 4. Container Security
-- [ ] Run as non-root user (already configured in Dockerfile)
-- [ ] Use Docker secrets for credentials (configured in docker-compose.yml)
+- [ ] Prefer SSH keys and rotate guest credentials (no secrets configured by default)
 - [ ] Enable security options:
   - `security_opt: [no-new-privileges:true]` ✅ (configured)
+  - `privileged: false` ✅ (configured)
   - `cap_drop: [ALL]` ✅ (configured)
-  - `cap_add: [NET_ADMIN, SYS_ADMIN]` ✅ (configured)
+  - `cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE]` ✅ (configured; required for bind-mount QCOW2 + optional privilege drop)
 - [ ] Set resource limits to prevent DoS
 - [ ] Use read-only root filesystem where possible
 - [ ] Enable Docker Content Trust (image signing)
@@ -144,7 +144,7 @@ Serial console (port 5555) provides unauthenticated root access:
 - **Risk**: Anyone with network access can control the VM
 - **Mitigation**: Bind to localhost only (`127.0.0.1:5555:5555`)
 - **Mitigation**: Use SSH instead of serial console for remote access
-- **Mitigation**: Disable serial console in production (`SERIAL_PORT=""`)
+- **Mitigation**: Disable serial console (`DISABLE_SERIAL=1`) and/or remove the host port mapping
 
 #### 4. QEMU Monitor Exposure
 
@@ -152,7 +152,7 @@ QEMU monitor (port 9999) allows full VM control:
 
 - **Risk**: Pause/resume VM, access memory, modify state
 - **Mitigation**: Bind to localhost only
-- **Mitigation**: Disable monitor in production (`MONITOR_PORT=""`)
+- **Mitigation**: Disable monitor (`DISABLE_MONITOR=1`) and/or remove the host port mapping
 - **Mitigation**: Use authentication if monitor is needed
 
 #### 5. Default Credentials
@@ -171,7 +171,7 @@ Development convenience vs security trade-off:
 ```yaml
 # docker-compose.yml
 services:
-  hurd-x86_64:
+  gnu-hurd-dev:
     ports:
       - "127.0.0.1:2222:2222"  # SSH
       - "127.0.0.1:5555:5555"  # Serial console
@@ -185,7 +185,7 @@ services:
 ```yaml
 # docker-compose.yml
 services:
-  hurd-x86_64:
+  gnu-hurd-dev:
     ports:
       - "2222:2222"  # SSH only (serial console disabled)
     environment:
@@ -249,7 +249,7 @@ MaxStartups 10:30:60
 
 - **Trivy**: Container vulnerability scanning
   ```bash
-  trivy image ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
+  trivy image ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
   ```
 
 - **Hadolint**: Dockerfile linter

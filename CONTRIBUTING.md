@@ -91,7 +91,7 @@ docker-compose build
 docker-compose up -d
 
 # Check logs
-docker-compose logs -f hurd-x86_64
+docker-compose logs -f gnu-hurd-dev
 ```
 
 ### Running Tests

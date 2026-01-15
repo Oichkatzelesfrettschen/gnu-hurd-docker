@@ -1,14 +1,14 @@
 # GNU/Hurd Docker Documentation Index
 
-> **Version**: 2.0.0 | **Last Updated**: 2025-11-08 | **Status**: Consolidated & Organized
+> **Status**: Canonical documentation index (see git history for updates)
 
-## 📚 Welcome to GNU/Hurd Docker Documentation
+## Welcome
 
 This documentation provides comprehensive guidance for running GNU/Hurd in Docker containers using QEMU virtualization. Whether you're a developer, researcher, or enthusiast, you'll find the resources you need to work with this unique operating system.
 
 ---
 
-## 🚀 Quick Start Path
+## Quick Start Path
 
 New to GNU/Hurd Docker? Follow this path:
 
@@ -19,14 +19,14 @@ New to GNU/Hurd Docker? Follow this path:
 
 ---
 
-## 📖 How to Use This Documentation
+## How to Use This Documentation
 
 ### For Different Roles
 
 - **👨‍💻 Developers**: Start with [Architecture](02-ARCHITECTURE/) → [Configuration](03-CONFIGURATION/) → [CI/CD](05-CI-CD/)
-- **🔬 Researchers**: Focus on [Research & Lessons](07-RESEARCH-AND-LESSONS/) → [Architecture](02-ARCHITECTURE/)
-- **🛠️ Operations**: Priority on [Operation](04-OPERATION/) → [Troubleshooting](06-TROUBLESHOOTING/)
-- **🎓 Learners**: Begin with [Getting Started](01-GETTING-STARTED/) → [Reference](08-REFERENCE/)
+- **Researchers**: Focus on [Research & Lessons](07-RESEARCH-AND-LESSONS/) → [Architecture](02-ARCHITECTURE/)
+- **Operations**: Priority on [Operation](04-OPERATION/) → [Troubleshooting](06-TROUBLESHOOTING/)
+- **Learners**: Begin with [Getting Started](01-GETTING-STARTED/) → [Reference](08-REFERENCE/)
 
 ### Navigation Tips
 
@@ -37,7 +37,7 @@ New to GNU/Hurd Docker? Follow this path:
 
 ---
 
-## 📂 Complete Documentation Structure
+## Complete Documentation Structure
 
 ### 01-GETTING-STARTED
 *Everything you need to begin your GNU/Hurd journey*
@@ -104,7 +104,7 @@ New to GNU/Hurd Docker? Follow this path:
 ### 07-RESEARCH-AND-LESSONS
 *Insights, findings, and deep dives*
 
-- **[README](03-CONFIGURATION/README.md)** - Research overview
+- **[README](07-RESEARCH-AND-LESSONS/README.md)** - Research overview
 - **[findings.md](07-RESEARCH-AND-LESSONS/FINDINGS.md)** - Key discoveries
 - **[testing-reports.md](07-RESEARCH-AND-LESSONS/testing-reports.md)** - Test results
 - **[implementation-notes.md](07-RESEARCH-AND-LESSONS/implementation-notes.md)** - Technical notes
@@ -126,52 +126,45 @@ New to GNU/Hurd Docker? Follow this path:
 
 ---
 
-## ⚡ Common Tasks Quick Reference
+## Common Tasks Quick Reference
 
 ### Essential Operations
 
 | Task | Documentation | Quick Command |
 |------|--------------|---------------|
-| 🚀 Start GNU/Hurd | [quickstart.md](01-GETTING-STARTED/QUICKSTART.md) | `docker compose up -d` |
-| 🔌 Connect via SSH | [interactive-access.md](04-OPERATION/INTERACTIVE-ACCESS.md) | `ssh user@localhost -p 2222` |
-| 📦 Build custom image | [image-building.md](05-CI-CD/image-building.md) | `docker build -t hurd .` |
-| 🔧 Configure ports | [port-forwarding.md](03-CONFIGURATION/PORT-FORWARDING.md) | Edit `docker-compose.yml` |
-| 📊 Monitor system | [monitoring.md](04-OPERATION/MONITORING.md) | `docker logs hurd-qemu` |
-| 🐛 Debug issues | [common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | Check troubleshooting guide |
+| Start GNU/Hurd (dev bind mode) | [quickstart.md](01-GETTING-STARTED/QUICKSTART.md) | `./scripts/docker-orchestration.sh up` |
+| Start GNU/Hurd (portable volume mode) | [usage-modes.md](01-GETTING-STARTED/USAGE-MODES.md) | `AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume` |
+| Connect via SSH | [interactive-access.md](04-OPERATION/INTERACTIVE-ACCESS.md) | `ssh root@localhost -p 2222` |
+| Build container image | [docker-compose-guide.md](05-CI-CD/DOCKER-COMPOSE-GUIDE.md) | `docker compose build` |
+| Monitor container logs | [monitoring.md](04-OPERATION/MONITORING.md) | `docker compose logs -f gnu-hurd-dev` |
+| Debug issues | [common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | `./scripts/docker-orchestration.sh logs` |
 
 ### Advanced Tasks
 
 | Task | Documentation | Notes |
 |------|--------------|-------|
-| 🎛️ Performance tuning | [performance-tuning.md](04-OPERATION/performance-tuning.md) | CPU/Memory optimization |
-| 🔐 Security hardening | [security-considerations.md](07-RESEARCH-AND-LESSONS/security-considerations.md) | Production recommendations |
-| 🤖 CI/CD setup | [workflows.md](05-CI-CD/WORKFLOWS.md) | GitHub Actions integration |
-| 📡 MCP server config | [mcp-servers.md](03-CONFIGURATION/mcp-servers.md) | Advanced automation |
-| 🔬 Kernel research | [mach-variants-research.md](07-RESEARCH-AND-LESSONS/mach-variants-research.md) | Deep technical analysis |
+| Performance tuning | [performance-tuning.md](04-OPERATION/performance-tuning.md) | CPU/Memory optimization |
+| Security hardening | [security-considerations.md](07-RESEARCH-AND-LESSONS/security-considerations.md) | Production recommendations |
+| CI/CD setup | [workflows.md](05-CI-CD/WORKFLOWS.md) | GitHub Actions integration |
+| MCP server config | [mcp-servers.md](03-CONFIGURATION/mcp-servers.md) | Advanced automation |
+| Kernel research | [mach-variants-research.md](07-RESEARCH-AND-LESSONS/mach-variants-research.md) | Deep technical analysis |
 
 ---
 
-## 📊 Documentation Metadata
-
-### Consolidation Information
-- **Consolidation Date**: 2025-11-08
-- **Documentation Version**: 2.0.0
-- **Structure**: 8 main sections + support directories
-- **Total Documents**: 50+ markdown files
-- **Archive Status**: Previous versions preserved in `archive/`
+## Documentation Metadata
 
 ### Directory Purpose
 
 | Directory | Purpose | Status |
 |-----------|---------|--------|
-| `01-08 sections` | Main documentation | ✅ Active |
-| `archive/` | Historical content | 📦 Preserved |
-| `assets/` | Templates & scripts | 🛠️ Support |
-| `logs/` | MCP server logs | 📝 Runtime |
+| `01-08 sections` | Main documentation | Active |
+| `archive/` | Historical content | Preserved |
+| `assets/` | Templates & scripts | Support |
+| `audits/` | Audit outputs and reports | Active |
 
 ---
 
-## 🔗 Additional Resources
+## Additional Resources
 
 ### Internal Links
 - **[Archive](archive/)** - Historical documentation and versions
@@ -182,19 +175,11 @@ New to GNU/Hurd Docker? Follow this path:
 - [GNU/Hurd Official Site](https://www.gnu.org/software/hurd/)
 - [QEMU Documentation](https://www.qemu.org/documentation/)
 - [Docker Documentation](https://docs.docker.com/)
-- [Project GitHub Repository](https://github.com/yourusername/gnu-hurd-docker)
+- [Project GitHub Repository](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker)
 
 ---
 
-## 📈 Documentation Maintenance
-
-### Update Schedule
-- **Weekly**: Review troubleshooting entries
-- **Monthly**: Update performance metrics
-- **Quarterly**: Major documentation review
-- **As Needed**: Add new findings and lessons learned
-
-### Contributing
+## Contributing
 To contribute to this documentation:
 1. Follow the existing structure (01-08 sections)
 2. Update the appropriate section's README
@@ -203,7 +188,7 @@ To contribute to this documentation:
 
 ---
 
-## 🎯 Next Steps
+## Next Steps
 
 Based on your role and needs:
 
@@ -214,6 +199,4 @@ Based on your role and needs:
 
 ---
 
-*Thank you for using GNU/Hurd Docker. This documentation is actively maintained and improved based on user feedback and project evolution.*
-
-**Happy Hacking! 🐧**
+*This documentation is actively maintained and improved based on user feedback and project evolution.*

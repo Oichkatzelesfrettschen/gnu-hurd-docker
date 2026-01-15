@@ -11,13 +11,11 @@
 # =============================================================================
 
 services:
-  hurd-x86_64:
+  gnu-hurd-dev:
     # Override: Build locally instead of pulling from GHCR
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BUILDKIT_INLINE_CACHE: 1  # Enable BuildKit caching
 
     # Override: Use local tag instead of GHCR tag
     image: gnu-hurd-docker:local-dev

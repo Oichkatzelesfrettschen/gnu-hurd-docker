@@ -4,12 +4,22 @@
 # WHAT: Functions to check container status, QEMU process, wait for boot
 # HOW: Source this file: source "$(dirname "$0")/lib/container-helpers.sh"
 
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# shellcheck source=container-runtime.sh
+source "${SCRIPT_DIR}/container-runtime.sh"
+
 # Check if container is running
 # Usage: is_container_running <container_name>
 is_container_running() {
     local container_name="${1:-gnu-hurd-dev}"
+    local runtime
+    runtime="$(get_container_runtime)"
 
-    if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+    if "$runtime" ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
         return 0
     else
         return 1
@@ -26,7 +36,7 @@ ensure_container_running() {
         return 0
     else
         echo "Starting container $container_name..."
-        docker compose up -d
+        "${REPO_ROOT}/scripts/docker-orchestration.sh" up
         sleep 5
 
         if is_container_running "$container_name"; then
@@ -40,19 +50,23 @@ ensure_container_running() {
 }
 
 # Check if QEMU process is running
-# Usage: is_qemu_running
+# Usage: is_qemu_running [container_name]
 is_qemu_running() {
-    if pgrep -f "qemu-system" >/dev/null 2>&1; then
-        return 0
-    else
-        return 1
-    fi
+    local container_name="${1:-gnu-hurd-dev}"
+    local runtime
+    runtime="$(get_container_runtime)"
+
+    "$runtime" exec "$container_name" pgrep -x qemu-system-x86_64 >/dev/null 2>&1
 }
 
 # Get QEMU PID
-# Usage: get_qemu_pid
+# Usage: get_qemu_pid [container_name]
 get_qemu_pid() {
-    pgrep -f "qemu-system" | head -1
+    local container_name="${1:-gnu-hurd-dev}"
+    local runtime
+    runtime="$(get_container_runtime)"
+
+    "$runtime" exec "$container_name" pgrep -o qemu-system-x86_64
 }
 
 # Export functions for subshells

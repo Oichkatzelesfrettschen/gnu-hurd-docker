@@ -115,8 +115,8 @@ jobs:
 
           ### Docker-based (Recommended for most users)
           ```bash
-          ./scripts/download-image.sh
-          docker-compose up -d
+          ./scripts/setup-hurd-amd64.sh
+          ./scripts/docker-orchestration.sh up
           ssh -p 2222 root@localhost
           ```
 
@@ -133,8 +133,9 @@ jobs:
         run: |
           echo "=== Packaging documentation ==="
           cp -v README.md release-artifacts/
-          cp -v docs/INSTALLATION.md release-artifacts/
-          cp -v docs/requirements.md release-artifacts/
+          cp -v docs/INDEX.md release-artifacts/
+          cp -v docs/01-GETTING-STARTED/INSTALLATION.md release-artifacts/
+          cp -v docs/01-GETTING-STARTED/REQUIREMENTS.md release-artifacts/
           cp -v LICENSE release-artifacts/ 2>/dev/null || echo "No LICENSE file"
           cp -rv docs/ release-artifacts/
 
@@ -300,17 +301,18 @@ jobs:
           # Pull the image
           docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
-          # Download Hurd QCOW2 image (Debian 13 "Trixie" 2025-11-05 release)
-          wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
-          tar xf debian-hurd.img.tar.xz
+          # Clone repo for Compose + scripts (recommended)
+          git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
+          cd gnu-hurd-docker
 
-          # Run
-          docker run -d --privileged --name gnu-hurd \
-            -p 2222:2222 -p 5555:5555 -p 5901:5901 \
-            -v $(pwd):/opt/hurd-image \
-            --device /dev/kvm \
-            -e QEMU_RAM=4096 -e QEMU_SMP=4 -e DISPLAY_MODE=vnc \
-            ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+          # Prepare disk image (bind mode)
+          ./scripts/setup-hurd-amd64.sh
+
+          # Pull latest container image
+          docker compose pull
+
+          # Run (no privileged container required; KVM uses /dev/kvm device mapping when enabled)
+          ./scripts/docker-orchestration.sh up
 
           # Access
           ssh -p 2222 root@localhost  # Password: root
@@ -327,27 +329,25 @@ jobs:
           cd gnu-hurd-docker-$VCLEAN
 
           # Download Hurd image
-          ./scripts/download-image.sh
+          ./scripts/setup-hurd-amd64.sh
 
           # Build and run
-          docker-compose build
-          docker-compose up -d
+          ./scripts/docker-orchestration.sh up
           ```
 
           **Option 3: Clone Repository**
           ```bash
           git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
           cd gnu-hurd-docker
-          ./scripts/download-image.sh
-          docker-compose up -d
+          ./scripts/setup-hurd-amd64.sh
+          ./scripts/docker-orchestration.sh up
           ```
 
           ### 📚 Documentation
 
-          - [Installation Guide](INSTALLATION.md)
-          - [QEMU Optimization Guide](docs/QEMU-OPTIMIZATION-2025.md)
-          - [System Requirements](requirements.md)
-          - [Testing Report](docs/HURD-TESTING-REPORT.md)
+          - [Documentation Index](docs/INDEX.md)
+          - [Installation Guide](docs/01-GETTING-STARTED/INSTALLATION.md)
+          - [System Requirements](docs/01-GETTING-STARTED/REQUIREMENTS.md)
           - [CI/CD Guide](docs/CI-CD-GUIDE.md)
 
           ### 🔒 Security

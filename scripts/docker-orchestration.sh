@@ -1,226 +1,143 @@
 #!/bin/bash
-# GNU/Hurd Docker - Docker CLI Orchestration Script
-# Demonstrates comprehensive Docker CLI control and best practices
-# WHY: Enable programmatic Docker container management
-# WHAT: Container lifecycle, exec, logs, inspect, networking
-# HOW: Docker CLI commands with best practices
+# GNU/Hurd container orchestration helper (Docker or Podman).
+#
+# This script intentionally prefers Compose to keep configuration in one place.
 
 set -euo pipefail
 
-# Colors
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-CONTAINER_NAME="${CONTAINER_NAME:-hurd-x86_64}"
-IMAGE_NAME="${IMAGE_NAME:-hurd-x86_64:latest}"
+# shellcheck source=lib/container-runtime.sh
+source "${SCRIPT_DIR}/lib/container-runtime.sh"
 
-show_usage() {
-    cat <<EOF
-GNU/Hurd Docker Orchestration Utility
+SERVICE_NAME="${SERVICE_NAME:-gnu-hurd-dev}"
 
-Usage: $0 <command> [arguments]
+compose_files_override=()
+if [[ -f "${REPO_ROOT}/docker-compose.override.yml" ]]; then
+    compose_files_override=(-f "${REPO_ROOT}/docker-compose.override.yml")
+fi
 
-Container Lifecycle:
-  build           - Build the Docker image
-  start           - Start the container (detached)
-  stop            - Stop the container
-  restart         - Restart the container
-  remove          - Remove the container
-  logs            - View container logs
-  follow-logs     - Follow container logs in real-time
+compose_files_base=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}")
+compose_files_bind=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.bind.yml")
+compose_files_bind_kvm=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.bind.yml" -f "${REPO_ROOT}/docker-compose.kvm.yml")
+compose_files_bind_vnc=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.bind.yml" -f "${REPO_ROOT}/docker-compose.vnc.yml")
+compose_files_bind_kvm_vnc=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.bind.yml" -f "${REPO_ROOT}/docker-compose.kvm.yml" -f "${REPO_ROOT}/docker-compose.vnc.yml")
+compose_files_volume=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}")
+compose_files_volume_kvm=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.kvm.yml")
+compose_files_volume_vnc=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.vnc.yml")
+compose_files_volume_kvm_vnc=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.kvm.yml" -f "${REPO_ROOT}/docker-compose.vnc.yml")
+compose_files_all=(-f "${REPO_ROOT}/docker-compose.yml" "${compose_files_override[@]}" -f "${REPO_ROOT}/docker-compose.bind.yml" -f "${REPO_ROOT}/docker-compose.kvm.yml" -f "${REPO_ROOT}/docker-compose.vnc.yml")
 
-Interaction:
-  exec CMD        - Execute command in container
-  shell           - Open interactive shell in container
-  attach          - Attach to container's main process
-  inspect         - Inspect container details
+usage() {
+    cat <<'EOF'
+GNU/Hurd Orchestration Utility
 
-QEMU Control (inside container):
-  qemu-monitor    - Access QEMU monitor via docker exec
-  qemu-serial     - Access QEMU serial console via docker exec
-  qemu-ssh        - SSH into Hurd instance
+Usage:
+  ./scripts/docker-orchestration.sh <command> [args...]
 
-Debugging:
-  stats           - Show container resource usage
-  top             - Show container processes
-  network         - Show container network details
-  ports           - Show port mappings
+Commands:
+  check                 - Show detected runtime + platform notes
+  up                    - Start using ./images bind mount (dev default)
+  up-kvm                - Start dev default + KVM (Linux x86_64 only)
+  up-vnc                - Start dev default + VNC/noVNC overlay
+  up-kvm-vnc            - Start dev default + KVM + VNC/noVNC overlay
+  up-volume             - Start using engine volume (portable default)
+  up-volume-kvm         - Start volume mode + KVM (Linux x86_64 only)
+  up-volume-vnc         - Start volume mode + VNC/noVNC overlay
+  up-volume-kvm-vnc     - Start volume mode + KVM + VNC/noVNC overlay
+  up-bind               - Start using ./images bind mount (host-managed QCOW2)
+  up-bind-kvm           - Start bind mount + KVM (Linux x86_64 only)
+  down                  - Stop and remove
+  logs                  - Follow logs
+  ps                    - Show container status
+  shell                 - Open shell inside container
+  exec <cmd...>         - Run a command inside container
 
-Examples:
-  $0 start
-  $0 exec "ps aux"
-  $0 shell
-  $0 qemu-monitor
-  $0 logs
-  $0 stats
-
+Notes:
+  - Default (volume) mode: use AUTO_DOWNLOAD_IMAGE=1 for first run, or copy in an image.
+  - Bind mode: run ./scripts/setup-hurd-amd64.sh first to populate ./images/.
+  - For KVM acceleration on Linux x86_64: use up-kvm and ensure /dev/kvm exists.
 EOF
-    exit 1
+    exit 2
 }
 
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[OK]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-check_docker() {
-    if ! command -v docker &> /dev/null; then
-        log_error "Docker is not installed or not in PATH"
-        exit 1
-    fi
-}
+cd "$REPO_ROOT"
 
 case "${1:-}" in
-    build)
-        check_docker
-        log_info "Building Docker image: $IMAGE_NAME"
-        docker build -t "$IMAGE_NAME" .
-        log_success "Image built successfully"
+    check)
+        check_runtime_compatibility
         ;;
-
-    start)
-        check_docker
-        log_info "Starting container: $CONTAINER_NAME"
-        # Start detached with full debugging enabled
-        docker run -d \
-            --name "$CONTAINER_NAME" \
-            --privileged \
-            -p 2222:22 \
-            -p 5900:5900 \
-            -p 9999:9999 \
-            -p 5555:5555 \
-            -v "$(pwd)/images:/home/user/images:rw" \
-            -v "$(pwd)/share:/home/user/share:rw" \
-            -e "ENABLE_VNC=1" \
-            -e "DEBUG=1" \
-            "$IMAGE_NAME"
-        log_success "Container started"
-        log_info "View logs: docker logs -f $CONTAINER_NAME"
+    up)
+        container_compose "${compose_files_bind[@]}" up -d
         ;;
-
-    stop)
-        check_docker
-        log_info "Stopping container: $CONTAINER_NAME"
-        docker stop "$CONTAINER_NAME"
-        log_success "Container stopped"
+    up-kvm)
+        container_compose "${compose_files_bind_kvm[@]}" up -d
         ;;
-
-    restart)
-        check_docker
-        log_info "Restarting container: $CONTAINER_NAME"
-        docker restart "$CONTAINER_NAME"
-        log_success "Container restarted"
+    up-vnc)
+        container_compose "${compose_files_bind_vnc[@]}" up -d
         ;;
-
-    remove|rm)
-        check_docker
-        log_warning "Removing container: $CONTAINER_NAME"
-        docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
-        log_success "Container removed"
+    up-kvm-vnc)
+        container_compose "${compose_files_bind_kvm_vnc[@]}" up -d
         ;;
-
+    up-volume)
+        container_compose "${compose_files_volume[@]}" up -d
+        ;;
+    up-volume-kvm)
+        container_compose "${compose_files_volume_kvm[@]}" up -d
+        ;;
+    up-volume-vnc)
+        container_compose "${compose_files_volume_vnc[@]}" up -d
+        ;;
+    up-volume-kvm-vnc)
+        container_compose "${compose_files_volume_kvm_vnc[@]}" up -d
+        ;;
+    up-bind)
+        container_compose "${compose_files_bind[@]}" up -d
+        ;;
+    up-bind-kvm)
+        container_compose "${compose_files_bind_kvm[@]}" up -d
+        ;;
+    down)
+        container_compose "${compose_files_all[@]}" down --remove-orphans
+        ;;
     logs)
-        check_docker
-        docker logs "$CONTAINER_NAME"
+        container_compose "${compose_files_base[@]}" logs -f "$SERVICE_NAME"
         ;;
-
-    follow-logs)
-        check_docker
-        log_info "Following logs for: $CONTAINER_NAME"
-        log_info "Press Ctrl+C to stop"
-        docker logs -f "$CONTAINER_NAME"
+    ps|status)
+        container_compose "${compose_files_base[@]}" ps
         ;;
-
-    exec)
-        check_docker
-        if [ -z "${2:-}" ]; then
-            log_error "Command required"
-            echo "Usage: $0 exec \"COMMAND\""
-            exit 1
-        fi
-        log_info "Executing in container: $2"
-        docker exec "$CONTAINER_NAME" bash -c "$2"
-        ;;
-
     shell)
-        check_docker
-        log_info "Opening interactive shell in container"
-        log_info "Type 'exit' to return"
-        docker exec -it "$CONTAINER_NAME" /bin/bash
+        runtime="$(get_container_runtime)"
+        case "$runtime" in
+            docker)
+                docker exec -it "$SERVICE_NAME" bash
+                ;;
+            podman)
+                podman exec -it "$SERVICE_NAME" bash
+                ;;
+        esac
         ;;
-
-    attach)
-        check_docker
-        log_warning "Attaching to container (Ctrl+P, Ctrl+Q to detach)"
-        docker attach "$CONTAINER_NAME"
+    exec)
+        shift
+        if [[ $# -lt 1 ]]; then
+            usage
+        fi
+        runtime="$(get_container_runtime)"
+        case "$runtime" in
+            docker)
+                docker exec "$SERVICE_NAME" "$@"
+                ;;
+            podman)
+                podman exec "$SERVICE_NAME" "$@"
+                ;;
+        esac
         ;;
-
-    inspect)
-        check_docker
-        docker inspect "$CONTAINER_NAME"
+    ""|-h|--help|help)
+        usage
         ;;
-
-    qemu-monitor)
-        check_docker
-        log_info "Accessing QEMU monitor via container"
-        log_info "Type QEMU commands (e.g., 'info status', 'help')"
-        log_info "Press Ctrl+] then type 'quit' to exit"
-        docker exec -it "$CONTAINER_NAME" telnet localhost 9999
-        ;;
-
-    qemu-serial)
-        check_docker
-        log_info "Accessing QEMU serial console via container"
-        log_info "Press Ctrl+] then type 'quit' to exit"
-        docker exec -it "$CONTAINER_NAME" telnet localhost 5555
-        ;;
-
-    qemu-ssh)
-        check_docker
-        log_info "SSH into Hurd instance (password: root)"
-        ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@localhost
-        ;;
-
-    stats)
-        check_docker
-        log_info "Container resource usage (Ctrl+C to stop)"
-        docker stats "$CONTAINER_NAME"
-        ;;
-
-    top)
-        check_docker
-        log_info "Container processes:"
-        docker top "$CONTAINER_NAME"
-        ;;
-
-    network)
-        check_docker
-        log_info "Container network details:"
-        docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$CONTAINER_NAME"
-        docker port "$CONTAINER_NAME"
-        ;;
-
-    ports)
-        check_docker
-        log_info "Port mappings for: $CONTAINER_NAME"
-        docker port "$CONTAINER_NAME"
-        ;;
-
     *)
-        show_usage
+        echo "[ERROR] Unknown command: $1" >&2
+        usage
         ;;
 esac

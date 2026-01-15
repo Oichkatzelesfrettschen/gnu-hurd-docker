@@ -6,7 +6,7 @@
 
 **Purpose**: Complete reference for custom configurations, packages, and features beyond base Debian GNU/Hurd
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 
@@ -841,7 +841,7 @@ lsmod | grep 9p
 cat /etc/fstab | grep 9p
 
 # Check QEMU configuration (from host)
-docker logs hurd-x86_64-qemu | grep virtfs
+docker logs gnu-hurd-dev | grep virtfs
 ```
 
 **Solutions**:
@@ -858,7 +858,7 @@ docker logs hurd-x86_64-qemu | grep virtfs
 
 3. **Verify QEMU args** (on host):
    ```bash
-   docker exec hurd-x86_64-qemu ps aux | grep virtfs
+   docker exec gnu-hurd-dev ps aux | grep virtfs
    # Expected: -virtfs local,path=/share,mount_tag=scripts,...
    ```
 

@@ -1,7 +1,7 @@
 # GNU/Hurd Docker - System Design and Architecture
 
 **Last Updated**: 2025-11-07
-**Architecture**: Pure x86_64-only (i386 deprecated)
+**Architecture**: x86_64 guest (via QEMU)
 **Status**: Production Ready
 **Version**: 2.0
 
@@ -92,7 +92,7 @@ Use **QEMU full-system virtualization** inside a **Docker container** to create 
 └─────────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────┐
-│  Layer 2: Docker Container (hurd-x86_64-qemu)      │
+│  Layer 2: Docker Container (gnu-hurd-dev)          │
 │  - Ubuntu 24.04 base image                          │
 │  - QEMU system emulator (x86_64 binary)            │
 │  - Helper scripts and tools                         │
@@ -131,7 +131,7 @@ Host System (x86_64)
   │
   ├── Docker Daemon
   │    │
-  │    └── Container: hurd-x86_64-qemu
+  │    └── Container: gnu-hurd-dev
   │         │
   │         ├── QEMU Process (qemu-system-x86_64)
   │         │    │
@@ -165,7 +165,8 @@ Host System (x86_64)
   │         │         └── VNC: localhost:5900 (if ENABLE_VNC=1)
   │         │
   │         ├── Volume Mounts:
-  │         │    ├── ./images:/opt/hurd-image (QCOW2 storage)
+  │         │    ├── hurd-disk:/opt/hurd-image (default volume)
+  │         │    └── ./images:/opt/hurd-image (optional bind mount via docker-compose.bind.yml)
   │         │    ├── ./share:/share (9p file sharing)
   │         │    └── ./logs:/var/log/qemu (debug logs)
   │         │
@@ -177,7 +178,7 @@ Host System (x86_64)
        ├── Serial Console: telnet localhost 5555
        ├── QEMU Monitor: telnet localhost 9999
        ├── VNC: vncviewer localhost:5900 (if enabled)
-       └── Docker Exec: docker exec -it hurd-x86_64-qemu bash
+       └── Docker Exec: docker exec -it gnu-hurd-dev bash
 ```
 
 ---
@@ -190,7 +191,7 @@ Host System (x86_64)
 
 **Rationale**:
 - **x86_64 Architecture**: Debian GNU/Hurd 2025 officially supports hurd-amd64
-- **Future-Proof**: x86_64 is the future of Hurd development (i386 deprecated)
+- **Future-Proof**: x86_64 guest workflow (avoid mixing legacy i386 docs into current setup)
 - **Complete Virtualization**: Supports full GNU/Hurd boot sequence
 - **Hardware Emulation**: Provides virtual CPU, memory, devices
 - **Acceleration**: Supports KVM on Linux for near-native performance
@@ -409,7 +410,7 @@ QEMU_RAM=8192   # Development workstation (large builds)
 **Decision**: Use QEMU user-mode networking with NAT
 
 **Rationale**:
-- **No Root Required**: Works in unprivileged containers
+- **No privileged mode required**: Works in a standard container (entrypoint may start as root and drop privileges)
 - **Isolation**: Guest cannot access host network directly (security)
 - **Simplicity**: No host network configuration needed
 - **Portability**: Works identically on all platforms
@@ -553,12 +554,10 @@ detect_acceleration() {
 **Key Configuration**:
 ```yaml
 services:
-  hurd-x86_64:
-    image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest
-    container_name: hurd-x86_64-qemu
-
-    devices:
-      - /dev/kvm:/dev/kvm:rw
+  gnu-hurd-dev:
+    image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
+    container_name: gnu-hurd-dev
+    privileged: false
 
     ports:
       - "2222:2222"   # SSH
@@ -571,14 +570,9 @@ services:
       - ./share:/share:rw
 
     environment:
+      QEMU_DRIVE: /opt/hurd-image/debian-hurd-amd64.qcow2
       QEMU_RAM: 4096
       QEMU_SMP: 2
-
-    deploy:
-      resources:
-        limits:
-          cpus: '4'
-          memory: 6G
 ```
 
 **Status**: ✅ Production-ready, valid YAML
@@ -589,7 +583,7 @@ services:
 **Purpose**: Download and prepare Hurd x86_64 image
 
 **Functionality**:
-1. Download debian-hurd-amd64-20251105.img.tar.xz (~355 MB)
+1. Download debian-hurd.img.tar.xz (~337 MB as of current ports/13.0 build)
 2. Extract to raw IMG format (~4.2 GB)
 3. Convert to QCOW2 format (~2.2 GB)
 4. Verify integrity
@@ -821,13 +815,13 @@ services:
     <<: *hurd-base
     ports:
       - "2222:2222"
-    container_name: hurd-x86_64-dev1
+    container_name: gnu-hurd-dev1
 
   hurd-dev-2:
     <<: *hurd-base
     ports:
       - "2223:2222"
-    container_name: hurd-x86_64-dev2
+    container_name: gnu-hurd-dev2
 ```
 
 **Method 2: Separate Disk Images**
@@ -837,7 +831,7 @@ services:
 cp debian-hurd-amd64.qcow2 debian-hurd-amd64-dev2.qcow2
 
 # Start with different name and ports
-docker run ... -p 2223:2222 ... -v ./dev2.qcow2:/opt/hurd-image/... hurd-x86_64
+docker run ... -p 2223:2222 ... -v ./dev2.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 ```
 
 **Resource Scaling** (linear):
@@ -855,24 +849,14 @@ docker run ... -p 2223:2222 ... -v ./dev2.qcow2:/opt/hurd-image/... hurd-x86_64
 
 ## Summary
 
-This architecture provides a **production-ready, pure x86_64 GNU/Hurd environment** with:
+This repository provides a **development-focused QEMU-in-container environment** for a Debian GNU/Hurd **x86_64 guest** with:
 
-✅ **Robust Design**: Three-layer isolation (guest → QEMU → container → host)
-✅ **Performance**: KVM acceleration provides near-native speed
-✅ **Portability**: Works on any x86_64 system with Docker
-✅ **Security**: Multiple isolation boundaries, minimal privileges
-✅ **Scalability**: Linear resource scaling for multiple instances
-✅ **Maintainability**: Clean architecture, comprehensive automation
-✅ **Modern**: x86_64-only, SMP support, current best practices
+- **Isolation layers**: guest → QEMU → container runtime → host
+- **Performance options**: KVM on Linux `x86_64` hosts (when `/dev/kvm` is available); TCG everywhere else (including `arm64`)
+- **Portability**: container runs on `linux/amd64` and `linux/arm64` hosts; guest remains `x86_64`
+- **Security posture**: `privileged: false`, minimal capabilities, opt-in device mapping for KVM
 
-**Next Steps**:
-- See [QEMU-CONFIGURATION.md](QEMU-CONFIGURATION.md) for detailed QEMU parameter explanations
-- See [CONTROL-PLANE.md](CONTROL-PLANE.md) for automation and access methods
-- See [../01-GETTING-STARTED/INSTALLATION.md](../01-GETTING-STARTED/INSTALLATION.md) for setup instructions
-
----
-
-**Status**: Production Ready
-**Architecture**: Pure x86_64-only
-**Last Updated**: 2025-11-07
-**Version**: 2.0
+**Next steps**:
+- See [QEMU-CONFIGURATION.md](QEMU-CONFIGURATION.md) for runtime knobs and constraints
+- See [CONTROL-PLANE.md](CONTROL-PLANE.md) for access channels and automation surfaces
+- See [../01-GETTING-STARTED/INSTALLATION.md](../01-GETTING-STARTED/INSTALLATION.md) for host setup

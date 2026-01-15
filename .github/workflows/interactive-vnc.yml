@@ -77,12 +77,9 @@ jobs:
           # Enable VNC in environment
           cat >> docker-compose.override.yml <<EOF
           services:
-            hurd-x86_64:
+            gnu-hurd-dev:
               environment:
                 ENABLE_VNC: 1
-              ports:
-                - "5900:5900"  # VNC
-                - "6080:6080"  # noVNC web interface
           EOF
 
       - name: Build and start Hurd with VNC
@@ -105,14 +102,10 @@ jobs:
 
       - name: Setup noVNC web interface
         run: |
-          # Download noVNC
-          git clone https://github.com/novnc/noVNC.git
-          cd noVNC
-
-          # Start websockify to proxy VNC
-          ./utils/novnc_proxy --vnc localhost:5900 --listen 6080 &
-
-          echo "noVNC started on http://localhost:6080/vnc.html"
+          # Use the docker-compose.vnc.yml overlay (theasp/novnc container).
+          # This avoids ad-hoc cloning/running noVNC in CI.
+          docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d novnc
+          echo "noVNC is exposed via the novnc service (see docker-compose.vnc.yml)."
 
       - name: Install GUI if requested
         if: ${{ github.event.inputs.enable_gui == 'true' }}

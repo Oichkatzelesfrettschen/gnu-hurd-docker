@@ -9,9 +9,9 @@
 
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
-**Release**: Debian GNU/Hurd 2025 "Trixie" (Debian 13, snapshot 2025-11-05)
+**Release**: Debian GNU/Hurd (Debian 13 "Trixie", ports/13.0)
 
-**Guest Architecture**: Pure x86_64 (i386 deprecated 2025-11-07)
+**Guest Architecture**: x86_64 (via QEMU)
 
 **Container Platforms**: linux/amd64, linux/arm64 (Apple Silicon supported)
 
@@ -26,10 +26,10 @@
 ./scripts/setup-hurd-amd64.sh
 
 # 2. Start container
-docker compose up -d
+./scripts/docker-orchestration.sh up
 
 # 3. Wait for boot (2-5 minutes)
-docker compose logs -f
+./scripts/docker-orchestration.sh logs
 
 # 4. Connect via SSH
 ssh -p 2222 root@localhost
@@ -99,19 +99,19 @@ ssh -p 2222 root@localhost
 
 **Multi-Platform Container Support**: The Docker container runs on both `linux/amd64` and `linux/arm64` hosts (e.g., Apple Silicon Macs, ARM servers). QEMU inside the container emulates x86_64 for the GNU/Hurd guest regardless of host architecture.
 
-**x86_64-Only Guest** (i386 deprecated 2025-11-07):
+**x86_64-only guest**:
 
 | Component | Configuration |
 |-----------|---------------|
 | **QEMU Binary** | `qemu-system-x86_64` (underscore!) |
-| **Release** | Debian GNU/Hurd 2025 "Trixie" (Debian 13) |
-| **Snapshot Date** | 2025-11-05 (November 5, 2025) |
-| **Image** | debian-hurd.img.tar.xz (355 MB compressed, 4.2 GB raw) |
-| **Image URL** | http://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/ |
+| **Release** | Debian GNU/Hurd (Debian 13 "Trixie", ports/13.0) |
+| **Upstream build ID** | See `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/` (example: `20250807`) |
+| **Image** | debian-hurd.img.tar.xz (~337 MB compressed, ~3.9 GB raw) |
+| **Image URL** | https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/ |
 | **CPU** | `-cpu max` or `-cpu host` (KVM acceleration) |
 | **RAM** | 4 GB (minimum 2 GB, recommended 4-8 GB) |
 | **SMP** | 1-2 cores (stable), 4+ experimental |
-| **Storage** | SATA/AHCI with NetBSD Rump drivers |
+| **Storage** | IDE (default; guest compatibility) |
 | **Machine** | pc (stable, not q35) |
 | **Network** | E1000 (proven Hurd compatibility) |
 
@@ -154,25 +154,15 @@ telnet localhost 5555
 ## Features
 
 ### Core Features
-- ✅ **Debian 13 "Trixie"**: Official 2025 release (snapshot 2025-11-05)
-- ✅ **x86_64 Native**: Full 64-bit architecture (i386 removed)
-- ✅ **72% Package Coverage**: ~65,000+ Debian packages available
-- ✅ **KVM Acceleration**: 30-60s boot (vs 3-5 min TCG)
-- ✅ **Official Debian Image**: debian-hurd-amd64 from ports/13.0
-
-### New in Hurd 2025
-- 🎉 **NetBSD Rump Drivers**: User-space disk drivers (no Linux drivers in Mach!)
-- 🎉 **ACPI/APIC Support**: Modern hardware initialization
-- 🎉 **SMP Support**: Experimental multi-core (1-2 cores stable)
-- 🎉 **Rust/LLVM/Clang**: Full modern toolchain support
-- 🎉 **64-bit Performance**: Native amd64 execution
+- Debian 13 "Trixie" ports/13.0 GNU/Hurd guest (x86_64)
+- Multi-platform container: runs on `linux/amd64` and `linux/arm64` (guest still x86_64 via QEMU)
+- Optional KVM acceleration on Linux x86_64 hosts (otherwise TCG emulation). Note: some Debian GNU/Hurd images hit IDE DMA I/O errors under KVM; this repo auto-disables KVM for IDE on `pc` unless `FORCE_KVM=1`.
+- Official Debian Ports images and checksums (`SHA256SUMS`) from cdimage
 
 ### Infrastructure
-- ✅ **SATA/AHCI Storage**: Stable x86_64 Hurd support
-- ✅ **Pre-Provisioned CI**: 85% faster, 95% reliable
-- ✅ **Comprehensive Docs**: 26+ documents, 8 sections
-- ✅ **21 Automation Scripts**: Setup, install, configure, test
-- ✅ **Snapshot Management**: QCOW2 snapshots for rollback
+- IDE storage + E1000 networking defaults (guest compatibility)
+- Snapshot management with QCOW2 (host-side rollback)
+- Automation scripts for setup, orchestration, validation, and troubleshooting
 
 ---
 
@@ -181,7 +171,7 @@ telnet localhost 5555
 **Docker**: Docker + Docker Compose v2
 
 **Virtualization**:
-- **Linux**: KVM (`/dev/kvm`) - 3x faster boot
+- **Linux x86_64**: KVM (`/dev/kvm`) can be faster, but may be auto-disabled for reliability with IDE disks (`AUTO_DISABLE_KVM_FOR_IDE=1` default). Use `FORCE_KVM=1` to override.
 - **macOS/Windows**: TCG emulation (slower but works)
 
 **Disk Space**: 10-12 GB (image + container)
@@ -197,15 +187,15 @@ telnet localhost 5555
 ### Start/Stop Environment
 
 ```bash
-# Start
-docker-compose up -d
+# Start (dev default: bind-mount ./images)
+./scripts/docker-orchestration.sh up
 
 # Stop (graceful)
 ssh -p 2222 root@localhost shutdown -h now
-docker-compose down
+./scripts/docker-orchestration.sh down
 
-# Restart
-docker-compose restart
+# Restart (container)
+docker compose restart
 ```
 
 ### Create Snapshot
@@ -275,22 +265,13 @@ docker-compose restart
 
 ---
 
-## Migration (i386 → x86_64)
+## Legacy i386 content
 
-**Date**: 2025-11-07
+i386 references are preserved for historical context under `ARCHIVE/` and `docs/**/archive/`. The current supported guest is x86_64.
 
-**Breaking Changes**:
-- All i386 support removed
-- QEMU binary: `qemu-system-i386` → `qemu-system-x86_64`
-- RAM: 1.5 GB → 4 GB
-- Storage: IDE → SATA/AHCI
-- Machine: q35 → pc
+**Migration notes**: [docs/07-RESEARCH-AND-LESSONS/X86_64-MIGRATION.md](docs/07-RESEARCH-AND-LESSONS/X86_64-MIGRATION.md)
 
-**Migration Guide**: [docs/07-RESEARCH/X86_64-MIGRATION.md](docs/07-RESEARCH/X86_64-MIGRATION.md)
-
-**Lessons Learned**: [docs/07-RESEARCH/LESSONS-LEARNED.md](docs/07-RESEARCH/LESSONS-LEARNED.md)
-
-**Archive**: [ARCHIVE/migration/](ARCHIVE/migration/)
+**Lessons learned**: [docs/07-RESEARCH-AND-LESSONS/LESSONS-LEARNED.md](docs/07-RESEARCH-AND-LESSONS/LESSONS-LEARNED.md)
 
 ---
 
@@ -360,7 +341,7 @@ MIT License - See [LICENSE](LICENSE) file
 **Essential Commands**:
 ```bash
 # Start environment
-docker-compose up -d
+./scripts/docker-orchestration.sh up
 
 # Connect via SSH
 ssh -p 2222 root@localhost
@@ -376,4 +357,4 @@ ssh -p 2222 root@localhost
 
 ---
 
-[📖 Complete Documentation](docs/INDEX.md) | [🚀 Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) | [🔧 Troubleshooting](docs/06-TROUBLESHOOTING/)
+[Complete Documentation](docs/INDEX.md) | [Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) | [Troubleshooting](docs/06-TROUBLESHOOTING/)

@@ -84,7 +84,7 @@ jobs:
           =============================================================================
           Image Details
           =============================================================================
-          Base Image: Debian GNU/Hurd x86_64 (amd64) 2025 "Trixie" (snapshot 2025-11-05)
+          Base Image: Debian GNU/Hurd x86_64 (amd64) (ports/13.0; build ID varies)
           Source: https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/
           Architecture: x86_64 (amd64)
           Machine Type: pc (i440fx)
@@ -110,7 +110,7 @@ jobs:
           Using Docker Compose (Recommended):
             1. Download this release's debian-hurd-amd64.qcow2 file
             2. Place it in the 'images' directory of the repository
-            3. Run: docker compose up -d
+            3. Run: ./scripts/docker-orchestration.sh up
             4. Connect via SSH: ssh -p 2222 root@localhost
 
           Using QEMU directly:

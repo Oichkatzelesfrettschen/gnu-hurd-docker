@@ -14,11 +14,11 @@
 ### Current QEMU Configuration
 
 ```bash
-qemu-system-i386 \
+qemu-system-x86_64 \
   -enable-kvm \
   -m 2048 \
   -cpu pentium3 \
-  -drive file=debian-hurd-i386-20251105.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
+  -drive file=debian-hurd-amd64.qcow2,format=qcow2,cache=writeback,aio=threads,if=ide \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device e1000,netdev=net0 \
   -display gtk \
@@ -399,7 +399,7 @@ When you're done testing:
 quit
 
 # Or find the PID:
-ps aux | grep qemu-system-i386 | grep -v grep
+ps aux | grep qemu-system-x86_64 | grep -v grep
 
 # Kill it:
 kill <PID>
@@ -413,14 +413,14 @@ kill <PID>
 
 ```bash
 # Check if QEMU is running:
-ps aux | grep qemu-system-i386
+ps aux | grep qemu-system-x86_64
 
 # Check display:
 echo $DISPLAY
 
 # Try different display mode:
 # Kill current QEMU and restart with SDL:
-qemu-system-i386 ... -display sdl
+qemu-system-x86_64 ... -display sdl
 ```
 
 ### Boot Hangs

@@ -8,7 +8,7 @@
 
 **Purpose**: Diagnose and fix SSH connectivity problems
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 
@@ -36,22 +36,22 @@ Run these commands in order to identify the issue:
 
 ```bash
 # 1. Check if container is running
-docker-compose ps
-# Expected: gnu-hurd-x86_64 in "Up" state
+./scripts/docker-orchestration.sh ps
+# Expected: gnu-hurd-dev in "Up" state
 
 # 2. Test SSH port from host
 nc -zv localhost 2222
 # Expected: "Connection to localhost 2222 port [tcp/*] succeeded!"
 
-# 3. Try SSH connection
-ssh -p 2222 -o ConnectTimeout=5 root@localhost
-# Expected: Password prompt or connection
+# 3. Check for an SSH banner (port open != sshd healthy)
+./scripts/check-ssh-banner.sh
+# Expected: "SSH-2.0-..." banner
 
 # 4. If connection refused, check logs
-docker-compose logs --tail=50 | grep -iE "ssh|sshd"
+./scripts/docker-orchestration.sh logs | tail -200 | grep -iE "ssh|sshd" || true
 
-# 5. Inside container, check SSH service
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
+# 5. Note: `docker exec` / `systemctl` checks inspect the container, not the guest.
+# Guest SSH must be validated via banner/auth from the host.
 ```
 
 **Result**: This workflow identifies whether the issue is container, network, or SSH service.
@@ -70,7 +70,7 @@ ssh -p 2222 root@localhost
 **Inside container**:
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 which sshd
+docker-compose exec gnu-hurd-dev which sshd
 # which: no sshd in (...)
 ```
 
@@ -115,6 +115,12 @@ ssh -p 2222 root@localhost
 **Prerequisites**:
 - Serial console accessible: `telnet localhost 5555`
 - Network connectivity inside guest
+
+**Important**: On many upstream Debian GNU/Hurd images the serial console is blank (no login prompt).
+If serial is blank, use VNC/noVNC instead:
+
+- Start: `./scripts/docker-orchestration.sh up-vnc`
+- Open: `http://127.0.0.1:6080/vnc.html`
 
 **Manual Steps**:
 
@@ -198,10 +204,10 @@ ssh -p 2222 root@localhost
 **Inside container**:
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 which sshd
+docker-compose exec gnu-hurd-dev which sshd
 # /usr/sbin/sshd (SSH is installed)
 
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
+docker-compose exec gnu-hurd-dev systemctl status ssh
 # ● ssh.service - OpenBSD Secure Shell server
 #    Loaded: loaded
 #    Active: inactive (dead)
@@ -209,23 +215,34 @@ docker-compose exec gnu-hurd-x86_64 systemctl status ssh
 
 **Root Cause**: SSH service not started or crashed.
 
+### Symptom: Port open but no banner
+
+If `nc -z` succeeds but `./scripts/check-ssh-banner.sh` fails, the forward is alive but the guest is not presenting an SSH banner.
+
+Common causes:
+- `sshd` is not running inside the guest
+- `sshd` crashes in the guest image (observed on some Debian GNU/Hurd builds)
+- networking inside the guest is up, but sshd can't bind or dies early
+
+In this case, use VNC/noVNC to log in and inspect `/var/log/auth.log`, `/var/log/daemon.log`, and try running `/usr/sbin/sshd -D -e` to see the crash reason.
+
 ---
 
 ### Solution 1: Start SSH Service
 
 ```bash
 # Inside container, start SSH
-docker-compose exec gnu-hurd-x86_64 systemctl start ssh
+docker-compose exec gnu-hurd-dev systemctl start ssh
 
 # Enable on boot
-docker-compose exec gnu-hurd-x86_64 systemctl enable ssh
+docker-compose exec gnu-hurd-dev systemctl enable ssh
 
 # Verify running
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
+docker-compose exec gnu-hurd-dev systemctl status ssh
 # Should show: Active: active (running)
 
 # Check listening port
-docker-compose exec gnu-hurd-x86_64 ss -tlnp | grep :22
+docker-compose exec gnu-hurd-dev ss -tlnp | grep :22
 # Should show: LISTEN ... :22
 ```
 
@@ -243,17 +260,17 @@ ssh -p 2222 root@localhost
 
 ```bash
 # Test SSH config syntax
-docker-compose exec gnu-hurd-x86_64 sshd -t
+docker-compose exec gnu-hurd-dev sshd -t
 
 # Output:
 # - No output: Config is valid
 # - Error messages: Config has syntax errors
 
 # View SSH config
-docker-compose exec gnu-hurd-x86_64 cat /etc/ssh/sshd_config | grep -E "^[^#]"
+docker-compose exec gnu-hurd-dev cat /etc/ssh/sshd_config | grep -E "^[^#]"
 
 # Check SSH logs
-docker-compose exec gnu-hurd-x86_64 journalctl -u ssh -n 50
+docker-compose exec gnu-hurd-dev journalctl -u ssh -n 50
 ```
 
 **Common Config Issues**:
@@ -265,41 +282,41 @@ docker-compose exec gnu-hurd-x86_64 journalctl -u ssh -n 50
 Port 2222  # Should be Port 22 inside guest
 
 # Fix:
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     sed -i 's/^Port.*/Port 22/' /etc/ssh/sshd_config
-docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
+docker-compose exec gnu-hurd-dev systemctl restart ssh
 ```
 
 **2. Root login disabled**:
 
 ```bash
 # Check setting
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     grep "PermitRootLogin" /etc/ssh/sshd_config
 
 # Should be:
 PermitRootLogin yes
 
 # Fix if needed:
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
+docker-compose exec gnu-hurd-dev systemctl restart ssh
 ```
 
 **3. Password authentication disabled**:
 
 ```bash
 # Check setting
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     grep "PasswordAuthentication" /etc/ssh/sshd_config
 
 # Should be:
 PasswordAuthentication yes
 
 # Fix if needed:
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
+docker-compose exec gnu-hurd-dev systemctl restart ssh
 ```
 
 ---
@@ -309,7 +326,7 @@ docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
 ### Symptom
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
+docker-compose exec gnu-hurd-dev systemctl status ssh
 # Active: active (running)  <-- SSH is running
 
 ssh -p 2222 root@localhost
@@ -337,7 +354,7 @@ docker-compose ps
 # Should show: 0.0.0.0:2222->22/tcp
 
 # Or use docker inspect
-docker inspect gnu-hurd-x86_64 | grep -A 5 "PortBindings"
+docker inspect gnu-hurd-dev | grep -A 5 "PortBindings"
 ```
 
 **If port mapping missing**:
@@ -383,7 +400,7 @@ sudo firewall-cmd --list-all | grep 2222
 
 ```bash
 # Check QEMU is running with user network
-docker-compose exec gnu-hurd-x86_64 ps aux | grep qemu
+docker-compose exec gnu-hurd-dev ps aux | grep qemu
 
 # Should show: -netdev user,id=net0,hostfwd=tcp::22-:22
 ```
@@ -416,15 +433,15 @@ docker-compose up -d
 
 ```bash
 # Check SSH listening on port 22
-docker-compose exec gnu-hurd-x86_64 ss -tlnp | grep :22
+docker-compose exec gnu-hurd-dev ss -tlnp | grep :22
 # Should show: LISTEN ... 0.0.0.0:22
 
 # Check network interfaces
-docker-compose exec gnu-hurd-x86_64 ip addr show
+docker-compose exec gnu-hurd-dev ip addr show
 # Should have: eth0 with IP 10.0.2.15 (QEMU user network)
 
 # Test SSH from inside container
-docker-compose exec gnu-hurd-x86_64 ssh -p 22 root@localhost
+docker-compose exec gnu-hurd-dev ssh -p 22 root@localhost
 # Should prompt for password (loopback test)
 ```
 
@@ -544,16 +561,16 @@ ssh -p 2222 root@localhost
 
 ```bash
 # Verify password auth enabled
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     grep "PasswordAuthentication" /etc/ssh/sshd_config
 
 # Should show:
 PasswordAuthentication yes
 
 # If not, enable:
-docker-compose exec gnu-hurd-x86_64 \
+docker-compose exec gnu-hurd-dev \
     sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
+docker-compose exec gnu-hurd-dev systemctl restart ssh
 ```
 
 ---
@@ -711,31 +728,31 @@ ssh -o ConnectTimeout=5 -p 2222 root@localhost true
 ### Check SSH Service Status
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
+docker-compose exec gnu-hurd-dev systemctl status ssh
 ```
 
 ### View SSH Logs
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 journalctl -u ssh -n 50
+docker-compose exec gnu-hurd-dev journalctl -u ssh -n 50
 ```
 
 ### Check Listening Ports
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 ss -tlnp
+docker-compose exec gnu-hurd-dev ss -tlnp
 ```
 
 ### Test SSH Config Syntax
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 sshd -t
+docker-compose exec gnu-hurd-dev sshd -t
 ```
 
 ### Restart SSH Service
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 systemctl restart ssh
+docker-compose exec gnu-hurd-dev systemctl restart ssh
 ```
 
 ---
@@ -746,7 +763,7 @@ Use this checklist to systematically diagnose SSH issues:
 
 - [ ] **Container running**: `docker-compose ps` shows "Up"
 - [ ] **Port accessible**: `nc -zv localhost 2222` succeeds
-- [ ] **SSH installed**: `docker-compose exec gnu-hurd-x86_64 which sshd` returns path
+- [ ] **SSH installed**: `docker-compose exec gnu-hurd-dev which sshd` returns path
 - [ ] **SSH running**: `systemctl status ssh` shows "active (running)"
 - [ ] **SSH listening**: `ss -tlnp | grep :22` shows LISTEN
 - [ ] **Port mapping correct**: docker-compose.yml has `"2222:22"`

@@ -7,6 +7,8 @@ Scans all markdown files for internal links and fixes broken references.
 import os
 import re
 import json
+import argparse
+import fnmatch
 from pathlib import Path
 from typing import List, Tuple
 from collections import defaultdict
@@ -19,13 +21,26 @@ class LinkScanner:
         self.link_report = defaultdict(list)
         self.fixes_applied = []
         self.manual_review = []
+        self.exclude_globs = []
+
+    def set_excludes(self, globs: List[str]):
+        self.exclude_globs = globs or []
+
+    def is_excluded(self, rel_path: str) -> bool:
+        for pattern in self.exclude_globs:
+            if fnmatch.fnmatch(rel_path, pattern):
+                return True
+        return False
 
     def scan_files(self):
         """Build index of all markdown files"""
         for file_path in self.docs_root.rglob("*.md"):
             # Store relative path from docs root
             rel_path = file_path.relative_to(self.docs_root)
-            self.all_md_files.add(str(rel_path))
+            rel_str = str(rel_path)
+            if self.is_excluded(rel_str):
+                continue
+            self.all_md_files.add(rel_str)
 
     def extract_links(
         self, content: str, file_path: Path
@@ -323,8 +338,61 @@ class LinkScanner:
 
 
 def main():
-    docs_root = Path("/home/eirikr/Playground/gnu-hurd-docker/docs")
+    parser = argparse.ArgumentParser(
+        description="Scan markdown files for internal links and report/fix broken references."
+    )
+    default_docs_root = Path(__file__).resolve().parents[2] / "docs"
+    parser.add_argument(
+        "--docs-root",
+        type=Path,
+        default=default_docs_root,
+        help=f"Docs directory to scan (default: {default_docs_root})",
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        help=(
+            "Glob (relative to docs root) to exclude from scanning. "
+            "Can be provided multiple times."
+        ),
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=None,
+        help="Where to write the markdown report (default: <docs-root>/audits/LINK-SCAN-REPORT.md)",
+    )
+    parser.add_argument(
+        "--json",
+        dest="json_path",
+        type=Path,
+        default=None,
+        help="Where to write the JSON output (default: <docs-root>/audits/link-scan-data.json)",
+    )
+
+    args = parser.parse_args()
+
+    docs_root = args.docs_root.resolve()
     scanner = LinkScanner(docs_root)
+    scanner.set_excludes(
+        args.exclude
+        + [
+            # Avoid self-referential scans
+            "LINK-*-REPORT.md",
+            "link-scan-data.json",
+            "link-fix-data.json",
+            "audits/LINK-*-REPORT.md",
+            "audits/link-scan-data.json",
+            # Historical docs are large and intentionally preserved as-is
+            "archive/**",
+            "**/archive/**",
+            # Templates often contain intentionally fake/example links
+            "assets/templates/**",
+            # This guideline intentionally contains example (non-existent) links
+            "08-REFERENCE/guidelines/CROSS-LINKING.md",
+        ]
+    )
 
     print("Starting link scan and fix process...")
     print(f"Scanning directory: {docs_root}")
@@ -339,7 +407,10 @@ def main():
 
     # Generate and save report
     report = scanner.generate_report(total, broken, fixed)
-    report_path = docs_root / "LINK-FIX-REPORT.md"
+    default_audits_dir = docs_root / "audits"
+    default_audits_dir.mkdir(parents=True, exist_ok=True)
+
+    report_path = args.report or (default_audits_dir / "LINK-SCAN-REPORT.md")
 
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
@@ -359,7 +430,7 @@ def main():
         "broken_links": scanner.link_report["broken"],
     }
 
-    json_path = docs_root / "link-fix-data.json"
+    json_path = args.json_path or (default_audits_dir / "link-scan-data.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=2)
 

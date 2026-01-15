@@ -81,7 +81,7 @@ jobs:
       - name: Upload image artifact
         uses: actions/upload-artifact@v6
         with:
-          name: hurd-x86_64-image
+          name: gnu-hurd-dev-image
           path: debian-hurd-amd64-80gb.qcow2
           retention-days: 30
 

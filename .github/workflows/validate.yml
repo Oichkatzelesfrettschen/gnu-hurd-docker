@@ -7,14 +7,20 @@ name: Validate Configuration
     paths:
       - 'Dockerfile'
       - 'entrypoint.sh'
-      - 'docker-compose.yml'
+      - 'docker-compose*.yml'
+      - 'Makefile'
+      - 'scripts/**'
+      - 'docs/**'
       - '.github/workflows/validate.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'Dockerfile'
       - 'entrypoint.sh'
-      - 'docker-compose.yml'
+      - 'docker-compose*.yml'
+      - 'Makefile'
+      - 'scripts/**'
+      - 'docs/**'
       - '.github/workflows/validate.yml'
 
 concurrency:
@@ -45,84 +51,12 @@ jobs:
           sudo apt-get install -y shellcheck python3-pip
           pip install pyyaml
 
-      - name: Validate Dockerfile
+      - name: Repo validation (treat warnings as errors)
         run: |
-          echo "=== Validating Dockerfile ==="
-          if [ ! -f Dockerfile ]; then
-            echo "ERROR: Dockerfile not found"
-            exit 1
-          fi
-          echo "OK: Dockerfile structure is present"
-
-      - name: Validate entrypoint.sh
-        run: |
-          echo "=== Validating entrypoint.sh ==="
-          if [ ! -f entrypoint.sh ]; then
-            echo "ERROR: entrypoint.sh not found"
-            exit 1
-          fi
-          if [ ! -x entrypoint.sh ]; then
-            echo "ERROR: entrypoint.sh is not executable"
-            exit 1
-          fi
-          shellcheck -S error entrypoint.sh
-          echo "OK: entrypoint.sh passes shellcheck validation"
-
-      - name: Validate docker-compose.yml
-        run: |
-          echo "=== Validating docker-compose.yml ==="
-          python3 << 'PYTHON_SCRIPT'
-          import yaml
-          import sys
-          try:
-              with open('docker-compose.yml', 'r') as f:
-                  data = yaml.safe_load(f)
-              if data is None:
-                  print("ERROR: docker-compose.yml is empty")
-                  sys.exit(1)
-              print("OK: docker-compose.yml has valid YAML syntax")
-              print(f"Services defined: {list(data.get('services', {}).keys())}")
-          except yaml.YAMLError as e:
-              print(f"ERROR: YAML syntax error: {e}")
-              sys.exit(1)
-          except FileNotFoundError:
-              print("ERROR: docker-compose.yml not found")
-              sys.exit(1)
-          PYTHON_SCRIPT
-
-      - name: Validate configuration files
-        run: |
-          echo "=== Validating configuration files ==="
-          [ -f LICENSE ] && echo "OK: LICENSE file present" || echo "WARN: LICENSE file missing"
-          [ -f README.md ] && echo "OK: README.md present" || echo "WARN: README.md missing"
-          [ -f .gitignore ] && echo "OK: .gitignore present" || echo "WARN: .gitignore missing"
-          [ -d docs ] && echo "OK: docs directory present" || echo "WARN: docs directory missing"
-          [ -d scripts ] && echo "OK: scripts directory present" || echo "WARN: scripts directory missing"
-
-      - name: Check script executability
-        run: |
-          echo "=== Checking script executability ==="
-          for script in scripts/*.sh; do
-            # Skip template and example files
-            if [[ "$script" =~ TEMPLATE|template|EXAMPLE|example ]]; then
-              echo "SKIP: $script (template/example file)"
-              continue
-            fi
-            if [ -f "$script" ]; then
-              if [ -x "$script" ]; then
-                echo "OK: $script is executable"
-              else
-                echo "ERROR: $script is not executable"
-                exit 1
-              fi
-            fi
-          done
-
-      - name: Validate security configuration
-        run: |
-          echo "=== Validating security configuration ==="
-          chmod +x scripts/validate-security-config.sh
-          ./scripts/validate-security-config.sh docker-compose.yml
+          make lint
+          make validate
+          make security
+          make links
 
       - name: Generate workflow summary
         if: always()
@@ -135,18 +69,15 @@ jobs:
           **Run ID:** ${{ github.run_id }}
 
           ### Checks Performed
-          - ✓ Dockerfile validation
-          - ✓ entrypoint.sh validation and executability
-          - ✓ docker-compose.yml YAML syntax
-          - ✓ Script executability (excluding templates)
-          - ✓ Security configuration validation
+          - ✓ ShellCheck (warnings as errors)
+          - ✓ Repo invariants (scripts/validate-config.sh)
+          - ✓ Compose security posture (scripts/validate-security-config.sh)
+          - ✓ Docs internal link scan (scripts/utils/link-scanner.py)
 
           ### Files Validated
-          - **Dockerfile:** Present and valid
-          - **entrypoint.sh:** Executable and passes ShellCheck
-          - **docker-compose.yml:** Valid YAML syntax
-          - **Scripts:** All non-template scripts executable
-          - **Security config:** Validated successfully
+          - **Shell scripts:** ShellCheck clean
+          - **Compose:** Base + overlays parse and agree
+          - **Docs:** Internal links consistent
 
           ### Repository Health
           All configuration files pass validation checks.

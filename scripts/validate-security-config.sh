@@ -67,6 +67,22 @@ check_cap_drop_all() {
     fi
 }
 
+check_minimal_cap_add() {
+    log_info "Checking: minimal cap_add (CHOWN/SETUID/SETGID)..."
+    if ! grep -q "cap_add:" "$COMPOSE_FILE"; then
+        log_error "  ✗ cap_add section missing (required when cap_drop: [ALL] is used)"
+        return
+    fi
+
+    local cap_block
+    cap_block="$(grep -A10 "cap_add:" "$COMPOSE_FILE" || true)"
+    if echo "$cap_block" | grep -q "CHOWN" && echo "$cap_block" | grep -q "SETUID" && echo "$cap_block" | grep -q "SETGID" && echo "$cap_block" | grep -q "DAC_OVERRIDE"; then
+        log_info "  ✓ cap_add includes CHOWN/SETUID/SETGID/DAC_OVERRIDE"
+    else
+        log_error "  ✗ cap_add does not include CHOWN/SETUID/SETGID/DAC_OVERRIDE (required for bind-mount QCOW2 + optional privilege drop)"
+    fi
+}
+
 check_localhost_binding() {
     log_info "Checking: localhost port binding (recommended)..."
     
@@ -75,11 +91,12 @@ check_localhost_binding() {
         log_warn "  ⚠ Ports are bound to 0.0.0.0 (all interfaces)"
         log_warn "    For production, bind to localhost: 127.0.0.1:PORT:PORT"
     else
-        # Check for explicit localhost binding or default (no IP prefix)
+        # Check for explicit localhost binding (recommended)
         if grep -E '^\s*-\s+"127\.0\.0\.1:' "$COMPOSE_FILE" >/dev/null 2>&1; then
             log_info "  ✓ Ports are explicitly bound to localhost (127.0.0.1)"
         elif grep -E '^\s*-\s+"[0-9]+:[0-9]+"' "$COMPOSE_FILE" >/dev/null 2>&1; then
-            log_info "  ✓ Ports use default binding (localhost for development)"
+            log_warn "  ⚠ Ports use default binding (all interfaces on Docker)"
+            log_warn "    Recommend binding to 127.0.0.1 unless you intend remote access"
         else
             log_info "  ℹ No port bindings found or non-standard format"
         fi
@@ -102,7 +119,7 @@ check_secrets_configured() {
     if grep -q "^secrets:" "$COMPOSE_FILE"; then
         log_info "  ✓ Secrets section is configured"
     else
-        log_warn "  ⚠ Secrets section not found (recommended in SECURITY.md Section 4.1)"
+        log_info "  ℹ Secrets section not found (not configured by default)"
     fi
 }
 
@@ -153,6 +170,8 @@ main() {
     check_no_new_privileges
     echo ""
     check_cap_drop_all
+    echo ""
+    check_minimal_cap_add
     echo ""
     check_localhost_binding
     echo ""

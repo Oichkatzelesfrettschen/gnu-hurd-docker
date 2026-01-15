@@ -89,46 +89,46 @@ sudo systemctl stop <service>
 
 # Use different port in docker-compose.yml
 # Change: "2222:2222" to "2223:2222"
-docker-compose up -d
+    docker compose up -d
 ```
 
 ## Container Issues
 
 ### Container Won't Start
 
-**Error:** `docker-compose up -d` fails
+**Error:** `docker compose up -d` fails
 
 **Solutions:**
 ```bash
 # Check container logs
-docker-compose logs --tail=100
+    docker compose logs --tail=100
 
 # Verify QCOW2 image exists
-ls -lh debian-hurd-i386-20251105.qcow2
+    ls -lh debian-hurd-amd64.qcow2
 
 # Check volume mount paths
 grep -A 3 "volumes:" docker-compose.yml
 
 # Try running with interactive output to see errors
-docker-compose up
+    docker compose up
 # Press Ctrl+C to stop
 
 # Check container status
 docker ps -a | grep gnu-hurd
 
 # Remove failed container and retry
-docker-compose down -v
-docker-compose up -d
+    docker compose down -v
+    docker compose up -d
 ```
 
 ### Container Exits Immediately
 
-**Error:** `docker-compose ps` shows `Exited (1)`
+**Error:** `docker compose ps` shows `Exited (1)`
 
 **Solutions:**
 ```bash
 # View exit logs
-docker-compose logs --tail=50
+    docker compose logs --tail=50
 
 # Check entrypoint.sh for syntax errors
 shellcheck entrypoint.sh
@@ -137,7 +137,7 @@ shellcheck entrypoint.sh
 docker image ls | grep gnu-hurd
 
 # Try rebuilding image
-docker-compose build --no-cache
+    docker compose build --no-cache
 docker-compose up -d
 ```
 
@@ -306,17 +306,17 @@ docker-compose exec gnu-hurd-dev cat /etc/passwd | head -5
 **Solutions:**
 ```bash
 # Check QCOW2 integrity
-qemu-img check debian-hurd-i386-20251105.qcow2
+qemu-img check debian-hurd-amd64.qcow2
 
 # Repair if needed
-qemu-img check -r all debian-hurd-i386-20251105.qcow2
+qemu-img check -r all debian-hurd-amd64.qcow2
 
 # Create backup
-cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
+cp debian-hurd-amd64.qcow2 debian-hurd-amd64.qcow2.backup
 
 # Convert back to raw and reconvert
-qemu-img convert -f qcow2 debian-hurd-i386-20251105.qcow2 temp.img
-qemu-img convert -f raw -O qcow2 temp.img debian-hurd-i386-20251105.qcow2
+qemu-img convert -f qcow2 debian-hurd-amd64.qcow2 temp.img
+qemu-img convert -f raw -O qcow2 temp.img debian-hurd-amd64.qcow2
 rm temp.img
 
 # Or redownload image
@@ -348,7 +348,7 @@ docker-compose exec gnu-hurd-dev rm -f /var/log/*.log
 df -h /
 
 # Remove old backups
-rm -f debian-hurd-i386-20251105.qcow2.backup
+rm -f debian-hurd-amd64.qcow2.backup
 rm -f debian-hurd.img.tar.xz
 ```
 

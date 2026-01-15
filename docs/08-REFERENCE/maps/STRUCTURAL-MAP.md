@@ -99,10 +99,10 @@
 ├── .gitignore                       (411 bytes - Git ignore rules)
 ├── LICENSE                          (1.05 KB - MIT License)
 │
-├── Disk Images (6.1 GB total)
-│   ├── debian-hurd-i386-20251105.img      (3.91 GB - Raw format)
-│   ├── debian-hurd-i386-20251105.qcow2    (1.97 GB - QCOW2 format)
-│   └── debian-hurd.img.tar.xz             (338 MB - Compressed source)
+├── Disk Images (varies by build)
+│   ├── debian-hurd-amd64.img              (~3–4 GB - Raw format)
+│   ├── debian-hurd-amd64.qcow2            (~2–4 GB - QCOW2 format)
+│   └── debian-hurd.img.tar.xz             (~337 MB - Compressed source)
 │
 └── mydatabase.db                    (Empty SQLite database, 0 bytes)
 ```
@@ -127,10 +127,10 @@
 ### By Size Distribution
 
 ```
-Disk Images:        6.26 GB  (99.2%)
-  - debian-hurd-i386-20251105.img        3.91 GB
-  - debian-hurd-i386-20251105.qcow2      1.97 GB
-  - debian-hurd.img.tar.xz               0.34 GB
+Disk Images:        varies
+  - debian-hurd-amd64.img              ~3–4 GB
+  - debian-hurd-amd64.qcow2            ~2–4 GB
+  - debian-hurd.img.tar.xz             ~337 MB
 
 Documentation:      0.05 GB  (0.8%)
   - 14 markdown files with comprehensive guides
@@ -358,13 +358,13 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
    - Skips if already exists
 
 4. **Extraction phase:**
-   - Extracts to `debian-hurd-i386-20251105.img` (4.2GB raw)
+   - Extracts to `debian-hurd-amd64.img` (raw)
    - Takes several minutes
    - Verifies file created
 
 5. **Conversion phase:**
    - Converts raw → QCOW2 format
-   - Output: `debian-hurd-i386-20251105.qcow2` (2.1GB)
+   - Output: `debian-hurd-amd64.qcow2` (QCOW2)
    - 50% space efficiency
    - Takes 5-10 minutes
 
@@ -375,8 +375,8 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 
 **Output Files:**
 - `debian-hurd.img.tar.xz` (355 MB, source archive)
-- `debian-hurd-i386-20251105.img` (4.2 GB, raw format)
-- `debian-hurd-i386-20251105.qcow2` (2.1 GB, production format)
+- `debian-hurd-amd64.img` (raw format)
+- `debian-hurd-amd64.qcow2` (QCOW2 guest disk)
 
 **Exit Codes:**
 - 0: Success
@@ -732,13 +732,13 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 
 | Filename | Size | Format | Purpose | Status |
 |----------|------|--------|---------|--------|
-| debian-hurd-i386-20251105.qcow2 | 1.97 GB | QCOW2 v3 | Production disk image | ACTIVE |
-| debian-hurd-i386-20251105.img | 3.91 GB | Raw IMG | Extracted raw format | Reference |
+| debian-hurd-amd64.qcow2 | ~2–4 GB | QCOW2 | Guest disk image | ACTIVE |
+| debian-hurd-amd64.img | ~3–4 GB | Raw IMG | Extracted raw format | Reference |
 | debian-hurd.img.tar.xz | 338 MB | Compressed | Source archive | Archived |
 
 **Total Disk Space:** 6.26 GB
 
-### QCOW2 Format (debian-hurd-i386-20251105.qcow2)
+### QCOW2 Format (debian-hurd-amd64.qcow2)
 
 **Specifications:**
 - Format: QEMU Copy-On-Write v3
@@ -756,10 +756,10 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 
 **Mounted In:**
 - Docker container via bind-mount
-- Path: `/opt/hurd-image/debian-hurd-i386-20251105.qcow2` (inside container)
+- Path: `/opt/hurd-image/debian-hurd-amd64.qcow2` (inside container)
 - Host path: Current directory (read-only)
 
-### Raw Image Format (debian-hurd-i386-20251105.img)
+### Raw Image Format (debian-hurd-amd64.img)
 
 **Specifications:**
 - Format: Raw IMG
@@ -908,7 +908,7 @@ Docker Execution Flow:
 │   │   ├── entrypoint.sh (COPY)
 │   │   └── Debian Bookworm base image
 │   │
-│   ├── debian-hurd-i386-20251105.qcow2 (volume mount)
+│   ├── debian-hurd-amd64.qcow2 (disk image)
 │   │   ├── /opt/hurd-image/ (container path)
 │   │   └── read-only access
 │   │
@@ -920,7 +920,7 @@ QEMU Launch Flow (entrypoint.sh):
 ├── Dockerfile
 │   └── COPY entrypoint.sh /entrypoint.sh
 ├── Volume Mount
-│   └── debian-hurd-i386-20251105.qcow2
+│   └── debian-hurd-amd64.qcow2
 ├── Parameters
 │   ├── -m 1.5G (memory)
 │   ├── -cpu pentium
@@ -985,7 +985,7 @@ Validation Chain:
     ├── wget/curl (download tool)
     ├── tar (extraction)
     ├── qemu-img (conversion)
-    └── Output: debian-hurd-i386-20251105.qcow2
+    └── Output: debian-hurd-amd64.qcow2
 
 Documentation Cross-References:
 ├── README.md

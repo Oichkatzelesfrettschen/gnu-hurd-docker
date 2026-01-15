@@ -6,7 +6,7 @@
 # - Provide unified interface for Docker and Podman
 # - Auto-detect available container runtime
 # - Handle runtime-specific quirks and differences
-# - Enable true platform agnosticism across Linux, macOS, Windows, BSD
+# - Provide best-effort portability across Linux/macOS/Windows (Podman uses a VM on macOS/Windows)
 # =============================================================================
 
 set -euo pipefail
@@ -93,11 +93,18 @@ get_compose_command() {
             fi
             ;;
         podman)
-            # Podman uses podman-compose
-            if command -v podman-compose >/dev/null 2>&1; then
+            # Prefer Podman's native Compose subcommand when available (Podman v4+).
+            if podman compose version >/dev/null 2>&1; then
+                echo "podman compose"
+            # Fall back to podman-compose (Python implementation)
+            elif command -v podman-compose >/dev/null 2>&1; then
                 echo "podman-compose"
             else
-                echo_error "podman-compose not found. Install with: pip3 install podman-compose"
+                echo_error "Podman Compose not found. Install either 'podman compose' plugin or 'podman-compose'."
+                echo_error "Examples:"
+                echo_error "  - Fedora/RHEL: dnf install podman-compose"
+                echo_error "  - Arch/CachyOS: pacman -S podman-compose"
+                echo_error "  - Pip: pip3 install podman-compose"
                 exit 1
             fi
             ;;
@@ -118,6 +125,11 @@ is_kvm_available() {
     
     # KVM only available on Linux
     if [[ "$(uname -s)" != "Linux" ]]; then
+        return 1
+    fi
+
+    # For an x86_64 guest, KVM acceleration is only usable on x86_64 hosts.
+    if [[ "$(uname -m)" != "x86_64" ]]; then
         return 1
     fi
     
@@ -175,7 +187,7 @@ get_security_opts() {
             ;;
         podman)
             # Podman may need additional security options for nested virtualization
-            # Running as root with --privileged for QEMU
+            # Note: This repo does not require --privileged; label=disable is often needed on SELinux hosts.
             echo "--security-opt label=disable"
             ;;
     esac
@@ -240,7 +252,9 @@ get_platform_notes() {
                 echo_success "KVM acceleration available - expect 30-60s boot time"
             else
                 echo_warning "KVM not available - using TCG emulation (slower, 3-5min boot)"
-                echo_info "To enable KVM: ensure /dev/kvm exists and you're in the 'kvm' group"
+                if [[ "$(uname -m)" == "x86_64" ]]; then
+                    echo_info "To enable KVM: ensure /dev/kvm exists and you're in the 'kvm' group"
+                fi
             fi
             ;;
         macos)
@@ -252,8 +266,8 @@ get_platform_notes() {
             echo_info "Windows Subsystem for Linux (WSL2) recommended for better performance"
             ;;
         bsd)
-            echo_warning "Running on BSD - using TCG emulation (slower, 3-5min boot)"
-            echo_info "Consider using bhyve for native BSD virtualization"
+            echo_warning "Running on BSD - Podman/Docker support is not officially covered by this project"
+            echo_info "If you have a working OCI runtime layer on BSD, expect TCG-only performance for the x86_64 guest"
             ;;
     esac
 }
@@ -307,27 +321,21 @@ container_run() {
     "${cmd[@]}"
 }
 
-# Compose up with appropriate flags
-container_compose_up() {
+# Generic compose wrapper.
+# Accepts full compose arguments, including global flags like -f.
+container_compose() {
     local compose_cmd
     compose_cmd=$(get_compose_command)
-    
-    echo_info "Starting containers with: $compose_cmd"
+
+    echo_info "Running compose with: $compose_cmd $*"
     # Properly handle multi-word compose command
     read -ra cmd_array <<< "$compose_cmd"
-    "${cmd_array[@]}" up "$@"
+    "${cmd_array[@]}" "$@"
 }
 
-# Compose down
-container_compose_down() {
-    local compose_cmd
-    compose_cmd=$(get_compose_command)
-    
-    echo_info "Stopping containers with: $compose_cmd"
-    # Properly handle multi-word compose command
-    read -ra cmd_array <<< "$compose_cmd"
-    "${cmd_array[@]}" down "$@"
-}
+# Convenience wrappers
+container_compose_up() { container_compose up "$@"; }
+container_compose_down() { container_compose down "$@"; }
 
 # =============================================================================
 # Compatibility Checks
@@ -376,6 +384,7 @@ export -f get_userns_opts
 export -f detect_platform
 export -f get_platform_notes
 export -f container_run
+export -f container_compose
 export -f container_compose_up
 export -f container_compose_down
 export -f check_runtime_compatibility

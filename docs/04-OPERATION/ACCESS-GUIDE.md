@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The official Debian GNU/Hurd image (debian-hurd-i386-20251105.img) **does NOT** include SSH server by default. To enable SSH access, you must first access the system via serial console, then manually install and configure OpenSSH.
+The official Debian GNU/Hurd pre-installed image does not include an SSH server by default (verify against the upstream `README.txt`). To enable SSH access, first access the system via serial console, then install and configure OpenSSH inside the guest.
 
 **Access Methods Available:**
 1. ✅ **Serial Console (telnet)** - PRIMARY method for initial setup
@@ -474,7 +474,7 @@ dpkg-reconfigure openssh-server
 ### Boot Times
 - First boot: 5-10 minutes (filesystem init, translator setup)
 - Subsequent boots: 2-3 minutes
-- With KVM: 2-3 minutes (50% faster)
+- With KVM (when supported by the guest image): 2-3 minutes (faster)
 
 ### SSH Connection
 - Initial connection: 1-2 seconds

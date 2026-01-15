@@ -82,7 +82,7 @@ The QCOW2 image is not included in the repository (too large).
 
 **Option B: Manual download**
 ```bash
-# Download compressed image (~350 MB) - Debian 13 "Trixie" 2025-11-05
+# Download compressed image (~337 MB as of current ports/13.0 build)
 wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 
 # Extract
@@ -97,18 +97,18 @@ qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-amd64.qcow2
 **Option C: Use existing image**
 ```bash
 # If you already have the QCOW2 image:
-cp /path/to/debian-hurd-i386-20251105.qcow2 ./
+cp /path/to/debian-hurd-amd64.qcow2 ./
 ```
 
 ### Verify Image
 
 ```bash
 # Check file exists and size is correct
-ls -lh debian-hurd-i386-20251105.qcow2
-# Should show: 2.1G ... debian-hurd-i386-20251105.qcow2
+ls -lh debian-hurd-amd64.qcow2
+# Should show: ~2–4G ... debian-hurd-amd64.qcow2 (varies by upstream and conversion)
 
 # Verify QCOW2 format
-file debian-hurd-i386-20251105.qcow2
+file debian-hurd-amd64.qcow2
 # Should output: QEMU QCOW2 Image
 ```
 
@@ -352,13 +352,13 @@ docker-compose exec gnu-hurd-dev ping 8.8.8.8
 
 ```bash
 # Clear Docker cache and rebuild
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Check Dockerfile syntax
 docker build --dry-run .
 
 # View full build output
-docker-compose build --progress=plain
+docker compose build --progress=plain
 
 # Check available disk space
 df -h
@@ -368,10 +368,10 @@ df -h
 
 ```bash
 # Check error messages
-docker-compose logs --tail=100
+docker compose logs --tail=100
 
 # Verify QCOW2 image exists
-ls -lh debian-hurd-i386-20251105.qcow2
+ls -lh debian-hurd-amd64.qcow2
 
 # Check Docker daemon status
 sudo systemctl status docker
@@ -387,7 +387,7 @@ docker ps -a | grep gnu-hurd
 # Press Enter at serial console to proceed past GRUB
 
 # If still stuck, check logs
-docker-compose logs | tail -100
+docker compose logs | tail -100
 
 # Manual timeout can be increased in entrypoint.sh
 ```
@@ -480,10 +480,10 @@ docker run -d --name restore-container my-backup:latest
 
 ```bash
 # Copy QCOW2 image
-cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
+cp debian-hurd-amd64.qcow2 debian-hurd-amd64.qcow2.backup
 
 # Create snapshot
-qemu-img snapshot -c backup debian-hurd-i386-20251105.qcow2
+qemu-img snapshot -c backup debian-hurd-amd64.qcow2
 ```
 
 ## Production Deployment
@@ -505,5 +505,5 @@ For production environments, consider:
 
 ---
 
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-05 (legacy timestamp; verify current upstream build on cdimage)
 **Status:** Complete

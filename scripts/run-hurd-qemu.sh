@@ -225,13 +225,16 @@ check_prerequisites() {
     qemu_version=$(qemu-system-x86_64 --version | head -1)
     log_info "QEMU: $qemu_version"
 
-    # Verify architecture
-    if [[ "$(uname -m)" != "x86_64" ]]; then
-        log_error "This script requires x86_64 host architecture"
-        exit 1
+    # KVM only works for x86_64 guests on x86_64 hosts; other hosts will use TCG.
+    local host_arch
+    host_arch="$(uname -m)"
+    if [[ "$host_arch" != "x86_64" ]]; then
+        log_warn "Host architecture is '$host_arch' (not x86_64)"
+        log_warn "Forcing TCG emulation (KVM not available for x86_64 guest on this host)"
+        DISABLE_KVM=1
+    else
+        log_info "Host architecture: x86_64 ✓"
     fi
-
-    log_info "Architecture: x86_64 ✓"
 }
 
 # =============================================================================
@@ -244,7 +247,7 @@ detect_kvm() {
         return
     fi
 
-    if [[ -e /dev/kvm ]] && [[ -r /dev/kvm ]] && [[ -w /dev/kvm ]]; then
+    if [[ "$(uname -m)" == "x86_64" ]] && [[ -e /dev/kvm ]] && [[ -r /dev/kvm ]] && [[ -w /dev/kvm ]]; then
         log_info "KVM acceleration: ENABLED ✓"
         echo "kvm"
     else
@@ -273,8 +276,12 @@ build_qemu_command() {
     # Machine type: pc (i440FX) for Hurd compatibility
     cmd+=(-machine pc)
 
-    # Acceleration with automatic fallback
-    cmd+=(-accel kvm -accel "tcg,thread=multi")
+    # Acceleration
+    if [[ "$accel_mode" == "kvm" ]]; then
+        cmd+=(-accel kvm)
+    else
+        cmd+=(-accel "tcg,thread=multi")
+    fi
 
     # CPU model
     if [[ "$accel_mode" == "kvm" ]]; then
@@ -315,7 +322,8 @@ build_qemu_command() {
         log_info "Display: nographic (serial console only)"
     fi
 
-    echo "${cmd[@]}"
+    QEMU_CMD=("${cmd[@]}")
+    return 0
 }
 
 # =============================================================================
@@ -355,8 +363,7 @@ main() {
     # Build and display QEMU command
     echo ""
     log_step "Launching QEMU..."
-    local qemu_cmd
-    qemu_cmd=$(build_qemu_command)
+    build_qemu_command
 
     echo ""
     echo "=================================================================="
@@ -374,8 +381,7 @@ main() {
     echo ""
 
     # Execute QEMU
-    # shellcheck disable=SC2086
-    exec $qemu_cmd
+    exec "${QEMU_CMD[@]}"
 }
 
 # Run main function with all arguments

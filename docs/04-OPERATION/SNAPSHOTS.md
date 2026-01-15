@@ -7,7 +7,7 @@
 
 **Purpose**: Complete guide to QCOW2 snapshot management for GNU/Hurd images
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 
@@ -624,15 +624,15 @@ rm debian-hurd-amd64-old.qcow2
 
 ```bash
 # Check QEMU is running
-docker-compose ps
-# Expected: hurd-x86_64-qemu Up
+docker compose ps
+# Expected: gnu-hurd-dev Up
 
 # Check disk space
 df -h .
 # Need at least 1 GB free
 
 # Check QCOW2 permissions
-ls -lh debian-hurd-amd64.qcow2
+ls -lh ./images/debian-hurd-amd64.qcow2
 # Should be writable
 ```
 

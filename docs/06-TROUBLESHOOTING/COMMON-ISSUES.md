@@ -8,7 +8,7 @@
 
 **Purpose**: Complete troubleshooting reference for common issues
 
-**Scope**: Debian GNU/Hurd x86_64 only (i386 deprecated 2025-11-07)
+**Scope**: Debian GNU/Hurd x86_64 guest (via QEMU)
 
 ---
 
@@ -23,7 +23,7 @@ docker-compose ps
 docker-compose logs --tail=50
 
 # Resource usage
-docker stats gnu-hurd-x86_64
+docker stats gnu-hurd-dev
 df -h /
 free -h
 
@@ -722,7 +722,7 @@ telnet localhost 5555
 **Check current usage**:
 
 ```bash
-docker stats gnu-hurd-x86_64
+docker stats gnu-hurd-dev
 ```
 
 **Solutions**:
@@ -734,13 +734,13 @@ environment:
   QEMU_RAM: 2048  # Reduce from 4096 or 8192
 
 # 2. Check QEMU process inside container
-docker-compose exec gnu-hurd-x86_64 ps aux | grep qemu
+docker-compose exec gnu-hurd-dev ps aux | grep qemu
 
 # 3. Check host memory
 free -h
 
 # 4. Inside guest, clean up packages
-docker-compose exec gnu-hurd-x86_64 bash
+docker-compose exec gnu-hurd-dev bash
 apt-get clean
 apt-get autoremove
 ```
@@ -820,18 +820,17 @@ cp debian-hurd-amd64-80gb.qcow2.backup debian-hurd-amd64-80gb.qcow2
 
 ```bash
 # Check disk usage
-docker-compose exec gnu-hurd-x86_64 df -h
+docker compose exec gnu-hurd-dev df -h
 
 # Clean package cache
-docker-compose exec gnu-hurd-x86_64 apt-get clean
-docker-compose exec gnu-hurd-x86_64 apt-get autoremove
+docker compose exec gnu-hurd-dev apt-get clean
+docker compose exec gnu-hurd-dev apt-get autoremove
 
 # Find large files
-docker-compose exec gnu-hurd-x86_64 du -sh /* | sort -rh
+docker compose exec gnu-hurd-dev du -sh /* | sort -rh
 
 # Clean log files
-docker-compose exec gnu-hurd-x86_64 rm -f /var/log/*.log
-docker-compose exec gnu-hurd-x86_64 journalctl --vacuum-size=50M
+docker compose exec gnu-hurd-dev rm -f /var/log/*.log
 ```
 
 **On Host**:
@@ -841,8 +840,8 @@ docker-compose exec gnu-hurd-x86_64 journalctl --vacuum-size=50M
 df -h /
 
 # Remove old backups
-rm -f debian-hurd-amd64-80gb.qcow2.backup
-rm -f debian-hurd-amd64-20251105.img.tar.xz
+rm -f images/debian-hurd-amd64.qcow2.backup
+rm -f images/debian-hurd.img.tar.xz
 
 # Clean Docker system
 docker system prune -af
@@ -868,14 +867,14 @@ docker system prune -af
 ls -la /dev/kvm
 
 # Check CPU usage inside container
-docker-compose exec gnu-hurd-x86_64 top
+docker-compose exec gnu-hurd-dev top
 
 # Monitor host CPU usage
 top
 # Look for qemu-system-x86_64 process
 
 # Check disk I/O (if iostat available)
-docker-compose exec gnu-hurd-x86_64 iostat -x 1 5
+docker-compose exec gnu-hurd-dev iostat -x 1 5
 ```
 
 **Solutions**:
@@ -892,11 +891,11 @@ devices:
 
 ```bash
 # List running services
-docker-compose exec gnu-hurd-x86_64 systemctl list-units --type=service --state=running
+docker-compose exec gnu-hurd-dev systemctl list-units --type=service --state=running
 
 # Disable unnecessary services
-docker-compose exec gnu-hurd-x86_64 systemctl disable <service>
-docker-compose exec gnu-hurd-x86_64 systemctl stop <service>
+docker-compose exec gnu-hurd-dev systemctl disable <service>
+docker-compose exec gnu-hurd-dev systemctl stop <service>
 ```
 
 **3. Increase host system resources**:
@@ -931,19 +930,19 @@ environment:
 
 ```bash
 # Check QEMU CPU usage
-docker stats gnu-hurd-x86_64
+docker stats gnu-hurd-dev
 
 # Inside guest, find high-CPU processes
-docker-compose exec gnu-hurd-x86_64 ps aux --sort=-%cpu | head -10
+docker-compose exec gnu-hurd-dev ps aux --sort=-%cpu | head -10
 
 # Kill runaway processes
-docker-compose exec gnu-hurd-x86_64 kill -9 <PID>
+docker-compose exec gnu-hurd-dev kill -9 <PID>
 
 # Check for infinite loops in logs
 docker-compose logs | grep -E "error|loop|retry" | tail -50
 
 # Disable unnecessary services
-docker-compose exec gnu-hurd-x86_64 systemctl disable <service>
+docker-compose exec gnu-hurd-dev systemctl disable <service>
 ```
 
 ---
@@ -965,7 +964,7 @@ nc -zv localhost 2222      # Should succeed
 telnet localhost 2222      # Should connect
 
 # Check container network
-docker inspect gnu-hurd-x86_64 | grep -A 10 "Networks"
+docker inspect gnu-hurd-dev | grep -A 10 "Networks"
 
 # Check firewall on host
 sudo ufw status
@@ -997,10 +996,10 @@ docker-compose ps
 
 ```bash
 # Check if service is listening inside container
-docker-compose exec gnu-hurd-x86_64 ss -tlnp | grep :22
+docker-compose exec gnu-hurd-dev ss -tlnp | grep :22
 
 # If not listening, start SSH
-docker-compose exec gnu-hurd-x86_64 systemctl start ssh
+docker-compose exec gnu-hurd-dev systemctl start ssh
 ```
 
 ---
@@ -1013,18 +1012,18 @@ docker-compose exec gnu-hurd-x86_64 systemctl start ssh
 
 ```bash
 # Test connectivity inside container
-docker-compose exec gnu-hurd-x86_64 ping -c 3 8.8.8.8
+docker-compose exec gnu-hurd-dev ping -c 3 8.8.8.8
 
 # Check routing
-docker-compose exec gnu-hurd-x86_64 ip route show
+docker-compose exec gnu-hurd-dev ip route show
 # Should have default via 10.0.2.2 (QEMU user network)
 
 # Check DNS resolution
-docker-compose exec gnu-hurd-x86_64 cat /etc/resolv.conf
+docker-compose exec gnu-hurd-dev cat /etc/resolv.conf
 # Should have nameserver entries
 
 # Test DNS
-docker-compose exec gnu-hurd-x86_64 nslookup google.com
+docker-compose exec gnu-hurd-dev nslookup google.com
 ```
 
 **Solutions**:
@@ -1032,7 +1031,7 @@ docker-compose exec gnu-hurd-x86_64 nslookup google.com
 **1. Manually set DNS**:
 
 ```bash
-docker-compose exec gnu-hurd-x86_64 bash
+docker-compose exec gnu-hurd-dev bash
 # Inside guest:
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 echo "nameserver 1.1.1.1" >> /etc/resolv.conf
@@ -1093,7 +1092,7 @@ sudo journalctl -u docker -n 100
 
 ```bash
 # Container resource usage
-docker stats gnu-hurd-x86_64
+docker stats gnu-hurd-dev
 
 # Host disk space
 df -h /
@@ -1113,7 +1112,7 @@ qemu-img info debian-hurd-amd64-80gb.qcow2
 docker-compose ps
 
 # Network connectivity inside container
-docker-compose exec gnu-hurd-x86_64 ping -c 3 8.8.8.8
+docker-compose exec gnu-hurd-dev ping -c 3 8.8.8.8
 
 # SSH connectivity
 ssh -p 2222 -o ConnectTimeout=5 root@localhost
@@ -1123,11 +1122,11 @@ ssh -p 2222 -o ConnectTimeout=5 root@localhost
 
 ```bash
 # Inside container, check running services
-docker-compose exec gnu-hurd-x86_64 systemctl status ssh
-docker-compose exec gnu-hurd-x86_64 ps aux
+docker-compose exec gnu-hurd-dev systemctl status ssh
+docker-compose exec gnu-hurd-dev ps aux
 
 # Check listening ports
-docker-compose exec gnu-hurd-x86_64 ss -tlnp
+docker-compose exec gnu-hurd-dev ss -tlnp
 ```
 
 **5. Rebuild and Restart**:

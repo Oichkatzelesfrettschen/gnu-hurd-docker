@@ -22,9 +22,9 @@ source "$SCRIPT_DIR/lib/container-helpers.sh"
 readonly EXIT_SUCCESS=0
 readonly EXIT_FAILURE=1
 
-# Ports to check
-readonly SSH_PORT=2222
-readonly HTTP_PORT=8080
+# Ports to check (inside the container namespace).
+SSH_PORT="${SSH_PORT:-2222}"
+HTTP_PORT="${HTTP_PORT:-8080}"
 
 # Logging functions (adapted to use library functions)
 log_error() {

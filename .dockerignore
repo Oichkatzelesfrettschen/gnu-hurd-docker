@@ -1,0 +1,22 @@
+.git
+.github
+ARCHIVE
+
+# Local VM artifacts (must not be in build context)
+images
+*.qcow2
+*.img
+*.iso
+*.tar
+*.tar.*
+*.xz
+
+# Local runtime/state
+secrets
+logs
+recordings
+
+# Python caches
+__pycache__
+*.pyc
+

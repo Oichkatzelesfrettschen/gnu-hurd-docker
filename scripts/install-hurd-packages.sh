@@ -166,7 +166,7 @@ echo_info "Setting up 9p mount point for host filesystem sharing..."
 mkdir -p /mnt/host
 cat >> /etc/fstab << 'EOF'
 # 9p filesystem sharing from Docker host
-scripts /mnt/host 9p trans=virtio,version=9p2000.L,nofail 0 0
+hostshare /mnt/host 9p trans=virtio,version=9p2000.L,nofail 0 0
 EOF
 
 echo_success "9p mount point configured at /mnt/host"

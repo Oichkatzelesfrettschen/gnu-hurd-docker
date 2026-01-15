@@ -1,8 +1,6 @@
 # GNU/Hurd Docker - Installation Requirements
 
-**Last Updated:** 2025-11-06  
-**Version:** 2.0  
-**Status:** Production Ready
+**Status:** Development-focused (QEMU-in-container; not a “Hurd container”)
 
 ---
 
@@ -25,7 +23,7 @@
 
 | Component | Requirement | Notes |
 |-----------|-------------|-------|
-| **CPU** | 2 cores (x86_64) | Any modern 64-bit processor |
+| **CPU** | 2 cores (amd64 or arm64 host) | Guest is x86_64-only (via QEMU) |
 | **RAM** | 4 GB total | 2 GB for QEMU, 2 GB for host |
 | **Disk** | 10 GB free | For Docker images and QCOW2 |
 | **OS** | Linux, macOS, Windows | With Docker support |
@@ -34,10 +32,10 @@
 
 | Component | Requirement | Notes |
 |-----------|-------------|-------|
-| **CPU** | 4+ cores with VT-x/AMD-V | For KVM acceleration (Linux only) |
+| **CPU** | 4+ cores with VT-x/AMD-V | For KVM acceleration (Linux x86_64 hosts only) |
 | **RAM** | 8 GB total | For better performance |
 | **Disk** | 20 GB free SSD | Faster I/O for QEMU |
-| **OS** | Linux with KVM | Best performance |
+| **OS** | Linux x86_64 with KVM | Best performance |
 
 ---
 
@@ -118,7 +116,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
 
 ### Core Requirements (All Platforms)
 
-#### 1. Docker Engine
+#### 1. Container Runtime (Docker or Podman)
 
 **Version:** 20.10 or later
 
@@ -150,13 +148,23 @@ brew install --cask docker
 - Download Docker Desktop from https://www.docker.com/products/docker-desktop
 - Install with WSL 2 backend enabled
 
-**Verification:**
+**Verification (Docker):**
 ```bash
 docker --version
 # Expected: Docker version 20.10.0 or later
 ```
 
-#### 2. Docker Compose
+**Alternative (Podman):**
+- Podman 4+ includes `podman compose` on many distros.
+- `podman-compose` (Python) is a fallback when `podman compose` is unavailable.
+
+**Verification (Podman):**
+```bash
+podman --version
+podman compose version
+```
+
+#### 2. Compose (Docker Compose v2 or Podman Compose)
 
 **Version:** 1.29 or later (or Docker Compose V2)
 
@@ -170,11 +178,15 @@ sudo chmod +x /usr/local/bin/docker-compose
 # Already included with Docker Desktop and modern Docker Engine
 ```
 
-**Verification:**
+**Verification (Docker Compose v2):**
 ```bash
-docker-compose --version
-# Expected: docker-compose version 1.29.0 or later
-# OR: Docker Compose version v2.x.x
+docker compose version
+# Expected: Docker Compose version v2.x.x
+```
+
+**Verification (podman-compose fallback):**
+```bash
+podman-compose --version
 ```
 
 #### 3. Git
@@ -206,12 +218,13 @@ git --version
 
 ## Optional Dependencies
 
-### For KVM Acceleration (Linux Only)
+### For KVM Acceleration (Linux x86_64 Only)
 
 **Required:**
 - KVM kernel modules loaded
 - `/dev/kvm` device accessible
 - CPU with VT-x (Intel) or AMD-V (AMD) support
+ - Host architecture: `x86_64` (KVM cannot accelerate an x86_64 guest on arm64 hosts)
 
 **Installation:**
 ```bash
@@ -403,22 +416,19 @@ yay -S gnu-hurd-docker
 
 The Docker image includes all required QEMU components:
 
-**Packages (Debian Bookworm base):**
-- `qemu-system-i386` - i386 system emulator
-- `qemu-utils` - QEMU utilities (qemu-img, etc.)
-- `screen` - Terminal multiplexer
-- `telnet` - Telnet client
-- `curl` - HTTP client
-- `socat` - Socket relay
-
-**QEMU Version:** 7.2 or later (from Debian Bookworm)
+**Packages (Ubuntu 24.04 base):**
+- `qemu-system-x86` (includes `qemu-system-x86_64`) - x86_64 system emulator
+- `qemu-utils` - QEMU utilities (`qemu-img`, etc.)
+- `curl`, `wget`, `ca-certificates` - downloads + HTTPS verification
+- `socat`, `netcat-openbsd` - socket/port tooling
+- `screen`, `tmux`, `expect` - debugging and automation helpers
 
 ### Guest OS (GNU/Hurd)
 
 **Image Requirements:**
-- Debian GNU/Hurd i386 image
+- Debian GNU/Hurd hurd-amd64 (x86_64 guest) image
 - Format: QCOW2
-- Size: ~2-4 GB compressed, ~10 GB expanded
+- Size: ~0.3–0.5 GB compressed, ~4 GB raw, ~2–3 GB QCOW2 (varies by upstream)
 - Download: Provided by `scripts/download-image.sh`
 
 **Image Source:**
@@ -426,7 +436,7 @@ The Docker image includes all required QEMU components:
 # Automated download script (recommended)
 ./scripts/download-image.sh
 
-# Manual download (Debian 13 "Trixie" x86_64 - 2025-11-05 release)
+# Manual download (Debian ports/13.0, hurd-amd64)
 wget https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/debian-hurd.img.tar.xz
 tar xJf debian-hurd.img.tar.xz
 qemu-img convert -f raw -O qcow2 debian-hurd.img debian-hurd-amd64.qcow2
@@ -521,14 +531,8 @@ docker pull hello-world
 ### Linux with KVM
 
 **Best Performance Configuration:**
-```yaml
-# docker-compose.yml
-devices:
-  - /dev/kvm
-
-environment:
-  - QEMU_RAM=4096
-  - QEMU_SMP=2
+```bash
+docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
 ```
 
 **Expected Performance:**
@@ -578,8 +582,9 @@ Use this checklist to verify all requirements are met:
 docker --version
 docker ps
 
-# 2. Docker Compose
-docker-compose --version
+# 2. Compose (Docker or Podman)
+docker compose version || docker-compose --version
+podman-compose --version || true
 
 # 3. Git
 git --version
@@ -604,8 +609,8 @@ free -h
 nproc
 lscpu | grep -i virtual
 
-# 10. QEMU (inside container)
-docker run --rm debian:bookworm-slim apt-cache policy qemu-system-i386
+# 10. QEMU (inside container image)
+docker run --rm ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest /usr/bin/qemu-system-x86_64 --version || true
 ```
 
 ---

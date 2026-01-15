@@ -7,9 +7,9 @@ This checklist verifies that the Docker container and QEMU setup are running in 
 
 ### 1. Host System Check
 ```bash
-# Verify host is x86_64
+# Verify host architecture (KVM requires Linux x86_64)
 uname -m
-# Expected: x86_64
+# Expected: x86_64 for KVM; other architectures will use TCG
 
 # Check Docker architecture
 docker version --format '{{.Server.Arch}}'
@@ -31,7 +31,7 @@ grep "qemu-system-x86_64" Dockerfile
 ### 3. Build the Container
 ```bash
 # Build with verification
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # During build, watch for:
 # - "Architecture verified: x86_64-only configuration"
@@ -41,12 +41,12 @@ docker-compose build --no-cache
 ### 4. Inspect Built Image
 ```bash
 # Check image architecture
-docker inspect ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest \
+docker inspect ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest \
   | jq '.[0].Architecture'
 # Expected: "amd64"
 
 # Verify QEMU binary in image
-docker run --rm ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest \
+docker run --rm ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest \
   ls -la /usr/bin/qemu-system-x86_64
 # Should show executable file
 ```
@@ -56,10 +56,10 @@ docker run --rm ghcr.io/oichkatzelesfrettschen/gnu-hurd-x86_64:latest \
 ### 5. Start Container
 ```bash
 # Start with KVM if available
-docker-compose up -d
+./scripts/docker-orchestration.sh up-kvm
 
 # Check container logs for architecture verification
-docker-compose logs hurd-x86_64 | grep -E "Architecture|x86_64|i386"
+docker compose logs gnu-hurd-dev | grep -E "Architecture|x86_64|i386"
 # Should show: "Architecture verified: x86_64-only configuration"
 # Should NOT show any i386 references
 ```
@@ -67,7 +67,7 @@ docker-compose logs hurd-x86_64 | grep -E "Architecture|x86_64|i386"
 ### 6. Verify QEMU Process
 ```bash
 # Check running QEMU process inside container
-docker exec hurd-x86_64-qemu ps aux | grep qemu
+docker exec gnu-hurd-dev ps aux | grep qemu
 
 # Should show:
 # - /usr/bin/qemu-system-x86_64 (with underscore!)
@@ -77,18 +77,18 @@ docker exec hurd-x86_64-qemu ps aux | grep qemu
 ### 7. Check Package Architecture
 ```bash
 # List all packages in container
-docker exec hurd-x86_64-qemu dpkg --get-selections | grep -E ":i386|i386-"
+docker exec gnu-hurd-dev dpkg --get-selections | grep -E ":i386|i386-"
 # Should return NOTHING (no i386 packages)
 
 # Verify QEMU package
-docker exec hurd-x86_64-qemu dpkg -l qemu-system-x86
+docker exec gnu-hurd-dev dpkg -l qemu-system-x86
 # Should show amd64 architecture
 ```
 
 ### 8. KVM/TCG Detection
 ```bash
 # Check acceleration mode
-docker-compose logs hurd-x86_64 | grep -E "KVM|TCG"
+docker compose logs gnu-hurd-dev | grep -E "KVM|TCG"
 
 # With KVM available:
 # - "KVM hardware acceleration detected and will be used"
@@ -154,7 +154,7 @@ dpkg --get-selections | grep i386
 ### 12. Memory Check
 ```bash
 # Verify 64-bit memory addressing
-docker exec hurd-x86_64-qemu cat /proc/meminfo | grep MemTotal
+docker exec gnu-hurd-dev cat /proc/meminfo | grep MemTotal
 # Can allocate more than 4GB (not limited to 32-bit addressing)
 ```
 
@@ -232,16 +232,16 @@ run_test "Host architecture" "uname -m" "x86_64"
 run_test "Docker architecture" "docker version --format '{{.Server.Arch}}'" "amd64"
 run_test "No i386 in Dockerfile" "grep -c 'i386' Dockerfile" "^0$"
 run_test "QEMU x86_64 binary specified" "grep -c 'qemu-system-x86_64' Dockerfile" "[1-9]"
-run_test "Container running" "docker ps --filter name=hurd-x86_64-qemu -q | wc -l" "^1$"
+run_test "Container running" "docker ps --filter name=gnu-hurd-dev -q | wc -l" "^1$"
 
 # If container is running, do additional checks
-if docker ps --filter name=hurd-x86_64-qemu -q | grep -q .; then
+if docker ps --filter name=gnu-hurd-dev -q | grep -q .; then
     run_test "QEMU process is x86_64" \
-        "docker exec hurd-x86_64-qemu pgrep -f 'qemu-system-x86_64' | wc -l" \
+        "docker exec gnu-hurd-dev pgrep -f 'qemu-system-x86_64' | wc -l" \
         "^1$"
 
     run_test "No i386 packages in container" \
-        "docker exec hurd-x86_64-qemu sh -c 'dpkg --get-selections | grep -c i386'" \
+        "docker exec gnu-hurd-dev sh -c 'dpkg --get-selections | grep -c i386'" \
         "^0$"
 fi
 

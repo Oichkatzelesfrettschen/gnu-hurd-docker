@@ -2,6 +2,7 @@
 # Automated SSH Installation for GNU/Hurd via Serial Console
 # Connects to running QEMU instance and installs OpenSSH server
 
+# shellcheck disable=SC2154
 set -euo pipefail
 
 SERIAL_PORT="${SERIAL_PORT:-5555}"
@@ -41,18 +42,51 @@ spawn telnet $SERIAL_HOST $SERIAL_PORT
 send "\r\r\r"
 sleep 2
 
-# Wait for login prompt (could be various forms)
-expect {
-    -re ".*login:\s*\$" {
-        puts "\nFound login prompt"
-        send -s "root\r"
-    }
-    timeout {
-        puts "\nTimeout waiting for login prompt after 600s"
-        puts "The system may not have booted yet or serial is not responding"
-        exit 1
-    }
-}
+	# Most upstream Hurd images do not provide a usable serial login.
+	# Fail fast with actionable guidance if serial appears blank.
+	set allow_wait 0
+	if {[info exists env(ALLOW_BLANK_SERIAL_WAIT)] && $env(ALLOW_BLANK_SERIAL_WAIT) == "1"} {
+	    set allow_wait 1
+	}
+
+	set quick_timeout 20
+	expect -timeout $quick_timeout {
+	    -re ".*login:\\s*$" {
+	        puts "\nFound login prompt"
+	        send -s "root\r"
+	    }
+	    timeout {
+	        if {$allow_wait} {
+	            puts "\nNo login prompt on serial after ${quick_timeout}s; continuing to wait (ALLOW_BLANK_SERIAL_WAIT=1)."
+	        } else {
+	            puts "\nNo login prompt on serial after ${quick_timeout}s."
+	            puts "This is expected on many Debian GNU/Hurd images (serial is often blank)."
+	            puts ""
+	            puts "Use VNC/noVNC for provisioning instead:"
+	            puts "  ./scripts/docker-orchestration.sh up-vnc"
+	            puts "  Open: http://127.0.0.1:${NOVNC_PORT:-6080}/vnc.html"
+	            puts ""
+	            puts "If you intentionally want to wait on serial anyway, re-run with:"
+	            puts "  ALLOW_BLANK_SERIAL_WAIT=1 ./scripts/install-ssh-hurd.sh"
+	            exit 1
+	        }
+	    }
+	}
+
+	# If the user explicitly allows waiting, fall back to long wait for login.
+	if {$allow_wait} {
+	    expect {
+	        -re ".*login:\\s*$" {
+	            puts "\nFound login prompt"
+	            send -s "root\r"
+	        }
+	        timeout {
+	            puts "\nTimeout waiting for login prompt after 600s"
+	            puts "The system may not have booted yet or serial is not responding"
+	            exit 1
+	        }
+	    }
+	}
 
 # Wait for password prompt or shell
 expect {

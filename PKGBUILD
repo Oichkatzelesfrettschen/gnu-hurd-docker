@@ -2,13 +2,12 @@ pkgname=gnu-hurd-docker
 pkgver=2.0.0
 pkgrel=1
 pkgdesc="GNU/Hurd x86_64 microkernel in QEMU within Docker - Complete development environment"
-arch=('x86_64')
+arch=('any')
 url="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
 license=('MIT')
 depends=(
     'docker>=20.10'
     'docker-compose>=1.29'
-    'qemu-base>=7.0'
     'python>=3.7'
 )
 makedepends=(
@@ -16,8 +15,7 @@ makedepends=(
     'shellcheck'
 )
 optdepends=(
-    'qemu-system-x86-64: For running QEMU outside Docker'
-    'qemu-img: For manual image manipulation'
+    'qemu-base>=7.0: For running QEMU outside Docker (standalone mode)'
     'cloud-image-utils: For cloud-init seed creation'
     'socat: For QMP/monitor socket control'
     'screen: For serial console access'
@@ -45,7 +43,7 @@ build() {
     
     # Validate shell scripts
     echo "Validating shell scripts..."
-    for script in entrypoint.sh scripts/*.sh; do
+    for script in entrypoint.sh $(find scripts -type f -name "*.sh" | sort); do
         if [ -f "$script" ]; then
             echo "  Checking $script..."
             shellcheck -S warning "$script" || {
@@ -103,7 +101,7 @@ package() {
     
     # Install documentation
     install -Dm644 README.md "${pkgdir}/usr/share/doc/gnu-hurd-docker/README.md"
-    install -Dm644 requirements.md "${pkgdir}/usr/share/doc/gnu-hurd-docker/requirements.md"
+    install -Dm644 docs/01-GETTING-STARTED/REQUIREMENTS.md "${pkgdir}/usr/share/doc/gnu-hurd-docker/requirements.md"
     
     # Install all docs
     cp -r docs "${pkgdir}/usr/share/doc/gnu-hurd-docker/"

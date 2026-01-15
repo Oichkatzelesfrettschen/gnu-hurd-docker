@@ -71,16 +71,16 @@ If QEMU won't boot at all, fix the QCOW2 from host:
 
 ```bash
 # Stop QEMU if running
-pkill qemu-system-i386
+pkill qemu-system-x86_64
 
 # Check QCOW2 integrity
-qemu-img check debian-hurd-i386-20251105.qcow2
+qemu-img check debian-hurd-amd64.qcow2
 
 # If corruption detected, try to repair:
-qemu-img check -r all debian-hurd-i386-20251105.qcow2
+qemu-img check -r all debian-hurd-amd64.qcow2
 
 # If that fails, restore from backup or re-download
-cp debian-hurd-i386-20251105.qcow2 debian-hurd-i386-20251105.qcow2.backup
+cp debian-hurd-amd64.qcow2 debian-hurd-amd64.qcow2.backup
 # Then re-download original image
 ```
 
@@ -156,10 +156,10 @@ If fsck fails repeatedly:
 
 ```bash
 # Stop QEMU
-pkill qemu-system-i386
+pkill qemu-system-x86_64
 
 # Download fresh image
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 ./scripts/download-image.sh
 
 # This will overwrite the corrupted QCOW2
