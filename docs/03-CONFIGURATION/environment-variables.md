@@ -1,25 +1,248 @@
-# Environment Variables (Canonical)
+# Environment Variables Reference
 
-Environment variables are consumed by `entrypoint.sh` (container runtime) and the helper scripts in `scripts/`.
+Complete reference of environment variables consumed by `entrypoint.sh` (container runtime) and helper scripts in `scripts/`.
 
-## Core QEMU settings
+## Resource Allocation
 
-- `QEMU_DRIVE`: path to QCOW2 inside container (default: `/opt/hurd-image/debian-hurd-amd64.qcow2`)
-- `QEMU_RAM`: guest RAM in MB (default: `4096` via `docker-compose.yml`)
-- `QEMU_SMP`: vCPU count (default: `2` via `docker-compose.yml`)
-- `ENABLE_VNC`: `1` to enable QEMU VNC output on port 5900 (default `0`)
-- `SERIAL_PORT`: serial console telnet port (default `5555`)
-- `MONITOR_PORT`: QEMU monitor telnet port (default `9999`)
-- `DISABLE_SERIAL`: `1` to disable the serial telnet server (default `0`)
-- `DISABLE_MONITOR`: `1` to disable the QEMU monitor telnet server (default `0`)
-- `QEMU_HOSTFWDS`: comma-separated QEMU hostfwd rules (default: `tcp::2222-:22,tcp::8080-:80`)
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `QEMU_RAM` | Integer (MB) | `4096` | Guest RAM in megabytes |
+| `QEMU_SMP` | Integer | `2` | Virtual CPU count (cores) |
+| `QEMU_MACHINE` | String | `pc` | QEMU machine type (pc, q35, microvm, etc.) |
 
-## Disk/image helpers
+**Examples**:
+```bash
+QEMU_RAM=8192 QEMU_SMP=4 make up      # 8GB RAM, 4 cores
+QEMU_RAM=2048 QEMU_SMP=1 make up      # Minimal: 2GB RAM, 1 core
+```
 
-- `AUTO_DOWNLOAD_IMAGE`: `1` to download and prepare the image inside the container when missing (default `0`)
-- `SKIP_CHECKSUM`: `1` to skip `SHA256SUMS` verification when using `scripts/download-image.sh` (default `0`)
+## Storage & Image
 
-## Experimental
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `QEMU_DRIVE` | Path | `/opt/hurd-image/debian-hurd-amd64.qcow2` | Guest disk image location in container |
+| `QEMU_DISK_BUS` | String | `ide` | Disk controller type: `ide`, `ahci`, `scsi`, `nvme` |
+| `QEMU_IDE_CONTROLLER` | String | `piix` | IDE controller model: `piix`, `ich9-ide`, `isa-ide` |
+| `UNSAFE_CACHE` | Boolean | `0` | Use `cache=unsafe` for disk (⚠ data loss risk) |
+| `AUTO_DOWNLOAD_IMAGE` | Boolean | `0` | Auto-download missing Debian GNU/Hurd image |
+| `SKIP_CHECKSUM` | Boolean | `0` | Skip SHA256 verification during download |
 
-- `ENABLE_9P`: `1` to add a QEMU 9p share for `/share` (mount tag `hostshare`) (default `0`)
-- `UNSAFE_CACHE`: `1` to use QEMU `cache=unsafe` for the disk (risk of data loss) (default `0`)
+**Examples**:
+```bash
+# Use AHCI controller (better performance on some systems)
+QEMU_DISK_BUS=ahci make up
+
+# Auto-download image if missing
+AUTO_DOWNLOAD_IMAGE=1 make up
+
+# Use unsafe cache (development only, not recommended)
+UNSAFE_CACHE=1 make up
+```
+
+## I/O & Error Handling
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `QEMU_IDE_RERROR` | String | `auto` | IDE read error handling: `ignore`, `stop`, `report`, `auto` |
+| `QEMU_IDE_WERROR` | String | `auto` | IDE write error handling: `ignore`, `stop`, `enospc`, `auto` |
+| `QEMU_IDE_WRITE_CACHE` | String | `auto` | IDE write cache mode: `on`, `off`, `auto` |
+| `QEMU_AHCI_BOUNCE_SIZE` | Integer | (empty) | AHCI DMA bounce buffer size (advanced) |
+| `QEMU_PIIX_IDE_BOUNCE_SIZE` | Integer | (empty) | PIIX IDE DMA bounce buffer size (advanced) |
+| `ENABLE_NATIVE_AIO` | Boolean | `0` | Enable native AIO (async I/O) for disk operations |
+
+**Examples**:
+```bash
+# Strict I/O error handling (fail on errors)
+QEMU_IDE_RERROR=stop QEMU_IDE_WERROR=stop make up
+
+# Enable native AIO for better I/O performance
+ENABLE_NATIVE_AIO=1 make up
+```
+
+## Acceleration & Performance
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `FORCE_KVM` | Boolean | `0` | Force KVM acceleration (fail if unavailable) |
+| `DISABLE_KVM` | Boolean | `0` | Disable KVM, use TCG emulation |
+| `AUTO_DISABLE_KVM_FOR_IDE` | Boolean | `1` | Automatically disable KVM if using IDE (avoids DMA errors) |
+| `PRINT_QEMU_CMD` | Boolean | `0` | Print full QEMU command before starting |
+
+**Examples**:
+```bash
+# Force KVM acceleration (will fail on non-KVM systems)
+FORCE_KVM=1 make up
+
+# Use TCG mode (slower, but works on all systems)
+DISABLE_KVM=1 make up
+
+# Debug: print QEMU command
+PRINT_QEMU_CMD=1 make up
+
+# Keep IDE with KVM (be aware of potential DMA issues)
+AUTO_DISABLE_KVM_FOR_IDE=0 make up
+```
+
+## Display & Input/Output
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `ENABLE_VNC` | Boolean | `0` | Enable QEMU VNC output (port 5900) |
+| `QEMU_VGA_DEVICE` | String | (empty) | VGA device: `std`, `virtio`, `qxl`, `vmware` |
+| `SERIAL_PORT` | Integer | `5555` | Guest serial console telnet port on host |
+| `MONITOR_PORT` | Integer | `9999` | QEMU monitor telnet port on host |
+| `SSH_PORT` | Integer | `2222` | Guest SSH port on host (guest port 22 forwarded) |
+| `HTTP_PORT` | Integer | `8080` | Guest HTTP port on host (guest port 80 forwarded) |
+
+**Examples**:
+```bash
+# Enable VNC display (access via VNC client or VNC viewer)
+ENABLE_VNC=1 make up
+
+# Change serial console port
+SERIAL_PORT=7777 make up
+
+# Custom SSH port
+SSH_PORT=2222 HTTP_PORT=8080 make up
+```
+
+## Network Configuration
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `QEMU_NET_MODEL` | String | (auto-detect) | Network device: `e1000`, `virtio`, `rtl8139` |
+| `QEMU_HOSTFWDS` | String | `tcp::2222-:22,tcp::8080-:80` | Port forwarding rules (QEMU `-hostfwd` syntax) |
+| `QEMU_SLIRP_NET` | String | (empty) | Slirp network configuration (advanced) |
+| `QEMU_SLIRP_DHCPSTART` | String | (empty) | Slirp DHCP pool start IP (advanced) |
+
+**Examples**:
+```bash
+# Use VirtIO network (better performance)
+QEMU_NET_MODEL=virtio make up
+
+# Custom port forwarding (also map port 3306 MySQL)
+QEMU_HOSTFWDS=tcp::2222-:22,tcp::8080-:80,tcp::3306-:3306 make up
+
+# Custom Slirp network configuration
+QEMU_SLIRP_NET=10.0.2.0/24 QEMU_SLIRP_DHCPSTART=10.0.2.15 make up
+```
+
+## Server Control & Debugging
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `DISABLE_SERIAL` | Boolean | `0` | Disable serial telnet server |
+| `DISABLE_MONITOR` | Boolean | `0` | Disable QEMU monitor telnet server |
+| `HOST_SSH_PORT` | String | (empty) | Override host SSH port (internal use) |
+| `HOST_HTTP_PORT` | String | (empty) | Override host HTTP port (internal use) |
+| `HOST_SERIAL_PORT` | String | (empty) | Override host serial port (internal use) |
+| `HOST_MONITOR_PORT` | String | (empty) | Override host monitor port (internal use) |
+
+**Examples**:
+```bash
+# Disable serial console (for testing)
+DISABLE_SERIAL=1 make up
+
+# Disable QEMU monitor (for security/testing)
+DISABLE_MONITOR=1 make up
+```
+
+## Advanced / Experimental
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `ENABLE_9P` | Boolean | `0` | Enable QEMU 9p filesystem share (experimental) |
+
+**Note**: 9p filesystem sharing is experimental and may not work on all systems.
+
+## Configuration Priority
+
+Variables are resolved in this order (first match wins):
+
+1. Explicit environment variable: `QEMU_RAM=8192 make up`
+2. `.env` file in repo root: `QEMU_RAM=4096` in `.env`
+3. `docker-compose.override.yml`: environment section
+4. `docker-compose.yml`: default values
+5. Hardcoded defaults in `entrypoint.sh`
+
+**Example Priority Chain**:
+```bash
+# 1. Command-line (highest priority)
+QEMU_RAM=8192 make up
+
+# 2. .env file (if no command-line override)
+cat > .env << EOF
+QEMU_RAM=4096
+QEMU_SMP=2
+EOF
+make up
+
+# 3. docker-compose.override.yml
+cat > docker-compose.override.yml << EOF
+services:
+  gnu-hurd-dev:
+    environment:
+      QEMU_RAM: "4096"
+      QEMU_SMP: "2"
+EOF
+make up
+
+# 4. docker-compose.yml defaults are used as fallback
+```
+
+## Common Combinations
+
+### Minimal Setup (Testing/Learning)
+```bash
+QEMU_RAM=2048 QEMU_SMP=1 DISABLE_KVM=1 make up
+```
+
+### Recommended Development
+```bash
+QEMU_RAM=4096 QEMU_SMP=2 make up-kvm
+```
+
+### Performance Testing
+```bash
+QEMU_RAM=8192 QEMU_SMP=4 ENABLE_NATIVE_AIO=1 QEMU_DISK_BUS=ahci make up-kvm
+```
+
+### Debugging with All Output
+```bash
+PRINT_QEMU_CMD=1 ENABLE_VNC=1 ENABLE_NATIVE_AIO=1 make up
+```
+
+### Rootless Podman
+```bash
+# Most settings work the same with podman-compose
+QEMU_RAM=4096 QEMU_SMP=2 podman-compose up -d
+```
+
+## Verification
+
+To verify environment variable settings inside the running container:
+
+```bash
+# View current QEMU settings
+docker exec gnu-hurd-dev env | grep QEMU
+
+# Check actual QEMU process arguments
+docker exec gnu-hurd-dev ps aux | grep qemu-system
+
+# Check guest resource allocation
+docker exec gnu-hurd-dev nproc          # CPU cores
+docker exec gnu-hurd-dev free -h        # RAM
+docker exec gnu-hurd-dev df -h /        # Disk space
+```
+
+## References
+
+- [RESOURCE-SIZING.md](RESOURCE-SIZING.md) - Detailed resource allocation guidance
+- [entrypoint.sh](../../entrypoint.sh) - Source of truth for variable usage
+- [docker-compose.yml](../../docker-compose.yml) - Default values
+- [OPTIMIZATION-2025.md](../02-ARCHITECTURE/qemu/OPTIMIZATION-2025.md) - Performance tuning
+
+---
+
+*Last updated: 2026-01-14*
+*Complete reference for all supported environment variables*

@@ -16,6 +16,7 @@ makedepends=(
 )
 optdepends=(
     'qemu-base>=7.0: For running QEMU outside Docker (standalone mode)'
+    'podman>=3.0: Alternative container runtime for QEMU environments'
     'cloud-image-utils: For cloud-init seed creation'
     'socat: For QMP/monitor socket control'
     'screen: For serial console access'
@@ -173,12 +174,24 @@ cd "${WORK_DIR}"
 
 case "${1:-help}" in
     start|up)
-        echo "Starting GNU/Hurd Docker environment..."
+        echo "Starting GNU/Hurd Docker environment (TCG mode)..."
         docker_compose up -d
         echo "Container started. Access via:"
         echo "  SSH: ssh -p 2222 root@localhost"
         echo "  Serial: telnet localhost 5555"
         echo "  Logs: gnu-hurd-docker logs"
+        ;;
+    up-kvm)
+        echo "Starting GNU/Hurd Docker environment (KVM acceleration mode)..."
+        if docker_compose -f docker-compose.yml -f docker-compose.kvm.yml up -d; then
+            echo "Container started with KVM acceleration. Access via:"
+            echo "  SSH: ssh -p 2222 root@localhost"
+            echo "  Serial: telnet localhost 5555"
+            echo "  Logs: gnu-hurd-docker logs"
+        else
+            echo "ERROR: Failed to start container with KVM. Ensure /dev/kvm is available (Linux x86_64)."
+            exit 1
+        fi
         ;;
     stop|down)
         echo "Stopping GNU/Hurd Docker environment..."
@@ -208,7 +221,8 @@ GNU/Hurd Docker - QEMU-based GNU/Hurd development environment
 Usage: gnu-hurd-docker [command]
 
 Commands:
-    start, up       - Start the container
+    start, up       - Start the container (TCG mode, compatible with all platforms)
+    up-kvm          - Start the container with KVM acceleration (Linux x86_64 only)
     stop, down      - Stop the container
     logs            - View container logs
     shell           - Open shell in container
@@ -220,7 +234,8 @@ Commands:
 Examples:
     gnu-hurd-docker download   # First time setup
     gnu-hurd-docker build      # Build Docker image
-    gnu-hurd-docker start      # Start container
+    gnu-hurd-docker up         # Start container (TCG mode)
+    gnu-hurd-docker up-kvm     # Start container with KVM (Linux x86_64)
     gnu-hurd-docker logs       # View logs
     gnu-hurd-docker stop       # Stop container
 

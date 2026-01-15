@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-01-14 (Phase 4-5: Roadmap Completion & Documentation)
+
+**Roadmap Milestones M2, M4, M5, M6 Implementation:**
+- **M4.24**: Boot smoke test workflow (`.github/workflows/smoke-boot.yml`)
+  - Weekly automated boot validation
+  - Manual trigger with configurable timeouts (10-30 min)
+  - Port accessibility checks (SSH 2222, HTTP 8080, QEMU Monitor 9999)
+  - Health check monitoring with diagnostics
+  - Artifact upload on failure for debugging
+
+- **M4.25**: CI artifact publishing for workflow failures
+  - Integrated into smoke-boot.yml
+  - Container logs and diagnostics saved
+  - 7-day retention for debugging
+
+- **M5.28**: Comprehensive resource sizing guide (650+ lines)
+  - Three profiles: minimal (2GB/1-core), recommended (4GB/2-core), optimal (8GB/4-core)
+  - Auto-sizing algorithm for host resource detection
+  - Performance benchmarks and comparison tables
+  - Troubleshooting for slow boot, OOM, high CPU, disk I/O
+
+- **M5.29**: Troubleshooting playbook with 8 decision trees
+  - VM boot failures, SSH issues, disk/fsck errors
+  - Performance problems, VNC connection issues
+  - Container exit issues, disk space management
+  - Network problems with diagnostic commands
+
+- **M5.33 & M5.34**: Known issues research document
+  - KVM+IDE DMA error analysis and mitigation strategies
+  - Guest sshd crash diagnosis and workarounds
+  - Upstream investigation status
+  - Testing procedures and recovery paths
+
+- **M6.34**: Podman optional dependency in PKGBUILD
+  - Added `podman>=3.0` to optdepends
+  - Enables alternative container runtime support
+
+- **M6.35**: KVM launcher support in PKGBUILD
+  - Added `up-kvm` command to gnu-hurd-docker launcher
+  - Uses docker-compose overlay for KVM acceleration
+  - Clear documentation of TCG vs KVM modes
+
+**Documentation Enhancements:**
+
+- **Docker Compose Variants Guide** (400+ lines)
+  - Complete comparison of docker compose v2, v1, and podman-compose
+  - Compatibility matrix for all platforms (Linux, macOS, Windows)
+  - Performance characteristics and feature support
+  - Migration paths and troubleshooting
+  - Platform-specific recommendations
+
+- **Environment Variables Reference** (250+ lines expansion)
+  - Complete documentation of all 50+ supported variables
+  - Organized by category (resource, storage, I/O, acceleration, display, network)
+  - Usage examples for common combinations
+  - Configuration priority and verification procedures
+  - Quick reference tables for all options
+
+**CI/CD Quality Improvements:**
+
+- Multi-platform Docker image testing (amd64 + arm64 in push-ghcr.yml)
+- Python linting integration in PKGBUILD (flake8)
+- Hadolint download with retry logic (--tries=3 --retry-connrefused)
+- Release artifact verification in CI workflows
+- Expanded Makefile help with all 18 targets documented
+- ShellCheck compliance fixes (removed error suppression)
+
 ### Added - 2025-01-10 (Release Automation)
 - **NEW**: Added `create-release.yml` workflow for manual release creation
   - Enables maintainers to publish releases without local git/tag access
