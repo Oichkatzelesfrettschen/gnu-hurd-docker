@@ -1,0 +1,229 @@
+---
+name: Boot Smoke Test
+
+"on":
+  workflow_dispatch:
+    inputs:
+      timeout_minutes:
+        description: 'Health check timeout in minutes'
+        required: false
+        default: '15'
+        type: choice
+        options:
+          - '10'
+          - '15'
+          - '20'
+          - '30'
+
+  schedule:
+    - cron: '0 0 * * 0'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  smoke-boot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    name: Boot and Port Accessibility Test (Experimental)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker environment
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd telnet jq
+
+      - name: Check for port collisions
+        run: |
+          echo "Checking host ports for conflicts..."
+          ./scripts/check-ports.sh || true
+
+      - name: Create required directories and secrets
+        run: |
+          mkdir -p secrets share logs images
+          echo "root" > secrets/root_password.txt
+          echo "agents" > secrets/agents_password.txt
+
+      - name: Start container in headless mode
+        run: |
+          echo "Starting GNU/Hurd container..."
+          make up
+          echo "Container started, waiting for QEMU to initialize..."
+          sleep 10
+
+      - name: Verify container is running
+        run: |
+          if ! docker ps | grep -q gnu-hurd-dev; then
+            echo "ERROR: Container failed to start"
+            docker ps -a
+            exit 1
+          fi
+          echo "Container is running"
+
+      - name: Wait for health check to pass
+        id: health-check
+        timeout-minutes: ${{ github.event.inputs.timeout_minutes || '15' }}
+        continue-on-error: true
+        run: |
+          echo "Waiting for container health check (timeout: ${{ github.event.inputs.timeout_minutes || '15' }} minutes)..."
+          echo "Note: Boot time varies significantly - this is expected behavior"
+
+          timeout_seconds=$(( ${{ github.event.inputs.timeout_minutes || '15' }} * 60 ))
+          elapsed=0
+          interval=10
+
+          while [ $elapsed -lt $timeout_seconds ]; do
+            health_status=$(docker inspect gnu-hurd-dev --format='{{.State.Health.Status}}' 2>/dev/null || echo "none")
+
+            echo "Health status: $health_status (${elapsed}s elapsed)"
+
+            if [ "$health_status" = "healthy" ]; then
+              echo "Container is healthy!"
+              echo "status=healthy" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            if [ "$health_status" != "none" ]; then
+              echo "Last health check log:"
+              docker inspect gnu-hurd-dev --format='{{range .State.Health.Log}}{{.Output}}{{end}}' 2>/dev/null | tail -5 || true
+            fi
+
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          echo "Timeout reached after ${elapsed}s"
+          echo "status=timeout" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Verify SSH port accessible (port 2222)
+        id: ssh-check
+        continue-on-error: true
+        run: |
+          echo "Testing SSH port 2222 accessibility..."
+          if timeout 5 nc -zv localhost 2222; then
+            echo "SSH port 2222 is accessible"
+            echo "status=accessible" >> $GITHUB_OUTPUT
+          else
+            echo "SSH port 2222 is not accessible (VM may still be booting)"
+            echo "status=not-accessible" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Verify HTTP port accessible (port 8080)
+        id: http-check
+        continue-on-error: true
+        run: |
+          echo "Testing HTTP port 8080 accessibility..."
+          if timeout 5 nc -zv localhost 8080; then
+            echo "HTTP port 8080 is accessible"
+            echo "status=accessible" >> $GITHUB_OUTPUT
+          else
+            echo "HTTP port 8080 is not accessible"
+            echo "status=not-accessible" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Verify QEMU monitor accessible (port 9999)
+        id: monitor-check
+        continue-on-error: true
+        run: |
+          echo "Testing QEMU monitor port 9999 accessibility..."
+          if timeout 5 nc -zv localhost 9999; then
+            echo "QEMU monitor port 9999 is accessible"
+            (echo "info status"; sleep 1) | timeout 5 telnet localhost 9999 2>&1 | tee monitor-output.txt || true
+            if grep -q "VM status:" monitor-output.txt 2>/dev/null; then
+              echo "Monitor responded successfully"
+            fi
+            echo "status=accessible" >> $GITHUB_OUTPUT
+          else
+            echo "QEMU monitor port 9999 is not accessible"
+            echo "status=not-accessible" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Collect diagnostic information
+        if: always()
+        run: |
+          echo "=== Container Status ==="
+          docker ps -a
+
+          echo ""
+          echo "=== Container Logs (last 100 lines) ==="
+          docker logs --tail 100 gnu-hurd-dev 2>&1 || true
+
+          echo ""
+          echo "=== Container Health ==="
+          docker inspect gnu-hurd-dev --format='{{json .State.Health}}' 2>/dev/null | jq . || true
+
+          echo ""
+          echo "=== Port Bindings ==="
+          docker port gnu-hurd-dev 2>/dev/null || true
+
+          echo ""
+          echo "=== Host Port Listeners ==="
+          ss -tlnp 2>/dev/null | grep -E ':(2222|8080|5555|9999)\b' || echo "No matching ports found"
+
+      - name: Save container logs on failure
+        if: failure() || steps.health-check.outputs.status == 'timeout'
+        run: |
+          mkdir -p logs
+          docker logs gnu-hurd-dev > logs/container.log 2>&1 || true
+          docker inspect gnu-hurd-dev > logs/container-inspect.json 2>&1 || true
+
+      - name: Upload logs on failure
+        if: failure() || steps.health-check.outputs.status == 'timeout'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-boot-logs-${{ github.run_id }}
+          path: logs/
+          retention-days: 7
+
+      - name: Stop container
+        if: always()
+        run: |
+          echo "Stopping container..."
+          make down || true
+
+      - name: Generate workflow summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## GNU/Hurd Boot Smoke Test - Summary
+
+          **Status:** ${{ job.status }}
+          **Run ID:** ${{ github.run_id }}
+          **Timeout:** ${{ github.event.inputs.timeout_minutes || '15' }} minutes
+
+          > **Note:** This is an experimental/flaky test suite. Boot times vary significantly
+          > based on GitHub runner performance. Timeouts do not necessarily indicate bugs.
+
+          ### Test Results
+
+          | Check | Status | Notes |
+          |-------|--------|-------|
+          | Container Start | ${{ job.status == 'success' && 'Pass' || 'Fail' }} | Container creation and startup |
+          | Health Check | ${{ steps.health-check.outputs.status == 'healthy' && 'Pass' || steps.health-check.outputs.status == 'timeout' && 'Timeout' || 'Fail' }} | QEMU process verification |
+          | SSH Port (2222) | ${{ steps.ssh-check.outputs.status == 'accessible' && 'Pass' || 'Not Ready' }} | Guest SSH service |
+          | HTTP Port (8080) | ${{ steps.http-check.outputs.status == 'accessible' && 'Pass' || 'Not Ready' }} | Guest HTTP service |
+          | Monitor (9999) | ${{ steps.monitor-check.outputs.status == 'accessible' && 'Pass' || 'Fail' }} | QEMU monitor interface |
+
+          ### Expected Behavior
+
+          - Container starts successfully
+          - QEMU process is running (health check passes)
+          - Monitor port is accessible
+          EOF
