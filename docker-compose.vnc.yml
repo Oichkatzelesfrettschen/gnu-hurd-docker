@@ -36,7 +36,7 @@ services:
 
   # noVNC Web Interface Service
   novnc:
-    image: theasp/novnc@sha256:6fbc9663a54bed0c32b7813fd6735222fe3c49f1dc4814d131f236bab23c3f85
+    image: docker.io/theasp/novnc@sha256:6fbc9663a54bed0c32b7813fd6735222fe3c49f1dc4814d131f236bab23c3f85
     container_name: hurd-novnc
     restart: unless-stopped
 
@@ -73,7 +73,7 @@ services:
 
   # Optional: VNC Recorder (for demonstrations/tutorials)
   vnc-recorder:
-    image: dorowu/ubuntu-desktop-lxde-vnc@sha256:775184eaa5bbc01bc4261a6c9596a642b3b43a433c1508637567bc724575964b
+    image: docker.io/dorowu/ubuntu-desktop-lxde-vnc@sha256:775184eaa5bbc01bc4261a6c9596a642b3b43a433c1508637567bc724575964b
     container_name: hurd-vnc-recorder
     restart: "no"  # Manual start only
 
