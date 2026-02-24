@@ -10,6 +10,16 @@ images/*.img
 images/*.qcow2
 images/*.tar.xz
 
+# VM backup/snapshot spillover should never be versioned from images/
+images/debian-hurd-amd64.qcow2.bak*
+images/debian-hurd-amd64.qcow2.*.bak
+images/debian-hurd-amd64.qcow2.pre-*
+images/debian-hurd-amd64.qcow2.post-*
+
+# Local infrastructure cache for large transient VM artifacts
+infrastructure/cache/images/*
+!infrastructure/cache/images/README.md
+
 # QEMU logs and output
 qemu*.log
 serial*.log
