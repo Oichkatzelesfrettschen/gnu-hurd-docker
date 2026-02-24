@@ -9,10 +9,18 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 cd "$REPO_ROOT"
 
+RUNTIME="${CONTAINER_RUNTIME:-docker}"
+if [[ "$RUNTIME" == "podman" ]]; then
+  SSH_PORT="${SSH_PORT:-2223}"
+  SERIAL_PORT="${SERIAL_PORT:-5556}"
+  MONITOR_PORT="${MONITOR_PORT:-9998}"
+else
+  SSH_PORT="${SSH_PORT:-2222}"
+  SERIAL_PORT="${SERIAL_PORT:-5555}"
+  MONITOR_PORT="${MONITOR_PORT:-9999}"
+fi
+
 SERVICE_NAME="${SERVICE_NAME:-gnu-hurd-dev}"
-SSH_PORT="${SSH_PORT:-2222}"
-SERIAL_PORT="${SERIAL_PORT:-5555}"
-MONITOR_PORT="${MONITOR_PORT:-9999}"
 VNC_PORT="${VNC_PORT:-5900}"
 NOVNC_PORT="${NOVNC_PORT:-6080}"
 
@@ -64,7 +72,7 @@ query_monitor_status() {
 }
 
 echo "[*] Starting container (KVM overlay if available)..."
-./scripts/docker-orchestration.sh up-kvm || ./scripts/docker-orchestration.sh up
+CONTAINER_RUNTIME="$RUNTIME" make up-kvm || CONTAINER_RUNTIME="$RUNTIME" make up
 
 echo ""
 echo "[*] Waiting for SSH port ${SSH_PORT} to open..."
@@ -91,7 +99,7 @@ echo ""
 echo "[WARN] SSH not confirmed; checking serial console prompt (telnet :${SERIAL_PORT})..."
 if ! wait_for_tcp 127.0.0.1 "$SERIAL_PORT" 30; then
   echo "[ERROR] Serial port is not reachable on ${SERIAL_PORT}" >&2
-  ./scripts/docker-orchestration.sh logs >&2 || true
+  CONTAINER_RUNTIME="$RUNTIME" make logs >&2 || true
   exit 1
 fi
 
@@ -110,8 +118,8 @@ fi
 echo "[INFO] Next debugging steps:" >&2
 echo "  - telnet localhost ${SERIAL_PORT} (serial)" >&2
 echo "  - telnet localhost ${MONITOR_PORT} (monitor)" >&2
-echo "  - ./scripts/docker-orchestration.sh logs" >&2
+echo "  - CONTAINER_RUNTIME=${RUNTIME} make logs" >&2
 echo "  - If serial stays blank, use VNC/noVNC:" >&2
-echo "      ./scripts/docker-orchestration.sh up-kvm-vnc" >&2
+echo "      CONTAINER_RUNTIME=${RUNTIME} make up-kvm-vnc" >&2
 echo "      vncviewer localhost:${VNC_PORT} (or open http://localhost:${NOVNC_PORT}/vnc.html)" >&2
 exit 1

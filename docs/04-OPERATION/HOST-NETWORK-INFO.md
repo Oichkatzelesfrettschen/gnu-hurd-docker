@@ -31,7 +31,7 @@ When running with VNC/noVNC overlay:
 Expose only noVNC, and keep raw VNC on localhost:
 
 ```bash
-NOVNC_BIND=0.0.0.0 VNC_BIND=127.0.0.1 ./scripts/docker-orchestration.sh up-vnc
+NOVNC_BIND=0.0.0.0 VNC_BIND=127.0.0.1 make up-vnc
 ```
 
 Allow from the LAN subnet:

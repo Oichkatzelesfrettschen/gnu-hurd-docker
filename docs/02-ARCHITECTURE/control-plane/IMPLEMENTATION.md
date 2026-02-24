@@ -10,7 +10,7 @@ This document describes the **current** control surfaces exposed by the containe
   - SSH: host `:2222` → guest `:22`
   - Serial console: host `:5555` (telnet)
   - QEMU monitor: host `:9999` (telnet)
-  - Optional VNC/noVNC via `docker-compose.vnc.yml`
+  - Optional VNC/noVNC via `compose.vnc.yaml`
   - Optional 9p share: set `ENABLE_9P=1` (mount tag `hostshare`)
 
 ## What does not exist yet (explicit gaps)
@@ -20,7 +20,6 @@ This document describes the **current** control surfaces exposed by the containe
 
 ## Primary entrypoints
 
-- Orchestration wrapper: `scripts/docker-orchestration.sh`
+- Compose control plane: `Makefile` + `compose.yaml` overlays
 - Runtime launcher: `entrypoint.sh`
 - Standalone launcher: `scripts/run-hurd-qemu.sh`
-

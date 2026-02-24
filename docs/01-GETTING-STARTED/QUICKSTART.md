@@ -57,10 +57,10 @@ cd gnu-hurd-docker
 
 # 3. Build and start
 docker compose build
-./scripts/docker-orchestration.sh up
+make up
 
 # 4. Monitor boot (optional)
-./scripts/docker-orchestration.sh logs
+make logs
 ```
 
 **Wait 5-10 minutes for boot**, then connect via SSH:
@@ -110,7 +110,7 @@ telnet localhost 5555
 
 **Via VNC/noVNC (recommended for first boot):**
 ```bash
-./scripts/docker-orchestration.sh up-vnc
+make up-vnc
 vncviewer localhost:5900
 # Or open: http://localhost:6080/vnc.html
 ```
@@ -407,7 +407,7 @@ cat /etc/fstab | grep 9p
 
 ```bash
 # Enable KVM acceleration (Linux x86_64 only)
-./scripts/docker-orchestration.sh up-kvm
+make up-kvm
 
 # Increase resources
 # In docker-compose.yml:

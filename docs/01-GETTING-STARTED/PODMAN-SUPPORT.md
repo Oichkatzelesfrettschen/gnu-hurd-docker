@@ -64,15 +64,14 @@ This project does not currently validate Podman/Docker operation on BSD hosts. I
 
 ## Quick Start with Podman
 
-### Using Container Runtime Abstraction (Recommended)
+### Using Compose-Native Make Targets (Recommended)
 
-The canonical wrapper auto-detects Docker vs Podman and chooses the correct compose frontend:
+The control plane is `make` + Compose files. For Podman, pin the compose provider:
 
 ```bash
-./scripts/docker-orchestration.sh check
-./scripts/docker-orchestration.sh up
-./scripts/docker-orchestration.sh logs
-./scripts/docker-orchestration.sh down
+PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make up-podman
+PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make logs
+PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make down
 ```
 
 ### Using Podman Compose Directly

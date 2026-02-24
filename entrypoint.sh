@@ -198,6 +198,8 @@ detect_host_resources
 
 # All configuration via environment variables for Docker flexibility
 QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-amd64.qcow2}"
+QEMU_CDROM="${QEMU_CDROM:-}"
+QEMU_BOOT_ORDER="${QEMU_BOOT_ORDER:-}"
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 MONITOR_PORT="${MONITOR_PORT:-9999}"
 
@@ -475,6 +477,26 @@ build_qemu_command() {
         exit 1
     fi
 
+    # Optional installer media for fresh image provisioning workflows.
+    if [ -n "$QEMU_CDROM" ]; then
+        if [ ! -f "$QEMU_CDROM" ]; then
+            log_error "Installer ISO not found: ${QEMU_CDROM}"
+            log_error "Ensure the host path is mounted into /opt/hurd-installer and set QEMU_CDROM accordingly"
+            exit 1
+        fi
+        cmd+=(-cdrom "$QEMU_CDROM")
+        log_info "Installer media attached: ${QEMU_CDROM}"
+        if [ -z "$QEMU_BOOT_ORDER" ]; then
+            QEMU_BOOT_ORDER="d"
+            log_info "Boot order auto-set to '${QEMU_BOOT_ORDER}' for installer media"
+        fi
+    fi
+
+    if [ -n "$QEMU_BOOT_ORDER" ]; then
+        cmd+=(-boot "order=${QEMU_BOOT_ORDER}")
+        log_info "Boot order: ${QEMU_BOOT_ORDER}"
+    fi
+
     # Network: default is e1000 (NOT virtio - Hurd doesn't support it well)
     # Port forwarding defaults are safe for most setups; customize with QEMU_HOSTFWDS.
     #
@@ -563,8 +585,13 @@ build_qemu_command() {
     # RTC for proper timekeeping
     cmd+=(-rtc "base=utc,clock=host")
 
-    # Disable reboot on exit
-    cmd+=(-no-reboot)
+    # Keep guest reboots in-container by default; opt into one-shot mode only.
+    if [ "${QEMU_NO_REBOOT:-0}" = "1" ]; then
+        cmd+=(-no-reboot)
+        log_info "QEMU one-shot mode enabled (-no-reboot)"
+    else
+        log_info "QEMU reboot loop mode enabled (default)"
+    fi
 
     # Enable guest error logging (to /tmp which is writable)
     cmd+=(-d guest_errors -D /tmp/qemu-guest-errors.log)
@@ -596,6 +623,12 @@ main() {
     echo "Configuration:"
     echo "  - Binary: /usr/bin/qemu-system-x86_64"
     echo "  - Image: ${QCOW2_IMAGE}"
+    if [ -n "${QEMU_CDROM}" ]; then
+        echo "  - CDROM: ${QEMU_CDROM}"
+    fi
+    if [ -n "${QEMU_BOOT_ORDER}" ]; then
+        echo "  - Boot order: ${QEMU_BOOT_ORDER}"
+    fi
     echo "  - Memory: ${QEMU_RAM} MB"
     echo "  - CPUs: ${QEMU_SMP}"
     echo "  - Machine: ${QEMU_MACHINE}"

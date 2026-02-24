@@ -256,8 +256,8 @@ ssh -p 2222 root@localhost
 **For Docker Mode**:
 - Continue to [INSTALLATION.md](INSTALLATION.md)
 - See [QUICKSTART.md](QUICKSTART.md) for fast setup
-  - Dev default (bind): `./scripts/docker-orchestration.sh up`
-  - Portable default (volume): `AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume`
+  - Dev default (bind): `make up`
+  - Portable default (volume): `AUTO_DOWNLOAD_IMAGE=1 AUTO_DOWNLOAD_IMAGE=1 make up-volume`
 
 **For Standalone Mode**:
 - Continue to [STANDALONE-QEMU.md](STANDALONE-QEMU.md)

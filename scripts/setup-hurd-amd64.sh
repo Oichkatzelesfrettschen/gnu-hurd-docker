@@ -25,7 +25,7 @@ cd "$REPO_ROOT"
 mkdir -p images
 
 echo_info "Downloading and converting official Debian GNU/Hurd image..."
-IMAGE_DIR=images "${SCRIPT_DIR}/download-image.sh"
+IMAGE_TRACK=release IMAGE_DIR=images "${SCRIPT_DIR}/download-image.sh"
 
 if [ -f "images/debian-hurd-amd64.qcow2" ]; then
     echo ""
@@ -42,8 +42,10 @@ fi
 echo ""
 echo_info "Next steps:"
 echo "  1. Validate:   ./scripts/validate-config.sh"
-echo "  2. Build:      docker compose build"
-echo "  3. Run (dev):  ./scripts/docker-orchestration.sh up"
-echo "  4. Run (KVM):  ./scripts/docker-orchestration.sh up-kvm"
-echo "  5. Run (vol):  ./scripts/docker-orchestration.sh up-volume"
+echo "  2. Build:      make build"
+echo "  3. Run (dev):  make up"
+echo "  4. Run (KVM):  make up-kvm"
+echo "  5. Run (vol):  make up-volume"
+echo "  6. Latest prebuilt img: make setup-latest && make up-latest"
+echo "  7. Fresh daily installer: make setup-daily-installer && make up-installer"
 echo ""

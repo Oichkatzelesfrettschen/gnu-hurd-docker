@@ -13,13 +13,13 @@
 
 ```bash
 # Start (dev default: bind-mount ./images)
-./scripts/docker-orchestration.sh up
+make up
 
 # Logs
-./scripts/docker-orchestration.sh logs
+make logs
 
 # Stop
-./scripts/docker-orchestration.sh down
+make down
 ```
 
 ## Access
@@ -35,7 +35,7 @@ telnet localhost 9999   # QEMU monitor
 If you start in volume mode and the disk image is missing:
 
 ```bash
-AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume
+AUTO_DOWNLOAD_IMAGE=1 AUTO_DOWNLOAD_IMAGE=1 make up-volume
 ```
 
 ## Legacy

@@ -13,6 +13,7 @@ cd "$REPO_ROOT"
 source "${SCRIPT_DIR}/lib/container-runtime.sh"
 
 SERVICE_NAME="${SERVICE_NAME:-gnu-hurd-dev}"
+RUNTIME="${CONTAINER_RUNTIME:-$(get_container_runtime)}"
 
 echo "[*] Validating repo invariants..."
 ./scripts/validate-config.sh
@@ -20,13 +21,13 @@ echo "[*] Validating repo invariants..."
 
 echo ""
 echo "[*] Ensuring compose configs parse..."
-container_compose -f docker-compose.yml config >/dev/null
-container_compose -f docker-compose.yml -f docker-compose.bind.yml config >/dev/null
-container_compose -f docker-compose.yml -f docker-compose.kvm.yml config >/dev/null
+container_compose -f compose.yaml config >/dev/null
+container_compose -f compose.yaml -f compose.bind.yaml config >/dev/null
+container_compose -f compose.yaml -f compose.kvm.yaml config >/dev/null
 
 echo ""
 echo "[*] Starting container (bind mode)..."
-./scripts/docker-orchestration.sh up
+CONTAINER_RUNTIME="$RUNTIME" make up
 
 echo ""
 echo "[*] Waiting for QEMU process to appear..."
@@ -43,7 +44,7 @@ runtime="$(get_container_runtime)"
 if ! "$runtime" exec "$SERVICE_NAME" pgrep -x qemu-system-x86_64 >/dev/null 2>&1; then
   echo "[ERROR] QEMU process not found in container after timeout" >&2
   echo "[INFO] Recent container logs:" >&2
-  ./scripts/docker-orchestration.sh logs >&2 || true
+  CONTAINER_RUNTIME="$RUNTIME" make logs >&2 || true
   exit 1
 fi
 

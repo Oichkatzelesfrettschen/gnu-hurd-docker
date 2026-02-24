@@ -40,7 +40,7 @@
 ✓ scripts/health-check.sh
 ✓ scripts/download-image.sh
 ✓ scripts/setup-hurd-amd64.sh
-✓ scripts/docker-orchestration.sh
+✓ Makefile (Compose control plane)
 ✓ scripts/validate-security-config.sh
 ✓ scripts/smoke-host.sh
 ✓ scripts/smoke-container.sh
@@ -85,7 +85,7 @@
 - ✅ scripts/health-check.sh
 - ✅ scripts/download-image.sh
 - ✅ scripts/setup-hurd-amd64.sh
-- ✅ scripts/docker-orchestration.sh
+- ✅ Makefile (Compose control plane)
 - ✅ scripts/validate-security-config.sh
 - ✅ scripts/smoke-host.sh
 - ✅ scripts/smoke-container.sh

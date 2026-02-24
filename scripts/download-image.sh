@@ -13,15 +13,30 @@ echo "=========================================="
 echo ""
 
 # Configuration
-# Official Debian GNU/Hurd images (Debian ports/13.0, hurd-amd64)
-BASE_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64"
+# IMAGE_TRACK controls source selection:
+# - release: pinned stable track (ports/13.0)
+# - latest: newest rolling track (ports/latest)
+IMAGE_TRACK="${IMAGE_TRACK:-release}"
+case "$IMAGE_TRACK" in
+    release)
+        DEFAULT_BASE_URL="https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64"
+        ;;
+    latest)
+        DEFAULT_BASE_URL="https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64"
+        ;;
+    *)
+        echo "[ERROR] Unsupported IMAGE_TRACK='$IMAGE_TRACK' (supported: release, latest)"
+        exit 1
+        ;;
+esac
+BASE_URL="${BASE_URL:-$DEFAULT_BASE_URL}"
 IMAGE_DIR="${IMAGE_DIR:-images}"
 
 # Prefer the latest dated artifact so SHA256SUMS verification works.
 # You may override by setting COMPRESSED_FILE explicitly, e.g.:
 #   COMPRESSED_FILE=debian-hurd.img.tar.xz SKIP_CHECKSUM=1 ./scripts/download-image.sh
 COMPRESSED_FILE="${COMPRESSED_FILE:-}"
-QCOW2_IMAGE="debian-hurd-amd64.qcow2"
+QCOW2_IMAGE="${QCOW2_IMAGE:-debian-hurd-amd64.qcow2}"
 COMPRESSED_PATH=""
 QCOW2_PATH="${IMAGE_DIR}/${QCOW2_IMAGE}"
 WORKDIR=""
@@ -52,6 +67,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Configuration:"
+echo "  Track:     $IMAGE_TRACK"
 echo "  Base URL:  $BASE_URL"
 echo "  Output Dir: $IMAGE_DIR"
 echo "  QCOW2 Image: $QCOW2_PATH"
@@ -119,8 +135,8 @@ if ! command -v qemu-img &> /dev/null; then
     exit 1
 fi
 
-if ! command -v sha256sum &> /dev/null; then
-    echo "[WARN] sha256sum not found - checksum verification will be skipped"
+if ! command -v sha256sum &> /dev/null && ! command -v md5sum &> /dev/null; then
+    echo "[WARN] sha256sum/md5sum not found - checksum verification will be skipped"
 fi
 
 echo "[OK] All prerequisites found"
@@ -167,27 +183,54 @@ echo "[OK] Image downloaded"
 echo ""
 
 # Verify checksum (if possible)
-if command -v sha256sum &> /dev/null && [ "${SKIP_CHECKSUM:-0}" != "1" ]; then
-    echo "Verifying checksum (SHA256SUMS)..."
-    SUMS_URL="$(dirname "$DEBIAN_URL")/SHA256SUMS"
-    EXPECTED_LINE="$(fetch_url_stdout "$SUMS_URL" | grep -E "${COMPRESSED_FILE}\$" || true)"
+if [ "${SKIP_CHECKSUM:-0}" != "1" ]; then
+    echo "Verifying checksum..."
+    sum_root="$(dirname "$DEBIAN_URL")"
 
-    if [ -z "$EXPECTED_LINE" ]; then
-        echo "[ERROR] Could not find ${COMPRESSED_FILE} in SHA256SUMS; refusing to skip verification"
-        echo "[ERROR] Hint: set SKIP_CHECKSUM=1 (not recommended), or use a dated artifact that appears in SHA256SUMS"
-        exit 1
-    else
-        EXPECTED_SHA="$(echo "$EXPECTED_LINE" | awk '{print $1}')"
-        ACTUAL_SHA="$(sha256sum "$COMPRESSED_PATH" | awk '{print $1}')"
-        if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
-            echo "[ERROR] SHA256 mismatch for ${COMPRESSED_PATH}"
-            echo "  Expected: $EXPECTED_SHA"
-            echo "  Actual:   $ACTUAL_SHA"
+    # Prefer SHA256 when available.
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha_line="$(fetch_url_stdout "${sum_root}/SHA256SUMS" 2>/dev/null | grep -E "${COMPRESSED_FILE}\$" || true)"
+        if [ -n "$sha_line" ]; then
+            expected_sha="$(echo "$sha_line" | awk '{print $1}')"
+            actual_sha="$(sha256sum "$COMPRESSED_PATH" | awk '{print $1}')"
+            if [ "$expected_sha" != "$actual_sha" ]; then
+                echo "[ERROR] SHA256 mismatch for ${COMPRESSED_PATH}"
+                echo "  Expected: $expected_sha"
+                echo "  Actual:   $actual_sha"
+                exit 1
+            fi
+            echo "[OK] SHA256 verified"
+            echo ""
+        fi
+    fi
+
+    # Fallback: some ports/latest indexes publish only MD5SUMS for image blobs.
+    if [ -z "${sha_line:-}" ]; then
+        if command -v md5sum >/dev/null 2>&1; then
+            md5_line="$(fetch_url_stdout "${sum_root}/MD5SUMS" 2>/dev/null | grep -E "${COMPRESSED_FILE}\$" || true)"
+            if [ -n "$md5_line" ]; then
+                expected_md5="$(echo "$md5_line" | awk '{print $1}')"
+                actual_md5="$(md5sum "$COMPRESSED_PATH" | awk '{print $1}')"
+                if [ "$expected_md5" != "$actual_md5" ]; then
+                    echo "[ERROR] MD5 mismatch for ${COMPRESSED_PATH}"
+                    echo "  Expected: $expected_md5"
+                    echo "  Actual:   $actual_md5"
+                    exit 1
+                fi
+                echo "[WARN] SHA256SUMS unavailable; verified MD5SUMS instead"
+                echo "[OK] MD5 verified"
+                echo ""
+            else
+                echo "[ERROR] Could not find ${COMPRESSED_FILE} in SHA256SUMS or MD5SUMS"
+                echo "[ERROR] Hint: set SKIP_CHECKSUM=1 to bypass verification (not recommended)"
+                exit 1
+            fi
+        else
+            echo "[ERROR] SHA256SUMS unavailable and md5sum is not installed"
+            echo "[ERROR] Hint: install coreutils/md5sum or set SKIP_CHECKSUM=1 (not recommended)"
             exit 1
         fi
-        echo "[OK] SHA256 verified"
     fi
-    echo ""
 fi
 
 # Extract image
@@ -253,7 +296,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Validate configuration: ./scripts/validate-config.sh"
 echo "  2. Build container image: make build"
-echo "  3. Deploy container:      ./scripts/docker-orchestration.sh up"
+echo "  3. Deploy container:      make up"
 echo ""
 
 # Mark success so trap doesn't remove outputs

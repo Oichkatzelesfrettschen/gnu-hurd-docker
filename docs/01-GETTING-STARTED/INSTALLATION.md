@@ -98,10 +98,10 @@ cd gnu-hurd-docker
 
 # 4. Build and start
 docker compose build
-./scripts/docker-orchestration.sh up
+make up
 
 # 5. View logs
-./scripts/docker-orchestration.sh logs
+make logs
 ```
 
 ### macOS
@@ -319,7 +319,7 @@ git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 ./scripts/download-image.sh
 docker compose build
-./scripts/docker-orchestration.sh up
+make up
 ```
 
 **Note:** macOS uses TCG emulation (no KVM). Expect slower performance but full functionality.
@@ -369,7 +369,7 @@ cd gnu-hurd-docker
 # Continue with standard Linux steps
 ./scripts/download-image.sh
 docker compose build
-./scripts/docker-orchestration.sh up
+make up
 ```
 
 **WSL Performance Tips:**
@@ -437,7 +437,7 @@ devices:
 
 Verify KVM works:
 ```bash
-./scripts/docker-orchestration.sh logs | grep -i kvm
+make logs | grep -i kvm
 # Should show: "KVM acceleration detected"
 ```
 
@@ -494,7 +494,7 @@ qemu-img info images/debian-hurd-amd64.qcow2
 
 ```bash
 docker compose build
-./scripts/docker-orchestration.sh up
+make up
 ```
 
 ### Monitor Boot Process
@@ -502,7 +502,7 @@ docker compose build
 **Via Logs:**
 ```bash
 # Watch container logs
-./scripts/docker-orchestration.sh logs
+make logs
 
 # Look for:
 # - "Pure x86_64 Debian GNU/Hurd QEMU Environment"
@@ -520,7 +520,7 @@ telnet localhost 5555
 **Via VNC/noVNC (recommended for first boot):**
 ```bash
 # Start the VNC/noVNC overlay
-./scripts/docker-orchestration.sh up-vnc
+make up-vnc
 
 # Install VNC client first
 sudo pacman -S tigervnc  # Arch Linux
@@ -693,7 +693,7 @@ git config --global user.email "you@example.com"
 
 ```bash
 # On host
-./scripts/docker-orchestration.sh ps
+make ps
 # Should show: gnu-hurd-dev running
 
 # Check QEMU process
@@ -753,8 +753,8 @@ EOF
 **Check Docker:**
 ```bash
 docker ps
-./scripts/docker-orchestration.sh ps
-./scripts/docker-orchestration.sh logs
+make ps
+make logs
 ```
 
 **Check Disk Space:**
@@ -782,7 +782,7 @@ qemu-img check images/debian-hurd-amd64*.qcow2
 
 **Check Logs:**
 ```bash
-./scripts/docker-orchestration.sh logs | tail -50
+make logs | tail -50
 # Look for errors
 ```
 
@@ -797,7 +797,7 @@ free -h
 **Wait for Full Boot:**
 ```bash
 # Boot takes 5-10 minutes for x86_64
-./scripts/docker-orchestration.sh logs | grep -i "ssh\\|login"
+make logs | grep -i "ssh\\|login"
 ```
 
 **Check SSH is Running (inside guest):**
@@ -811,7 +811,7 @@ service ssh start
 
 **Check Port Forwarding:**
 ```bash
-./scripts/docker-orchestration.sh ps
+make ps
 # Verify 2222:2222 mapping
 ```
 
@@ -825,7 +825,7 @@ ssh -v -p 2222 root@localhost
 
 **Solution:**
 - Press Enter several times to wake up the console
-- Or use VNC/noVNC: `./scripts/docker-orchestration.sh up-vnc` then `vncviewer localhost:5900` or `http://localhost:6080/vnc.html`
+- Or use VNC/noVNC: `make up-vnc` then `vncviewer localhost:5900` or `http://localhost:6080/vnc.html`
 - Check if boot is still in progress (can take 10+ minutes on first boot)
 
 ### 9p Mount Fails

@@ -487,31 +487,23 @@ podman-compose logs -f
 
 ## This Project's Strategy
 
-This project uses a **runtime abstraction wrapper** that auto-detects the available container engine:
-
-```bash
-# File: scripts/docker-orchestration.sh
-# Auto-detects:
-#   1. docker compose (v2)
-#   2. docker-compose (v1)
-#   3. podman-compose
-# And uses the first one found in PATH
-```
+This project uses a **Compose-native control plane** via `Makefile` + `compose*.yaml`.
+Runtime selection is explicit with `CONTAINER_RUNTIME=docker|podman`; for Podman, pin `PODMAN_COMPOSE_PROVIDER=podman-compose`.
 
 **Usage**:
 
 ```bash
-./scripts/docker-orchestration.sh up       # TCG (compatible with all runtimes)
-./scripts/docker-orchestration.sh up-kvm   # KVM (docker-compose variants only)
-./scripts/docker-orchestration.sh down
-./scripts/docker-orchestration.sh logs
+make up       # TCG (compatible with all runtimes)
+make up-kvm   # KVM overlay (Linux x86_64 host + /dev/kvm required)
+make down
+make logs
 ```
 
 **Why this approach**:
 - ✓ Works with any installed compose variant
-- ✓ No user decision needed; automatically selects best available
+- ✓ Runtime/provider is explicit and reproducible in CI
 - ✓ Enables CI/CD to run on various platforms without changes
-- ✓ Graceful fallback from v2 → v1 → podman-compose
+- ✓ Uses standardized Compose/Bake workflows instead of custom orchestration wrappers
 
 ---
 
@@ -591,8 +583,8 @@ sudo chmod 666 /dev/kvm
 
 - [PODMAN-SUPPORT.md](../01-GETTING-STARTED/PODMAN-SUPPORT.md) - Detailed Podman setup guide
 - [DOCKER-COMPOSE-GUIDE.md](DOCKER-COMPOSE-GUIDE.md) - docker-compose usage patterns
-- [docker-orchestration.sh](../../scripts/docker-orchestration.sh) - Runtime abstraction implementation
-- [docker-compose.kvm.yml](../../docker-compose.kvm.yml) - KVM acceleration overlay
+- [Makefile](../../Makefile) - Compose control plane targets
+- [compose.kvm.yaml](../../compose.kvm.yaml) - KVM acceleration overlay
 
 ---
 

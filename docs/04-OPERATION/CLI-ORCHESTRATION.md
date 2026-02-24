@@ -1,6 +1,7 @@
 # CLI Orchestration
 
-This repository supports Docker and Podman. The canonical wrapper is `scripts/docker-orchestration.sh`, which centralizes Compose file selection and naming.
+This repository supports Docker and Podman via a Compose-native control plane driven by `Makefile`.
+The canonical entrypoint is `make` + Compose files (`compose.yaml`, `compose.*.yaml`) rather than a custom wrapper script.
 
 If you need the previous, long-form orchestration guide (including legacy service names), see `docs/04-OPERATION/archive/CLI-ORCHESTRATION-LEGACY.md`.
 
@@ -9,42 +10,62 @@ If you need the previous, long-form orchestration guide (including legacy servic
 Check runtime compatibility (Docker vs Podman, KVM availability):
 
 ```bash
-./scripts/docker-orchestration.sh check
+CONTAINER_RUNTIME=docker make compose-config
 ```
 
-Start (dev bind mode, uses `docker-compose.bind.yml`):
+Build with Bake (Docker Buildx):
 
 ```bash
-./scripts/docker-orchestration.sh up
+make build
+```
+
+Start (dev bind mode, uses `compose.bind.yaml`):
+
+```bash
+make up
 ```
 
 Start (dev bind + KVM, Linux x86_64 only):
 
 ```bash
-./scripts/docker-orchestration.sh up-kvm
+make up-kvm
 ```
 
-Start (portable volume mode, uses `docker-compose.yml` only):
+Start (portable volume mode, uses `compose.yaml` only):
 
 ```bash
-AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume
+AUTO_DOWNLOAD_IMAGE=1 make up-volume
 ```
 
 Stop:
 
 ```bash
-./scripts/docker-orchestration.sh down
+make down
 ```
 
 Logs:
 
 ```bash
-./scripts/docker-orchestration.sh logs
+make logs
 ```
 
 Shell inside container:
 
 ```bash
-./scripts/docker-orchestration.sh shell
+make shell
 ```
 
+## Podman Provider Pinning
+
+Use Podman with an explicit compose provider to avoid accidental delegation:
+
+```bash
+PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make up-podman
+```
+
+Optional persistent config template:
+
+```bash
+mkdir -p ~/.config/containers
+cp config/podman/containers.conf ~/.config/containers/containers.conf
+```

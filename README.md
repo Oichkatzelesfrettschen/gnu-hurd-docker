@@ -26,10 +26,10 @@
 ./scripts/setup-hurd-amd64.sh
 
 # 2. Start container
-./scripts/docker-orchestration.sh up
+make up
 
 # 3. Wait for boot (2-5 minutes)
-./scripts/docker-orchestration.sh logs
+make logs
 
 # 4. Connect via SSH
 ssh -p 2222 root@localhost
@@ -57,6 +57,37 @@ ssh -p 2222 root@localhost
 
 **Best for**: Native performance, benchmarking, direct QEMU control
 
+### Path C: Fresh Upstream Latest Image (ports/latest)
+
+```bash
+# 1. Resolve and download latest dated hurd-amd64 image
+make setup-latest
+
+# 2. Boot using the latest-image alias (keeps baseline image untouched)
+make up-latest
+
+# 3. Follow logs and connect
+make logs
+ssh -p 2222 root@localhost
+```
+
+**Best for**: testing the newest Debian GNU/Hurd image while keeping reproducible baseline workflows
+
+### Path D: Fresh Daily Installer (d-i hurd-amd64)
+
+```bash
+# 1. Resolve/download latest d-i mini.iso + create fresh qcow2 target disk
+make setup-daily-installer
+
+# 2. Boot installer media on fresh target disk
+make up-installer
+
+# Podman variant:
+# PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make up-podman-installer
+```
+
+**Best for**: validating against the newest installer daily when ports/latest prebuilt images lag behind
+
 **Need help choosing?** See [docs/01-GETTING-STARTED/USAGE-MODES.md](docs/01-GETTING-STARTED/USAGE-MODES.md)
 
 **Detailed setup**: See [docs/01-GETTING-STARTED/INSTALLATION.md](docs/01-GETTING-STARTED/INSTALLATION.md)
@@ -75,6 +106,7 @@ ssh -p 2222 root@localhost
 - [Usage Modes](docs/01-GETTING-STARTED/USAGE-MODES.md) - Choose Docker vs Standalone QEMU
 - [Installation Guide](docs/01-GETTING-STARTED/INSTALLATION.md) - Complete setup instructions
 - [Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) - Fast-track boot and verify
+- [Latest Image Workflow](docs/01-GETTING-STARTED/LATEST-IMAGE-WORKFLOW.md) - Fresh upstream latest + reproducible baseline
 - [Standalone QEMU Guide](docs/01-GETTING-STARTED/STANDALONE-QEMU.md) - Run Hurd without Docker
 
 **Daily Operations**:
@@ -105,7 +137,11 @@ ssh -p 2222 root@localhost
 |-----------|---------------|
 | **QEMU Binary** | `qemu-system-x86_64` (underscore!) |
 | **Release** | Debian GNU/Hurd (Debian 13 "Trixie", ports/13.0) |
-| **Upstream build ID** | See `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/` (example: `20250807`) |
+| **Release Track (reproducible)** | `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/` |
+| **Latest Track (rolling)** | `https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/` |
+| **Latest Resolver** | `./scripts/resolve-latest-hurd-amd64.sh` |
+| **Daily Installer Track** | `https://d-i.debian.org/daily-images/hurd-amd64/` |
+| **Daily Installer Resolver** | `./scripts/resolve-latest-hurd-amd64-daily-installer.sh` |
 | **Image** | debian-hurd.img.tar.xz (~337 MB compressed, ~3.9 GB raw) |
 | **Image URL** | https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/ |
 | **CPU** | `-cpu max` or `-cpu host` (KVM acceleration) |
@@ -145,7 +181,7 @@ telnet localhost 5555
 |---------|------|-------|
 | SSH | 2222 | Primary access |
 | Serial Console | 5555 | Emergency access |
-| Custom Services | Configure in docker-compose.yml |
+| Custom Services | Configure in compose.yaml |
 
 **See**: [docs/03-CONFIGURATION/PORT-FORWARDING.md](docs/03-CONFIGURATION/PORT-FORWARDING.md)
 
@@ -188,11 +224,11 @@ telnet localhost 5555
 
 ```bash
 # Start (dev default: bind-mount ./images)
-./scripts/docker-orchestration.sh up
+make up
 
 # Stop (graceful)
 ssh -p 2222 root@localhost shutdown -h now
-./scripts/docker-orchestration.sh down
+make down
 
 # Restart (container)
 docker compose restart
@@ -257,7 +293,7 @@ docker compose restart
 │   ├── manage-snapshots.sh       # Snapshot management
 │   └── ... (18 more scripts)
 ├── .github/workflows/             # CI/CD workflows (x86_64 only)
-├── docker-compose.yml             # QEMU VM configuration
+├── compose.yaml                    # QEMU VM base configuration
 ├── Dockerfile                     # Container image
 ├── entrypoint.sh                  # QEMU launcher
 └── ARCHIVE/                       # Historical docs (migration, i386)
@@ -341,7 +377,7 @@ MIT License - See [LICENSE](LICENSE) file
 **Essential Commands**:
 ```bash
 # Start environment
-./scripts/docker-orchestration.sh up
+make up
 
 # Connect via SSH
 ssh -p 2222 root@localhost

@@ -132,12 +132,14 @@ New to GNU/Hurd Docker? Follow this path:
 
 | Task | Documentation | Quick Command |
 |------|--------------|---------------|
-| Start GNU/Hurd (dev bind mode) | [quickstart.md](01-GETTING-STARTED/QUICKSTART.md) | `./scripts/docker-orchestration.sh up` |
-| Start GNU/Hurd (portable volume mode) | [usage-modes.md](01-GETTING-STARTED/USAGE-MODES.md) | `AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume` |
+| Start GNU/Hurd (dev bind mode) | [quickstart.md](01-GETTING-STARTED/QUICKSTART.md) | `make up` |
+| Start GNU/Hurd (portable volume mode) | [usage-modes.md](01-GETTING-STARTED/USAGE-MODES.md) | `AUTO_DOWNLOAD_IMAGE=1 make up-volume` |
+| Start GNU/Hurd (fresh latest image) | [latest-image-workflow.md](01-GETTING-STARTED/LATEST-IMAGE-WORKFLOW.md) | `make setup-latest && make up-latest` |
+| Start GNU/Hurd (fresh daily installer) | [latest-image-workflow.md](01-GETTING-STARTED/LATEST-IMAGE-WORKFLOW.md) | `make setup-daily-installer && make up-installer` |
 | Connect via SSH | [interactive-access.md](04-OPERATION/INTERACTIVE-ACCESS.md) | `ssh root@localhost -p 2222` |
-| Build container image | [docker-compose-guide.md](05-CI-CD/DOCKER-COMPOSE-GUIDE.md) | `docker compose build` |
-| Monitor container logs | [monitoring.md](04-OPERATION/MONITORING.md) | `docker compose logs -f gnu-hurd-dev` |
-| Debug issues | [common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | `./scripts/docker-orchestration.sh logs` |
+| Build container image | [docker-compose-guide.md](05-CI-CD/DOCKER-COMPOSE-GUIDE.md) | `make build` |
+| Monitor container logs | [monitoring.md](04-OPERATION/MONITORING.md) | `make logs` |
+| Debug issues | [common-issues.md](06-TROUBLESHOOTING/COMMON-ISSUES.md) | `make logs` |
 
 ### Advanced Tasks
 

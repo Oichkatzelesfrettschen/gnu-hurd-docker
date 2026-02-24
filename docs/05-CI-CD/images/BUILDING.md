@@ -7,7 +7,7 @@ This repo’s default workflow uses the upstream Debian GNU/Hurd pre-installed i
 1. Create/update the disk image (with checksum verification):
    - `./scripts/setup-hurd-amd64.sh`
 2. Run the VM (dev default):
-   - `./scripts/docker-orchestration.sh up`
+   - `make up`
 3. Customize inside the guest (SSH: `ssh -p 2222 root@localhost`)
 4. Persist changes by shutting down cleanly (guest `shutdown -h now`), then snapshot on the host:
    - `./scripts/manage-snapshots.sh create <name>`

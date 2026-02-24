@@ -324,13 +324,35 @@ container_run() {
 # Generic compose wrapper.
 # Accepts full compose arguments, including global flags like -f.
 container_compose() {
-    local compose_cmd
-    compose_cmd=$(get_compose_command)
+    local runtime compose_cmd
+    runtime=$(get_container_runtime)
+    compose_cmd=$(get_compose_command "$runtime")
 
     echo_info "Running compose with: $compose_cmd $*"
     # Properly handle multi-word compose command
     read -ra cmd_array <<< "$compose_cmd"
-    "${cmd_array[@]}" "$@"
+    local rc=0
+    if "${cmd_array[@]}" "$@"; then
+        return 0
+    else
+        rc=$?
+    fi
+
+    # Podman best-effort fallback: if podman compose provider is misconfigured
+    # (common when it delegates to docker-compose), retry with podman-compose.
+    if [[ "$runtime" == "podman" && "$compose_cmd" == "podman compose" && "${PODMAN_COMPOSE_DISABLE_FALLBACK:-0}" != "1" ]]; then
+        if command -v podman-compose >/dev/null 2>&1; then
+            echo_warning "podman compose failed (exit $rc); retrying with podman-compose"
+            if podman-compose "$@"; then
+                return 0
+            else
+                rc=$?
+            fi
+            echo_error "podman-compose fallback also failed (exit $rc)"
+        fi
+    fi
+
+    return "$rc"
 }
 
 # Convenience wrappers

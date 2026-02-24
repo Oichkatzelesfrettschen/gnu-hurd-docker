@@ -59,9 +59,9 @@ This can be caused by either:
 
 **Triage**:
 
-- If you are using KVM (`./scripts/docker-orchestration.sh up-kvm*`), stop and retry without KVM (TCG is slower but far more reliable for this image):
-  - `DISABLE_KVM=1 ./scripts/docker-orchestration.sh up-vnc`
-  - Or simply use `./scripts/docker-orchestration.sh up-vnc` (no KVM overlay).
+- If you are using KVM (`make up-kvm*`), stop and retry without KVM (TCG is slower but far more reliable for this image):
+  - `DISABLE_KVM=1 make up-vnc`
+  - Or simply use `make up-vnc` (no KVM overlay).
 - Optional: try `QEMU_IDE_CONTROLLER=isa` (experimental). Note: on some QEMU builds the guest still attaches to the machine's PIIX IDE path even when an ISA IDE is added, so this may not help.
 - SCSI mode is currently **experimental** for the Debian GNU/Hurd amd64 qcow2 used here; the guest may not probe the expected `sd0` device even if GRUB is patched. Treat it as a debugging path, not a default.
 - If the error persists even under TCG, run an offline `e2fsck` on the qcow2 from the host using `guestfish`.

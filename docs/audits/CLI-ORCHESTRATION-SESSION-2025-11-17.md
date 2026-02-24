@@ -201,7 +201,7 @@ quit                 # Exit QEMU
 ```bash
 ./scripts/docker-orchestration.sh build
 ./scripts/docker-orchestration.sh start
-./scripts/docker-orchestration.sh shell
+make shell
 ./scripts/docker-orchestration.sh qemu-monitor
 ./scripts/docker-orchestration.sh stats
 ```

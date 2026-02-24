@@ -26,7 +26,7 @@ This avoids exposing an unauthenticated remote desktop service on your LAN.
 
 ```bash
 # Use 0.0.0.0 to listen on the LAN interface (insecure unless firewalled)
-NOVNC_BIND=0.0.0.0 VNC_BIND=0.0.0.0 ./scripts/docker-orchestration.sh up-vnc
+NOVNC_BIND=0.0.0.0 VNC_BIND=0.0.0.0 make up-vnc
 ```
 
 2. Ensure your firewall allows LAN access to the chosen ports (example for ufw):
@@ -52,7 +52,7 @@ sudo ufw allow from 10.0.0.0/24 to any port 5900 proto tcp
 1. Start VNC/noVNC and bind noVNC to LAN:
 
 ```bash
-NOVNC_BIND=0.0.0.0 NOVNC_PORT=6081 VNC_PORT=5901 ./scripts/docker-orchestration.sh up-vnc
+NOVNC_BIND=0.0.0.0 NOVNC_PORT=6081 VNC_PORT=5901 make up-vnc
 ```
 
 2. Allow from LAN subnet (this host uses `10.0.0.0/24`):

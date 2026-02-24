@@ -16,7 +16,7 @@ This repo uses a two-step forwarding chain:
 | VNC (optional) | 5900 | 5900 | N/A |
 | noVNC (optional) | 6080 | 8080 | N/A |
 
-VNC/noVNC are enabled only when starting with the VNC overlay (`./scripts/docker-orchestration.sh up-vnc`).
+VNC/noVNC are enabled only when starting with the VNC overlay (`make up-vnc`).
 
 ## Changing host ports
 

@@ -70,7 +70,7 @@ cd gnu-hurd-docker
 IMAGE_DIR=images ./scripts/download-image.sh
 
 # Start Hurd VM and provision it
-./scripts/docker-orchestration.sh up
+make up
 
 # Wait for boot (5-10 minutes)
 sleep 600
@@ -86,7 +86,7 @@ exit
 # Shutdown gracefully
 ssh -p 2222 root@localhost 'shutdown -h now'
 sleep 30
-./scripts/docker-orchestration.sh down
+make down
 
 # Copy provisioned image
 cp images/debian-hurd-amd64.qcow2 images/debian-hurd-amd64-provisioned.qcow2

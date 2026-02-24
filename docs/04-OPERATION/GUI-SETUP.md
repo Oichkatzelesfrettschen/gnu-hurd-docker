@@ -6,7 +6,7 @@ GUI support inside Debian GNU/Hurd varies significantly by upstream image, packa
 
 - Prefer headless workflows unless you specifically need a GUI.
 - Use VNC/noVNC for display output:
-  - Start the overlay: `./scripts/docker-orchestration.sh up-vnc`
+  - Start the overlay: `make up-vnc`
   - Connect with: `vncviewer localhost:5900` or open `http://localhost:6080/vnc.html`
 - If you want to install a desktop environment (XFCE), follow: `docs/04-OPERATION/WORKSTATION-XFCE.md`.
 

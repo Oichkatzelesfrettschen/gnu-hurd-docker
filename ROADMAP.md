@@ -25,7 +25,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 ## Milestone 2 — Runtime portability (Docker + Podman)
 
 15. [ ] Verify rootless Podman behavior on Linux and document required flags/limitations
-16. [x] Add a Docker/Podman invocation path using `scripts/lib/container-runtime.sh` + `scripts/docker-orchestration.sh`
+16. [x] Add a Docker/Podman invocation path using Compose-native `make` targets + `scripts/lib/container-runtime.sh`
 17. [ ] Ensure `docker compose` vs `docker-compose` vs `podman-compose` differences are documented and tested end-to-end
 18. [ ] Validate bind mounts and file paths on macOS/Windows via Docker Desktop/Podman Machine (document caveats)
 

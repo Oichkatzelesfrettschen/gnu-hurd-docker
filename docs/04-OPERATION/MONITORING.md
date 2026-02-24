@@ -7,8 +7,8 @@ If you need the previous, long-form monitoring guide (including legacy container
 ## Container status and logs
 
 ```bash
-./scripts/docker-orchestration.sh ps
-./scripts/docker-orchestration.sh logs
+make ps
+make logs
 ```
 
 Using Docker Compose directly:

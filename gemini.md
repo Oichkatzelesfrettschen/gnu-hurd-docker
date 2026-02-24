@@ -21,7 +21,7 @@ Docker/Podman host the QEMU process and expose ports/volumes. This is **not** â€
 - Download + convert official image: `./scripts/setup-hurd-amd64.sh`
 - Validate repo consistency: `./scripts/validate-config.sh`
 - Host smoke check: `./scripts/smoke-host.sh`
-- Orchestration (Docker or Podman): `./scripts/docker-orchestration.sh up` / `up-kvm`
+- Orchestration (Docker or Podman): `make up` / `make up-kvm`
 
 ## Key fixes applied (audit continuation)
 

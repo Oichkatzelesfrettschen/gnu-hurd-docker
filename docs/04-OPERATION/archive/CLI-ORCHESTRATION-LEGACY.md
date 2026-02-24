@@ -70,8 +70,8 @@ The repository includes `scripts/docker-orchestration.sh` for comprehensive cont
 
 # Interaction
 ./scripts/docker-orchestration.sh exec "command" # Run command
-./scripts/docker-orchestration.sh shell          # Interactive shell
-./scripts/docker-orchestration.sh logs           # View logs
+make shell          # Interactive shell
+make logs           # View logs
 ./scripts/docker-orchestration.sh follow-logs    # Tail logs
 
 # QEMU Access via Docker

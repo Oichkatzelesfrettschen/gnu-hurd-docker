@@ -23,8 +23,8 @@ if [[ -f images/debian-hurd-amd64.qcow2 ]]; then
 else
   echo "[WARN] Missing images/debian-hurd-amd64.qcow2"
   echo "      Dev (bind):    ./scripts/setup-hurd-amd64.sh"
-  echo "      Dev + KVM:     ./scripts/setup-hurd-amd64.sh && ./scripts/docker-orchestration.sh up-kvm"
-  echo "      Volume (auto): AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume"
+  echo "      Dev + KVM:     ./scripts/setup-hurd-amd64.sh && make up-kvm"
+  echo "      Volume (auto): AUTO_DOWNLOAD_IMAGE=1 make up-volume"
 fi
 
 echo ""

@@ -13,13 +13,13 @@ Start (dev bind mode):
 
 ```bash
 ./scripts/setup-hurd-amd64.sh
-./scripts/docker-orchestration.sh up
+make up
 ```
 
 Start (portable volume mode, auto-download on first run):
 
 ```bash
-AUTO_DOWNLOAD_IMAGE=1 ./scripts/docker-orchestration.sh up-volume
+AUTO_DOWNLOAD_IMAGE=1 AUTO_DOWNLOAD_IMAGE=1 make up-volume
 ```
 
 ## Access channels
@@ -58,7 +58,7 @@ telnet localhost 9999
 Enable VNC:
 
 ```bash
-./scripts/docker-orchestration.sh up-vnc
+make up-vnc
 ```
 
 ### noVNC (optional, browser)
@@ -66,7 +66,7 @@ Enable VNC:
 - Host: `http://localhost:6080/vnc.html`
 
 ```bash
-./scripts/docker-orchestration.sh up-vnc
+make up-vnc
 ```
 
 ## Container-level access (not the guest)
@@ -74,11 +74,11 @@ Enable VNC:
 Open a shell inside the container:
 
 ```bash
-./scripts/docker-orchestration.sh shell
+make shell
 ```
 
 Follow logs:
 
 ```bash
-./scripts/docker-orchestration.sh logs
+make logs
 ```

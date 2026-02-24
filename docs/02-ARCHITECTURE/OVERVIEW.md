@@ -37,7 +37,7 @@ QEMU uses user-mode networking (NAT) with port forwards:
 - HTTP: `localhost:8080` → guest `:80`
 - Serial console: `telnet localhost:5555`
 - QEMU monitor: `telnet localhost:9999`
-- Optional VNC/noVNC: start with `./scripts/docker-orchestration.sh up-vnc` then use `localhost:5900` or `http://localhost:6080/vnc.html`
+- Optional VNC/noVNC: start with `make up-vnc` then use `localhost:5900` or `http://localhost:6080/vnc.html`
 
 ## File sharing
 

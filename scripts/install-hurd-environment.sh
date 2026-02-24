@@ -464,7 +464,7 @@ print_summary() {
         echo "GUI Access:"
         echo "  Option 1: service lightdm start  (graphical login via VNC)"
         echo "  Option 2: startxfce4             (direct Xfce session)"
-        echo "  VNC port: 5900 (ENABLE_VNC=1 in docker-compose.yml)"
+        echo "  VNC port: 5900 (ENABLE_VNC=1 in compose.yaml)"
     fi
     
     echo ""

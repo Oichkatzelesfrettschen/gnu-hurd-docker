@@ -1,13 +1,13 @@
 #!/bin/bash
 # =============================================================================
-# validate-security-config.sh - Validate docker-compose.yml security configuration
+# validate-security-config.sh - Validate compose security configuration
 # =============================================================================
 # PURPOSE:
-#   Validates that docker-compose.yml matches security promises in SECURITY.md
+#   Validates that compose.yaml matches security promises in SECURITY.md
 #   Ensures security-critical configuration options are properly set
 #
 # USAGE:
-#   ./scripts/validate-security-config.sh [docker-compose.yml]
+#   ./scripts/validate-security-config.sh [compose.yaml]
 #
 # EXIT CODES:
 #   0 - All security checks passed
@@ -23,7 +23,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILE="${1:-docker-compose.yml}"
+COMPOSE_FILE="${1:-compose.yaml}"
 ERRORS=0
 
 # Helper functions

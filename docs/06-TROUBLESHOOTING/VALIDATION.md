@@ -13,7 +13,7 @@ This repo includes validation scripts to catch configuration regressions early.
 
 ## Runtime checks
 
-- Container logs: `./scripts/docker-orchestration.sh logs`
+- Container logs: `make logs`
 - Healthcheck: `/opt/scripts/health-check.sh` (runs inside the container)
 
 ## Legacy

@@ -28,7 +28,7 @@ docker compose up -d
 Podman is supported via `podman-compose` (see `scripts/lib/container-runtime.sh`). Prefer using:
 
 ```bash
-./scripts/docker-orchestration.sh up
+make up
 ```
 
 ## Legacy

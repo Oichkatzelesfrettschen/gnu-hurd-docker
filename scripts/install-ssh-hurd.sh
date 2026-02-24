@@ -7,6 +7,7 @@ set -euo pipefail
 
 SERIAL_PORT="${SERIAL_PORT:-5555}"
 SERIAL_HOST="${SERIAL_HOST:-localhost}"
+NOVNC_PORT="${NOVNC_PORT:-6080}"
 
 echo "========================================================================"
 echo "  GNU/Hurd SSH Server Installation via Serial Console"
@@ -20,70 +21,76 @@ echo "  4. Install openssh-server and random-egd"
 echo "  5. Start SSH daemon"
 echo "  6. Set root password for security"
 echo ""
-echo "Press Ctrl+C to cancel, or Enter to continue..."
-read -r
+if [ "${NONINTERACTIVE:-0}" = "1" ]; then
+    echo "[INFO] NONINTERACTIVE=1 set; skipping confirmation prompt"
+else
+    echo "Press Ctrl+C to cancel, or Enter to continue..."
+    read -r
+fi
 
 echo ""
 echo "[INFO] Connecting to serial console on port $SERIAL_PORT..."
 echo ""
 
 # Use expect to automate the serial console interaction
-expect << EXPECT_SCRIPT
+export SERIAL_HOST SERIAL_PORT NOVNC_PORT
+expect << 'EXPECT_SCRIPT'
 set timeout 600
 set send_slow {1 .001}
 log_user 1
 
-puts "Connecting to telnet $SERIAL_HOST:$SERIAL_PORT"
+puts "Connecting to telnet $env(SERIAL_HOST):$env(SERIAL_PORT)"
 
 # Connect to telnet
-spawn telnet $SERIAL_HOST $SERIAL_PORT
+spawn telnet $env(SERIAL_HOST) $env(SERIAL_PORT)
 
 # Send wake-up characters
 send "\r\r\r"
 sleep 2
 
 	# Most upstream Hurd images do not provide a usable serial login.
-	# Fail fast with actionable guidance if serial appears blank.
+	# Use an absolute deadline (not activity-based timeout) so we fail predictably
+	# even when boot output continuously refreshes the serial stream.
 	set allow_wait 0
 	if {[info exists env(ALLOW_BLANK_SERIAL_WAIT)] && $env(ALLOW_BLANK_SERIAL_WAIT) == "1"} {
 	    set allow_wait 1
 	}
 
-	set quick_timeout 20
-	expect -timeout $quick_timeout {
-	    -re ".*login:\\s*$" {
-	        puts "\nFound login prompt"
-	        send -s "root\r"
-	    }
-	    timeout {
+	set login_wait_limit 20
+	if {$allow_wait} {
+	    set login_wait_limit 600
+	}
+
+	set login_found 0
+	set login_wait_start [clock seconds]
+	while {$login_found == 0} {
+	    set elapsed [expr {[clock seconds] - $login_wait_start}]
+	    if {$elapsed >= $login_wait_limit} {
 	        if {$allow_wait} {
-	            puts "\nNo login prompt on serial after ${quick_timeout}s; continuing to wait (ALLOW_BLANK_SERIAL_WAIT=1)."
+	            puts "\nTimeout waiting for login prompt after ${login_wait_limit}s"
+	            puts "The system may not have booted yet or serial is not responding"
 	        } else {
-	            puts "\nNo login prompt on serial after ${quick_timeout}s."
+	            puts "\nNo login prompt on serial after ${login_wait_limit}s."
 	            puts "This is expected on many Debian GNU/Hurd images (serial is often blank)."
 	            puts ""
 	            puts "Use VNC/noVNC for provisioning instead:"
-	            puts "  ./scripts/docker-orchestration.sh up-vnc"
-	            puts "  Open: http://127.0.0.1:${NOVNC_PORT:-6080}/vnc.html"
+	            puts "  make up-vnc"
+	            puts "  Open: http://127.0.0.1:$env(NOVNC_PORT)/vnc.html"
 	            puts ""
-	            puts "If you intentionally want to wait on serial anyway, re-run with:"
+	            puts "If you intentionally want to wait longer on serial, re-run with:"
 	            puts "  ALLOW_BLANK_SERIAL_WAIT=1 ./scripts/install-ssh-hurd.sh"
-	            exit 1
 	        }
+	        exit 1
 	    }
-	}
 
-	# If the user explicitly allows waiting, fall back to long wait for login.
-	if {$allow_wait} {
-	    expect {
+	    expect -timeout 5 {
 	        -re ".*login:\\s*$" {
 	            puts "\nFound login prompt"
 	            send -s "root\r"
+	            set login_found 1
 	        }
 	        timeout {
-	            puts "\nTimeout waiting for login prompt after 600s"
-	            puts "The system may not have booted yet or serial is not responding"
-	            exit 1
+	            # Keep polling until absolute deadline.
 	        }
 	    }
 	}

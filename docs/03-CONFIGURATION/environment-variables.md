@@ -20,17 +20,28 @@ QEMU_RAM=2048 QEMU_SMP=1 make up      # Minimal: 2GB RAM, 1 core
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `QEMU_DRIVE` | Path | `/opt/hurd-image/debian-hurd-amd64.qcow2` | Guest disk image location in container |
+| `QEMU_DRIVE` | Path | `/opt/hurd-image/${HURD_IMAGE_BASENAME:-debian-hurd-amd64.qcow2}` | Guest disk image location in container |
+| `HURD_IMAGE_BASENAME` | String | `debian-hurd-amd64.qcow2` | Select image filename from `./images` bind mount |
+| `QEMU_CDROM` | Path | (empty) | Optional installer ISO path inside container (e.g. `/opt/hurd-installer/...iso`) |
+| `QEMU_BOOT_ORDER` | String | (empty) | Optional boot order for QEMU (`c`, `d`, `dc`, etc.); auto-set to `d` when `QEMU_CDROM` is set |
 | `QEMU_DISK_BUS` | String | `ide` | Disk controller type: `ide`, `ahci`, `scsi`, `nvme` |
 | `QEMU_IDE_CONTROLLER` | String | `piix` | IDE controller model: `piix`, `ich9-ide`, `isa-ide` |
 | `UNSAFE_CACHE` | Boolean | `0` | Use `cache=unsafe` for disk (⚠ data loss risk) |
 | `AUTO_DOWNLOAD_IMAGE` | Boolean | `0` | Auto-download missing Debian GNU/Hurd image |
 | `SKIP_CHECKSUM` | Boolean | `0` | Skip SHA256 verification during download |
+| `IMAGE_TRACK` | String | `release` | Download track for `scripts/download-image.sh`: `release` (ports/13.0) or `latest` (ports/latest) |
 
 **Examples**:
 ```bash
 # Use AHCI controller (better performance on some systems)
 QEMU_DISK_BUS=ahci make up
+
+# Boot with the latest-image alias created by make setup-latest
+HURD_IMAGE_BASENAME=debian-hurd-amd64.latest.qcow2 make up
+
+# Boot fresh installer workflow disk with daily mini.iso
+QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso \
+QEMU_BOOT_ORDER=d HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2 make up
 
 # Auto-download image if missing
 AUTO_DOWNLOAD_IMAGE=1 make up
@@ -66,6 +77,7 @@ ENABLE_NATIVE_AIO=1 make up
 | `FORCE_KVM` | Boolean | `0` | Force KVM acceleration (fail if unavailable) |
 | `DISABLE_KVM` | Boolean | `0` | Disable KVM, use TCG emulation |
 | `AUTO_DISABLE_KVM_FOR_IDE` | Boolean | `1` | Automatically disable KVM if using IDE (avoids DMA errors) |
+| `QEMU_NO_REBOOT` | Boolean | `0` | Add `-no-reboot` for one-shot debugging (default keeps VM alive across reboots) |
 | `PRINT_QEMU_CMD` | Boolean | `0` | Print full QEMU command before starting |
 
 **Examples**:
@@ -78,6 +90,9 @@ DISABLE_KVM=1 make up
 
 # Debug: print QEMU command
 PRINT_QEMU_CMD=1 make up
+
+# One-shot mode: exit QEMU on guest reboot
+QEMU_NO_REBOOT=1 make up
 
 # Keep IDE with KVM (be aware of potential DMA issues)
 AUTO_DISABLE_KVM_FOR_IDE=0 make up
@@ -161,8 +176,8 @@ Variables are resolved in this order (first match wins):
 
 1. Explicit environment variable: `QEMU_RAM=8192 make up`
 2. `.env` file in repo root: `QEMU_RAM=4096` in `.env`
-3. `docker-compose.override.yml`: environment section
-4. `docker-compose.yml`: default values
+3. Active Compose file set (`COMPOSE_FILE=...`): environment section(s)
+4. `compose.yaml`: default values
 5. Hardcoded defaults in `entrypoint.sh`
 
 **Example Priority Chain**:
@@ -177,17 +192,17 @@ QEMU_SMP=2
 EOF
 make up
 
-# 3. docker-compose.override.yml
-cat > docker-compose.override.yml << EOF
+# 3. compose override file in COMPOSE_FILE chain
+cat > compose.local.yaml << EOF
 services:
   gnu-hurd-dev:
     environment:
       QEMU_RAM: "4096"
       QEMU_SMP: "2"
 EOF
-make up
+COMPOSE_FILE=compose.yaml:compose.bind.yaml:compose.local.yaml make up
 
-# 4. docker-compose.yml defaults are used as fallback
+# 4. compose.yaml defaults are used as fallback
 ```
 
 ## Common Combinations
@@ -214,8 +229,8 @@ PRINT_QEMU_CMD=1 ENABLE_VNC=1 ENABLE_NATIVE_AIO=1 make up
 
 ### Rootless Podman
 ```bash
-# Most settings work the same with podman-compose
-QEMU_RAM=4096 QEMU_SMP=2 podman-compose up -d
+# Most settings work the same through the orchestration wrapper
+CONTAINER_RUNTIME=podman QEMU_RAM=4096 QEMU_SMP=2 make up
 ```
 
 ## Verification
@@ -239,7 +254,7 @@ docker exec gnu-hurd-dev df -h /        # Disk space
 
 - [RESOURCE-SIZING.md](RESOURCE-SIZING.md) - Detailed resource allocation guidance
 - [entrypoint.sh](../../entrypoint.sh) - Source of truth for variable usage
-- [docker-compose.yml](../../docker-compose.yml) - Default values
+- [compose.yaml](../../compose.yaml) - Default values
 - [OPTIMIZATION-2025.md](../02-ARCHITECTURE/qemu/OPTIMIZATION-2025.md) - Performance tuning
 
 ---

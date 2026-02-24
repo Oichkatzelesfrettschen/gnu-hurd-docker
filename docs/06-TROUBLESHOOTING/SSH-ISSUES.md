@@ -36,7 +36,7 @@ Run these commands in order to identify the issue:
 
 ```bash
 # 1. Check if container is running
-./scripts/docker-orchestration.sh ps
+make ps
 # Expected: gnu-hurd-dev in "Up" state
 
 # 2. Test SSH port from host
@@ -48,7 +48,7 @@ nc -zv localhost 2222
 # Expected: "SSH-2.0-..." banner
 
 # 4. If connection refused, check logs
-./scripts/docker-orchestration.sh logs | tail -200 | grep -iE "ssh|sshd" || true
+make logs | tail -200 | grep -iE "ssh|sshd" || true
 
 # 5. Note: `docker exec` / `systemctl` checks inspect the container, not the guest.
 # Guest SSH must be validated via banner/auth from the host.
@@ -119,7 +119,7 @@ ssh -p 2222 root@localhost
 **Important**: On many upstream Debian GNU/Hurd images the serial console is blank (no login prompt).
 If serial is blank, use VNC/noVNC instead:
 
-- Start: `./scripts/docker-orchestration.sh up-vnc`
+- Start: `make up-vnc`
 - Open: `http://127.0.0.1:6080/vnc.html`
 
 **Manual Steps**:

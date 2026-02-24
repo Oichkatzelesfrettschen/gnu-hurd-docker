@@ -37,7 +37,7 @@ Example (add HTTPS 443):
 
 ```bash
 QEMU_HOSTFWDS="tcp::2222-:22,tcp::8080-:80,tcp::8443-:443" \
-  ./scripts/docker-orchestration.sh up
+  make up
 ```
 
 Then map host port `8443` to container port `8443` in Compose as needed.

@@ -56,7 +56,7 @@ docker run --rm ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest \
 ### 5. Start Container
 ```bash
 # Start with KVM if available
-./scripts/docker-orchestration.sh up-kvm
+make up-kvm
 
 # Check container logs for architecture verification
 docker compose logs gnu-hurd-dev | grep -E "Architecture|x86_64|i386"

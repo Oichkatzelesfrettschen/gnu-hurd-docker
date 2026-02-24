@@ -13,7 +13,7 @@ This repository runs Debian GNU/Hurd as a QEMU virtual machine hosted inside a c
 
 1. Prepare the disk image: `./scripts/setup-hurd-amd64.sh`
 2. Validate config: `./scripts/validate-config.sh`
-3. Start (dev default): `./scripts/docker-orchestration.sh up`
+3. Start (dev default): `make up`
 
 ## Legacy
 

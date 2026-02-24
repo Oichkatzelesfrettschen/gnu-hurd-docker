@@ -44,7 +44,7 @@ cleanup() {
         if [ "$CONTAINER_STARTED_BY_SCRIPT" = true ]; then
             if is_container_running "$CONTAINER_NAME"; then
                 echo "  [INFO] Stopping container: $CONTAINER_NAME"
-                ./scripts/docker-orchestration.sh down 2>/dev/null || true
+                CONTAINER_RUNTIME="${CONTAINER_RUNTIME:-$(get_container_runtime)}" make down >/dev/null 2>&1 || true
             fi
         fi
     fi

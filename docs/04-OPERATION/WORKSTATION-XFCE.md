@@ -7,7 +7,7 @@ This repo can boot Debian GNU/Hurd under QEMU and expose the VGA console via VNC
 1. Start with VNC/noVNC (TCG, no KVM):
 
 ```bash
-./scripts/docker-orchestration.sh up-vnc
+make up-vnc
 ```
 
 2. Open noVNC locally:

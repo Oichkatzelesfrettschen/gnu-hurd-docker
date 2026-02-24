@@ -52,7 +52,7 @@ fi
 echo "Test 4: Configuration files..."
 [ -f "Dockerfile" ] && pass "Dockerfile exists" || fail "Dockerfile missing"
 [ -f "entrypoint.sh" ] && pass "entrypoint.sh exists" || fail "entrypoint.sh missing"
-[ -f "docker-compose.yml" ] && pass "docker-compose.yml exists" || fail "docker-compose.yml missing"
+[ -f "compose.yaml" ] && pass "compose.yaml exists" || fail "compose.yaml missing"
 
 # Test 5: QCOW2 image exists
 echo "Test 5: QCOW2 image..."
@@ -102,9 +102,9 @@ if [ $FAIL -eq 0 ]; then
     echo "All tests passed! Ready to deploy."
     echo ""
     echo "Next steps:"
-    echo "  docker compose build"
-    echo "  docker compose up -d"
-    echo "  docker compose logs -f"
+    echo "  make build"
+    echo "  make up"
+    echo "  make logs"
     exit 0
 else
     echo "Some tests failed. Please review errors above."

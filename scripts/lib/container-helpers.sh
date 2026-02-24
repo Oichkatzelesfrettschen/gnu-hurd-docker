@@ -30,13 +30,15 @@ is_container_running() {
 # Usage: ensure_container_running <container_name>
 ensure_container_running() {
     local container_name="${1:-gnu-hurd-dev}"
+    local runtime
+    runtime="$(get_container_runtime)"
 
     if is_container_running "$container_name"; then
         echo "Container $container_name is already running"
         return 0
     else
         echo "Starting container $container_name..."
-        "${REPO_ROOT}/scripts/docker-orchestration.sh" up
+        (cd "${REPO_ROOT}" && CONTAINER_RUNTIME="$runtime" make up)
         sleep 5
 
         if is_container_running "$container_name"; then

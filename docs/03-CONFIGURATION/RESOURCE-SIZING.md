@@ -414,7 +414,7 @@ file /opt/hurd-image/debian-hurd-amd64.qcow2
 
 ## Related Documentation
 
-- [REQUIREMENTS.md](REQUIREMENTS.md) - System requirements
+- [REQUIREMENTS.md](../01-GETTING-STARTED/REQUIREMENTS.md) - System requirements
 - [environment-variables.md](environment-variables.md) - Complete environment variable reference
 - [QEMU-CONFIGURATION.md](../02-ARCHITECTURE/QEMU-CONFIGURATION.md) - QEMU-specific tuning
 - [OPTIMIZATION-2025.md](../02-ARCHITECTURE/qemu/OPTIMIZATION-2025.md) - Advanced QEMU optimization
