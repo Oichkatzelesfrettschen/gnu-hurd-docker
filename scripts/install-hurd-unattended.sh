@@ -85,7 +85,7 @@ qemu_iso_path() {
 }
 
 backend_auto_pick() {
-    if command -v VBoxManage >/dev/null 2>&1 && [ "$(uname -s)" = "Linux" ] && lsmod | grep -q '^vboxdrv'; then
+    if command -v VBoxManage >/dev/null 2>&1 && [ "$(uname -s)" = "Linux" ] && [ -r /proc/modules ] && grep -q '^vboxdrv ' /proc/modules; then
         echo "virtualbox"
         return
     fi

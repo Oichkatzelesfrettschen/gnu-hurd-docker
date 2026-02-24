@@ -100,11 +100,13 @@ check_vboxdrv_linux() {
     if [ "$(uname -s)" != "Linux" ]; then
         return 0
     fi
-    if lsmod | grep -q '^vboxdrv'; then
+    # Avoid pipefail + grep -q SIGPIPE false-negatives by checking /proc/modules directly.
+    if [ -r /proc/modules ] && grep -q '^vboxdrv ' /proc/modules; then
         return 0
     fi
     echo "[ERROR] VirtualBox kernel module 'vboxdrv' is not loaded." >&2
-    echo "        Run: sudo /sbin/vboxconfig" >&2
+    echo "        Run (Arch/CachyOS): sudo -A rcvboxdrv setup" >&2
+    echo "        Run (Debian/Ubuntu): sudo -A /sbin/vboxconfig" >&2
     return 1
 }
 

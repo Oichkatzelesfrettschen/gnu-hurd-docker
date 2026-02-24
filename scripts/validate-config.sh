@@ -53,6 +53,7 @@ require_file scripts/wait-for-guest-ssh.sh
 require_file scripts/provision-hurd-x11.sh
 require_file scripts/vboxmanage-hurd.sh
 require_file scripts/install-hurd-unattended.sh
+require_file scripts/sudo-askpass.sh
 require_file scripts/bootstrap-latest-hurd.sh
 require_file scripts/validate-security-config.sh
 require_file scripts/smoke-host.sh
@@ -82,6 +83,7 @@ if command -v shellcheck >/dev/null 2>&1; then
     shellcheck -S error scripts/provision-hurd-x11.sh && pass "scripts/provision-hurd-x11.sh passes shellcheck (errors)"
     shellcheck -S error scripts/vboxmanage-hurd.sh && pass "scripts/vboxmanage-hurd.sh passes shellcheck (errors)"
     shellcheck -S error scripts/install-hurd-unattended.sh && pass "scripts/install-hurd-unattended.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/sudo-askpass.sh && pass "scripts/sudo-askpass.sh passes shellcheck (errors)"
     shellcheck -S error scripts/bootstrap-latest-hurd.sh && pass "scripts/bootstrap-latest-hurd.sh passes shellcheck (errors)"
 else
     warn "shellcheck not installed"
