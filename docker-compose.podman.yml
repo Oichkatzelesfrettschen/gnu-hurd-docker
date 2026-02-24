@@ -1,0 +1,30 @@
+# Podman-specific compose override
+# Uses Podman's default network instead of custom subnet to avoid conflicts with Docker networks
+
+services:
+  gnu-hurd-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gnu-hurd-docker:latest
+    container_name: gnu-hurd-dev-podman
+    devices:
+      - /dev/kvm:/dev/kvm
+    environment:
+      FORCE_KVM: "1"
+    volumes:
+      - ./images/debian-hurd-amd64.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw
+      - ./share:/share:rw
+    # Note: Podman ports are slightly different; use podman-specific port format
+    ports:
+      - "127.0.0.1:2223:2222"   # SSH (different port to avoid conflict with Docker instance)
+      - "127.0.0.1:8081:8080"   # HTTP
+      - "127.0.0.1:5556:5555"   # Serial console
+      - "127.0.0.1:9998:9999"   # QEMU monitor
+    # Use Podman's default network
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

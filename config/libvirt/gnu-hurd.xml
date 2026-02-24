@@ -3,112 +3,67 @@
 GNU/Hurd libvirt Domain Definition
 ==================================
 
-This libvirt domain XML defines a GNU/Hurd microkernel x86_64 virtual machine.
-It provides an alternative to Docker/Podman-based deployment for users with libvirt infrastructure.
+This libvirt domain XML defines a GNU/Hurd x86_64 virtual machine for
+local development and compatibility testing.
 
 USAGE:
-  1. Customize this file for your environment (memory, vcpu, paths)
+  1. Customize memory/vCPU/image path as needed.
   2. Define the domain: virsh define gnu-hurd.xml
   3. Start the VM: virsh start gnu-hurd
-  4. Connect: virsh console gnu-hurd (or SSH after boot)
-
-REQUIREMENTS:
-  - libvirt daemon running (libvirtd)
-  - KVM support (nested if running in VM) OR QEMU/TCG fallback
-  - Sufficient disk space (20+ GB recommended)
-  - Sufficient RAM (4+ GB recommended for guest + host)
-
-CUSTOMIZATION POINTS:
-  - memory: RAM in KiB (4194304 = 4GB)
-  - currentMemory: Current allocated RAM
-  - vcpu: Virtual CPU count (1-8 recommended)
-  - disk source path: Path to Debian GNU/Hurd QCOW2 image
-  - name: VM name (must be unique)
+  4. Connect via VNC or serial/telnet console.
 
 NOTES:
-  - Uses QCOW2 image format for flexibility
-  - Slirp networking (user-mode, no host network config needed)
-  - VNC console for graphical access
-  - Serial console for text-only access
-  - KVM acceleration enabled (falls back to TCG if unavailable)
-
-RELATED:
-  - See docs/02-ARCHITECTURE/libvirt/LIBVIRT-GUIDE.md for detailed setup
-  - See docker-compose.libvirt.yml for Docker Compose alternative
+  - User-mode networking with host forwards:
+      127.0.0.1:2222 -> guest:22 (SSH)
+      127.0.0.1:8080 -> guest:80 (HTTP)
+  - TCP console exposed on 127.0.0.1:5555 (telnet protocol)
 -->
-
-<domain type="kvm" xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0">
-  <name>gnu-hurd-dev</name>
-  <uuid>00000000-0000-0000-0000-000000000001</uuid>
+<domain type="kvm">
+  <name>gnu-hurd</name>
+  <uuid>a1b2c3d4-e5f6-47a8-9b0c-1d2e3f4a5b6c</uuid>
   <title>GNU/Hurd Microkernel x86_64</title>
-  <description>Debian GNU/Hurd development environment with Mach microkernel</description>
+  <description>Debian GNU/Hurd development and testing environment</description>
 
-  <!-- Memory Configuration -->
-  <memory unit="KiB">4194304</memory>                <!-- 4 GB total -->
-  <currentMemory unit="KiB">4194304</currentMemory> <!-- 4 GB allocated -->
-
-  <!-- CPU Configuration -->
+  <memory unit="MiB">4096</memory>
+  <currentMemory unit="MiB">4096</currentMemory>
   <vcpu placement="static">2</vcpu>
-  <cputune>
-    <!-- Pin vCPUs if desired (optional) -->
-    <!-- <vcpupin vcpu="0" cpuset="0"/>
-         <vcpupin vcpu="1" cpuset="1"/> -->
-  </cputune>
 
-  <!-- CPU Features -->
-  <cpu mode="host-passthrough">
+  <cpu mode="host-passthrough" check="none">
     <topology sockets="1" cores="2" threads="1"/>
   </cpu>
 
-  <!-- Boot Configuration -->
   <os>
     <type arch="x86_64" machine="pc">hvm</type>
     <boot dev="hd"/>
     <bios useserial="yes" rebootTimeout="5000"/>
   </os>
 
-  <!-- Hypervisor Features -->
   <features>
-    <acpi/>                    <!-- ACPI support -->
-    <apic/>                    <!-- Advanced Programmable Interrupt Controller -->
-    <pae/>                     <!-- Physical Address Extension -->
-    <kvm>
-      <hidden state="off"/>    <!-- Expose KVM to guest (for nested virt) -->
-    </kvm>
+    <acpi/>
+    <apic/>
+    <pae/>
   </features>
 
-  <!-- Clock Configuration -->
   <clock offset="utc">
     <timer name="rtc" tickpolicy="catchup"/>
     <timer name="pit" tickpolicy="delay"/>
     <timer name="hpet" present="no"/>
   </clock>
 
-  <!-- Power Management -->
   <pm>
-    <suspend-to-mem supported="yes"/>
-    <suspend-to-disk supported="yes"/>
+    <suspend-to-mem supported="no"/>
+    <suspend-to-disk supported="no"/>
   </pm>
 
-  <!-- Device Configuration -->
   <devices>
-    <!-- Emulator -->
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
 
-    <!-- IDE Controller -->
     <controller type="ide" index="0">
       <alias name="ide"/>
     </controller>
-
-    <!-- USB Controllers -->
-    <controller type="usb" index="0" model="piix3-uhci">
-      <alias name="usb"/>
-    </controller>
-
-    <!-- PCI Host Bridge -->
+    <controller type="usb" index="0" model="piix3-uhci"/>
     <controller type="pci" index="0" model="pci-root"/>
 
-    <!-- Root File System (Disk) -->
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2" cache="writeback" io="threads"/>
       <source file="/var/lib/libvirt/images/debian-hurd-amd64.qcow2"/>
@@ -116,66 +71,41 @@ RELATED:
       <address type="drive" controller="0" bus="0" target="0" unit="0"/>
     </disk>
 
-    <!-- Network Configuration (Slirp User-Mode Networking) -->
     <interface type="user">
-      <alias name="net0"/>
       <mac address="52:54:00:12:34:56"/>
-
-      <!-- SSH port forwarding: host 2222 -> guest 22 -->
+      <model type="e1000"/>
       <source>
-        <portForward proto="tcp" hostPort="2222" guestPort="22"/>
-        <!-- HTTP port forwarding: host 8080 -> guest 80 -->
-        <portForward proto="tcp" hostPort="8080" guestPort="80"/>
-        <!-- Custom application ports can be added here -->
+        <portForward family="ipv4" address="127.0.0.1" start="2222" end="2222">
+          <range start="22" end="22"/>
+        </portForward>
+        <portForward family="ipv4" address="127.0.0.1" start="8080" end="8080">
+          <range start="80" end="80"/>
+        </portForward>
       </source>
-
-      <!-- Guest network configuration -->
-      <ip address="10.0.2.15" prefix="24"/>
-      <route family="ipv4" address="0.0.0.0" prefix="0" gateway="10.0.2.2"/>
-
-      <!-- DNS configuration -->
-      <dns>
-        <forwarder addr="8.8.8.8"/>
-        <forwarder addr="8.8.4.4"/>
-      </dns>
     </interface>
 
-    <!-- Graphics Console (VNC) -->
     <graphics type="vnc" port="-1" autoport="yes" listen="127.0.0.1">
       <listen type="address" address="127.0.0.1"/>
     </graphics>
 
-    <!-- Serial Console (Text-only access) -->
+    <console type="tcp">
+      <target type="serial" port="0"/>
+      <protocol type="telnet"/>
+      <source mode="bind" host="127.0.0.1" service="5555" tls="no"/>
+    </console>
+
     <serial type="pty">
       <target type="isa-serial" port="0">
         <model name="isa-serial"/>
       </target>
     </serial>
 
-    <!-- QEMU Guest Agent (optional, for enhanced control) -->
-    <channel type="unix">
-      <target type="virtio" name="com.redhat.spice.0"/>
-    </channel>
+    <input type="mouse" bus="ps2"/>
+    <input type="keyboard" bus="ps2"/>
 
-    <!-- Memballoon (memory management optimization) -->
-    <memballoon model="virtio">
-      <alias name="balloon0"/>
-    </memballoon>
-
-    <!-- RNG (random number generator) -->
+    <memballoon model="virtio"/>
     <rng model="virtio">
       <backend model="builtin"/>
     </rng>
   </devices>
-
-  <!-- QEMU-specific Configuration -->
-  <qemu:commandline>
-    <!-- Enable KVM acceleration (will fall back to TCG if unavailable) -->
-    <qemu:arg value="-enable-kvm"/>
-
-    <!-- Custom QEMU arguments -->
-    <!-- Uncomment to adjust boot timeout, etc. -->
-    <!-- <qemu:arg value="-boot"/>
-         <qemu:arg value="menu=on,strict=off"/> -->
-  </qemu:commandline>
 </domain>
