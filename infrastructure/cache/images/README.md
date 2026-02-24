@@ -10,6 +10,9 @@ Suggested usage:
   - `mv images/debian-hurd-amd64.qcow2.*.bak infrastructure/cache/images/`
   - `mv images/debian-hurd-amd64.qcow2.pre-* infrastructure/cache/images/`
   - `mv images/debian-hurd-amd64.qcow2.post-* infrastructure/cache/images/`
+- Or run the helper script from repo root:
+  - `./scripts/manage-image-backup-cache.sh`
+  - Dry run: `./scripts/manage-image-backup-cache.sh --dry-run`
 
 Cleanup examples:
 - Remove everything in this cache:
