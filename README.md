@@ -76,10 +76,10 @@ ssh -p 2222 root@localhost
 ### Path D: Fresh Daily Installer (d-i hurd-amd64)
 
 ```bash
-# 1. Resolve/download latest d-i mini.iso + create fresh qcow2 target disk
+# 1. Resolve/download latest d-i mini.iso, build unattended mini-auto.iso, and create fresh qcow2 target disk
 make setup-daily-installer
 
-# 2. Boot installer media on fresh target disk
+# 2. Boot unattended installer media on fresh target disk
 make up-installer
 
 # Podman variant:
@@ -87,6 +87,21 @@ make up-installer
 ```
 
 **Best for**: validating against the newest installer daily when ports/latest prebuilt images lag behind
+
+### Path E: Fully Automated Fresh Install (No Manual Installer UI)
+
+```bash
+# Auto-pick backend (VirtualBox preferred when vboxdrv is ready; else QEMU; else Podman)
+make auto-fresh
+
+# Force VirtualBox unattended flow
+make vbox-full-auto
+
+# Force backend from orchestration script
+./scripts/install-hurd-unattended.sh --backend podman --profile x11
+```
+
+**Best for**: reproducible "fresh installer -> SSH-ready configured guest" without manual keypresses/screenshots
 
 **Need help choosing?** See [docs/01-GETTING-STARTED/USAGE-MODES.md](docs/01-GETTING-STARTED/USAGE-MODES.md)
 

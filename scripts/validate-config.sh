@@ -48,12 +48,19 @@ require_file scripts/resolve-latest-hurd-amd64.sh
 require_file scripts/resolve-latest-hurd-amd64-daily-installer.sh
 require_file scripts/setup-hurd-amd64-latest.sh
 require_file scripts/setup-hurd-amd64-daily-installer.sh
+require_file scripts/build-hurd-unattended-iso.sh
+require_file scripts/wait-for-guest-ssh.sh
+require_file scripts/provision-hurd-x11.sh
+require_file scripts/vboxmanage-hurd.sh
+require_file scripts/install-hurd-unattended.sh
 require_file scripts/bootstrap-latest-hurd.sh
 require_file scripts/validate-security-config.sh
 require_file scripts/smoke-host.sh
 require_file scripts/smoke-container.sh
 require_file scripts/smoke-guest.sh
 require_file scripts/capture-telnet-log.sh
+require_file infrastructure/unattended/preseed.cfg
+require_file config/virtualbox/hurd-amd64.env
 require_file Makefile
 
 echo ""
@@ -70,6 +77,11 @@ if command -v shellcheck >/dev/null 2>&1; then
     shellcheck -S error scripts/resolve-latest-hurd-amd64-daily-installer.sh && pass "scripts/resolve-latest-hurd-amd64-daily-installer.sh passes shellcheck (errors)"
     shellcheck -S error scripts/setup-hurd-amd64-latest.sh && pass "scripts/setup-hurd-amd64-latest.sh passes shellcheck (errors)"
     shellcheck -S error scripts/setup-hurd-amd64-daily-installer.sh && pass "scripts/setup-hurd-amd64-daily-installer.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/build-hurd-unattended-iso.sh && pass "scripts/build-hurd-unattended-iso.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/wait-for-guest-ssh.sh && pass "scripts/wait-for-guest-ssh.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/provision-hurd-x11.sh && pass "scripts/provision-hurd-x11.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/vboxmanage-hurd.sh && pass "scripts/vboxmanage-hurd.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/install-hurd-unattended.sh && pass "scripts/install-hurd-unattended.sh passes shellcheck (errors)"
     shellcheck -S error scripts/bootstrap-latest-hurd.sh && pass "scripts/bootstrap-latest-hurd.sh passes shellcheck (errors)"
 else
     warn "shellcheck not installed"

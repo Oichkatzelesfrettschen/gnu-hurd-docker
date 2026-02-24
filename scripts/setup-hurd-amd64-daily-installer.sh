@@ -66,6 +66,9 @@ safe_build="${latest_build//:/-}"
 installer_basename="debian-hurd-amd64-installer-${safe_build}-mini.iso"
 installer_path="${INSTALLER_DIR}/${installer_basename}"
 installer_latest_alias="${INSTALLER_DIR}/debian-hurd-amd64-installer.latest-mini.iso"
+installer_auto_basename="debian-hurd-amd64-installer-${safe_build}-mini-auto.iso"
+installer_auto_path="${INSTALLER_DIR}/${installer_auto_basename}"
+installer_auto_latest_alias="${INSTALLER_DIR}/debian-hurd-amd64-installer.latest-mini-auto.iso"
 
 fresh_qcow2_basename="debian-hurd-amd64-fresh-${build_date}.qcow2"
 fresh_qcow2_path="${FRESH_IMAGE_DIR}/${fresh_qcow2_basename}"
@@ -101,6 +104,13 @@ fi
 
 ln -sfn "$installer_basename" "$installer_latest_alias"
 
+echo "[STEP] Building unattended installer ISO..."
+BASE_ISO="$installer_path" \
+OUTPUT_ISO="$installer_auto_path" \
+PRESEED_FILE="${REPO_ROOT}/infrastructure/unattended/preseed.cfg" \
+    "${SCRIPT_DIR}/build-hurd-unattended-iso.sh"
+ln -sfn "$installer_auto_basename" "$installer_auto_latest_alias"
+
 if [ -f "$fresh_qcow2_path" ]; then
     echo "[SKIP] Fresh QCOW2 already exists: ${fresh_qcow2_path}"
 else
@@ -115,14 +125,16 @@ echo ""
 echo "[SUCCESS] Daily installer assets prepared:"
 echo "  - ${installer_path}"
 echo "  - ${installer_latest_alias} -> ${installer_basename}"
+echo "  - ${installer_auto_path}"
+echo "  - ${installer_auto_latest_alias} -> ${installer_auto_basename}"
 echo "  - ${fresh_qcow2_path}"
 echo "  - ${fresh_qcow2_alias} -> ${fresh_qcow2_basename}"
 echo ""
 echo "[INFO] Installer boot (Docker):"
-echo "  QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso \\"
+echo "  QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso \\"
 echo "  QEMU_BOOT_ORDER=d HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2 make up"
 echo ""
 echo "[INFO] Installer boot (Podman):"
-echo "  QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso \\"
+echo "  QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso \\"
 echo "  QEMU_BOOT_ORDER=d HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2 \\"
 echo "  PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make up-podman"

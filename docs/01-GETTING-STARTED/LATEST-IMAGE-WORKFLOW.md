@@ -142,15 +142,16 @@ make resolve-latest-daily-installer
 make setup-daily-installer
 ```
 
-`setup-daily-installer` does three things:
+`setup-daily-installer` does four things:
 
 1. Resolves latest dated installer build (`YYYYMMDD-HH:MM`)
 2. Downloads `netboot/mini.iso` into `infrastructure/cache/images/installers/` and verifies SHA256 when published
-3. Creates a fresh target QCOW2 disk in `images/` and a stable alias: `debian-hurd-amd64.fresh.qcow2`
+3. Builds an unattended ISO variant (`*-mini-auto.iso`) with injected preseed and deterministic grub defaults
+4. Creates a fresh target QCOW2 disk in `images/` and a stable alias: `debian-hurd-amd64.fresh.qcow2`
 
 Installer boot defaults:
 
-- `QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso`
+- `QEMU_CDROM=/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso`
 - `QEMU_BOOT_ORDER=d`
 - `HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2`
 
@@ -159,6 +160,31 @@ After OS install completes, boot the fresh disk without installer media:
 ```bash
 QEMU_CDROM= QEMU_BOOT_ORDER=c HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2 make up
 ```
+
+## Fully Unattended Installer -> Configured SSH Guest
+
+Backend auto-pick (VirtualBox preferred when available):
+
+```bash
+make auto-fresh
+```
+
+VirtualBox explicit flow:
+
+```bash
+make vbox-doctor
+make vbox-full-auto
+```
+
+Standalone orchestrator with explicit backend:
+
+```bash
+./scripts/install-hurd-unattended.sh --backend qemu --profile x11
+./scripts/install-hurd-unattended.sh --backend virtualbox --profile dev
+./scripts/install-hurd-unattended.sh --backend podman --profile x11
+```
+
+The orchestrator writes a timestamped transcript under `logs/` by default.
 
 ## Notes
 

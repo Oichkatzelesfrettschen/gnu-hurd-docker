@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer down ps logs shell
+.PHONY: help validate security lint links smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -36,7 +36,7 @@ help:
 	@echo "  make resolve-latest-image         - resolve latest upstream hurd-amd64 dated artifact"
 	@echo "  make resolve-latest-daily-installer - resolve latest d-i daily installer build (hurd-amd64)"
 	@echo "  make setup-latest                 - download latest upstream image to images/debian-hurd-amd64.latest.qcow2"
-	@echo "  make setup-daily-installer        - fetch latest d-i mini.iso + create fresh qcow2 target disk"
+	@echo "  make setup-daily-installer        - fetch latest d-i mini.iso + build mini-auto.iso + create fresh qcow2 target disk"
 	@echo ""
 	@echo "Operation (Docker defaults):"
 	@echo "  make up                           - start bind-mode stack"
@@ -58,6 +58,13 @@ help:
 	@echo "  make up-podman-vnc                - start Podman stack + VNC/noVNC overlay"
 	@echo "  make up-podman-latest             - start Podman stack with latest image alias"
 	@echo "  make up-podman-installer          - boot installer ISO on Podman stack with fresh qcow2 target"
+	@echo ""
+	@echo "Unattended Fresh Installer Flows:"
+	@echo "  make vbox-doctor                  - validate VBoxManage host prerequisites"
+	@echo "  make vbox-install-auto            - unattended install via VirtualBox (SSH-ready)"
+	@echo "  make vbox-provision               - provision VirtualBox guest (dev/x11)"
+	@echo "  make vbox-full-auto               - unattended install + provision via VirtualBox"
+	@echo "  make auto-fresh                   - backend auto-pick (virtualbox/qemu/podman) full unattended"
 	@echo ""
 	@echo "Debugging:"
 	@echo "  make screenshot                   - capture QEMU screendump to logs/"
@@ -158,7 +165,7 @@ up-latest:
 	HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.latest.qcow2}" $(MAKE) up
 
 up-installer:
-	QEMU_CDROM="$${QEMU_CDROM:-/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso}" QEMU_BOOT_ORDER="$${QEMU_BOOT_ORDER:-d}" HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.fresh.qcow2}" $(MAKE) up
+	QEMU_CDROM="$${QEMU_CDROM:-/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso}" QEMU_BOOT_ORDER="$${QEMU_BOOT_ORDER:-d}" HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.fresh.qcow2}" $(MAKE) up
 
 up-podman: CONTAINER_RUNTIME=podman
 up-podman:
@@ -178,7 +185,22 @@ up-podman-latest:
 
 up-podman-installer: CONTAINER_RUNTIME=podman
 up-podman-installer:
-	QEMU_CDROM="$${QEMU_CDROM:-/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini.iso}" QEMU_BOOT_ORDER="$${QEMU_BOOT_ORDER:-d}" HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.fresh.qcow2}" PODMAN_COMPOSE_PROVIDER="$${PODMAN_COMPOSE_PROVIDER:-podman-compose}" COMPOSE_FILE="$${COMPOSE_FILE:-$(COMPOSE_PODMAN_FILES)}" "$${PODMAN_COMPOSE_PROVIDER}" up -d
+	QEMU_CDROM="$${QEMU_CDROM:-/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso}" QEMU_BOOT_ORDER="$${QEMU_BOOT_ORDER:-d}" HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.fresh.qcow2}" PODMAN_COMPOSE_PROVIDER="$${PODMAN_COMPOSE_PROVIDER:-podman-compose}" COMPOSE_FILE="$${COMPOSE_FILE:-$(COMPOSE_PODMAN_FILES)}" "$${PODMAN_COMPOSE_PROVIDER}" up -d
+
+vbox-doctor:
+	./scripts/vboxmanage-hurd.sh doctor
+
+vbox-install-auto:
+	./scripts/vboxmanage-hurd.sh install-auto
+
+vbox-provision:
+	./scripts/vboxmanage-hurd.sh provision
+
+vbox-full-auto:
+	./scripts/vboxmanage-hurd.sh full-auto
+
+auto-fresh:
+	./scripts/install-hurd-unattended.sh --backend "$${BACKEND:-auto}" --profile "$${PROFILE:-x11}"
 
 down:
 	@runtime="$${CONTAINER_RUNTIME:-$(CONTAINER_RUNTIME)}"; \
