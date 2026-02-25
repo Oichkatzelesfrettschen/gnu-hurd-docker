@@ -2,9 +2,15 @@
 
 Comprehensive script reference for GNU/Hurd development environment setup, automation, and management.
 
-**Total Scripts**: 31 | **Last Updated**: 2025-11-08
+**Total Scripts**: see `scripts/inventory.tsv` (generated) | **Last Updated**: 2026-02-25
 
 **Architecture**: This project is **x86_64-only** as of v2.0.0 (2025-11-08). Any references to i386/i686 in script documentation are legacy and should be considered outdated.
+
+**Consolidation Note**:
+- Canonical QEMU unattended automation now lives under `scripts/automation/qemu/`.
+- Compatibility wrappers remain under `scripts/*.sh`.
+- VirtualBox flows are conceptual-only stubs in this phase (`scripts/automation/stubs/`).
+- Run `./scripts/scripts-inventory-audit.sh` to refresh inventory and synthesis recommendations.
 
 ## Quick Navigation
 

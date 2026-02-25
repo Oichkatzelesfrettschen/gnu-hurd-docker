@@ -1,0 +1,352 @@
+#!/usr/bin/expect -f
+
+# QEMU installer finite-state monitor/controller.
+# - Polls QEMU screendump via HMP over telnet
+# - OCRs the current screen
+# - Handles known blocking dialogs deterministically
+# - Exits success when guest SSH port is open
+
+proc env_default {name def} {
+    if {[info exists ::env($name)]} {
+        return $::env($name)
+    }
+    return $def
+}
+
+set monitor_host [env_default MONITOR_HOST "127.0.0.1"]
+set monitor_port [env_default MONITOR_PORT "9998"]
+set ssh_host [env_default SSH_HOST "127.0.0.1"]
+set ssh_port [env_default SSH_PORT "2226"]
+set timeout_total [expr {[env_default FSM_TIMEOUT_SEC "3600"] + 0}]
+set poll_ms [expr {[env_default FSM_POLL_MS "2500"] + 0}]
+set work_dir [env_default FSM_WORK_DIR "logs/fsm"]
+set state_log [env_default FSM_STATE_LOG ""]
+
+file mkdir $work_dir
+set screen_ppm [file join $work_dir "qemu-installer-fsm.ppm"]
+set screen_ocr [file join $work_dir "qemu-installer-fsm-ocr.png"]
+set screen_txt [file join $work_dir "qemu-installer-fsm.txt"]
+set debug_log_ppm [file join $work_dir "qemu-installer-fsm-debug-log.ppm"]
+set debug_log_ocr [file join $work_dir "qemu-installer-fsm-debug-log-ocr.png"]
+set debug_log_txt [file join $work_dir "qemu-installer-fsm-debug-log.txt"]
+set ocr_trace_log [file join $work_dir "qemu-installer-fsm-ocr-trace.log"]
+set have_timeout 0
+
+proc log_state {message} {
+    global state_log
+    set ts [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
+    puts "$ts $message"
+    flush stdout
+    if {$state_log ne ""} {
+        set fh [open $state_log a]
+        puts $fh "$ts $message"
+        close $fh
+    }
+}
+
+proc connect_monitor_session {} {
+    global monitor_host monitor_port
+    set timeout 8
+    spawn telnet $monitor_host $monitor_port
+    log_user 0
+    expect {
+        -re {\(qemu\)} {
+            return 1
+        }
+        timeout {
+            catch {close}
+            catch {wait}
+            return 0
+        }
+        eof {
+            catch {close}
+            catch {wait}
+            return 0
+        }
+    }
+}
+
+proc ensure_monitor {reason} {
+    set attempts 0
+    while {$attempts < 5} {
+        incr attempts
+        if {[connect_monitor_session]} {
+            if {$attempts > 1} {
+                log_state "STATE=MONITOR_RECONNECTED reason=${reason} attempts=${attempts}"
+            }
+            return 1
+        }
+        after 500
+    }
+    log_state "STATE=ERROR message=monitor_channel_failure reason=${reason}"
+    return 0
+}
+
+proc ssh_port_open {host port} {
+    if {[catch {set banner [exec sh -c "printf '' | nc -w 2 $host $port 2>/dev/null | head -n 1"]}]} {
+        return 0
+    }
+    if {[regexp {^SSH-} [string trim $banner]]} {
+        return 1
+    }
+    return 0
+}
+
+proc ocr_screen {ppm ocr_img out_txt} {
+    if {![file exists $ppm]} {
+        return ""
+    }
+    if {[catch {exec convert $ppm -colorspace Gray -auto-level -threshold 55% $ocr_img}]} {
+        set ocr_img $ppm
+    }
+    if {[catch {set raw [run_tesseract $ppm]}]} {
+        if {[catch {set raw [run_tesseract $ocr_img]}]} {
+            return ""
+        }
+    }
+    if {[string length [string trim $raw]] < 3} {
+        if {[catch {set raw2 [run_tesseract $ocr_img]}] == 0} {
+            set raw $raw2
+        }
+    }
+    if {[string length [string trim $raw]] < 3} {
+        return ""
+    }
+    set lower [string tolower $raw]
+    set fh [open $out_txt w]
+    puts $fh $lower
+    close $fh
+    return $lower
+}
+
+proc run_tesseract {image_path} {
+    global have_timeout
+    if {$have_timeout} {
+        return [exec timeout 8s tesseract $image_path stdout -l eng --psm 6]
+    }
+    return [exec tesseract $image_path stdout -l eng --psm 6]
+}
+
+proc normalize_for_log {text} {
+    set compact [regsub -all {\s+} $text " "]
+    return [string trim $compact]
+}
+
+proc hmp {cmd} {
+    if {[catch {
+        send -- "$cmd\r"
+        expect {
+            -re {\(qemu\)} {}
+            timeout { error "hmp_timeout" }
+            eof { error "hmp_eof" }
+        }
+    } err]} {
+        set normalized [string map {"\"" "'"} $err]
+        log_state "STATE=MONITOR_RETRY reason=hmp_failed cmd=\"$cmd\" error=\"$normalized\""
+        if {![ensure_monitor "hmp_retry"]} {
+            return -code error "monitor_unavailable"
+        }
+        send -- "$cmd\r"
+        expect {
+            -re {\(qemu\)} {}
+            timeout { error "hmp_timeout_after_retry" }
+            eof { error "hmp_eof_after_retry" }
+        }
+    }
+}
+
+proc send_key {seq} {
+    hmp "sendkey $seq"
+}
+
+proc send_text {text} {
+    foreach c [split $text ""] {
+        switch -- $c {
+            ":" { send_key "shift:semicolon" }
+            "/" { send_key "slash" }
+            "." { send_key "dot" }
+            "-" { send_key "minus" }
+            "_" { send_key "shift-minus" }
+            default {
+                if {[regexp {[a-z0-9]} $c]} {
+                    send_key $c
+                }
+            }
+        }
+    }
+}
+
+if {[catch {exec which tesseract}]} {
+    puts stderr "[ERROR] tesseract is required for qemu-install-fsm.expect"
+    exit 1
+}
+if {[catch {exec which nc}]} {
+    puts stderr "[ERROR] nc is required for qemu-install-fsm.expect"
+    exit 1
+}
+if {[catch {exec which telnet}]} {
+    puts stderr "[ERROR] telnet is required for qemu-install-fsm.expect"
+    exit 1
+}
+if {![catch {exec which timeout}]} {
+    set have_timeout 1
+}
+
+set timeout 8
+log_state "STATE=FSM_START monitor=${monitor_host}:${monitor_port} ssh=${ssh_host}:${ssh_port}"
+if {![ensure_monitor "fsm_start"]} {
+    exit 1
+}
+
+set start_ts [clock seconds]
+set menu_seen_count 0
+set preseed_dialog_count 0
+set heartbeat_count 0
+set swap_recovery_count 0
+set write_changes_count 0
+set last_screen_snippet ""
+set stagnant_count 0
+set com_console_stall_count 0
+set empty_ocr_count 0
+
+while {1} {
+    set elapsed [expr {[clock seconds] - $start_ts}]
+    if {$elapsed > $timeout_total} {
+        log_state "STATE=TIMEOUT elapsed=${elapsed}s"
+        exit 1
+    }
+
+    if {[ssh_port_open $ssh_host $ssh_port]} {
+        log_state "STATE=SSH_PORT_OPEN elapsed=${elapsed}s"
+        exit 0
+    }
+
+    hmp "screendump $screen_ppm"
+    set screen [ocr_screen $screen_ppm $screen_ocr $screen_txt]
+    set screen_snippet [normalize_for_log [string range $screen 0 200]]
+    if {$screen_snippet eq ""} {
+        incr empty_ocr_count
+        if {$empty_ocr_count % 8 == 0} {
+            log_state "STATE=WAITING reason=empty_ocr elapsed=${elapsed}s count=${empty_ocr_count}"
+        }
+    } else {
+        set empty_ocr_count 0
+    }
+    set trace_ts [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
+    set trace_fh [open $ocr_trace_log a]
+    puts $trace_fh "$trace_ts snippet=$screen_snippet"
+    close $trace_fh
+
+    if {$screen_snippet eq $last_screen_snippet} {
+        incr stagnant_count
+    } else {
+        set stagnant_count 0
+        set last_screen_snippet $screen_snippet
+    }
+    if {$stagnant_count > 0 && $stagnant_count % 45 == 0} {
+        log_state "ACTION=SENDKEY_RET reason=stagnant_screen_recovery count=${stagnant_count}"
+        send_key "ret"
+    }
+    if {[regexp {using com port [0-9]+ for console} $screen]} {
+        incr com_console_stall_count
+        if {$com_console_stall_count % 20 == 0} {
+            log_state "ACTION=SENDKEY_RET reason=com_console_stall_recovery count=${com_console_stall_count}"
+            send_key "ret"
+        }
+        if {$com_console_stall_count >= 100} {
+            log_state "STATE=ERROR message=com_console_stall count=${com_console_stall_count}"
+            exit 7
+        }
+    } else {
+        set com_console_stall_count 0
+    }
+
+    if {[string first "debian gnu/hurd installer boot menu" $screen] >= 0} {
+        incr menu_seen_count
+        log_state "STATE=BOOT_MENU_DETECTED seen=${menu_seen_count}"
+        if {$menu_seen_count >= 4} {
+            log_state "ACTION=SENDKEY_RET reason=boot_menu_stalled"
+            send_key "ret"
+            set menu_seen_count 0
+        }
+    }
+
+    if {[regexp {failed to retrieve.*preconfiguration file} $screen]} {
+        incr preseed_dialog_count
+        log_state "STATE=PRESEED_DIALOG_DETECTED seen=${preseed_dialog_count}"
+        log_state "ACTION=SENDKEY_RET reason=preseed_error_dialog"
+        send_key "ret"
+        if {$preseed_dialog_count >= 2} {
+            log_state "STATE=ERROR message=preseed_dialog_persistent"
+            exit 2
+        }
+    }
+
+    if {[regexp {download debconf preconfiguration file} $screen]} {
+        log_state "STATE=PRESEED_URL_PROMPT_DETECTED"
+        log_state "ACTION=ENTER_PRESEED_URL value=file:///preseed.cfg"
+        send_key "ctrl-u"
+        send_text "file:///preseed.cfg"
+        send_key "ret"
+    }
+
+    if {[regexp {(choose language|select a language|configure the keyboard)} $screen]} {
+        log_state "STATE=ERROR message=interactive_installer_screen_detected"
+        exit 3
+    }
+
+    if {[regexp {write the changes to disks} $screen] || [regexp {if you continue, the changes listed below will be written to the disks} $screen]} {
+        incr write_changes_count
+        log_state "STATE=PARTMAN_WRITE_CHANGES_PROMPT seen=${write_changes_count}"
+        if {[string first "<no>" $screen] >= 0} {
+            log_state "ACTION=SENDKEY_TAB reason=partman_no_selected"
+            send_key "tab"
+        }
+        log_state "ACTION=SENDKEY_RET reason=partman_write_changes_confirm"
+        send_key "ret"
+        if {$write_changes_count >= 12} {
+            log_state "STATE=ERROR message=partman_write_changes_persistent"
+            exit 6
+        }
+    }
+
+    if {[regexp {failed to create a swap space} $screen]} {
+        incr swap_recovery_count
+        log_state "STATE=SWAP_CREATION_FAILED seen=${swap_recovery_count}"
+        log_state "ACTION=SENDKEY_RET reason=swap_creation_failed_continue"
+        send_key "ret"
+        if {$swap_recovery_count >= 8} {
+            log_state "STATE=ERROR message=swap_creation_failed_interactive_persistent"
+            exit 4
+        }
+    }
+
+    if {[regexp {failed to create a file system} $screen]} {
+        log_state "ACTION=SENDKEY_RET reason=filesystem_failure_dismiss_dialog"
+        send_key "ret"
+        after 500
+        log_state "ACTION=SENDKEY_ALT_F4 reason=filesystem_failure_capture_log"
+        send_key "alt-f4"
+        after 1200
+        for {set i 0} {$i < 12} {incr i} {
+            send_key "pgdn"
+            after 80
+        }
+        hmp "screendump $debug_log_ppm"
+        set debug_log [ocr_screen $debug_log_ppm $debug_log_ocr $debug_log_txt]
+        if {[string length [string trim $debug_log]] > 0} {
+            set clipped [string range [normalize_for_log $debug_log] 0 500]
+            log_state "DEBUG=TTY4_LOG_SNAPSHOT text=\"$clipped\""
+        }
+        send_key "f1"
+        log_state "STATE=ERROR message=filesystem_creation_failed_interactive"
+        exit 5
+    }
+
+    incr heartbeat_count
+    if {$heartbeat_count % 5 == 0} {
+        log_state "STATE=WAITING elapsed=${elapsed}s screen=\"$screen_snippet\""
+    }
+
+    after $poll_ms
+}

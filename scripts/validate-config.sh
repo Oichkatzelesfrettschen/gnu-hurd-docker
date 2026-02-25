@@ -49,10 +49,17 @@ require_file scripts/resolve-latest-hurd-amd64-daily-installer.sh
 require_file scripts/setup-hurd-amd64-latest.sh
 require_file scripts/setup-hurd-amd64-daily-installer.sh
 require_file scripts/build-hurd-unattended-iso.sh
+require_file scripts/rebuild-hurd-unattended-iso.sh
 require_file scripts/wait-for-guest-ssh.sh
 require_file scripts/provision-hurd-x11.sh
 require_file scripts/vboxmanage-hurd.sh
 require_file scripts/install-hurd-unattended.sh
+require_file scripts/qemu-auto-verify.sh
+require_file scripts/qemu-matrix-runner.sh
+require_file scripts/qemu-install-fsm.expect
+require_file scripts/qemu-install-serial-fsm.sh
+require_file scripts/qemu-stall-probe.sh
+require_file scripts/scripts-inventory-audit.sh
 require_file scripts/sudo-askpass.sh
 require_file scripts/bootstrap-latest-hurd.sh
 require_file scripts/validate-security-config.sh
@@ -60,6 +67,14 @@ require_file scripts/smoke-host.sh
 require_file scripts/smoke-container.sh
 require_file scripts/smoke-guest.sh
 require_file scripts/capture-telnet-log.sh
+require_file scripts/lib/installer/serial-log-utils.sh
+require_file scripts/automation/qemu/qemu-auto-verify.sh
+require_file scripts/automation/qemu/qemu-matrix-runner.sh
+require_file scripts/automation/qemu/qemu-install-serial-fsm.sh
+require_file scripts/automation/qemu/qemu-stall-probe.sh
+require_file scripts/automation/qemu/rebuild-hurd-unattended-iso.sh
+require_file scripts/automation/stubs/vbox-conceptual-stub.sh
+require_file scripts/automation/audit/audit-scripts-inventory.sh
 require_file infrastructure/unattended/preseed.cfg
 require_file config/virtualbox/hurd-amd64.env
 require_file Makefile
@@ -79,10 +94,24 @@ if command -v shellcheck >/dev/null 2>&1; then
     shellcheck -S error scripts/setup-hurd-amd64-latest.sh && pass "scripts/setup-hurd-amd64-latest.sh passes shellcheck (errors)"
     shellcheck -S error scripts/setup-hurd-amd64-daily-installer.sh && pass "scripts/setup-hurd-amd64-daily-installer.sh passes shellcheck (errors)"
     shellcheck -S error scripts/build-hurd-unattended-iso.sh && pass "scripts/build-hurd-unattended-iso.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/rebuild-hurd-unattended-iso.sh && pass "scripts/rebuild-hurd-unattended-iso.sh passes shellcheck (errors)"
     shellcheck -S error scripts/wait-for-guest-ssh.sh && pass "scripts/wait-for-guest-ssh.sh passes shellcheck (errors)"
     shellcheck -S error scripts/provision-hurd-x11.sh && pass "scripts/provision-hurd-x11.sh passes shellcheck (errors)"
     shellcheck -S error scripts/vboxmanage-hurd.sh && pass "scripts/vboxmanage-hurd.sh passes shellcheck (errors)"
     shellcheck -S error scripts/install-hurd-unattended.sh && pass "scripts/install-hurd-unattended.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/qemu-auto-verify.sh && pass "scripts/qemu-auto-verify.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/qemu-matrix-runner.sh && pass "scripts/qemu-matrix-runner.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/qemu-install-serial-fsm.sh && pass "scripts/qemu-install-serial-fsm.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/qemu-stall-probe.sh && pass "scripts/qemu-stall-probe.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/scripts-inventory-audit.sh && pass "scripts/scripts-inventory-audit.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/lib/installer/serial-log-utils.sh && pass "scripts/lib/installer/serial-log-utils.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/qemu/qemu-auto-verify.sh && pass "scripts/automation/qemu/qemu-auto-verify.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/qemu/qemu-matrix-runner.sh && pass "scripts/automation/qemu/qemu-matrix-runner.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/qemu/qemu-install-serial-fsm.sh && pass "scripts/automation/qemu/qemu-install-serial-fsm.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/qemu/qemu-stall-probe.sh && pass "scripts/automation/qemu/qemu-stall-probe.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/qemu/rebuild-hurd-unattended-iso.sh && pass "scripts/automation/qemu/rebuild-hurd-unattended-iso.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/stubs/vbox-conceptual-stub.sh && pass "scripts/automation/stubs/vbox-conceptual-stub.sh passes shellcheck (errors)"
+    shellcheck -S error scripts/automation/audit/audit-scripts-inventory.sh && pass "scripts/automation/audit/audit-scripts-inventory.sh passes shellcheck (errors)"
     shellcheck -S error scripts/sudo-askpass.sh && pass "scripts/sudo-askpass.sh passes shellcheck (errors)"
     shellcheck -S error scripts/bootstrap-latest-hurd.sh && pass "scripts/bootstrap-latest-hurd.sh passes shellcheck (errors)"
 else

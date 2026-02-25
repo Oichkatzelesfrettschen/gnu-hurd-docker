@@ -91,10 +91,25 @@ make up-installer
 ### Path E: Fully Automated Fresh Install (No Manual Installer UI)
 
 ```bash
-# Auto-pick backend (VirtualBox preferred when vboxdrv is ready; else QEMU; else Podman)
+# QEMU-first full unattended flow (installer FSM + SSH + provisioning)
 make auto-fresh
 
-# Force VirtualBox unattended flow
+# Explicit QEMU path
+make qemu-full-auto
+
+# Reproducibility harness (3 attempts by default)
+make qemu-auto-verify
+
+# Extended matrix (bus x disk-size x cpu, 2 attempts per case by default)
+make qemu-matrix
+
+# Rebuild unattended ISO locally when preseed changes (no download)
+make rebuild-unattended-iso
+
+# Generate script inventory/synthesis report
+make scripts-audit
+
+# VirtualBox conceptual stub path (non-operational in this phase)
 make vbox-full-auto
 
 # Force backend from orchestration script
@@ -102,6 +117,17 @@ make vbox-full-auto
 ```
 
 **Best for**: reproducible "fresh installer -> SSH-ready configured guest" without manual keypresses/screenshots
+
+Run artifacts are written per-attempt under `logs/runs/<run-id>/` with:
+- `transcript.log`
+- `serial.log`
+- `fsm/state.log`
+- `summary.log` (status, stage, failure_tag)
+
+By default, unattended QEMU now uses a serial-log FSM (`scripts/qemu-install-serial-fsm.sh`) for deterministic
+installer progress/failure detection, with OCR monitor FSM kept as an opt-in fallback (`FSM_BACKEND=ocr`).
+On partition stall, the flow now performs active serial interaction/retry probes and captures
+forensic artifacts under `logs/runs/<run-id>/fsm/stall-probe/` before final abort.
 
 **Need help choosing?** See [docs/01-GETTING-STARTED/USAGE-MODES.md](docs/01-GETTING-STARTED/USAGE-MODES.md)
 

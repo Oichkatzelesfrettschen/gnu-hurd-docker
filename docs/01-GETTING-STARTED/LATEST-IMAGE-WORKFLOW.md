@@ -163,13 +163,17 @@ QEMU_CDROM= QEMU_BOOT_ORDER=c HURD_IMAGE_BASENAME=debian-hurd-amd64.fresh.qcow2 
 
 ## Fully Unattended Installer -> Configured SSH Guest
 
-Backend auto-pick (VirtualBox preferred when available):
+QEMU-first default:
 
 ```bash
 make auto-fresh
+make qemu-full-auto
+make qemu-auto-verify
+make qemu-matrix
+make rebuild-unattended-iso
 ```
 
-VirtualBox explicit flow:
+VirtualBox conceptual-stub flow:
 
 ```bash
 make vbox-doctor
@@ -180,11 +184,26 @@ Standalone orchestrator with explicit backend:
 
 ```bash
 ./scripts/install-hurd-unattended.sh --backend qemu --profile x11
-./scripts/install-hurd-unattended.sh --backend virtualbox --profile dev
+./scripts/install-hurd-unattended.sh --backend virtualbox --profile dev   # conceptual stub
 ./scripts/install-hurd-unattended.sh --backend podman --profile x11
 ```
 
 The orchestrator writes a timestamped transcript under `logs/` by default.
+The QEMU path defaults to a serial-log FSM (`scripts/qemu-install-serial-fsm.sh`) to
+detect installer progress/failure without framebuffer scraping. OCR monitor FSM
+(`scripts/qemu-install-fsm.expect`) remains available as an explicit fallback via
+`FSM_BACKEND=ocr`.
+If the cached unattended ISO preseed does not match `infrastructure/unattended/preseed.cfg`,
+the orchestrator now rebuilds the unattended ISO locally before boot.
+When partitioning stalls, QEMU serial FSM now performs active monitor-driven retry/log capture
+before aborting, and stores evidence under `fsm/stall-probe/`.
+
+Current runs are grouped under `logs/runs/<run-id>/` and include:
+
+- `transcript.log`
+- `serial.log`
+- `fsm/state.log`
+- `summary.log` (`status`, `stage`, `failure_tag`)
 
 ## Notes
 

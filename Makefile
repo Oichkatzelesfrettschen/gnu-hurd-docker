@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -37,6 +37,8 @@ help:
 	@echo "  make resolve-latest-daily-installer - resolve latest d-i daily installer build (hurd-amd64)"
 	@echo "  make setup-latest                 - download latest upstream image to images/debian-hurd-amd64.latest.qcow2"
 	@echo "  make setup-daily-installer        - fetch latest d-i mini.iso + build mini-auto.iso + create fresh qcow2 target disk"
+	@echo "  make rebuild-unattended-iso       - rebuild mini-auto.iso from locally cached base ISO + current preseed"
+	@echo "  make scripts-audit                - generate scripts inventory + synthesis report"
 	@echo ""
 	@echo "Operation (Docker defaults):"
 	@echo "  make up                           - start bind-mode stack"
@@ -59,12 +61,20 @@ help:
 	@echo "  make up-podman-latest             - start Podman stack with latest image alias"
 	@echo "  make up-podman-installer          - boot installer ISO on Podman stack with fresh qcow2 target"
 	@echo ""
+	@echo "QEMU-First Unattended Flows:"
+	@echo "  make qemu-fsm                     - run expect FSM controller against running QEMU monitor"
+	@echo "  make qemu-serial-fsm              - run serial-log FSM controller against running unattended install"
+	@echo "  make qemu-stall-probe             - execute active stall probe against a running stalled installer"
+	@echo "  make qemu-full-auto               - unattended installer -> SSH -> provisioning via standalone QEMU"
+	@echo "  make qemu-auto-verify             - run repeated unattended verification attempts (ATTEMPTS=3 default)"
+	@echo "  make qemu-matrix                  - run bus/disk/cpu unattended matrix with per-run evidence"
+	@echo ""
 	@echo "Unattended Fresh Installer Flows:"
-	@echo "  make vbox-doctor                  - validate VBoxManage host prerequisites"
-	@echo "  make vbox-install-auto            - unattended install via VirtualBox (SSH-ready)"
-	@echo "  make vbox-provision               - provision VirtualBox guest (dev/x11)"
-	@echo "  make vbox-full-auto               - unattended install + provision via VirtualBox"
-	@echo "  make auto-fresh                   - backend auto-pick (virtualbox/qemu/podman) full unattended"
+	@echo "  make auto-fresh                   - default qemu-first unattended flow (override BACKEND=...)"
+	@echo "  make vbox-doctor                  - conceptual stub (VBox non-operational in this phase)"
+	@echo "  make vbox-install-auto            - conceptual stub (use qemu-* targets)"
+	@echo "  make vbox-provision               - conceptual stub (use qemu-* targets)"
+	@echo "  make vbox-full-auto               - conceptual stub (use qemu-* targets)"
 	@echo ""
 	@echo "Debugging:"
 	@echo "  make screenshot                   - capture QEMU screendump to logs/"
@@ -116,6 +126,12 @@ setup:
 
 setup-latest:
 	./scripts/setup-hurd-amd64-latest.sh
+
+rebuild-unattended-iso:
+	./scripts/rebuild-hurd-unattended-iso.sh
+
+scripts-audit:
+	./scripts/scripts-inventory-audit.sh
 
 resolve-latest-image:
 	./scripts/resolve-latest-hurd-amd64.sh report
@@ -187,6 +203,24 @@ up-podman-installer: CONTAINER_RUNTIME=podman
 up-podman-installer:
 	QEMU_CDROM="$${QEMU_CDROM:-/opt/hurd-installer/debian-hurd-amd64-installer.latest-mini-auto.iso}" QEMU_BOOT_ORDER="$${QEMU_BOOT_ORDER:-d}" HURD_IMAGE_BASENAME="$${HURD_IMAGE_BASENAME:-debian-hurd-amd64.fresh.qcow2}" PODMAN_COMPOSE_PROVIDER="$${PODMAN_COMPOSE_PROVIDER:-podman-compose}" COMPOSE_FILE="$${COMPOSE_FILE:-$(COMPOSE_PODMAN_FILES)}" "$${PODMAN_COMPOSE_PROVIDER}" up -d
 
+qemu-fsm:
+	MONITOR_HOST="$${MONITOR_HOST:-127.0.0.1}" MONITOR_PORT="$${MONITOR_PORT:-9998}" SSH_HOST="$${SSH_HOST:-127.0.0.1}" SSH_PORT="$${SSH_PORT:-2226}" ./scripts/qemu-install-fsm.expect
+
+qemu-serial-fsm:
+	SSH_HOST="$${SSH_HOST:-127.0.0.1}" SSH_PORT="$${SSH_PORT:-2226}" MONITOR_HOST="$${MONITOR_HOST:-127.0.0.1}" MONITOR_PORT="$${MONITOR_PORT:-9998}" SERIAL_LOG="$${SERIAL_LOG:-logs/serial-install.log}" FSM_TIMEOUT_SEC="$${FSM_TIMEOUT_SEC:-3600}" FSM_POLL_MS="$${FSM_POLL_MS:-2500}" STALL_TIMEOUT_SEC="$${STALL_TIMEOUT_SEC:-420}" STALL_PROBE_MODE="$${STALL_PROBE_MODE:-deep_retry}" STALL_PROBE_RETRY_COUNT="$${STALL_PROBE_RETRY_COUNT:-3}" STALL_PROBE_RETRY_TIMEOUT_SEC="$${STALL_PROBE_RETRY_TIMEOUT_SEC:-90}" STALL_CAPTURE_MAX_PAGES="$${STALL_CAPTURE_MAX_PAGES:-12}" FSM_STATE_LOG="$${FSM_STATE_LOG:-logs/fsm-serial-state.log}" ./scripts/qemu-install-serial-fsm.sh
+
+qemu-stall-probe:
+	MONITOR_HOST="$${MONITOR_HOST:-127.0.0.1}" MONITOR_PORT="$${MONITOR_PORT:-9998}" SERIAL_LOG="$${SERIAL_LOG:-logs/serial-install.log}" PROBE_MODE="$${PROBE_MODE:-deep_retry}" RETRY_COUNT="$${RETRY_COUNT:-3}" RETRY_TIMEOUT_SEC="$${RETRY_TIMEOUT_SEC:-90}" CAPTURE_MAX_PAGES="$${CAPTURE_MAX_PAGES:-12}" PROBE_DIR="$${PROBE_DIR:-logs/stall-probe}" ./scripts/qemu-stall-probe.sh
+
+qemu-full-auto:
+	./scripts/install-hurd-unattended.sh --backend qemu --profile "$${PROFILE:-x11}"
+
+qemu-auto-verify:
+	ATTEMPTS="$${ATTEMPTS:-3}" PROFILE="$${PROFILE:-x11}" SKIP_SETUP="$${SKIP_SETUP:-1}" QEMU_DISK_BUS="$${QEMU_DISK_BUS:-ide}" QEMU_CPUS="$${QEMU_CPUS:-1}" QEMU_INSTALL_DISK_SIZE="$${QEMU_INSTALL_DISK_SIZE:-20G}" FSM_BACKEND="$${FSM_BACKEND:-serial}" STALL_TIMEOUT_SEC="$${STALL_TIMEOUT_SEC:-420}" STALL_PROBE_MODE="$${STALL_PROBE_MODE:-deep_retry}" STALL_PROBE_RETRY_COUNT="$${STALL_PROBE_RETRY_COUNT:-3}" STALL_PROBE_RETRY_TIMEOUT_SEC="$${STALL_PROBE_RETRY_TIMEOUT_SEC:-90}" STALL_CAPTURE_MAX_PAGES="$${STALL_CAPTURE_MAX_PAGES:-12}" INSTALL_TIMEOUT_SEC="$${INSTALL_TIMEOUT_SEC:-3600}" BOOT_TIMEOUT_SEC="$${BOOT_TIMEOUT_SEC:-900}" ./scripts/qemu-auto-verify.sh
+
+qemu-matrix:
+	PROFILE="$${PROFILE:-x11}" SKIP_SETUP="$${SKIP_SETUP:-1}" MATRIX_ATTEMPTS="$${MATRIX_ATTEMPTS:-2}" MATRIX_BUSES="$${MATRIX_BUSES:-ide,ahci,virtio-blk}" MATRIX_DISK_SIZES="$${MATRIX_DISK_SIZES:-4G,20G}" MATRIX_CPUS="$${MATRIX_CPUS:-1,2}" FSM_BACKEND="$${FSM_BACKEND:-serial}" STALL_TIMEOUT_SEC="$${STALL_TIMEOUT_SEC:-420}" STALL_PROBE_MODE="$${STALL_PROBE_MODE:-deep_retry}" STALL_PROBE_RETRY_COUNT="$${STALL_PROBE_RETRY_COUNT:-3}" STALL_PROBE_RETRY_TIMEOUT_SEC="$${STALL_PROBE_RETRY_TIMEOUT_SEC:-90}" STALL_CAPTURE_MAX_PAGES="$${STALL_CAPTURE_MAX_PAGES:-12}" INSTALL_TIMEOUT_SEC="$${INSTALL_TIMEOUT_SEC:-2400}" BOOT_TIMEOUT_SEC="$${BOOT_TIMEOUT_SEC:-600}" ./scripts/qemu-matrix-runner.sh
+
 vbox-doctor:
 	./scripts/vboxmanage-hurd.sh doctor
 
@@ -200,7 +234,7 @@ vbox-full-auto:
 	./scripts/vboxmanage-hurd.sh full-auto
 
 auto-fresh:
-	./scripts/install-hurd-unattended.sh --backend "$${BACKEND:-auto}" --profile "$${PROFILE:-x11}"
+	./scripts/install-hurd-unattended.sh --backend "$${BACKEND:-qemu}" --profile "$${PROFILE:-x11}"
 
 down:
 	@runtime="$${CONTAINER_RUNTIME:-$(CONTAINER_RUNTIME)}"; \
