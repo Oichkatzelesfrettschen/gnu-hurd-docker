@@ -204,6 +204,20 @@ DISABLE_KVM=1 ./scripts/run-hurd-qemu.sh
 
 ## Advanced Configuration
 
+### Storage and Machine Fallbacks
+
+The repository defaults still favor `pc` machine type for broad compatibility, but some Debian GNU/Hurd x86_64 image and host-QEMU combinations behave better as a fallback with `q35` plus an AHCI controller. If you only get a reliable `wd0` disk path in that shape, test this before assuming the image is broken:
+
+```bash
+qemu-system-x86_64 \
+  -machine q35 \
+  -drive file=images/debian-hurd-amd64.qcow2,format=qcow2,if=none,id=hd0 \
+  -device ahci,id=ahci0 \
+  -device ide-hd,drive=hd0,bus=ahci0.0
+```
+
+Treat this as a troubleshooting fallback, not the project default. If your normal `pc` setup already works reliably, keep using it.
+
 ### Performance Tuning
 
 **CPU Configuration**:

@@ -528,16 +528,18 @@ Management, monitoring, and maintenance tools.
 
 **WHY**: Some upstream Hurd images have unreliable/blank serial consoles and may have a broken `sshd` at boot. This provides a best-effort way to type into the VGA console via the QEMU monitor.
 
-**WHAT**: Sends ASCII text by mapping characters to QEMU `sendkey` sequences.
+**WHAT**: Sends ASCII text by mapping characters to QEMU `sendkey` sequences. It can talk to the classic telnet monitor or directly to a QMP socket for safer automation.
 
 **HOW**:
 ```bash
 MONITOR_PORT=9998 ./qemu-type.sh "root\n"
 MONITOR_PORT=9998 ./qemu-type.sh --enter "root"
+QMP_SOCKET=/tmp/qemu-qmp.sock ./qemu-type.sh "<ctrl-l>root<enter>"
 ```
 
 **Notes**:
-- Not all characters are supported.
+- Control tokens like `<enter>`, `<ctrl-c>`, `<up>`, and `<delay:0.2>` are supported.
+- QMP is the preferred transport for scripted automation because it avoids relying on window focus or a manually exposed telnet monitor.
 - Use it to bootstrap SSH and a better automation channel.
 
 ---

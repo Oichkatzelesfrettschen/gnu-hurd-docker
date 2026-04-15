@@ -192,6 +192,14 @@ echo '{"execute":"human-monitor-command","arguments":{"command-line":"sendkey es
   | python3 scripts/qmp-helper.py
 ```
 
+### Safe Automation Rules
+
+- Prefer QMP for screenshots and key injection. It is deterministic and does not depend on desktop focus.
+- Do not use `xdotool` or similar host-window keyboard tools for guest automation.
+- Do not use external screenshot tools against the QEMU window. Use QMP `screendump` instead.
+- Bind VNC to localhost unless you are deliberately exposing it through another controlled channel.
+- Use `QMP_SOCKET=/path/to/qmp.sock ./scripts/qemu-type.sh "<ctrl-l>root<enter>"` when SSH is not ready yet.
+
 ### Common QMP Commands
 
 **Query Information:**
