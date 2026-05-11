@@ -9,7 +9,7 @@
 # - Production-ready with proper health monitoring
 # =============================================================================
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # OCI labels for GHCR metadata and container registry
 LABEL org.opencontainers.image.source="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
