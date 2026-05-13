@@ -184,3 +184,67 @@ See `compose.minty.yaml` for the full reproducible spec.
       use pubkey auth.
 * `patches/gnumach-raise-ipc_kernel_map_size.patch` -- 8 MB ->
   64 MB in `ipc/ipc_init.c`.  Submitted to nobody yet.
+
+## Remote desktop access -- three paths (recommended order)
+
+1. **X11 forwarding over SSH (recommended)**.  No VNC layer needed.
+   The guest's `/etc/ssh/sshd_config` has `X11Forwarding yes`.  From a
+   host running an X server:
+   ```sh
+   ssh -X -i ssh-test-keys/hurd_test_key -p 2222 user@127.0.0.1 xfce4-terminal
+   # any X11 program runs on the guest and displays on the host.
+   # to run a full XFCE session inside a nested X server:
+   Xephyr -screen 1280x800 :2 &
+   DISPLAY=:2 ssh -X -i ssh-test-keys/hurd_test_key -p 2222 \
+       user@127.0.0.1 dbus-launch startxfce4
+   ```
+
+2. **QEMU framebuffer VNC on host port 5900**.  Shows whatever the
+   Hurd kernel framebuffer shows (boot messages, login prompt,
+   getty).  Useful for kernel-level debugging or watching the
+   boot.  Connect via `vncviewer 127.0.0.1:5900` from the host.
+   No password (QEMU monitor restricted to 127.0.0.1).
+
+3. **tightvncserver inside guest -- not currently working**.
+   `Xtightvnc` reports *"could not open default font 'fixed'"*
+   even with explicit `-fp` listing the correct directories and
+   verified `fonts.alias` containing the `fixed` alias.  This is
+   tracked as a Hurd-specific TightVNC font subsystem bug to file
+   upstream.  Workaround: use path 1 (X11-over-SSH).
+
+## Mint package matrix -- what's installed and where it came from
+
+| Source | Packages |
+|---|---|
+| Debian-ports/sid hurd-amd64 | 700+ packages (Xorg, XFCE, lightdm, fonts, tmux, mosh, mksh, fastfetch, ...) |
+| LMDE7 gigi `_all.deb` arch=all (whitelisted) | linuxmint-keyring, mint-artwork, mint-themes (2.3.8), mint-l-theme, mint-y-icons, mint-x-icons, mint-l-icons, mint-cursor-themes, mint-backgrounds-wilma, python3-xapp, xapps-common, xapp-thumbnailers-common, xapp-mp3-thumbnailer, xapp-raw-thumbnailer, xapp-jxl-thumbnailer, xapp-symbolic-icons |
+| Mined out of debs directly | Real Mint XFCE whiskermenu-1.rc + xfce4-panel.xml + all panel plugin .rc files from `/usr/share/mint-artwork/xfce/xfce4/` (mint-artwork 1.9.3, gigi).  Deployed to /home/user/.config/xfce4/ and /etc/skel/.config/xfce4/. |
+| Curated download (PD/CC) | JWST: weic2208a (Webb's First Deep Field), weic2316a from esawebb.org.  Hubble: Westerlund 2, Cone Nebula, Carina Deep from esahubble.org.  All resized to <=1920x1080.  Staged in /usr/share/backgrounds/minty-hurd/ with attribution README. |
+
+722 packages installed, 16 GB disk with 11 GB free.
+
+## The "_all.deb works for Hurd from LMDE7" mechanism
+
+Architecture-independent `.deb` packages (arch=all) install on any
+Debian architecture, including hurd-amd64, because dpkg treats them
+as universal.  Architecture-specific binaries are ELF files compiled
+for a specific platform -- a binary built for Linux amd64 cannot
+satisfy a `Depends:` chain when the dpkg native architecture is
+hurd-amd64.
+
+Our setup chains:
+1. `/etc/apt/sources.list.d/lmde7.list` with `[arch=amd64]` tells
+   apt to fetch LMDE7's `binary-amd64/Packages` list (LMDE has no
+   binary-hurd-amd64).
+2. `/etc/apt/preferences.d/lmde7` pin file defaults everything from
+   LMDE to priority 100 (below Debian-ports' 500), so no package
+   wins over Debian by accident.
+3. Explicit whitelist at priority 500 for the named arch=all Mint
+   packages, allowing them to install.
+4. dpkg will refuse to install any `_amd64.deb` (Linux binary)
+   because the architecture mismatch is detected by `dpkg --check`
+   at unpack time -- `dpkg --add-architecture amd64` was never run,
+   so amd64 is foreign and refused.
+
+This gives us the Mint UI/look layer without compromising the Hurd
+binary layer.
