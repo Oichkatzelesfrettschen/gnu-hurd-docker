@@ -49,6 +49,22 @@ cat > /etc/dbus-1/session-hurd.conf <<'EOF'
 </busconfig>
 EOF
 
+log "Step 1b: fix system bus too (ConsoleKit, polkit, etc.)"
+cat > /etc/dbus-1/system.d/00-hurd-anonymous.conf <<'EOF'
+<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<!-- Hurd compat: allow ANONYMOUS + COOKIE_SHA1 on system bus too, since
+     pflocal has no SO_PEERCRED.  Drop-in conf auto-included by
+     /usr/share/dbus-1/system.conf's includedir directive. -->
+<busconfig>
+  <auth>EXTERNAL</auth>
+  <auth>DBUS_COOKIE_SHA1</auth>
+  <auth>ANONYMOUS</auth>
+  <allow_anonymous/>
+</busconfig>
+EOF
+/etc/init.d/dbus restart || true
+
 log "Step 2: install /usr/local/bin/start-dbus-hurd"
 cat > /usr/local/bin/start-dbus-hurd <<'EOF'
 #!/bin/sh
@@ -86,12 +102,17 @@ cat > /usr/local/bin/minty-hurd-xfce <<'EOF'
 # Launch xfce4-session against the Hurd-friendly D-Bus.
 # Run inside an SSH X11-forwarded session OR with $DISPLAY set.
 set -eu
+# Start ONE Hurd-friendly session bus, export its addr, keep it ours.
 eval "$(/usr/local/bin/start-dbus-hurd)"
 export DBUS_SESSION_BUS_ADDRESS
-# Start xfconfd in the background so other XFCE components can find it.
+# xfconfd in background so XFCE settings work.
 /usr/lib/x86_64-gnu/xfce4/xfconf/xfconfd &
 sleep 1
-exec dbus-launch xfce4-session
+# Run xfce4-session DIRECTLY -- DO NOT wrap in dbus-launch.  dbus-launch
+# would spawn a second, default-config session bus that fails on Hurd
+# (the default config offers only AUTH EXTERNAL which needs SO_PEERCRED).
+export XDG_SESSION_TYPE=x11 XDG_CURRENT_DESKTOP=XFCE
+exec xfce4-session
 EOF
 chmod +x /usr/local/bin/minty-hurd-xfce
 
