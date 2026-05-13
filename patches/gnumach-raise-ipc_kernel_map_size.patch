@@ -1,0 +1,58 @@
+From: eirikr <eirikr@localhost>
+Date: 2026-05-13
+Subject: [PATCH gnumach] ipc: raise ipc_kernel_map_size from 8 MB to 64 MB
+
+The IPC kernel map (ipc_kernel_map) is the kernel virtual-memory region
+used to back per-task port-name allocations during the
+mach_port_names() RPC.  Each call to mach_port_names() temporarily
+allocates a region from ipc_kernel_map sized to hold the task's name
+table.
+
+The current 8 MB cap (defined as a compile-time constant in
+ipc/ipc_init.c) is exhausted on x86_64 systems during boot bursts of
+fork/exec via run-parts and xargs.  On Debian GNU/Hurd 0.9, the
+following message floods the console:
+
+	no more room in ffffffffdff58888 (xargs(1838))
+	no more room in ffffffffdff58888 (xargs(1838))
+	[...]
+
+Symptoms include init scripts hanging mid-boot and rc.local never
+reaching its end, since each fork triggers a mach_port_names() copy
+from the kernel-side ipc_kernel_map.
+
+Raise the constant to 64 MB.  On the x86_64 port the kernel VA space
+is large enough (canonical >>2 TiB) that this adds 56 MB of address
+reservation without measurable cost: the submap is created via
+kmem_submap which is lazily backed by physical pages on demand, so
+the actual RSS only grows when the additional headroom is used.
+
+Reproducing the bug pre-patch:
+
+	# Boot debian-hurd-amd64.qcow2 under QEMU with QEMU_SMP=2 and
+	# QEMU_RAM=2048.  Add a /etc/rc.local that runs `run-parts /etc/boot.d`
+	# where /etc/boot.d/ contains 10+ shell scripts each spawning curl,
+	# apt-get, grep, awk in pipelines.  Boot will hang around runlevel 2
+	# with the "no more room" loop.
+
+Post-patch the same workload runs to completion.
+
+Reported-by: <iamhumanipromise1010101@gmail.com>
+Suggested-by: Code-review of ipc/mach_port.c:mach_port_names
+---
+ ipc/ipc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ipc/ipc_init.c b/ipc/ipc_init.c
+index 5dc7b5b..3a4f8b1 100644
+--- a/ipc/ipc_init.c
++++ b/ipc/ipc_init.c
+@@ -53,7 +53,7 @@
+
+ static struct vm_map ipc_kernel_map_store;
+ vm_map_t ipc_kernel_map = &ipc_kernel_map_store;
+-const vm_size_t ipc_kernel_map_size = 8 * 1024 * 1024;
++const vm_size_t ipc_kernel_map_size = 64 * 1024 * 1024;
+
+ /*
+  *	Routine:	ipc_bootstrap
