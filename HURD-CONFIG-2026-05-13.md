@@ -1,10 +1,20 @@
 # Hurd guest configuration: root/user accounts + utilities  (2026-05-13)
 
-## Outcome -- working SSH access verified
+## Outcome -- working OpenSSH access verified
 
-`images/hurd-working.qcow2` boots cleanly and accepts SSH connections.
-RCA-driven fixes resolved three upstream Hurd runtime bugs that had
-blocked remote access in the initial attempt.
+`images/hurd-working.qcow2` boots cleanly and accepts OpenSSH connections.
+Round-2 RCA isolated three upstream Hurd runtime bugs with concrete
+fixes; the headline finding is that `OPENSSL_ia32cap="~0:0"` in
+`/etc/default/ssh` makes OpenSSH 10.3p1-2 run cleanly on Hurd by
+disabling SIMD code paths in libcrypto that GNU Mach's
+fork-state-inheritance doesn't preserve properly.
+
+* SSH via OpenSSH 10.3p1-2: **working** (pubkey auth verified)
+* All 12 utilities installed and resolvable
+* user account in sudo NOPASSWD ALL
+* Reproducible via offline `qemu-nbd` edits documented below
+* Three upstream bug reports + one gnumach patch staged in
+  `upstream-bug-reports/` and `patches/`
 
 | Item | State | Evidence |
 |---|---|---|
@@ -41,22 +51,39 @@ podman run -d --rm --name hurd-vm \
 
 ## RCA: three Hurd runtime bugs and their fixes
 
-### Bug 1 -- OpenSSH 10.2p1-2 SIGSEGV on Hurd
+### Bug 1 -- OpenSSH SIGSEGV in libcrypto SHA512_Update on Hurd
 
-* **Symptom**: `/hurd/crash: /usr/sbin/sshd -t(703) crashed, signal {no:11}`
-  on every boot, even in config-test mode.
-* **Root cause**: Debian bug
-  [#1128399](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1128399).
-  10.2p1-2's build linked sshd-session against `libcrypt.so.1` for
-  `res_query()`, but on GNU/Hurd `res_query` lives in `libc.so.0.3` not
-  libcrypt.  Samuel Thibault's patch removing the libcrypt link landed
-  in 1:10.2p1-5 (Feb 19 2026).
-* **Workaround applied**: Switched the running SSH server to
-  [dropbear](https://github.com/mkj/dropbear) 2026.91-1 from
-  debian-ports for hurd-amd64.  Dropbear has a smaller surface, no
-  libcrypt dependency for sshd-session, and a working pubkey auth
-  path on Hurd.  OpenSSH binary is left installed but
-  `/etc/ssh/sshd_not_to_be_run` keeps its init script from running.
+* **Symptom**: `/hurd/crash: /usr/sbin/sshd -t(N) crashed, signal {no:11}`
+  on every boot when sshd is launched via `/etc/init.d/ssh` or any
+  `start-stop-daemon`-style double-fork.  Direct invocation from an
+  interactive shell does NOT crash.
+* **Root cause** (round-2 RCA): GDB attached to a manual crash shows
+  the fault is inside `libcrypto.so.3:SHA512_Update` -- OpenSSL's
+  hand-coded SIMD/SHA-NI/AVX SHA-512 path.  The general-purpose
+  registers contain high-entropy garbage, consistent with the SIMD
+  loop reading from a stale pointer.  Hypothesis: GNU Mach's
+  user-thread FPU/XSAVE state save is not preserved across the
+  daemonizing double-fork, so libcrypto's CPUID-derived "we can use
+  AES-NI/AVX" assumption is wrong in the daemon child even though it
+  was correct at parent CPUID-detection time.
+* **Fix applied (user-space workaround)**: Export
+  `OPENSSL_ia32cap="~0:0"` in `/etc/default/ssh` so the openssh-server
+  init script sources it before launching sshd.  This forces
+  libcrypto to use the pure-C SHA-512 implementation (no
+  vector/SIMD ops).  Verified by `/etc/init.d/ssh start` producing
+  *"Starting OpenBSD Secure Shell server: sshd."* with no crash and
+  end-to-end `ssh root@:2222` returning a live shell.
+* **Kernel-side proper fix**: file
+  [`upstream-bug-reports/openssl-hurd-simd-sshd-crash.md`](upstream-bug-reports/openssl-hurd-simd-sshd-crash.md)
+  describes the suspected `i386/i386/fpu.c:fpinherit` issue in
+  GNU Mach.
+* **Also**: Debian bug
+  [#1128399](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1128399)
+  (libcrypt build-time link) was a *separate* fix in 1:10.2p1-5 that
+  unblocked us from running 10.3p1-2 in the first place.
+* **Dropbear retained as backup**: dropbear-bin 2026.91-1 from
+  debian-ports is still installed; pubkey auth works via dropbear too
+  if OpenSSH starts breaking again.
 
 ### Bug 2 -- /usr/bin/console daemon timeout
 
