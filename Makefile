@@ -283,3 +283,25 @@ shell:
 		service_name="$${SERVICE_NAME:-$(SERVICE_NAME)}"; \
 		COMPOSE_FILE="$$compose_files" "$$runtime" compose exec "$$service_name" bash; \
 	fi
+
+# ===== Minty Hurd targets =====
+.PHONY: minty-up minty-down minty-status minty-shell minty-vnc
+
+minty-up:
+	docker compose -f compose.yaml -f compose.minty.yaml up -d
+
+minty-down:
+	docker compose -f compose.yaml -f compose.minty.yaml down
+
+minty-status:
+	docker compose -f compose.yaml -f compose.minty.yaml ps
+
+minty-shell:
+	@ssh -i ssh-test-keys/hurd_test_key -p 2222 \
+		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+		user@127.0.0.1
+
+minty-vnc:
+	@ssh -i ssh-test-keys/hurd_test_key -p 2222 \
+		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+		user@127.0.0.1 'tightvncserver :1 -geometry 1440x900 -depth 24'

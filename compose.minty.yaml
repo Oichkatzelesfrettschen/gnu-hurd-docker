@@ -1,0 +1,81 @@
+# Minty Hurd compose profile.
+#
+# Boots images/hurd-working.qcow2 with KVM + IDE + 16 GB disk + the
+# Hurd-specific workarounds documented in HURD-CONFIG-2026-05-13.md
+# and DISK-PERFORMANCE-RCA-2026-05-13.md.
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.minty.yaml up -d
+#   ssh -i ssh-test-keys/hurd_test_key -p 2222 user@127.0.0.1
+#
+# Or (one-liner):
+#   make minty-up
+#
+# Requires: /dev/kvm available on host, podman or docker compose v2.
+
+services:
+  hurd:
+    image: localhost/gnu-hurd-docker:latest
+    container_name: hurd-minty
+    restart: unless-stopped
+    devices:
+      - "/dev/kvm:/dev/kvm"
+    cap_add:
+      # mosh-server fork-exec + tightvncserver need this on rootless podman
+      - SYS_PTRACE
+    environment:
+      # The qcow2 to boot.  hurd-working.qcow2 is the 16 GB Minty Hurd image
+      # (cloned from debian-hurd-amd64.qcow2 baseline + resized + provisioned).
+      QEMU_DRIVE: "/opt/hurd-image/hurd-working.qcow2"
+
+      # ----- Hurd-specific QEMU tuning ------------------------------------
+      # KVM is force-enabled (entrypoint normally auto-disables KVM+IDE on
+      # i440fx to avoid a known DMA bug; we override since SMP=2 + cache=
+      # writeback + 16GB disk has been stable in testing).
+      FORCE_KVM: "1"
+      # 2 CPUs + 2 GB matches the only combination that reliably avoids
+      # the "bus-master DMA error: missing interrupt" + ext2fs corruption
+      # cycle that auto-scaling triggers on this host.
+      QEMU_SMP: "2"
+      QEMU_RAM: "2048"
+      # cache=writeback is the QEMU default; leave it explicit so a future
+      # entrypoint refactor can't quietly downgrade us to writethrough.
+      QEMU_DISK_CACHE: "writeback"
+      QEMU_IDE_WRITE_CACHE: "auto"
+      # Enable VNC on display :0 (TCP 5900) so the entrypoint adds -vnc :0
+      # to the QEMU cmdline.  noVNC is on host port 6080.
+      ENABLE_VNC: "1"
+
+      # ----- QEMU user-mode networking port forwards ----------------------
+      # Bind everything to 127.0.0.1 in the container; the docker-compose
+      # ports: section below maps each to host loopback.
+      QEMU_HOSTFWDS: >-
+        tcp::2222-:22,
+        tcp::8080-:80,
+        tcp::5901-:5901,
+        udp::60000-:60000,
+        udp::60001-:60001,
+        udp::60002-:60002
+
+    ports:
+      # SSH (openssh-server 10.3p1-2 on guest:22)
+      - "127.0.0.1:2222:2222"
+      # QEMU's VNC of the framebuffer (the kernel console, not the XFCE session)
+      - "127.0.0.1:5900:5900"
+      # noVNC HTML5 proxy of the kernel framebuffer (websockify -> :5900)
+      - "127.0.0.1:6080:6080"
+      # tightvncserver of the XFCE session (started inside guest)
+      - "127.0.0.1:5901:5901"
+      # QEMU monitor (use 'echo screendump /tmp/s.ppm | nc 127.0.0.1 9999')
+      - "127.0.0.1:9999:9999"
+      # mosh-server UDP port range -- matches MOSH_PORT_RANGE=60000-60100
+      # exported in /etc/skel/.profile and /home/user/.profile inside guest.
+      - "127.0.0.1:60000-60002:60000-60002/udp"
+
+    volumes:
+      # The qcow2 lives in ./images/.  fsck the partition offline if it
+      # gets dirty between boots (cache=writeback can leave the FS clean
+      # but Hurd's ext2fs translator is finicky).
+      - "./images:/opt/hurd-image:Z"
+
+    # Health-check is in the base entrypoint.
