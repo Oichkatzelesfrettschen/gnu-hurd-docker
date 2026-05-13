@@ -77,3 +77,4 @@ secrets/*.txt
 # Claude Code local settings (auto-approvals and personal config)
 .claude/*.local.json
 ssh-test-keys/hurd_test_key
+mint-sources/
