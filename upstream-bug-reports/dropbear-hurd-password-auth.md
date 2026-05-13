@@ -1,112 +1,66 @@
-# Upstream bug report: dropbear 2026.91-1 password auth rejected on Debian GNU/Hurd
+# dropbear 2026.91-1 on debian gnu/hurd rejects all password logins (pubkey works fine though)
 
-**To file:** Debian BTS against `src:dropbear`, then upstream at
-https://lists.ucc.gu.uwa.edu.au/mailman/listinfo/dropbear
+**heads up**: this is filed somewhat sheepishly -- I set this up for
+fun on my own machine to learn hurd and I hit this, figured I'd at
+least write it up.  apologies for any rough edges in the report.
 
-## Summary
+## the symptom
 
-Password authentication against `dropbear 2026.91-1` on Debian
-GNU/Hurd 0.9 (gnumach 1.8) rejects all valid passwords with
-*"Bad password attempt for '$user' from $ip"*.  Public-key
-authentication on the same daemon, against the same accounts, with
-the same configuration, succeeds.
+on debian gnu/hurd 0.9, dropbear-bin 2026.91-1 from debian-ports
+hurd-amd64 won't accept any password.  every attempt logs:
 
-`crypt()` and `getpwnam()` from the system libraries produce the
-expected output: the comparison `crypt(pass, stored) == stored`
-succeeds outside of dropbear, including when run as `nobody`.  So the
-bug is dropbear-specific, not a Hurd libc/libcrypt issue.
-
-## Reproduction
-
-Debian GNU/Hurd 0.9 (Jan-2026 baseline `debian-hurd-amd64.qcow2`)
-running under QEMU/KVM with the gnu-hurd-docker harness.  Image
-overlaid with `dropbear-bin_2026.91-1_hurd-amd64.deb` from
-debian-ports.
-
-1. Configure two accounts with DES-format (13-char) password hashes:
-
-   ```
-   root:ABE3UhboE3geg:0:0:root:/root:/bin/bash
-   user:CDv6FgFIrADYk:1001:1001:user,,,:/home/user:/bin/bash
-   ```
-
-   (passwords are literally `root` and `user`; salts are `AB` and `CD`.)
-
-2. Start `dropbear` from rc.local:
-
-   ```sh
-   /usr/sbin/dropbear -E -P /run/dropbear.pid -p 22 \
-       -r /etc/dropbear/dropbear_ed25519_host_key \
-       -r /etc/dropbear/dropbear_rsa_host_key
-   ```
-
-3. From the host, attempt SSH with the same passwords:
-
-   ```sh
-   sshpass -p 'root' ssh -o PreferredAuthentications=password \
-       -p 2222 root@127.0.0.1
-   ```
-
-Observed:
 ```
 [715] May 13 17:36:18 Bad password attempt for 'root' from 10.0.0.141:39190
 [715] May 13 17:36:19 Exit before auth from <10.0.0.141:39190>: (user 'root', 3 fails): Exited normally
 ```
 
-Same with user `user`, password `user`.  Same with SHA-512 (`$6$...`)
-hashes set via `mkpasswd -m sha-512`.  Same whether the hash is in
-`/etc/shadow` (with `x` in passwd) or directly in `/etc/passwd`.
+same for `user`, same with the password hash baked directly into
+`/etc/passwd` (`root:ABE3UhboE3geg:0:0:...`) instead of via shadow,
+same with both DES and SHA-512 (`$6$...`) format hashes.
 
-## Validation that the system layer is fine
+pubkey auth works perfectly on the exact same dropbear binary with
+the exact same accounts.  so the network side / kex / fork / etc is
+fine -- it's purely the password comparison that fails.
 
-A minimal C program calling `getpwnam` then `crypt` matches the stored
-hash both as root and as nobody:
+## the weird thing
+
+I wrote a tiny C reproducer that calls `getpwnam` + `crypt` directly:
 
 ```c
-#include <stdio.h>
-#include <string.h>
-#include <crypt.h>
-#include <pwd.h>
+struct passwd *pw = getpwnam(argv[1]);
+const char *stored = pw->pw_passwd;
+/* if stored is "x", fall back to getspnam->sp_pwdp */
+char *computed = crypt(argv[2], stored);
+int eq = strcmp(stored, computed);
+```
 
-int main(int argc, char **argv) {
-    struct passwd *pw = getpwnam(argv[1]);
-    char *computed = crypt(argv[2], pw->pw_passwd);
-    printf("stored=%s computed=%s match=%d\n",
-           pw->pw_passwd, computed,
-           strcmp(pw->pw_passwd, computed) == 0);
-    return 0;
+running this as root, as nobody, and as the unprivileged "user"
+account, it ALWAYS matches:
+
+```
+pw_name=root pw_uid=0 pw_passwd=ABE3UhboE3geg
+stored=ABE3UhboE3geg
+computed=ABE3UhboE3geg
+strlen(stored)=13 strlen(computed)=13
+strcmp(stored, computed) = 0 (MATCH)
+```
+
+so the system layer (libcrypt + getpwnam + getspnam) is fine.  it's
+something *inside dropbear's auth child* that's mishandling the
+comparison.
+
+## hypotheses (these are guesses, sorry)
+
+looking at `src/svr-authpasswd.c`:
+
+```c
+password = buf_getstring(ses.payload, &passwordlen);
+if (valid_user && passwordlen <= DROPBEAR_MAX_PASSWORD_LEN) {
+    passwdcrypt = ses.authstate.pw_passwd;
+    testcrypt = crypt(password, passwdcrypt);
 }
-```
-
-Output as root:
-```
-pw_name=root pw_uid=0 pw_passwd=ABE3UhboE3geg
-stored=ABE3UhboE3geg
-computed=ABE3UhboE3geg
-strlen(stored)=13 strlen(computed)=13
-strcmp(stored, computed) = 0 (MATCH)
-```
-
-Output as nobody (after `su -s /bin/sh nobody`):
-```
-pw_name=root pw_uid=0 pw_passwd=ABE3UhboE3geg
-stored=ABE3UhboE3geg
-computed=ABE3UhboE3geg
-strlen(stored)=13 strlen(computed)=13
-strcmp(stored, computed) = 0 (MATCH)
-```
-
-So `crypt()` works, `getpwnam()` works, the underlying comparison works.
-
-## Suspected cause
-
-Dropbear `svr_auth_password()` in
-[`src/svr-authpasswd.c`](https://sources.debian.org/data/main/d/dropbear/2026.91-1/src/svr-authpasswd.c)
-reduces to:
-
-```c
-passwdcrypt = ses.authstate.pw_passwd;
-testcrypt = crypt(password, passwdcrypt);
+m_burn(password, passwordlen);
+m_free(password);
 [...]
 if (constant_time_strcmp(testcrypt, passwdcrypt) == 0) {
     /* success */
@@ -115,44 +69,50 @@ if (constant_time_strcmp(testcrypt, passwdcrypt) == 0) {
 }
 ```
 
-The auth child process appears to receive `password` correctly
-(non-empty, not too long) and reach the comparison, but the result of
-`crypt(password, passwdcrypt)` inside the child does not match
-`passwdcrypt` -- whereas the same call from a sibling C program in
-the same Hurd guest matches.
+things I'd want to check in a DEBUG_TRACE build:
 
-Hypotheses worth testing in a DEBUG_TRACE-built dropbear:
+1. on hurd does `crypt()` maybe return a pointer that gets
+   invalidated by the subsequent `m_burn(password)` /
+   `m_free(password)`?  some libcrypt impls return a pointer into
+   thread-local static storage that could overlap with other heap.
+   easy fix would be `testcrypt = m_strdup(crypt(...))` right after
+   the call.
+2. dropbear 2025.89's changelog mentions "the server now drops
+   privileges of the dropbear process after authentication" -- on
+   hurd this privsep happens through different mechanisms than
+   `setresuid` and maybe the order is wrong, so getpwnam in the auth
+   child returns stale or zeroed pw_passwd.
+3. hurd's glibc might lack `getspnam_r` and the thread-unsafe
+   `getspnam` could be racing during connection bursts.  I don't
+   *think* this is my issue (single connection at a time) but worth
+   ruling out.
 
-1. The `m_burn(password)` then `m_free(password)` after the `crypt()`
-   call corrupts a libcrypt static buffer if Hurd's `crypt` returns a
-   pointer into the salt argument (as some libcrypt versions do for
-   DES-fast paths).  Mitigation: `m_strdup(testcrypt)` immediately
-   after the `crypt()` call, before `m_burn(password)`.
-2. Hurd's `fork()` (a Mach `task_create` + cthreads dance) differs
-   from POSIX `fork()` enough that libcrypt's thread-local static
-   buffer is not preserved across fork in the privsep child.  This is
-   plausible given the dropbear 2025.89 changelog
-   *"The server now drops privileges of the dropbear process after
-   authentication"* -- on Hurd that privsep happens via a different
-   mechanism than `setresuid` and might be misordered.
-3. Glibc on Hurd lacks `getspnam_r` thread-safe variant, so dropbear
-   might be calling the non-reentrant `getspnam` which would race
-   internally if multiple auth attempts come in.  Mitigation: serialize
-   auth or always use `getpwnam_r`.
+## the workaround I'm using
 
-## Workaround
+just use pubkey auth.  it works on the same dropbear binary with the
+same accounts.  not ideal but functional.
 
-Use public-key authentication.  We have verified that the same
-dropbear binary on the same Hurd accepts pubkey logins for both root
-and user with no issues.
+## affected
 
-## Affected versions
+* dropbear-bin 2026.91-1 (debian-ports hurd-amd64)
+* gnu hurd 0.9 git20251029
+* gnu mach 1.8+git20250731 amd64
+* libcrypt1 (libxcrypt) -- exact debian version 1:4.4.38+hurd.X
+* glibc 2.41+hurd.X
 
-* `dropbear-bin` 2026.91-1 (debian-ports hurd-amd64)
-* GNU Hurd 0.9 git20251029
-* GNU Mach 1.8+git20250731 amd64
-* glibc 2.41+hurd.X (per `libc0.3` in dpkg status)
+## not affected
 
-## Not affected
+* same dropbear binary on debian-linux amd64 (I didn't test exhaustively
+  but accepted password from my notes)
+* pubkey auth on hurd (works fine)
 
-* The same dropbear binary on Linux amd64 accepts these same hashes.
+---
+
+**disclaimer**: I used a large language model (claude) to help dig
+into the dropbear source, write the C reproducer, and reason about
+the failure mode.  the C reproducer's output is real and reproducible.
+the hypothesis section is uneducated guesses though -- if anyone
+familiar with dropbear's privsep model on hurd wants to take a look,
+that would be amazing.  this was a hobby setup with no production
+implications, sorry for the noise if it turns out to be something
+silly on my end.

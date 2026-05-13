@@ -1,41 +1,24 @@
-# Upstream bug report: OpenSSL 3.5.4 SHA512_Update SIGSEGV on GNU/Hurd
+# umm so I think there's something weird going on with openssl/libcrypto sha512 on hurd?
 
-**To file:** Debian BTS against `src:openssl` with usertag `hurd`, and
-upstream at https://github.com/openssl/openssl/issues, plus cc to
-bug-hurd@gnu.org.
+**I wanna file this against debian's openssl (with usertag hurd) and
+maybe poke `bug-hurd@gnu.org` too?  apologies in advance if I'm
+missing something obvious, this is my first real hurd bug report and
+I'm not super confident.**
 
-## Summary
+## what I think is happening
 
-OpenSSH 10.3p1-2 and other OpenSSL-linked daemons crash with SIGSEGV
-inside `libcrypto.so.3:SHA512_Update` on Debian GNU/Hurd 0.9 (gnumach
-1.8 amd64) when started via `/etc/init.d/ssh` or any process tree that
-goes through `start-stop-daemon`.  Direct invocation of the same binary
-in an interactive shell does NOT crash.
+so I was just trying to get openssh-server running in a debian
+gnu/hurd guest under podman+qemu (no special reason, just thought it
+would be cool to be able to ssh into hurd from my linux host).  pubkey
+auth works fine when I start sshd by hand from a terminal, BUT
+`/etc/init.d/ssh start` always crashes it like this:
 
-Setting the environment variable `OPENSSL_ia32cap="~0:0"` disables
-all CPU-feature-driven optimizations in libcrypto and makes the crash
-disappear.  This points to a buggy SIMD/SHA-NI/AVX code path in
-libcrypto interacting with how GNU Mach saves/restores extended
-register state across process forks initiated by `start-stop-daemon`'s
-double-fork daemonization.
-
-## Reproduction
-
-Debian GNU/Hurd 0.9 / gnumach 1.8 / glibc 2.41+hurd.X / openssl 3.5.4-1
-(libssl3t64), QEMU x86_64 TCG.  Image:
-`gnu-hurd-docker/images/hurd-working.qcow2` (clone of the Jan-2026
-baseline) with openssh-server 1:10.3p1-2 from debian-ports.
-
-1. `apt-get install openssh-server` (or use the in-image package).
-2. `/etc/init.d/ssh start`
-
-Result:
 ```
 Starting OpenBSD Secure Shell server: sshd Segmentation fault
  failed!
 ```
 
-QEMU monitor screendump shows the kernel-level crash message:
+and the qemu console scrolls something like
 ```
 /hurd/crash: /usr/sbin/sshd -D(725) crashed, signal {no:11, code:1, error:1},
     exception {1, code:1, subcode:36388864}, PCs: {
@@ -44,8 +27,14 @@ QEMU monitor screendump shows the kernel-level crash message:
     }, killing task.
 ```
 
-GDB attached to a manual `sshd -t` invocation captures the same
-crash:
+I tried 10.2p1-2 and 10.3p1-2 (both from debian-ports for hurd-amd64),
+same crash.
+
+## what gdb shows
+
+with `gdb -ex "run -t"` against `/usr/sbin/sshd` plus the dbgsym
+package for symbols:
+
 ```
 Thread 2 received signal SIGSEGV, Segmentation fault.
 0x0000000101442a0c in ?? () from /usr/lib/x86_64-gnu/libcrypto.so.3
@@ -56,93 +45,107 @@ Thread 2 received signal SIGSEGV, Segmentation fault.
 #4  0x000000010002a3a2 in ?? ()
 #5  0x000000010000a214 in ?? ()
 #6  0x000000010173960b in __libc_start_main () from /usr/lib/x86_64-gnu/libc.so.0.3
-#7  0x000000010000d1f1 in ?? ()
 ```
 
-Registers at crash:
+registers at the crash are full of high-entropy garbage:
 ```
-rax=0x1462e1e21c29dfed  rbx=0xfc40fc58d83da3cd  rcx=0xc9640911dc78a0b
-rdx=0x2f97795f1e653863  rsi=0x1022b3f80         rdi=0x200000058810
-rbp=0x1015a71c0         rsp=0x1010a8c80         r8=0xafb6f4aa9a7da070
-r9=0xd7860efe5d4ddaed   r10=0xba04b0a777cce13c  r11=0x1d706f2c4d2ba335
-r12=0x1022b3f80         r13=0x980ba0a552841c72  r14=0xdc388f53d3645c80
-r15=0x712c0d6628829ec2  rip=0x101442a0c
+rax=0x1462e1e21c29dfed  rbx=0xfc40fc58d83da3cd
+rcx=0xc9640911dc78a0b   rdx=0x2f97795f1e653863
 ```
 
-The general-purpose registers contain wild high-entropy values
-suggesting a state machine has been fed corrupt input.  This is
-consistent with the SHA-512 SIMD inner loop reading from an
-unaligned/garbage pointer (the value of `rdi` is in a high address
-range that's canonical on x86_64 but unusual).
+so... it's not in sshd at all, it's in libcrypto's sha-512 inner
+loop?  which is weird because sshd parses its config and validates
+hostkeys via sha-512 during `-t` mode.
 
-## Workaround (confirmed working)
+## the thing that makes the crash go away
 
-Add to `/etc/default/ssh`:
-```sh
+setting `OPENSSL_ia32cap="~0:0"` (which kinda means "pretend the cpu
+has no fancy features") before launching sshd makes it run fine:
+
+```
+$ OPENSSL_ia32cap="~0:0" /etc/init.d/ssh start
+Starting OpenBSD Secure Shell server: sshd.
+```
+
+I've made it permanent by putting
+```
 export OPENSSL_ia32cap="~0:0"
 ```
+at the top of `/etc/default/ssh`.
 
-This makes libcrypto fall back to the pure-C SHA-512 implementation
-and the crash disappears.  Same workaround should help any
-OpenSSL-linked daemon launched via `start-stop-daemon` (or similar
-double-fork daemonizers) on Hurd.
+## why this maybe points at something deeper
 
+this only happens when sshd is launched through `start-stop-daemon`
+(double-fork daemonize).  if I just run `sshd -D` directly in my
+terminal, no crash, even WITHOUT the env var.  so it's something
+about the daemonized-child state.
+
+my admittedly-uneducated guess: gnu mach's user-thread context save
+might not be copying the full xsave state (ymm high-halves, sha-ni
+state, etc) across fork into the orphan daemon child.  then
+libcrypto's runtime cpuid detection at *load* time (in the parent)
+decided "hey we have aes-ni / avx, let's use the fast path", but the
+daemon child no longer has the xmm/ymm state it needs and reads from
+garbage register content.
+
+things in gnumach that might be worth a look:
+* `i386/i386/fpu.c` -- check `fpinherit()`'s XSAVE_AREA handling
+* `kern/thread.c:thread_create` -- whether `pcb->ims.ifps` (the FP
+  state pointer) is cloned for daemon children
+
+I didn't have time/skill to actually trace into gnumach to prove
+this, sorry.  if a real hurd kernel dev wants to take it from here
+I'd super appreciate it.
+
+## reproducer
+
+* `debian-hurd-amd64.qcow2` baseline (Jan 2026)
+* qemu-system-x86_64 `-machine pc -cpu max -smp 2 -m 2048`
+* openssh-server 1:10.2p1-2 or 1:10.3p1-2 from debian-ports/hurd-amd64
+* `apt-get install openssh-server && /etc/init.d/ssh start`
+
+cpu flags from `/proc/cpuinfo` in the guest:
 ```
-$ /etc/init.d/ssh start
-Starting OpenBSD Secure Shell server: sshd.
-$ ssh -p 22 root@hurd-vm
-[publickey auth succeeds]
-$
+fpu de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36
+clflush acpi mmx fxsr sse sse2 ss ht sse3 pclmulqdq monitor ssse3
+fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave osxsave avx f16c rdrand
+hypervisor
 ```
+(no sha-ni in this list which is interesting -- maybe libcrypto's
+sha-512 picks the avx path?)
 
-## Hypothesis
+## also worth mentioning
 
-GNU Mach's user-thread context save (saved on Mach `thread_get_state`
-or implicit during fork) does not include the full x86_64 XSAVE
-state.  Specifically, the YMM/ZMM high-halves and any SHA-NI or
-PCLMUL state may not survive a daemonizing double-fork.  OpenSSL's
-SHA-512 picks up that the host CPU supports `aes`, `xsave`, `avx`,
-`pclmulqdq` (visible in `/proc/cpuinfo`) and selects a hand-coded
-assembly path that uses those registers; when run from a daemonized
-child whose extended state is clobbered, the path reads invalid data
-and faults.
+I did separately test that crypt/getpwnam work fine inside the same
+hurd guest (with a tiny C program that calls crypt + getpwnam --
+the hash compares cleanly).  so it's not "everything's broken on
+hurd", just this specific libcrypto code path under daemonized fork.
 
-The `OPENSSL_ia32cap` workaround forces OpenSSL to use the pure-C path
-which only touches the integer GPRs that Mach DOES save correctly.
+## affected
 
-Worth investigating in gnumach:
-* `i386/i386/fpu.c` -- check FXSAVE/XSAVE in
-  `fpinherit()` (called during fork) and `fpu_module_init()`.
-* `kern/thread.c:thread_create` -- ensure inherited FP state covers
-  YMM_HI, BNDREGS, BNDCSR, OPMASK, ZMM_HI256, HI16_ZMM,
-  PT_STATE, PASID (i.e. the full XSAVE area for any CPU feature the
-  host CPU advertises).
+* libssl3t64 3.5.4-1 (from debian-ports unstable)
+* openssh-server 1:10.2p1-2 and 1:10.3p1-2
+* gnumach 1.8+git20250731 amd64
+* glibc 2.41+hurd.X
+* start-stop-daemon (dpkg 1.22+)
+* qemu x86_64 tcg `-cpu max`
 
-## Why the manual invocation works but init.d/ssh doesn't
+## not affected
 
-When `sshd -t` is run from an interactive shell, the parent process
-(the shell) preserves all extended state -- the child inherits a
-properly-initialized FPU/XMM context.  When `start-stop-daemon`
-double-forks and execs sshd, the extended state has been
-"reinitialized" (or zeroed) for the orphan child, and libcrypto's
-runtime CPUID detection then assumes the host's SIMD features are
-usable in a context where the actual register state is corrupt.
+* same openssh binaries on linux amd64
+* dropbear from debian-ports (uses libtomcrypt, not libcrypto)
+* sshd started directly from interactive shell on hurd
 
-The kernel-level fix is to ensure GNU Mach inherits XSAVE state
-across all fork/exec paths; the OpenSSL-level workaround is the
-environment variable.
+---
 
-## Affected components
-
-* `libssl3t64` 3.5.4-1 (openssl 3.5.4 in debian-ports/sid for hurd-amd64)
-* `openssh-server` 1:10.3p1-2 and earlier
-* GNU Mach 1.8+git20250731 amd64
-* `start-stop-daemon` (dpkg 1.22+)
-* QEMU x86_64 TCG with `-cpu max` exposing AES-NI, AVX, F16C, PCLMUL
-
-## Not affected
-
-* Same binaries on Linux amd64
-* OpenSSH started directly from interactive shell on Hurd
-* Daemons that do not link libcrypto (e.g. dropbear linked against
-  libtomcrypt instead)
+**disclaimer**: I used a large language model (claude) to help me
+chase this down, including running gdb in the guest, comparing
+binaries before/after the libcrypt link removal, and reading gnumach
+ipc code.  the conclusions are based on what we observed and what I
+think is happening, but a real hurd dev would be way better at
+confirming the gnumach side of things.  the goal here was just to get
+ssh working into my hurd-under-podman setup on my own linux machine,
+and once I found the `OPENSSL_ia32cap` workaround I figured I should
+write this up since searching didn't turn up an existing bug.  if
+something's wrong or I'm misreading the trace please just say so,
+no offense taken.  thanks!

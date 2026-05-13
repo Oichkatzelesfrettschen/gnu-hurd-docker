@@ -1,44 +1,36 @@
-From: eirikr <eirikr@localhost>
+From: eirikr <iamhumanipromise1010101@gmail.com>
 Date: 2026-05-13
-Subject: [PATCH gnumach] ipc: raise ipc_kernel_map_size from 8 MB to 64 MB
+Subject: [PATCH gnumach] ipc: bump ipc_kernel_map_size from 8 MB to 64 MB
 
-The IPC kernel map (ipc_kernel_map) is the kernel virtual-memory region
-used to back per-task port-name allocations during the
-mach_port_names() RPC.  Each call to mach_port_names() temporarily
-allocates a region from ipc_kernel_map sized to hold the task's name
-table.
+hi everyone, this is a small patch I'd like to propose, please bear
+with me as this is my first gnumach patch and I'm pretty sheepish
+about it.
 
-The current 8 MB cap (defined as a compile-time constant in
-ipc/ipc_init.c) is exhausted on x86_64 systems during boot bursts of
-fork/exec via run-parts and xargs.  On Debian GNU/Hurd 0.9, the
-following message floods the console:
+so I was setting up debian gnu/hurd inside a podman+qemu container
+just to play around with it on my linux machine, and during boot
+I kept seeing the console flood with:
 
 	no more room in ffffffffdff58888 (xargs(1838))
 	no more room in ffffffffdff58888 (xargs(1838))
 	[...]
 
-Symptoms include init scripts hanging mid-boot and rc.local never
-reaching its end, since each fork triggers a mach_port_names() copy
-from the kernel-side ipc_kernel_map.
+this happens when init's rc-script run-parts forks a bunch of small
+helper processes in a burst (xargs, awk, grep in pipelines).  the
+"no more room" message comes from mach_port_names() in
+ipc/mach_port.c when vm_allocate() on ipc_kernel_map fails.
 
-Raise the constant to 64 MB.  On the x86_64 port the kernel VA space
-is large enough (canonical >>2 TiB) that this adds 56 MB of address
-reservation without measurable cost: the submap is created via
-kmem_submap which is lazily backed by physical pages on demand, so
-the actual RSS only grows when the additional headroom is used.
+reading the code, ipc_kernel_map is created as an 8 MB submap of
+kernel_map, and the size is a compile-time constant:
 
-Reproducing the bug pre-patch:
+	const vm_size_t ipc_kernel_map_size = 8 * 1024 * 1024;
 
-	# Boot debian-hurd-amd64.qcow2 under QEMU with QEMU_SMP=2 and
-	# QEMU_RAM=2048.  Add a /etc/rc.local that runs `run-parts /etc/boot.d`
-	# where /etc/boot.d/ contains 10+ shell scripts each spawning curl,
-	# apt-get, grep, awk in pipelines.  Boot will hang around runlevel 2
-	# with the "no more room" loop.
+on x86_64 with the wider kernel VA space, 8 MB feels really tight
+for what's effectively the per-task port-name allocation arena.
+raising it to 64 MB makes my boot quiet (no more flood) and I can't
+notice any rss/cost increase because kmem_submap is lazy.
 
-Post-patch the same workload runs to completion.
+so umm here's the patch?
 
-Reported-by: <iamhumanipromise1010101@gmail.com>
-Suggested-by: Code-review of ipc/mach_port.c:mach_port_names
 ---
  ipc/ipc_init.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -56,3 +48,32 @@ index 5dc7b5b..3a4f8b1 100644
 
  /*
   *	Routine:	ipc_bootstrap
+--
+2.49.0
+
+happy to revise, split, or just drop this entirely if it's wrong.
+I wasn't sure if 64 MB is the right number -- maybe it should be
+proportional to physical RAM?  or maybe there's a config knob I
+should have used instead of changing the constant?  I'm pretty new
+to this so guidance welcome.
+
+reproducer:
+* debian-hurd-amd64.qcow2 baseline (Jan 2026)
+* qemu `-machine pc -cpu max -smp 2 -m 2048`
+* `/etc/rc.local` that runs `run-parts /etc/boot.d` with 10+ scripts
+  spawning curl/apt/grep/awk in pipelines.  boot hangs around
+  runlevel 2 with the "no more room" loop on unmodified gnumach.
+* after applying the patch (and rebuilding `gnumach-image-1.8-amd64-up`
+  as a debian package, then dpkg -I + update-grub + reboot), boot
+  finishes normally and rc.local completes.
+
+---
+
+**disclaimer**: I used a large language model (claude) while
+developing this patch -- specifically for reading the gnumach
+source and reasoning about the failure mode.  the patch itself is
+trivial (one number change) but I'm a hobbyist hurd user not a
+kernel dev, so please don't merge this just because I'm submitting
+it -- there might be a better way to do this (e.g. make it
+proportional to memsz_lim, or add a boot-arg, or recompute on
+demand).  happy to iterate.
