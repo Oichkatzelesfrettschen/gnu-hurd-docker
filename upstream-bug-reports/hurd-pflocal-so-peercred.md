@@ -129,6 +129,8 @@ xfconfd serving channels.
 I have a screenshot of it working on my own machine if useful;
 it's in
 [`docs/minty-hurd-desktop-2026-05-13.png`](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs/minty-hurd-desktop-2026-05-13.png).
+The final wallpaper fallback check is captured in
+[`docs/minty-hurd-final-2026-05-13.png`](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs/minty-hurd-final-2026-05-13.png).
 
 ## the proper fix
 
