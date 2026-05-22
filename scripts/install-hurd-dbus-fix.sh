@@ -116,6 +116,17 @@ exec xfce4-session
 EOF
 chmod +x /usr/local/bin/minty-hurd-xfce
 
+log "Step 5: symlink xfdesktop fallback wallpaper to JWST."
+# WHY: xfdesktop's wallpaper-loading path can fail through xfconf on Hurd
+# (system-bus probe broken by SO_PEERCRED gap -> xfdesktop falls back to
+# its compiled-in default /usr/share/images/desktop-base/default).  We
+# symlink that to a real JPG so the fallback path also paints.
+mkdir -p /usr/share/images/desktop-base
+WP=/usr/share/backgrounds/minty-hurd/jwst/jwst-weic2208a.jpg
+if [ -f "$WP" ]; then
+    ln -sf "$WP" /usr/share/images/desktop-base/default
+fi
+
 log "Done.  Test with:"
 echo "  eval \"\$(start-dbus-hurd)\""
 echo "  /usr/lib/x86_64-gnu/xfce4/xfconf/xfconfd &"
