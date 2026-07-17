@@ -118,6 +118,32 @@ make vbox-full-auto
 
 **Best for**: reproducible "fresh installer -> SSH-ready configured guest" without manual keypresses/screenshots
 
+### Path F: Minty Hurd (XFCE + Linux Mint theming over VNC)
+
+```bash
+# Boot the provisioned desktop image (requires images/hurd-working.qcow2,
+# built per MINTY-HURD-README.md)
+make minty-up
+
+# Start the desktop and view it: VNC on :5901 / noVNC in the browser
+make minty-vnc
+```
+
+The Minty profile layers Linux Mint's arch-independent theme and menu
+packages (LMDE 7 "gigi", pinned so Debian always wins for real code --
+see `scripts/lmde7-apt-setup.sh`) over XFCE on Debian GNU/Hurd. Full
+walkthrough: [MINTY-HURD-README.md](MINTY-HURD-README.md).
+
+## First login (out-of-box experience)
+
+Published/provisioned images ship two generic accounts, `user`/`user`
+and `root`/`root`, with their passwords **expired**: the first
+interactive login (SSH password auth or the VNC console) asks you to
+set your own password before you get a shell. Details and the staging
+mechanism: [docs/08-REFERENCE/CREDENTIALS.md](docs/08-REFERENCE/CREDENTIALS.md);
+image publishers run `make oobe` as the final step before shutting the
+guest down.
+
 Run artifacts are written per-attempt under `logs/runs/<run-id>/` with:
 - `transcript.log`
 - `serial.log`
