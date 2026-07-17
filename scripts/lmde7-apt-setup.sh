@@ -34,10 +34,12 @@ Pin: release o=linuxmint
 Pin-Priority: 100
 
 # Allow only these specific Mint-specific arch=all packages to install from LMDE.
-# (These don't exist in Debian.)
-Package: mintmenu mint-themes mint-x-icons mint-y-icons mint-l-theme mint-l-icons \
-         mint-cursor-themes mintdesktop mint-artwork mint-common mint-translations \
-         mint-backgrounds-* mint-info-cinnamon mint-meta-codecs linuxmint-keyring
+# (These don't exist in Debian.)  apt_preferences(5) takes the package list as
+# one space-separated field; continuation lines fold RFC-822 style with leading
+# whitespace and no backslashes.
+Package: mintmenu mint-themes mint-x-icons mint-y-icons mint-l-theme mint-l-icons
+ mint-cursor-themes mintdesktop mint-artwork mint-common mint-translations
+ mint-backgrounds-* mint-info-cinnamon mint-meta-codecs linuxmint-keyring
 Pin: release o=linuxmint
 Pin-Priority: 500
 EOF
