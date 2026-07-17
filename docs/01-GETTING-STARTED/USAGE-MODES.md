@@ -114,7 +114,7 @@ START: Choose GNU/Hurd deployment mode
 **Development Teams**
 - Consistent environments across developers
 - Easy onboarding with single command setup
-- Version-controlled configuration via docker-compose.yml
+- Version-controlled configuration via compose.yaml
 
 **CI/CD Pipelines**
 - Native container support in GitHub Actions, GitLab CI

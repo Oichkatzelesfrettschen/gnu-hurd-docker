@@ -211,7 +211,7 @@ SPECIAL CASES
 
 ```markdown
 See implementation in [entrypoint.sh](../../entrypoint.sh#L42)
-Configuration in [docker-compose.yml](../../docker-compose.yml)
+Configuration in [compose.yaml](../../compose.yaml)
 ```
 
 ### 2. LINKING TO WORKFLOWS

@@ -13,15 +13,15 @@
 #
 # USAGE:
 #   # Start Hurd VM via libvirt (managed by this compose file)
-#   docker compose -f docker-compose.libvirt.yml up -d
+#   docker compose -f compose.libvirt.yaml up -d
 #
 #   # Access VM
 #   ssh -p 2222 root@localhost
-#   # Or: docker compose -f docker-compose.libvirt.yml exec hurd-manager \
+#   # Or: docker compose -f compose.libvirt.yaml exec hurd-manager \
 #          virsh console gnu-hurd-dev
 #
 #   # Stop VM
-#   docker compose -f docker-compose.libvirt.yml down
+#   docker compose -f compose.libvirt.yaml down
 #
 # REQUIREMENTS:
 # - Docker or Podman (with socket available)
@@ -132,12 +132,12 @@ services:
         echo "[*] Access Methods:"
         echo "  SSH:    ssh -p 2222 root@localhost"
         echo "  HTTP:   curl http://localhost:8080"
-        echo "  Console: docker compose -f docker-compose.libvirt.yml exec hurd-manager \\"
+        echo "  Console: docker compose -f compose.libvirt.yaml exec hurd-manager \\"
         echo "             virsh -c qemu:///system console gnu-hurd-dev"
         echo ""
         echo "[*] Useful Commands:"
-        echo "  docker compose -f docker-compose.libvirt.yml exec hurd-manager virsh -c qemu:///system domstats"
-        echo "  docker compose -f docker-compose.libvirt.yml exec hurd-manager virsh -c qemu:///system screenshot"
+        echo "  docker compose -f compose.libvirt.yaml exec hurd-manager virsh -c qemu:///system domstats"
+        echo "  docker compose -f compose.libvirt.yaml exec hurd-manager virsh -c qemu:///system screenshot"
         echo ""
         echo "Press Ctrl+C to exit (container will keep running in background)"
         echo "=========================================="

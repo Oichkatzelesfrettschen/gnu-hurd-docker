@@ -264,14 +264,14 @@ qemu-system-x86_64 ... -smp 2 ...
 **Serial Console Workflow:**
 ```bash
 # Start container
-docker-compose up -d
+docker compose up -d
 
 # Find PTY
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 # Output: char device redirected to /dev/pts/5 (label serial0)
 
 # Attach to console
-docker-compose exec gnu-hurd-dev screen /dev/pts/5
+docker compose exec gnu-hurd-dev screen /dev/pts/5
 ```
 
 ---
@@ -403,7 +403,7 @@ tail -f /tmp/qemu.log
 
 **Diagnosis:**
 ```bash
-docker-compose logs | grep ERROR
+docker compose logs | grep ERROR
 ```
 
 **Common Causes:**
@@ -411,7 +411,7 @@ docker-compose logs | grep ERROR
 2. **Invalid Machine Type:** QEMU version too old for `-machine pc-i440fx-7.2`
    - Fix: Use `-machine pc` (generic)
 3. **Port Conflict:** Host port 2222 or 8080 already in use
-   - Fix: Change ports in `docker-compose.yml`
+   - Fix: Change ports in `compose.yaml`
 
 ### Hurd Kernel Panic During Boot
 
@@ -420,7 +420,7 @@ docker-compose logs | grep ERROR
 **Diagnosis:**
 ```bash
 # Check QEMU log
-docker-compose exec gnu-hurd-dev cat /tmp/qemu.log | tail -50
+docker compose exec gnu-hurd-dev cat /tmp/qemu.log | tail -50
 ```
 
 **Common Causes:**

@@ -34,7 +34,7 @@ Validates YAML files using Python YAML parser.
 ```yaml
 - uses: ./.github/actions/yaml-validate
   with:
-    yaml-files: 'docker-compose.yml mkdocs.yml .github/workflows/*.yml'
+    yaml-files: 'compose.yaml mkdocs.yml .github/workflows/*.yml'
     strict: 'true'
 ```
 
@@ -63,7 +63,7 @@ Generates comprehensive workflow summary for GitHub Actions.
       - ✓ Script executability
     additional-info: |
       ### Files Validated
-      - docker-compose.yml
+      - compose.yaml
       - entrypoint.sh
 ```
 

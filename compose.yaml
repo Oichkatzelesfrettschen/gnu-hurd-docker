@@ -13,7 +13,7 @@ services:
   # Single x86_64 Hurd service - NO i386 variants
   gnu-hurd-dev:
     # Production: Pull pre-built image from GHCR
-    # Local development: docker-compose.override.yml will override this with build section
+    # Local development: compose.override.yaml will override this with build section
     image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
     # Container naming (descriptive and unique)
@@ -186,10 +186,10 @@ volumes:
 # USAGE EXAMPLES:
 # =============================================================================
 # Start the container:
-#   docker-compose up -d
+#   docker compose up -d
 #
 # View logs:
-#   docker-compose logs -f gnu-hurd-dev
+#   docker compose logs -f gnu-hurd-dev
 #
 # SSH into Hurd VM:
 #   ssh -p ${SSH_PORT:-2222} root@localhost
@@ -201,17 +201,17 @@ volumes:
 #   telnet localhost ${SERIAL_PORT:-5555}
 #
 # Stop the container:
-#   docker-compose down
+#   docker compose down
 #
 # Remove everything including volumes:
-#   docker-compose down -v
+#   docker compose down -v
 #
 # Build with no cache:
-#   docker-compose build --no-cache
+#   docker compose build --no-cache
 #
 # Run with KVM acceleration:
-#   docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+#   docker compose -f compose.yaml -f compose.kvm.yaml up -d
 #
 # Run without KVM (TCG only):
-#   docker-compose up -d
+#   docker compose up -d
 # =============================================================================

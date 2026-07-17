@@ -50,7 +50,7 @@ Replace `/path/to/your/hurd/image` with the directory containing `debian-hurd-i3
 
 ## Method 3: Docker Compose (If you want declarative config)
 
-Create `docker-compose.yml`:
+Create `compose.yaml`:
 
 ```yaml
 services:
@@ -78,7 +78,7 @@ services:
 Then:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ---
@@ -114,8 +114,8 @@ docker logs -f gnu-hurd
 git clone https://github.com/oaich/gnu-hurd-docker.git  # ← Unnecessary
 cd gnu-hurd-docker                                      # ← Unnecessary
 ./scripts/download-image.sh                             # ← OK, but can be manual
-docker-compose build                                     # ← Unnecessary (takes time)
-docker-compose up -d                                     # ← Finally running
+docker compose build                                     # ← Unnecessary (takes time)
+docker compose up -d                                     # ← Finally running
 ```
 
 **New way (this guide):**
@@ -165,8 +165,8 @@ docker run -d --privileged \
 ```bash
 git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
 This is the fallback if GHCR hasn't published the image yet.

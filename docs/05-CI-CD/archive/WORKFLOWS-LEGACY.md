@@ -62,7 +62,7 @@ gh run watch
 **Purpose**: Validate Dockerfile, scripts, and configs
 
 **Triggers**:
-- Push/PR affecting Dockerfile, entrypoint.sh, docker-compose.yml
+- Push/PR affecting Dockerfile, entrypoint.sh, compose.yaml
 
 **Checks**:
 - Dockerfile structure
@@ -74,7 +74,7 @@ gh run watch
 ```
 ✓ Dockerfile structure is present
 ✓ entrypoint.sh passes shellcheck validation
-✓ docker-compose.yml has valid YAML syntax
+✓ compose.yaml has valid YAML syntax
 ✓ All scripts are executable
 ```
 
@@ -186,7 +186,7 @@ qemu-system-x86_64 \
     -qmp unix:/tmp/qmp.sock,server=on,wait=off
 ```
 
-**docker-compose.yml**:
+**compose.yaml**:
 ```yaml
 services:
   hurd-x86_64:
@@ -295,7 +295,7 @@ jobs:
           QEMU_RAM: ${{ matrix.ram }}
           QEMU_SMP: ${{ matrix.smp }}
           QEMU_ACCEL: ${{ matrix.accel }}
-        run: docker-compose up -d
+        run: docker compose up -d
 ```
 
 ### Pattern 2: Conditional Workflows
@@ -318,12 +318,12 @@ jobs:
       - name: Fast boot (KVM)
         if: steps.accel.outputs.kvm == 'true'
         run: |
-          QEMU_ARGS="-enable-kvm -cpu host" docker-compose up -d
+          QEMU_ARGS="-enable-kvm -cpu host" docker compose up -d
 
       - name: Slow boot (TCG)
         if: steps.accel.outputs.kvm != 'true'
         run: |
-          QEMU_ARGS="-cpu max" docker-compose up -d
+          QEMU_ARGS="-cpu max" docker compose up -d
 ```
 
 ### Pattern 3: Artifact Caching
@@ -403,7 +403,7 @@ Interact with VM via serial console:
 ```yaml
 - name: Start VM with serial console
   run: |
-    docker-compose up -d
+    docker compose up -d
     # Serial console exposed on port 5555
 
 - name: Wait for boot via serial log
@@ -556,7 +556,7 @@ Interactive debugging in CI:
   if: always()
   run: |
     mkdir -p debug
-    docker-compose logs > debug/docker-logs.txt
+    docker compose logs > debug/docker-logs.txt
     docker cp hurd-x86_64:/tmp/serial.log debug/ || true
     tar czf debug.tar.gz debug/
 
@@ -636,7 +636,7 @@ jobs:
         run: docker load < image.tar.gz
 
       - name: Start VM
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Wait for SSH
         run: |
@@ -659,7 +659,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
       - name: Upload logs
         if: always()

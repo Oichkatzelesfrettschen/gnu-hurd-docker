@@ -40,7 +40,7 @@ QEMU_RAM=2048 QEMU_SMP=1 make up-kvm
 
 | Resource | Value | Notes |
 |----------|-------|-------|
-| RAM | 4 GB | Default in docker-compose.yml |
+| RAM | 4 GB | Default in compose.yaml |
 | CPU Cores | 2-4 | 2 stable, 4 experimental |
 | Acceleration | KVM strongly recommended | ~60x faster than TCG |
 | Disk Space | 20-30 GB | Includes build artifacts |
@@ -130,7 +130,7 @@ QEMU_RAM=8192 QEMU_SMP=4 QEMU_DISK_BUS=ahci make up-kvm
 
 ### Method 2: Docker Compose Override (Recommended for Development)
 
-Create `docker-compose.override.yml`:
+Create `compose.override.yaml`:
 
 ```yaml
 services:
@@ -161,7 +161,7 @@ Docker Compose will automatically load this file.
 
 ### Method 4: Direct Modification (Not Recommended)
 
-Edit `docker-compose.yml` directly. **Note:** This approach complicates version control.
+Edit `compose.yaml` directly. **Note:** This approach complicates version control.
 
 ---
 
@@ -344,7 +344,7 @@ top -p $(pgrep -f qemu-system)
 
 **Solutions:**
 1. Reduce QEMU_SMP: `QEMU_SMP=2 make up`
-2. Enable CPU limits: Modify `docker-compose.yml` CPU settings
+2. Enable CPU limits: Modify `compose.yaml` CPU settings
 3. Check for busy processes: `docker exec gnu-hurd-dev ps aux | sort -k3 -r | head`
 4. Adjust guest scheduler: `QEMU_CPU=host-phys-bits=keep`
 
@@ -367,7 +367,7 @@ file /opt/hurd-image/debian-hurd-amd64.qcow2
 ```
 
 **Solutions:**
-1. Optimize cache mode: Add to docker-compose override:
+1. Optimize cache mode: Add to docker compose override:
    ```yaml
    environment:
      QEMU_DISK_CACHE: "writeback"
@@ -391,7 +391,7 @@ file /opt/hurd-image/debian-hurd-amd64.qcow2
    - Gracefully falls back if unavailable
 
 3. **Use Override Files**
-   - `docker-compose.override.yml` for persistent changes
+   - `compose.override.yaml` for persistent changes
    - Keeps main config clean
    - Easy to commit/share
 
@@ -430,7 +430,7 @@ file /opt/hurd-image/debian-hurd-amd64.qcow2
 - **8 GB RAM / 4-6 cores** → Optimal (performance)
 - **Always use KVM when available** (Linux x86_64)
 - **Use SSD/NVMe for Profile 2+**
-- **Override via environment variables or `docker-compose.override.yml`**
+- **Override via environment variables or `compose.override.yaml`**
 - **Monitor with `free`, `nproc`, `df`, `docker stats`**
 
 Example configuration:

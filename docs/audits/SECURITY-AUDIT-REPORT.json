@@ -17,7 +17,7 @@
     "compliance_status": "MOSTLY_COMPLIANT",
     "key_findings": [
       "All scripts pass shellcheck -S error (excellent)",
-      "CRITICAL: Multiple uses of docker-compose (v1 legacy) instead of 'docker compose' (v2)",
+      "CRITICAL: Multiple uses of docker compose (v1 legacy) instead of 'docker compose' (v2)",
       "HIGH: Hardcoded passwords used throughout (root/root, agents/agents)",
       "MEDIUM: Inconsistent error handling (some missing set -u, set -o pipefail)",
       "LOW: Some unquoted variables found but most are properly quoted",
@@ -27,7 +27,7 @@
       {
         "script": "bringup-and-provision.sh",
         "risk_level": "HIGH",
-        "reason": "Uses docker-compose (legacy), hardcoded passwords, remote SSH execution"
+        "reason": "Uses docker compose (legacy), hardcoded passwords, remote SSH execution"
       },
       {
         "script": "install-ssh-hurd.sh",
@@ -47,7 +47,7 @@
       {
         "script": "test-docker-provision.sh",
         "risk_level": "MEDIUM",
-        "reason": "Uses docker-compose (legacy), missing set -u"
+        "reason": "Uses docker compose (legacy), missing set -u"
       }
     ]
   },
@@ -296,7 +296,7 @@
           "severity": "CRITICAL",
           "category": "COMPLIANCE",
           "line": 130,
-          "description": "Validates 'docker-compose.yml' file (legacy naming)",
+          "description": "Validates 'compose.yaml' file (legacy naming)",
           "recommendation": "Update to validate compose.yml or docker-compose.yaml"
         },
         {
@@ -635,7 +635,7 @@
           "severity": "CRITICAL",
           "category": "COMPLIANCE",
           "line": 60,
-          "description": "Suggests 'docker-compose -f docker-compose.amd64.yml'",
+          "description": "Suggests 'docker compose -f docker-compose.amd64.yml'",
           "recommendation": "Use 'docker compose -f docker-compose.amd64.yml'"
         },
         {
@@ -666,7 +666,7 @@
           "severity": "CRITICAL",
           "category": "COMPLIANCE",
           "line": 57,
-          "description": "Suggests 'docker-compose up -d'",
+          "description": "Suggests 'docker compose up -d'",
           "recommendation": "Use 'docker compose up -d'"
         },
         {

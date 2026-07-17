@@ -421,7 +421,7 @@ Based on official testing and community reports:
 
 ### Environment Variables
 
-Add to `docker-compose.yml`:
+Add to `compose.yaml`:
 ```yaml
 environment:
   - QEMU_RAM=4096
@@ -446,7 +446,7 @@ volumes:
 On host:
 ```bash
 xhost +local:docker
-docker-compose up
+docker compose up
 ```
 
 ---

@@ -15,7 +15,7 @@
 This document explains the **two-stage port forwarding** architecture used in the Docker-QEMU setup for GNU/Hurd x86_64.
 
 **Two-Stage Model**:
-1. **Docker Layer**: Host ports → Container ports (via docker-compose.yml)
+1. **Docker Layer**: Host ports → Container ports (via compose.yaml)
 2. **QEMU Layer**: Container ports → Guest ports (via user-mode NAT)
 
 ---
@@ -150,7 +150,7 @@ curl http://localhost:8080
 
 To change HTTP port, update both layers:
 
-**docker-compose.yml**:
+**compose.yaml**:
 ```yaml
 ports:
   - "8081:8080"  # Host:8081 → Container:8080
@@ -168,7 +168,7 @@ ports:
 
 ### Enable VNC
 
-**Set ENABLE_VNC=1** in docker-compose.yml:
+**Set ENABLE_VNC=1** in compose.yaml:
 
 ```yaml
 environment:
@@ -270,7 +270,7 @@ Host:9999 → Container:9999 → QEMU HMP monitor
 
 ### UDP Port Forwarding for mosh
 
-**Configure docker-compose.yml**:
+**Configure compose.yaml**:
 ```yaml
 ports:
   - "2222:2222"                     # SSH
@@ -312,7 +312,7 @@ mosh -p 60000:60010 --ssh="ssh hurd-local" localhost
 
 ## Detailed Port Mapping Breakdown
 
-### Docker Layer (docker-compose.yml)
+### Docker Layer (compose.yaml)
 
 **Current Configuration**:
 ```yaml
@@ -417,7 +417,7 @@ hostfwd=udp::60010-:60010
 
 1. **Expose specific ports**: Only published ports accessible
 2. **Bind to specific interfaces**: Can limit to localhost
-3. **Easy port changes**: Edit docker-compose.yml, no QEMU restart
+3. **Easy port changes**: Edit compose.yaml, no QEMU restart
 4. **Multiple containers**: Each container gets unique host ports
 5. **Health checks**: Docker can monitor port availability
 
@@ -465,7 +465,7 @@ netstat -tlnp | grep :22
 **Solutions**:
 1. Wait longer for boot to complete
 2. Start SSH manually in guest: `systemctl start ssh`
-3. Verify docker-compose.yml has `ports: ["2222:2222"]`
+3. Verify compose.yaml has `ports: ["2222:2222"]`
 4. Verify entrypoint.sh has `hostfwd=tcp::2222-:22`
 
 ### Port Already in Use
@@ -494,7 +494,7 @@ sudo lsof -i :2222
 
 2. **Change host port** (recommended):
    ```yaml
-   # docker-compose.yml
+   # compose.yaml
    ports:
      - "2223:2222"  # Use different host port
 
@@ -557,7 +557,7 @@ sudo lsof -i :2222
 
 **Solutions**:
 
-1. **Enable VNC** in docker-compose.yml:
+1. **Enable VNC** in compose.yaml:
    ```yaml
    environment:
      ENABLE_VNC: 1
@@ -568,7 +568,7 @@ sudo lsof -i :2222
 
 2. **Restart container**:
    ```bash
-   docker-compose up -d --force-recreate
+   docker compose up -d --force-recreate
    ```
 
 3. **Verify VNC in QEMU** (check logs):
@@ -595,7 +595,7 @@ sudo lsof -i :2222
    apt-get install -y mosh
    ```
 
-2. **Expose UDP ports** in docker-compose.yml:
+2. **Expose UDP ports** in compose.yaml:
    ```yaml
    ports:
      - "60000-60010:60000-60010/udp"
@@ -708,7 +708,7 @@ ss -tlnp | grep -E '(2222|5555|8080|9999|5900)'
 **Expose range of ports for services**:
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 ports:
   - "3000-3010:3000-3010"  # Range for web services
 ```
@@ -726,7 +726,7 @@ done
 **Bind to specific interface**:
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 ports:
   - "192.168.1.100:2222:2222"  # Only on specific IP
 ```
@@ -736,7 +736,7 @@ ports:
 **Enable IPv6** (experimental):
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 networks:
   hurd-net:
     enable_ipv6: true

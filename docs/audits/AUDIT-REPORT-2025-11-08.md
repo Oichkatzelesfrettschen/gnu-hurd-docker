@@ -17,7 +17,7 @@ A comprehensive multi-agent audit was conducted combining:
 
 ### Key Achievements ✅
 
-1. **CRITICAL FIX APPLIED:** Replaced `docker-compose` (v1 legacy) with `docker compose` (v2) in 9 scripts
+1. **CRITICAL FIX APPLIED:** Replaced `docker compose` (v1 legacy) with `docker compose` (v2) in 9 scripts
 2. **LIBRARY INFRASTRUCTURE CREATED:** Extracted 3 core libraries eliminating ~200 lines of duplication
 3. **EXACT DUPLICATES ELIMINATED:** Deleted scripts/share/ directory (3 duplicate files)
 4. **OBSOLETE SCRIPTS ARCHIVED:** Moved 2 superseded scripts to archive/ with documentation
@@ -45,14 +45,14 @@ A comprehensive multi-agent audit was conducted combining:
 - ✅ **Good variable quoting** - 95% of variables properly quoted
 - ⚠️ **Error handling gaps:** Only 13% use full `set -euo pipefail` (90% use `set -e` only)
 - ⚠️ **Hardcoded passwords:** 6 scripts use development defaults (acceptable for dev env)
-- 🔴 **CRITICAL:** 13 scripts used `docker-compose` v1 legacy (FIXED)
+- 🔴 **CRITICAL:** 13 scripts used `docker compose` v1 legacy (FIXED)
 
 **Top 5 Risk Scripts (Before Fixes):**
-1. bringup-and-provision.sh (HIGH) - docker-compose usage, hardcoded passwords → FIXED
+1. bringup-and-provision.sh (HIGH) - docker compose usage, hardcoded passwords → FIXED
 2. install-ssh-hurd.sh (HIGH) - hardcoded password in expect script
 3. full-automated-setup.sh (MEDIUM-HIGH) - 399 LOC complexity, missing set -u
 4. fix-sources-hurd.sh (MEDIUM) - remote SSH execution (good error handling mitigates)
-5. test-docker-provision.sh (MEDIUM) - docker-compose usage → ARCHIVED
+5. test-docker-provision.sh (MEDIUM) - docker compose usage → ARCHIVED
 
 **Files Generated:**
 - SECURITY-AUDIT-REPORT.json (detailed per-script analysis)
@@ -170,8 +170,8 @@ A comprehensive multi-agent audit was conducted combining:
 
 **1. Docker Compose v1 → v2 Migration**
 - **WHY:** CLAUDE.md requirement, v1 is deprecated and non-free
-- **WHAT:** 9 scripts using `docker-compose` command
-- **HOW:** Bulk sed replacement preserving docker-compose.yml filename
+- **WHAT:** 9 scripts using `docker compose` command
+- **HOW:** Bulk sed replacement preserving compose.yaml filename
 - **Result:** 100% compliance with docker compose v2
 - **Time:** 5 minutes
 - **Files Modified:**
@@ -224,7 +224,7 @@ A comprehensive multi-agent audit was conducted combining:
 | **Total Scripts** | 27 + 3 duplicates = 30 | 25 active + 3 lib + 2 archived | 10% reduction |
 | **Active LOC** | 4,742 | ~4,326 (9% reduction) | 416 lines eliminated |
 | **Duplicated Code** | ~800-1,000 lines (17-21%) | ~600-800 lines | ~200 lines extracted |
-| **docker-compose v1 usage** | 9 scripts (33%) | 0 scripts (0%) | 100% compliance |
+| **docker compose v1 usage** | 9 scripts (33%) | 0 scripts (0%) | 100% compliance |
 | **Shellcheck Compliance** | 100% | 100% | Maintained ✅ |
 | **Error Handling (set -e)** | 90% | 90% | Maintained |
 | **Error Handling (set -euo pipefail)** | 13% | 13% | To improve |
@@ -441,7 +441,7 @@ trap cleanup EXIT INT TERM
 | Standard | Status | Notes |
 |----------|--------|-------|
 | **Treat warnings as errors** | ✅ PASS | 100% shellcheck -S error compliance |
-| **docker compose v2 only** | ✅ PASS | All docker-compose → docker compose |
+| **docker compose v2 only** | ✅ PASS | All docker compose → docker compose |
 | **set -eu minimum** | ⚠️ PARTIAL | 90% have -e, only 13% have -u -o pipefail |
 | **Quote variables** | ✅ PASS | 95% compliance |
 | **No secrets in code** | ✅ PASS | Only dev passwords, clearly marked |

@@ -20,7 +20,7 @@ docker compose version
 **Usage**:
 ```bash
 docker compose up -d
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 docker compose logs -f
 docker compose down
 ```
@@ -29,7 +29,7 @@ docker compose down
 - **Implementation**: Go-based, built-in Docker CLI command
 - **Installation**: Ships with Docker Desktop (macOS, Windows) or Docker Engine (Linux)
 - **Performance**: Faster than v1 (rewritten from scratch)
-- **Features**: Supports all modern docker-compose.yml syntax (version 3.8+)
+- **Features**: Supports all modern compose.yaml syntax (version 3.8+)
 - **Cross-platform**: Available on Linux, macOS (via Docker Desktop), Windows (via Docker Desktop + WSL2)
 - **Defaults**: Automatically uses available hardware acceleration (VT-x/AMD-V on Linux, Hyper-V on Windows)
 
@@ -53,7 +53,7 @@ docker compose down
 
 ### Docker Compose v1 (Legacy)
 
-**What it is**: The original Python-based Docker Compose tool (`docker-compose` standalone).
+**What it is**: The original Python-based Docker Compose tool (`docker compose` standalone).
 
 **Installation**:
 ```bash
@@ -61,23 +61,23 @@ docker compose down
 sudo pip install docker-compose
 
 # Or via package manager (some distros still provide it)
-sudo apt install docker-compose     # Ubuntu/Debian
-sudo pacman -S docker-compose       # Arch
+sudo apt install docker compose     # Ubuntu/Debian
+sudo pacman -S docker compose       # Arch
 ```
 
 **Usage**:
 ```bash
-docker-compose up -d
-docker-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
-docker-compose logs -f
-docker-compose down
+docker compose up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
+docker compose logs -f
+docker compose down
 ```
 
 **Characteristics**:
 - **Implementation**: Python-based
 - **Status**: Deprecated (no new releases since 2021)
 - **Performance**: Slower than v2 (Python overhead)
-- **Features**: Supports docker-compose.yml version 3.x
+- **Features**: Supports compose.yaml version 3.x
 - **Maintenance**: Security fixes only; no new features
 - **Installation**: Requires Python 3.6+ and pip
 
@@ -121,7 +121,7 @@ pip3 install --user podman-compose
 **Usage**:
 ```bash
 podman-compose up -d
-podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+podman-compose -f compose.yaml -f compose.bind.yaml up -d
 podman-compose logs -f
 podman-compose down
 ```
@@ -131,7 +131,7 @@ podman-compose down
 - **Compatibility**: ~90% compatible with Docker Compose syntax
 - **Daemonless**: No background daemon required
 - **Rootless**: Can run without root privileges (major security advantage)
-- **Performance**: Comparable to docker-compose v1 (Python-based)
+- **Performance**: Comparable to docker compose v1 (Python-based)
 - **Features**: Supports Podman-specific features (pods, etc.)
 
 **Compatibility Matrix**:
@@ -176,7 +176,7 @@ sudo systemctl enable --now libvirtd
 virsh console gnu-hurd-dev
 
 # Option 2: Docker Compose orchestration (experimental)
-docker compose -f docker-compose.libvirt.yml up -d
+docker compose -f compose.libvirt.yaml up -d
 ```
 
 **Characteristics**:
@@ -277,7 +277,7 @@ Libvirt (disk image):  500MB-20GB (QCOW2 image file)
 
 **Linux x86_64 (KVM)**:
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 # Automatically detects /dev/kvm and enables KVM acceleration
 ```
 
@@ -287,7 +287,7 @@ docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
 
 **Linux x86_64 (KVM)**:
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 # Works identically to v2
 ```
 
@@ -297,7 +297,7 @@ docker-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
 
 **Linux x86_64 (KVM)**:
 ```bash
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 # Works but requires careful /dev/kvm permission setup
 # May require: sudo chmod 666 /dev/kvm
 ```
@@ -361,7 +361,7 @@ curl -fsSL https://get.docker.com | sh
 docker compose version    # Should show v2.x.x
 
 # Use for development
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 ```
 
 **Alternative**: Podman Compose (if rootless container execution required)
@@ -395,7 +395,7 @@ podman-compose up -d
 ```bash
 # Install Docker Desktop from: https://www.docker.com/products/docker-desktop
 # Then:
-docker compose -f docker-compose.yml up -d
+docker compose -f compose.yaml up -d
 ```
 
 **Alternative**: Podman Desktop (if daemonless execution preferred)
@@ -434,7 +434,7 @@ docker compose up -d
 
 ## Migration Path
 
-### From docker-compose v1 to Docker Compose v2
+### From docker compose v1 to Docker Compose v2
 
 ```bash
 # 1. Ensure Docker >=20.10 is installed
@@ -446,7 +446,7 @@ docker compose version
 # 3. Update scripts to use "docker compose" instead of "docker-compose"
 sed -i 's/docker-compose/docker compose/g' scripts/*.sh
 
-# 4. Test with existing docker-compose.yml (no format changes needed)
+# 4. Test with existing compose.yaml (no format changes needed)
 docker compose up -d
 
 # 5. Verify all services started correctly
@@ -455,7 +455,7 @@ docker compose ps
 
 **Estimated time**: ~10 minutes
 **Risk**: Very low (backward compatible syntax)
-**Rollback**: Just reinstall docker-compose v1 if issues arise
+**Rollback**: Just reinstall docker compose v1 if issues arise
 
 ### From Docker to Podman
 
@@ -468,10 +468,10 @@ podman --version
 podman-compose --version
 
 # 3. Update container runtime script references (if any)
-# Most docker-compose.yml files work unchanged with podman-compose
+# Most compose.yaml files work unchanged with podman-compose
 
 # 4. Start with non-critical services first
-podman-compose -f docker-compose.yml up -d
+podman-compose -f compose.yaml up -d
 
 # 5. Verify container startup and logs
 podman-compose logs -f
@@ -481,7 +481,7 @@ podman-compose logs -f
 
 **Estimated time**: ~30 minutes
 **Risk**: Medium (some edge cases may not work identically)
-**Rollback**: Switch back to `docker-compose` commands
+**Rollback**: Switch back to `docker compose` commands
 
 ---
 
@@ -517,7 +517,7 @@ make logs
 # Option 1: Docker v2 (recommended)
 docker compose version  # If this fails, upgrade Docker to >=20.10
 
-# Option 2: Fallback to docker-compose v1
+# Option 2: Fallback to docker compose v1
 sudo pip install docker-compose
 
 # Option 3: Use Podman instead
@@ -533,7 +533,7 @@ sudo apt install podman-compose
 docker --version
 
 # If <20.10, either upgrade or use:
-docker-compose up -d         # v1 (requires pip install)
+docker compose up -d         # v1 (requires pip install)
 podman-compose up -d         # Podman (requires podman install)
 ```
 
@@ -560,7 +560,7 @@ groups $USER | grep docker
 sudo systemctl restart docker
 
 # 4. Try KVM override explicitly
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 ```
 
 ### Podman rootless KVM issues
@@ -582,7 +582,7 @@ sudo chmod 666 /dev/kvm
 ## Related Documentation
 
 - [PODMAN-SUPPORT.md](../01-GETTING-STARTED/PODMAN-SUPPORT.md) - Detailed Podman setup guide
-- [DOCKER-COMPOSE-GUIDE.md](DOCKER-COMPOSE-GUIDE.md) - docker-compose usage patterns
+- [DOCKER-COMPOSE-GUIDE.md](DOCKER-COMPOSE-GUIDE.md) - docker compose usage patterns
 - [Makefile](../../Makefile) - Compose control plane targets
 - [compose.kvm.yaml](../../compose.kvm.yaml) - KVM acceleration overlay
 
@@ -592,13 +592,13 @@ sudo chmod 666 /dev/kvm
 
 | Use Case | Recommended | Alternative | Avoid |
 |----------|-------------|-------------|-------|
-| Linux x86_64 development | Docker v2 | Podman / Libvirt | docker-compose v1 |
+| Linux x86_64 development | Docker v2 | Podman / Libvirt | docker compose v1 |
 | Linux ARM64 development | Podman | — | Docker v1 |
-| macOS development | Docker v2 | Podman Desktop | docker-compose v1 |
-| Windows development | Docker v2 | Podman Desktop | docker-compose v1 |
+| macOS development | Docker v2 | Podman Desktop | docker compose v1 |
+| Windows development | Docker v2 | Podman Desktop | docker compose v1 |
 | Rootless containers | Podman | — | Docker without special config |
-| CI/CD pipelines | Docker v2 | Podman | docker-compose v1 |
-| Production deployment | Docker v2 | Podman | docker-compose v1 |
+| CI/CD pipelines | Docker v2 | Podman | docker compose v1 |
+| Production deployment | Docker v2 | Podman | docker compose v1 |
 | Kubernetes integration | Podman | — | Other compose tools |
 | Full VM management | Libvirt | — | Containers (different model) |
 | VM snapshots/migration | Libvirt | — | Containers (no native support) |

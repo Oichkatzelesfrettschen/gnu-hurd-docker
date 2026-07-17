@@ -66,17 +66,17 @@ The provisioned image includes:
 
 ```bash
 # 1. Build the provisioning Docker image
-docker-compose -f docker-compose.provision.yml build
+docker compose -f docker-compose.provision.yml build
 
 # 2. Run provisioning (takes ~10-15 minutes)
-docker-compose -f docker-compose.provision.yml up
+docker compose -f docker-compose.provision.yml up
 
 # 3. Verify the output
 ls -lh images/debian-hurd-i386-80gb-provisioned.qcow2
 
 # 4. Test the provisioned image
 QEMU_DRIVE=images/debian-hurd-i386-80gb-provisioned.qcow2 \
-  docker-compose up -d
+  docker compose up -d
 
 # 5. SSH into the provisioned system
 ssh -p 2222 root@localhost
@@ -222,14 +222,14 @@ qemu-img check -r all images/debian-hurd-i386-80gb-provisioned.qcow2
 After provisioning, use the image in your main docker-compose:
 
 ```yaml
-# docker-compose.override.yml
+# compose.override.yaml
 services:
   gnu-hurd-dev:
     environment:
       - QEMU_DRIVE=/opt/hurd-image/debian-hurd-i386-80gb-provisioned.qcow2
 ```
 
-Now when you run `docker-compose up`, you get a fully configured system with:
+Now when you run `docker compose up`, you get a fully configured system with:
 - SSH accessible on port 2222
 - All dev tools ready
 - No manual setup required

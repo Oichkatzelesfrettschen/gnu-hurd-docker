@@ -273,8 +273,8 @@
     {
       "file": "08-REFERENCE/guidelines/CROSS-LINKING.md",
       "line": 214,
-      "text": "docker-compose.yml",
-      "url": "../../docker-compose.yml",
+      "text": "compose.yaml",
+      "url": "../../compose.yaml",
       "reason": "file_not_found"
     },
     {

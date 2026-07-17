@@ -383,10 +383,10 @@ dpkg --add-architecture hurd-amd64
 shutdown -h now
 # Wait for "System halted" message
 # Then stop QEMU:
-docker-compose down
+docker compose down
 
 # BAD (will cause fsck):
-docker-compose kill  # Kills QEMU abruptly
+docker compose kill  # Kills QEMU abruptly
 pkill qemu  # Same - abrupt kill
 ```
 
@@ -689,7 +689,7 @@ shutdown -h now
 # Expected output: "System halted" or "QEMU: Terminating on signal..."
 
 # Step 3: Stop Docker container
-docker-compose down
+docker compose down
 
 # Total time: 30-60 seconds
 ```
@@ -699,13 +699,13 @@ docker-compose down
 # Option 1: QEMU monitor (graceful)
 echo "system_powerdown" | nc localhost 9999
 sleep 30
-docker-compose down
+docker compose down
 
 # Option 2: Docker stop (sends SIGTERM)
-docker-compose stop -t 30
+docker compose stop -t 30
 
 # Option 3: Kill (LAST RESORT - will cause fsck)
-docker-compose kill  # Avoid if possible
+docker compose kill  # Avoid if possible
 ```
 
 **Automated Shutdown** (entrypoint.sh):

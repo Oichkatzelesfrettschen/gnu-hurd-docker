@@ -38,11 +38,11 @@ cd gnu-hurd-docker
 ./scripts/download-image.sh
 
 # 4. Build and start
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 
 # 5. View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### macOS
@@ -237,8 +237,8 @@ brew install git
 git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 ./scripts/download-image.sh
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
 **Note:** macOS uses TCG emulation (no KVM). Expect slower performance but full functionality.
@@ -287,8 +287,8 @@ cd gnu-hurd-docker
 
 # Continue with standard Linux steps
 ./scripts/download-image.sh
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
 **WSL Performance Tips:**
@@ -415,27 +415,27 @@ mv debian-hurd-i386.qcow2 ./
 
 **5. Build Docker Image:**
 ```bash
-docker-compose build
+docker compose build
 ```
 
 **6. Start Container:**
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 **7. Verify:**
 ```bash
-docker-compose ps
-docker-compose logs
+docker compose ps
+docker compose logs
 ```
 
 ---
 
 ## Configuration
 
-### docker-compose.yml Customization
+### compose.yaml Customization
 
-Edit `docker-compose.yml` to customize:
+Edit `compose.yaml` to customize:
 
 ```yaml
 environment:
@@ -461,7 +461,7 @@ Default ports:
 - **9999:** Custom application port
 - **5901:** VNC (if DISPLAY_MODE=vnc)
 
-To change ports, edit `docker-compose.yml`:
+To change ports, edit `compose.yaml`:
 ```yaml
 ports:
   - "2222:2222"  # Change host port (left side)
@@ -473,14 +473,14 @@ ports:
 Enable KVM for better performance:
 
 ```yaml
-# Uncomment in docker-compose.yml
+# Uncomment in compose.yaml
 devices:
   - /dev/kvm
 ```
 
 Verify KVM works:
 ```bash
-docker-compose logs | grep -i kvm
+docker compose logs | grep -i kvm
 # Should show: "KVM acceleration: ENABLED"
 ```
 
@@ -503,14 +503,14 @@ cd /mnt/scripts
 ### 1. Start the Container
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 2. Monitor Boot Process
 
 ```bash
 # Watch logs
-docker-compose logs -f
+docker compose logs -f
 
 # Look for:
 # - "QEMU i386 Microkernel Environment"
@@ -522,7 +522,7 @@ docker-compose logs -f
 
 **Via Logs:**
 ```bash
-docker-compose logs -f | grep -i "login"
+docker compose logs -f | grep -i "login"
 ```
 
 **Via Serial Console:**
@@ -575,14 +575,14 @@ apt-get install -y build-essential git
 ### Check Container Status
 
 ```bash
-docker-compose ps
+docker compose ps
 # Should show: gnu-hurd-dev running
 ```
 
 ### Check QEMU Process
 
 ```bash
-docker-compose exec gnu-hurd-dev ps aux | grep qemu
+docker compose exec gnu-hurd-dev ps aux | grep qemu
 ```
 
 ### Verify Network Access
@@ -604,7 +604,7 @@ ssh -p 2222 root@localhost 'ping -c 3 8.8.8.8'
 ### Check KVM Acceleration (Linux)
 
 ```bash
-docker-compose logs | grep -i "acceleration"
+docker compose logs | grep -i "acceleration"
 # Should show: "KVM acceleration: ENABLED"
 ```
 
@@ -629,8 +629,8 @@ EOF
 **Check Docker:**
 ```bash
 docker ps
-docker-compose ps
-docker-compose logs
+docker compose ps
+docker compose logs
 ```
 
 **Check Disk Space:**
@@ -642,7 +642,7 @@ df -h .
 **Check Port Conflicts:**
 ```bash
 netstat -tlnp | grep -E '2222|5555|8080'
-# If ports are in use, change them in docker-compose.yml
+# If ports are in use, change them in compose.yaml
 ```
 
 ### QEMU Won't Boot
@@ -658,7 +658,7 @@ qemu-img check debian-hurd-i386*.qcow2
 
 **Check Logs:**
 ```bash
-docker-compose logs | tail -50
+docker compose logs | tail -50
 # Look for errors
 ```
 
@@ -673,17 +673,17 @@ free -h
 **Wait for Full Boot:**
 ```bash
 # Boot takes 2-5 minutes
-docker-compose logs -f | grep -i "ssh\|login"
+docker compose logs -f | grep -i "ssh\|login"
 ```
 
 **Check SSH is Running:**
 ```bash
-docker-compose exec gnu-hurd-dev bash -c "ps aux | grep sshd"
+docker compose exec gnu-hurd-dev bash -c "ps aux | grep sshd"
 ```
 
 **Check Port Forwarding:**
 ```bash
-docker-compose ps
+docker compose ps
 # Verify 2222:2222 mapping
 ```
 
@@ -697,7 +697,7 @@ ssh -v -p 2222 root@localhost
 
 **Enable KVM (Linux):**
 ```yaml
-# In docker-compose.yml
+# In compose.yaml
 devices:
   - /dev/kvm
 ```
@@ -789,10 +789,10 @@ When reporting issues, include:
 # System info
 uname -a
 docker --version
-docker-compose --version
+docker compose version
 
 # Container logs
-docker-compose logs > logs.txt
+docker compose logs > logs.txt
 
 # System resources
 free -h

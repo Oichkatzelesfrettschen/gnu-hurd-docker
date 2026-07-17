@@ -393,7 +393,7 @@ mkdir -p qmp share logs images
 
 ### Configuration
 
-Prefer environment variables (or a `.env` file) over editing `docker-compose.yml` directly:
+Prefer environment variables (or a `.env` file) over editing `compose.yaml` directly:
 
 ```yaml
 environment:
@@ -430,7 +430,7 @@ MONITOR_PORT: 9998
 Enable KVM for better performance:
 
 ```yaml
-# In docker-compose.yml
+# In compose.yaml
 devices:
   - /dev/kvm:/dev/kvm:rw
 ```
@@ -766,7 +766,7 @@ df -h .
 **Check Port Conflicts:**
 ```bash
 netstat -tlnp | grep -E '2222|5555|8080'
-# If ports are in use, change them in docker-compose.yml
+# If ports are in use, change them in compose.yaml
 ```
 
 ### QEMU Won't Boot
@@ -867,7 +867,7 @@ apt-get install -y gnumach-dev hurd-dev mig
 
 **Enable KVM (Linux):**
 ```yaml
-# In docker-compose.yml
+# In compose.yaml
 devices:
   - /dev/kvm:/dev/kvm:rw
 ```

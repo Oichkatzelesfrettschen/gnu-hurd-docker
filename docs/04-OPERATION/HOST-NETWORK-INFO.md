@@ -19,8 +19,8 @@ By default, this repo binds interactive services to `127.0.0.1` (localhost-only)
 
 When running with VNC/noVNC overlay:
 
-- noVNC: `NOVNC_PORT` (default `6080`) via `docker-compose.vnc.yml`
-- VNC: `VNC_PORT` (default `5900`) via `docker-compose.vnc.yml`
+- noVNC: `NOVNC_PORT` (default `6080`) via `compose.vnc.yaml`
+- VNC: `VNC_PORT` (default `5900`) via `compose.vnc.yaml`
 - QEMU monitor (telnet): `MONITOR_PORT` (default `9999`)
 - QEMU serial (telnet): `SERIAL_PORT` (default `5555`)
 - SSH forward to guest: `SSH_PORT` (default `2222`)

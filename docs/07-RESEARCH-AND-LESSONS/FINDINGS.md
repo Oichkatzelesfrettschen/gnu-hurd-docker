@@ -170,14 +170,14 @@ GNU/Hurd System Running
 3. **Docker Image Gap** (DEPENDENT)
    - Current: Not built
    - Required: Built and tagged
-   - Fix: Execute `docker-compose build`
+   - Fix: Execute `docker compose build`
    - Depends on: Docker daemon running
    - Impact: No container possible without image
 
 4. **Container Runtime Gap** (DEPENDENT)
    - Current: Not deployed
    - Required: Running and accessible
-   - Fix: Execute `docker-compose up -d`
+   - Fix: Execute `docker compose up -d`
    - Depends on: Docker image available
    - Impact: GNU/Hurd not accessible
 
@@ -276,7 +276,7 @@ Risk Level: Low (standard pacman upgrade) ✓
 
 **Steps:**
 1. Navigate: `cd /home/eirikr/Playground/gnu-hurd-docker`
-2. Build image: `docker-compose build`
+2. Build image: `docker compose build`
 3. Monitor output: Watch for qemu-system-i386 package installation
 4. Verify image: `docker images | grep gnu-hurd-dev`
 
@@ -290,9 +290,9 @@ Risk Level: Low (standard pacman upgrade) ✓
 **Objective:** Launch GNU/Hurd system in container
 
 **Steps:**
-1. Start container: `docker-compose up -d`
-2. Check status: `docker-compose ps`
-3. View logs: `docker-compose logs -f` (watch for QEMU boot)
+1. Start container: `docker compose up -d`
+2. Check status: `docker compose ps`
+3. View logs: `docker compose logs -f` (watch for QEMU boot)
 4. Wait for boot: ~30-60 seconds for GNU/Hurd to reach login
 
 **Success Criteria:**

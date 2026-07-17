@@ -9,7 +9,7 @@ Reference: https://docs.docker.com/compose/multiple-compose-files/
 PROBLEM STATEMENT
 =============================================================================
 
-Goal: Configure docker-compose.yml to work seamlessly in two scenarios:
+Goal: Configure compose.yaml to work seamlessly in two scenarios:
 
 1. CI/CD (GitHub Actions):
    - Pull pre-built images from ghcr.io
@@ -31,7 +31,7 @@ Requirements:
 RECOMMENDED APPROACH: DOCKER-COMPOSE.OVERRIDE.YML PATTERN
 =============================================================================
 
-VERDICT: Use the docker-compose.override.yml pattern (Option 2)
+VERDICT: Use the compose.override.yaml pattern (Option 2)
 
 WHY THIS IS THE BEST CHOICE:
 1. Zero-configuration defaults: CI uses base file, local gets automatic override
@@ -41,16 +41,16 @@ WHY THIS IS THE BEST CHOICE:
 5. Explicit CI behavior: CI can ignore override or use -f to be explicit
 
 PATTERN OVERVIEW:
-- docker-compose.yml: Production/CI config (pulls pre-built image)
-- docker-compose.override.yml: Local dev config (builds from source)
-- CI: Uses only docker-compose.yml (ignores override)
+- compose.yaml: Production/CI config (pulls pre-built image)
+- compose.override.yaml: Local dev config (builds from source)
+- CI: Uses only compose.yaml (ignores override)
 - Local: Automatically merges both files (no flags needed)
 
 =============================================================================
 IMPLEMENTATION
 =============================================================================
 
-FILE 1: docker-compose.yml (Base Configuration - CI/Production)
+FILE 1: compose.yaml (Base Configuration - CI/Production)
 -----------------------------------------------------------------------------
 This file defines the canonical production configuration that pulls
 pre-built images from GHCR.
@@ -61,14 +61,14 @@ pre-built images from GHCR.
 # GNU/Hurd Docker Compose - Production/CI Configuration
 # =============================================================================
 # This is the BASE configuration used in CI/CD and production.
-# Local development: docker-compose.override.yml will automatically override
+# Local development: compose.override.yaml will automatically override
 # the image section with a build section.
 # =============================================================================
 
 services:
   hurd-x86_64:
     # Production: Pull pre-built image from GHCR
-    # This will be overridden by docker-compose.override.yml in local dev
+    # This will be overridden by compose.override.yaml in local dev
     image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
 
     container_name: hurd-x86_64-qemu
@@ -174,9 +174,9 @@ volumes:
       device: ${PWD}/images
 ```
 
-FILE 2: docker-compose.override.yml (Local Development Override)
+FILE 2: compose.override.yaml (Local Development Override)
 -----------------------------------------------------------------------------
-This file is automatically merged with docker-compose.yml when you run
+This file is automatically merged with compose.yaml when you run
 docker compose commands locally. It overrides the image section with a
 build section.
 
@@ -186,10 +186,10 @@ build section.
 # GNU/Hurd Docker Compose - Local Development Override
 # =============================================================================
 # This file is AUTOMATICALLY loaded by Docker Compose in local development.
-# It overrides the 'image' configuration in docker-compose.yml with a 'build'
+# It overrides the 'image' configuration in compose.yaml with a 'build'
 # configuration to enable local image building.
 #
-# CI/CD: This file is IGNORED (only docker-compose.yml is used)
+# CI/CD: This file is IGNORED (only compose.yaml is used)
 # Local: This file is AUTOMATICALLY merged (no flags needed)
 # =============================================================================
 
@@ -294,18 +294,18 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-      # NEW: Test with docker-compose (CI mode - pulls image)
+      # NEW: Test with docker compose (CI mode - pulls image)
       - name: Create required directories and secrets
         run: |
           mkdir -p secrets share logs images
           echo "root" > secrets/root_password.txt
           echo "agents" > secrets/agents_password.txt
 
-      - name: Test docker-compose (CI mode - pull image)
+      - name: Test docker compose (CI mode - pull image)
         run: |
-          # CI: Explicitly use only docker-compose.yml (ignore override)
+          # CI: Explicitly use only compose.yaml (ignore override)
           # This tests that the production config works correctly
-          docker compose -f docker-compose.yml pull
+          docker compose -f compose.yaml pull
 
       - name: Verify pulled image
         run: |
@@ -354,13 +354,13 @@ jobs:
 
       # NEW: Remove override file to force CI behavior
       - name: Remove override file (test production config)
-        run: rm -f docker-compose.override.yml
+        run: rm -f compose.override.yaml
 
-      - name: Start VM with docker-compose (CI mode)
+      - name: Start VM with docker compose (CI mode)
         run: |
           # Since we removed override, this will use the image we just built
-          # First, update docker-compose.yml to use local tag
-          sed -i 's|ghcr.io/.*:latest|ghcr.io/'"$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"':latest|' docker-compose.yml
+          # First, update compose.yaml to use local tag
+          sed -i 's|ghcr.io/.*:latest|ghcr.io/'"$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"':latest|' compose.yaml
           docker compose up -d
 
       - name: Wait for boot
@@ -389,8 +389,8 @@ USAGE GUIDE
 
 LOCAL DEVELOPMENT (Automatic Override)
 -----------------------------------------------------------------------------
-When you run docker-compose commands locally, Docker Compose automatically
-loads both docker-compose.yml AND docker-compose.override.yml:
+When you run docker compose commands locally, Docker Compose automatically
+loads both compose.yaml AND compose.override.yaml:
 
 ```bash
 # Build and start (uses override automatically)
@@ -407,8 +407,8 @@ docker compose down
 ```
 
 HOW IT WORKS:
-- Docker Compose searches for docker-compose.yml (base config)
-- Docker Compose searches for docker-compose.override.yml (if exists, merge)
+- Docker Compose searches for compose.yaml (base config)
+- Docker Compose searches for compose.override.yaml (if exists, merge)
 - Merged config: build section from override replaces image section from base
 - Result: Local build instead of GHCR pull
 
@@ -419,9 +419,9 @@ In CI, you have two options:
 OPTION A: Remove override file (recommended for testing production config)
 ```bash
 # Remove override to force production behavior
-rm -f docker-compose.override.yml
+rm -f compose.override.yaml
 
-# Now docker compose will ONLY use docker-compose.yml
+# Now docker compose will ONLY use compose.yaml
 docker compose pull
 docker compose up -d
 ```
@@ -429,8 +429,8 @@ docker compose up -d
 OPTION B: Explicitly specify base file only
 ```bash
 # Use -f flag to ignore override file
-docker compose -f docker-compose.yml pull
-docker compose -f docker-compose.yml up -d
+docker compose -f compose.yaml pull
+docker compose -f compose.yaml up -d
 ```
 
 OPTION C: Let CI naturally use override (builds in CI)
@@ -459,7 +459,7 @@ See exactly what configuration Docker Compose will use:
 docker compose config
 
 # CI (without override)
-docker compose -f docker-compose.yml config
+docker compose -f compose.yaml config
 ```
 
 Key differences to look for:
@@ -490,8 +490,8 @@ docker compose up -d
 docker compose down
 
 # Test CI behavior (without override)
-docker compose -f docker-compose.yml pull
-docker compose -f docker-compose.yml up -d
+docker compose -f compose.yaml pull
+docker compose -f compose.yaml up -d
 # Should pull from GHCR
 
 docker compose down
@@ -568,7 +568,7 @@ OPTION 4: Multiple Named Override Files
 -----------------------------------------------------------------------------
 PATTERN:
 ```yaml
-# docker-compose.yml (base)
+# compose.yaml (base)
 # docker-compose.dev.yml (local build)
 # docker-compose.ci.yml (GHCR pull)
 ```
@@ -576,10 +576,10 @@ PATTERN:
 USAGE:
 ```bash
 # Local
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f compose.yaml -f docker-compose.dev.yml up
 
 # CI
-docker compose -f docker-compose.yml -f docker-compose.ci.yml up
+docker compose -f compose.yaml -f docker-compose.ci.yml up
 ```
 
 PROS:
@@ -588,7 +588,7 @@ PROS:
 
 CONS:
 - Requires command-line flags: Not zero-config for local dev
-- Against convention: docker-compose.override.yml is the standard
+- Against convention: compose.override.yaml is the standard
 - More files: Requires managing 3+ files instead of 2
 - Not automatic: Must remember which -f flags to use
 
@@ -600,13 +600,13 @@ MIGRATION CHECKLIST
 
 To implement the recommended pattern:
 
-1. Update docker-compose.yml
+1. Update compose.yaml
    - [ ] Set image: ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
    - [ ] Remove build: section
    - [ ] Ensure all runtime config is correct
    - [ ] Commit changes
 
-2. Create docker-compose.override.yml
+2. Create compose.override.yaml
    - [ ] Add services: hurd-x86_64: section
    - [ ] Add build: section with context and dockerfile
    - [ ] Override image: with local tag
@@ -614,13 +614,13 @@ To implement the recommended pattern:
    - [ ] Commit changes
 
 3. Update .gitignore (optional)
-   - [ ] Consider adding docker-compose.override.yml to .gitignore if
+   - [ ] Consider adding compose.override.yaml to .gitignore if
          you want each developer to have their own custom overrides
    - [ ] OR commit it for consistent team dev experience (recommended)
 
 4. Update CI workflows
-   - [ ] Remove docker-compose.override.yml in CI (Option A), OR
-   - [ ] Use -f docker-compose.yml explicitly (Option B)
+   - [ ] Remove compose.override.yaml in CI (Option A), OR
+   - [ ] Use -f compose.yaml explicitly (Option B)
    - [ ] Test that CI pulls image instead of building
    - [ ] Verify workflow runs successfully
 
@@ -632,7 +632,7 @@ To implement the recommended pattern:
 
 6. Test both scenarios
    - [ ] Local: docker compose up -d (should build)
-   - [ ] CI: docker compose -f docker-compose.yml up (should pull)
+   - [ ] CI: docker compose -f compose.yaml up (should pull)
    - [ ] Verify docker compose config output for both
    - [ ] Verify correct images are used (docker ps)
 
@@ -641,13 +641,13 @@ TROUBLESHOOTING
 =============================================================================
 
 ISSUE: CI is building instead of pulling
-CAUSE: docker-compose.override.yml is present in CI
+CAUSE: compose.override.yaml is present in CI
 FIX: Remove override file in CI workflow:
-     rm -f docker-compose.override.yml
+     rm -f compose.override.yaml
 
 ISSUE: Local dev is pulling instead of building
-CAUSE: docker-compose.override.yml is missing or not being loaded
-FIX: Create docker-compose.override.yml with build section
+CAUSE: compose.override.yaml is missing or not being loaded
+FIX: Create compose.override.yaml with build section
      Verify: docker compose config | grep -A 5 "build:"
 
 ISSUE: "image and build may not be used together"
@@ -656,17 +656,17 @@ FIX: Upgrade to Docker Compose V2
      Version check: docker compose version
 
 ISSUE: Override file not being loaded automatically
-CAUSE: Working directory doesn't contain docker-compose.override.yml
-FIX: Ensure file is in same directory as docker-compose.yml
-     Verify: ls -la docker-compose*.yml
+CAUSE: Working directory doesn't contain compose.override.yaml
+FIX: Ensure file is in same directory as compose.yaml
+     Verify: ls -la compose*.yaml
 
 ISSUE: Different developers need different local configs
 SOLUTION:
-     1. Commit docker-compose.override.yml with sane defaults
+     1. Commit compose.override.yaml with sane defaults
      2. Add docker-compose.override.local.yml to .gitignore
      3. Developers create their own .local.yml for customization
-     4. Use: docker compose -f docker-compose.yml \
-                          -f docker-compose.override.yml \
+     4. Use: docker compose -f compose.yaml \
+                          -f compose.override.yaml \
                           -f docker-compose.override.local.yml up
 
 =============================================================================
@@ -690,8 +690,8 @@ Official Docker Documentation:
   https://docs.docker.com/reference/compose-file/merge/
 
 Best Practices:
-- Use docker-compose.override.yml for local development overrides
-- Keep docker-compose.yml as the production/CI configuration
+- Use compose.override.yaml for local development overrides
+- Keep compose.yaml as the production/CI configuration
 - Use explicit -f flags in CI to avoid surprises
 - Version control both files (unless team prefers personal overrides)
 - Document the pattern in README.md
@@ -700,15 +700,15 @@ Best Practices:
 SUMMARY
 =============================================================================
 
-RECOMMENDED PATTERN: docker-compose.override.yml
+RECOMMENDED PATTERN: compose.override.yaml
 
 FILES:
-1. docker-compose.yml - Production config (GHCR image)
-2. docker-compose.override.yml - Local dev config (build from source)
+1. compose.yaml - Production config (GHCR image)
+2. compose.override.yaml - Local dev config (build from source)
 
 USAGE:
 - Local: docker compose up (automatic merge, builds locally)
-- CI: docker compose -f docker-compose.yml up (explicit base, pulls GHCR)
+- CI: docker compose -f compose.yaml up (explicit base, pulls GHCR)
 
 BENEFITS:
 ✅ Zero-config local development (automatic override)
@@ -718,8 +718,8 @@ BENEFITS:
 ✅ Production-ready (tested pattern used widely)
 
 NEXT STEPS:
-1. Implement docker-compose.yml changes (use GHCR image)
-2. Create docker-compose.override.yml (build locally)
+1. Implement compose.yaml changes (use GHCR image)
+2. Create compose.override.yaml (build locally)
 3. Update CI to ignore override (rm or -f flag)
 4. Test both scenarios
 5. Update documentation

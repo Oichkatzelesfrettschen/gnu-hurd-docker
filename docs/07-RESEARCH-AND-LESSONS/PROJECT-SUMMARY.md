@@ -192,7 +192,7 @@ Display: Headless with VNC option
 ### Docker Validation
 ```
 ✓ Dockerfile: Valid syntax
-✓ docker-compose.yml: Valid YAML (no version warnings)
+✓ compose.yaml: Valid YAML (no version warnings)
 ✓ Build time: 1-2 seconds (with layer caching)
 ✓ Container startup: Clean with comprehensive banner
 ✓ KVM detection: Working (enabled on Linux hosts)
@@ -293,7 +293,7 @@ gnu-hurd-docker/
 ├── share/                   # 9p export directory (scripts accessible in guest)
 ├── qmp/                     # Unix sockets (monitor, QMP)
 ├── Dockerfile
-├── docker-compose.yml
+├── compose.yaml
 ├── entrypoint.sh            # Enhanced QEMU launcher (141 lines)
 ├── mkdocs.yml
 ├── README.md
@@ -326,9 +326,9 @@ cp scripts/configure-shell.sh share/
 
 ### 4. Build and Launch
 ```bash
-docker-compose build
-docker-compose up -d
-docker-compose logs -f
+docker compose build
+docker compose up -d
+docker compose logs -f
 ```
 
 ### 5. Access the System
@@ -429,7 +429,7 @@ This project successfully delivers a production-ready, portable, and comprehensi
 
 **Next Steps for Users:**
 1. Download the QCOW2 image
-2. Launch with `docker-compose up -d`
+2. Launch with `docker compose up -d`
 3. Follow Quick Start guide above
 4. Enjoy fully-configured Hurd development environment
 

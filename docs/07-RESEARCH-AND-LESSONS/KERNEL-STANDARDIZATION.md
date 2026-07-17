@@ -368,13 +368,13 @@ After reboot, proceed with:
 cd /home/eirikr/Playground/gnu-hurd-docker
 
 # 2. Build Docker image
-docker-compose build
+docker compose build
 
 # 3. Deploy container
-docker-compose up -d
+docker compose up -d
 
 # 4. Monitor startup
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---

@@ -47,7 +47,7 @@ Target:  A+  (Achievable with continued optimization)
 **Key Findings:**
 - ✅ 100% shellcheck compliance (excellent baseline)
 - ✅ No critical security vulnerabilities
-- 🔴 CRITICAL: 13 scripts using docker-compose v1 (legacy)
+- 🔴 CRITICAL: 13 scripts using docker compose v1 (legacy)
 - ⚠️ 75% code duplication across install scripts (510 lines)
 - ⚠️ test-hurd-system.sh complexity 53 (highest in codebase)
 - ⚠️ Only 19% documentation coverage
@@ -66,9 +66,9 @@ Target:  A+  (Achievable with continued optimization)
 
 #### 2.1 Docker Compose v1 → v2 Migration ✅
 **WHY:** CLAUDE.md requirement, v1 deprecated and non-free
-**WHAT:** 9 scripts using docker-compose command
+**WHAT:** 9 scripts using docker compose command
 **HOW:** Bulk sed replacement
-**RESULT:** 100% compliance, 0 docker-compose v1 usage
+**RESULT:** 100% compliance, 0 docker compose v1 usage
 
 **Files Modified:**
 - bringup-and-provision.sh

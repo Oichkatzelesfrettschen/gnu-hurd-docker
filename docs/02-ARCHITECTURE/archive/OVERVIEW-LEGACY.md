@@ -322,7 +322,7 @@ Host System (CachyOS Linux)
 gnu-hurd-docker/
 ├── Dockerfile                       # Image specification
 ├── entrypoint.sh                    # QEMU launcher
-├── docker-compose.yml               # Container orchestration
+├── compose.yaml               # Container orchestration
 ├── README.md                        # Project overview
 ├── LICENSE                          # MIT license
 ├── .gitignore                       # Git ignore rules
@@ -392,7 +392,7 @@ exec qemu-system-i386 \
 
 **Purpose:** Launch QEMU with optimized parameters
 
-### docker-compose.yml (27 lines)
+### compose.yaml (27 lines)
 
 ```yaml
 version: '3.9'
@@ -507,7 +507,7 @@ networks:
 
 **To run multiple GNU/Hurd systems:**
 
-1. Change container name in docker-compose.yml
+1. Change container name in compose.yaml
 2. Change port mappings (2223→22, 9998→9999, etc.)
 3. Use separate disk images (or COW snapshots)
 

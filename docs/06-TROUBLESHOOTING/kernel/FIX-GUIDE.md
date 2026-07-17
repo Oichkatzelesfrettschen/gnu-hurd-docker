@@ -212,8 +212,8 @@ systemctl status docker
 docker ps
 
 # Verify Docker Compose works
-docker-compose --version
-docker-compose ps
+docker compose version
+docker compose ps
 
 # Build test image (minimal)
 docker build --tag test:latest - << 'EOF'

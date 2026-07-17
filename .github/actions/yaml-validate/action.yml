@@ -6,7 +6,7 @@ inputs:
   yaml-files:
     description: 'Space-separated list of YAML files to validate'
     required: false
-    default: 'docker-compose.yml mkdocs.yml .github/workflows/*.yml'
+    default: 'compose.yaml mkdocs.yml .github/workflows/*.yml'
   strict:
     description: 'Enable strict validation mode'
     required: false

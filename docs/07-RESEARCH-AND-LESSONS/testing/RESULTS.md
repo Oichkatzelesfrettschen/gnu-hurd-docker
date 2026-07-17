@@ -25,7 +25,7 @@
 
 **Command:**
 ```bash
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 **Result:** ✅ SUCCESS
@@ -53,7 +53,7 @@ level=warning msg="Docker Compose is configured to build using Bake, but buildx 
 
 **Command:**
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 **Result:** ✅ SUCCESS
@@ -345,7 +345,7 @@ Install docker-buildx-plugin:
 sudo pacman -S docker-buildx
 
 # Or suppress warning via DOCKER_BUILDKIT=0
-DOCKER_BUILDKIT=0 docker-compose build
+DOCKER_BUILDKIT=0 docker compose build
 ```
 
 ---

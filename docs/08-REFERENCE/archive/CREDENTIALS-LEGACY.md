@@ -579,7 +579,7 @@ Current port mappings from Docker host to Hurd guest:
 
 ### Add Custom Port Mappings
 
-**Edit docker-compose.yml**:
+**Edit compose.yaml**:
 ```yaml
 services:
   hurd-x86_64:
@@ -594,14 +594,14 @@ services:
 **Apply changes**:
 ```bash
 # Rebuild and restart container
-docker-compose down
-docker-compose up -d --force-recreate
+docker compose down
+docker compose up -d --force-recreate
 ```
 
 **Verify port forwarding**:
 ```bash
 # Check port mappings
-docker-compose ps
+docker compose ps
 # Output:
 # NAME            PORTS
 # hurd-x86_64     0.0.0.0:2222->22/tcp, 0.0.0.0:8080->80/tcp, ...
@@ -713,7 +713,7 @@ ifdown eth0 && ifup eth0
 - **Guest Access**: Entire QCOW2 disk mounted as root filesystem
 - **Persistence**: All changes persist in QCOW2 file
 
-**Docker Bind Mounts** (optional, configure in docker-compose.yml):
+**Docker Bind Mounts** (optional, configure in compose.yaml):
 ```yaml
 volumes:
   - ./share:/mnt/share:ro   # Read-only shared directory
@@ -738,7 +738,7 @@ scp -P 2222 root@localhost:/etc/fstab ./fstab-backup.txt
 
 **Method 2: Docker Bind Mount**:
 ```yaml
-# docker-compose.yml
+# compose.yaml
 volumes:
   - ./share:/mnt/share:rw
 ```
@@ -775,20 +775,20 @@ EOF
 **Diagnosis**:
 ```bash
 # Check if container is running
-docker-compose ps
+docker compose ps
 # Container should be "Up"
 
 # Check if SSH service is running inside guest
-docker-compose exec hurd-x86_64 ps aux | grep sshd
+docker compose exec hurd-x86_64 ps aux | grep sshd
 # Should show /usr/sbin/sshd
 
 # Check port mapping
-docker-compose ps
+docker compose ps
 # Should show 0.0.0.0:2222->22/tcp
 ```
 
 **Solutions**:
-1. **Container not running**: `docker-compose up -d`
+1. **Container not running**: `docker compose up -d`
 2. **SSH not installed**: Use serial console to install:
    ```bash
    telnet localhost 5555
@@ -797,7 +797,7 @@ docker-compose ps
    apt-get install -y openssh-server random-egd
    systemctl start ssh
    ```
-3. **Port conflict**: Change host port in docker-compose.yml
+3. **Port conflict**: Change host port in compose.yaml
 
 ---
 
@@ -839,10 +839,10 @@ PasswordAuthentication yes
 **Diagnosis**:
 ```bash
 # Check if QEMU is running
-docker-compose logs | grep qemu-system-x86_64
+docker compose logs | grep qemu-system-x86_64
 
 # Check serial port configuration
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 ```
 
 **Solutions**:
@@ -850,8 +850,8 @@ docker-compose logs | grep "char device redirected"
 2. **Boot not complete**: Wait 2-5 minutes for full boot
 3. **QEMU crashed**: Check logs, restart container:
    ```bash
-   docker-compose logs | tail -50
-   docker-compose restart
+   docker compose logs | tail -50
+   docker compose restart
    ```
 
 ---
@@ -882,7 +882,7 @@ docker-compose logs | grep "char device redirected"
 **Diagnosis**:
 ```bash
 # Check container logs
-docker-compose logs
+docker compose logs
 
 # Verify QCOW2 image exists
 ls -lh debian-hurd-amd64-80gb.qcow2
@@ -897,9 +897,9 @@ qemu-img check debian-hurd-amd64-80gb.qcow2
 3. **Entrypoint error**: Check Docker logs for shell errors
 4. **Rebuild container**:
    ```bash
-   docker-compose down
-   docker-compose build --no-cache
-   docker-compose up -d
+   docker compose down
+   docker compose build --no-cache
+   docker compose up -d
    ```
 
 ---
@@ -932,7 +932,7 @@ cat /etc/resolv.conf
    ```
 3. **QEMU networking broken**: Restart container:
    ```bash
-   docker-compose restart
+   docker compose restart
    ```
 
 ---

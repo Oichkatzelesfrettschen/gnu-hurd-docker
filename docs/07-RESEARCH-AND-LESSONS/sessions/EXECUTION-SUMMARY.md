@@ -126,21 +126,21 @@ docker run --rm hello-world
 ### Phase 2: Docker Image Build (10 min)
 ```bash
 cd /home/eirikr/Playground/gnu-hurd-docker
-docker-compose build
+docker compose build
 # Builds Debian Bookworm + QEMU container image
 ```
 
 ### Phase 3: Container Deployment (3 min)
 ```bash
-docker-compose up -d
-docker-compose logs -f
+docker compose up -d
+docker compose logs -f
 # GNU/Hurd boots via QEMU inside container
 ```
 
 ### Phase 4: System Access (5 min)
 ```bash
 # Find serial PTY from logs
-docker-compose logs | grep "char device"
+docker compose logs | grep "char device"
 # Connect to serial console
 screen /dev/pts/X
 # Boot GNU/Hurd and access system
@@ -167,7 +167,7 @@ screen /dev/pts/X
 ## What You Currently Have
 
 ✓ **GitHub Repository:** Fully standardized with documentation and CI/CD
-✓ **Docker Configuration:** Complete and validated (Dockerfile, entrypoint.sh, docker-compose.yml)
+✓ **Docker Configuration:** Complete and validated (Dockerfile, entrypoint.sh, compose.yaml)
 ✓ **Kernel Config:** Proper nf_tables support available
 ✓ **Packages to Install:** Already downloaded and ready
 ✓ **Backup Kernel:** LTS kernel available as fallback
@@ -209,9 +209,9 @@ screen /dev/pts/X
 5. **Build and deploy:**
    ```bash
    cd /home/eirikr/Playground/gnu-hurd-docker
-   docker-compose build
-   docker-compose up -d
-   docker-compose logs -f
+   docker compose build
+   docker compose up -d
+   docker compose logs -f
    ```
 
 ---

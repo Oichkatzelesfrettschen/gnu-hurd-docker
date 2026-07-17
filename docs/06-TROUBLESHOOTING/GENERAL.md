@@ -52,7 +52,7 @@ docker ps
 
 ### Image Build Fails
 
-**Error:** `docker-compose build` fails with errors
+**Error:** `docker compose build` fails with errors
 
 **Solutions:**
 ```bash
@@ -60,13 +60,13 @@ docker ps
 df -h /
 
 # Clear Docker cache
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Check Dockerfile syntax
 docker build --dry-run .
 
 # View detailed build output
-docker-compose build --progress=plain
+docker compose build --progress=plain
 
 # Check network connectivity
 ping 8.8.8.8
@@ -87,7 +87,7 @@ netstat -tulpn | grep 2222
 # Stop conflicting service
 sudo systemctl stop <service>
 
-# Use different port in docker-compose.yml
+# Use different port in compose.yaml
 # Change: "2222:2222" to "2223:2222"
     docker compose up -d
 ```
@@ -107,7 +107,7 @@ sudo systemctl stop <service>
     ls -lh debian-hurd-amd64.qcow2
 
 # Check volume mount paths
-grep -A 3 "volumes:" docker-compose.yml
+grep -A 3 "volumes:" compose.yaml
 
 # Try running with interactive output to see errors
     docker compose up
@@ -138,7 +138,7 @@ docker image ls | grep gnu-hurd
 
 # Try rebuilding image
     docker compose build --no-cache
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Container Consumes Too Much Memory
@@ -152,14 +152,14 @@ docker stats gnu-hurd-dev
 
 # Reduce QEMU memory allocation in entrypoint.sh
 # Change: -m 1.5G to -m 1G
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 
 # Check QEMU process inside container
-docker-compose exec gnu-hurd-dev ps aux | grep qemu
+docker compose exec gnu-hurd-dev ps aux | grep qemu
 
 # Reduce system packages
-docker-compose exec gnu-hurd-dev apt-get autoremove
+docker compose exec gnu-hurd-dev apt-get autoremove
 ```
 
 ## QEMU and GNU/Hurd Issues
@@ -177,18 +177,18 @@ screen /dev/pts/X
 
 # If still hung after 5 minutes:
 # Check boot logs
-docker-compose logs | tail -100
+docker compose logs | tail -100
 
 # Increase QEMU timeout in entrypoint.sh
 # Note: timeout is typically 5-10 minutes normal boot time
 
 # Try with verbose QEMU output
 # Edit entrypoint.sh to add: -d guest_errors,cpu_reset
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 
 # Monitor QEMU debug log
-tail -f /tmp/qemu.log  # Inside container or via docker-compose exec
+tail -f /tmp/qemu.log  # Inside container or via docker compose exec
 ```
 
 ### Serial Console Not Responding
@@ -198,7 +198,7 @@ tail -f /tmp/qemu.log  # Inside container or via docker-compose exec
 **Solutions:**
 ```bash
 # Find correct PTY
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 
 # Try pressing Enter to wake console
 screen /dev/pts/X
@@ -213,7 +213,7 @@ stty -a
 screen /dev/pts/X
 
 # Debug QEMU serial configuration
-docker-compose exec gnu-hurd-dev ps aux | grep serial
+docker compose exec gnu-hurd-dev ps aux | grep serial
 ```
 
 ### SSH Not Working
@@ -223,27 +223,27 @@ docker-compose exec gnu-hurd-dev ps aux | grep serial
 **Solutions:**
 ```bash
 # Verify SSH service is running inside container
-docker-compose exec gnu-hurd-dev systemctl status ssh
+docker compose exec gnu-hurd-dev systemctl status ssh
 
 # Start SSH if stopped
-docker-compose exec gnu-hurd-dev systemctl start ssh
+docker compose exec gnu-hurd-dev systemctl start ssh
 
 # Check port mapping
-docker-compose ps
+docker compose ps
 # Should show: 0.0.0.0:2222->22/tcp
 
 # Test port is open on host
 nc -zv localhost 2222
 
 # Verify SSH listening on correct port inside container
-docker-compose exec gnu-hurd-dev netstat -tulpn | grep ":22"
+docker compose exec gnu-hurd-dev netstat -tulpn | grep ":22"
 
 # Check SSH configuration
-docker-compose exec gnu-hurd-dev cat /etc/ssh/sshd_config | grep -E "Port|Listen"
+docker compose exec gnu-hurd-dev cat /etc/ssh/sshd_config | grep -E "Port|Listen"
 
 # Restart SSH with verbose output
-docker-compose exec gnu-hurd-dev systemctl restart ssh
-docker-compose logs --tail=10
+docker compose exec gnu-hurd-dev systemctl restart ssh
+docker compose logs --tail=10
 ```
 
 ### Network Connectivity Issues
@@ -253,22 +253,22 @@ docker-compose logs --tail=10
 **Solutions:**
 ```bash
 # Test connectivity inside container
-docker-compose exec gnu-hurd-dev ping 8.8.8.8
+docker compose exec gnu-hurd-dev ping 8.8.8.8
 
 # Check routing
-docker-compose exec gnu-hurd-dev netstat -rn
+docker compose exec gnu-hurd-dev netstat -rn
 # Should show default gateway at 10.0.2.2
 
 # Check DNS resolution
-docker-compose exec gnu-hurd-dev cat /etc/resolv.conf
+docker compose exec gnu-hurd-dev cat /etc/resolv.conf
 
 # Manually set DNS if needed
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 # Inside: echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
 # Check network interfaces
-docker-compose exec gnu-hurd-dev ip addr show
-docker-compose exec gnu-hurd-dev ip route show
+docker compose exec gnu-hurd-dev ip addr show
+docker compose exec gnu-hurd-dev ip route show
 ```
 
 ### System Boots But Can't Login
@@ -290,11 +290,11 @@ screen /dev/pts/X
 # Or manually boot with init=/bin/bash
 
 # From host, reset root password
-docker-compose exec gnu-hurd-dev passwd root
+docker compose exec gnu-hurd-dev passwd root
 # Enter new password twice
 
 # Check /etc/passwd file
-docker-compose exec gnu-hurd-dev cat /etc/passwd | head -5
+docker compose exec gnu-hurd-dev cat /etc/passwd | head -5
 ```
 
 ## Disk and Storage Issues
@@ -330,19 +330,19 @@ rm temp.img
 **Solutions:**
 ```bash
 # Check disk usage inside container
-docker-compose exec gnu-hurd-dev df -h
+docker compose exec gnu-hurd-dev df -h
 
 # Clean package cache
-docker-compose exec gnu-hurd-dev apt-get clean
+docker compose exec gnu-hurd-dev apt-get clean
 
 # Remove unused packages
-docker-compose exec gnu-hurd-dev apt-get autoremove
+docker compose exec gnu-hurd-dev apt-get autoremove
 
 # Check large files
-docker-compose exec gnu-hurd-dev du -sh /* | sort -rh
+docker compose exec gnu-hurd-dev du -sh /* | sort -rh
 
 # Clean log files
-docker-compose exec gnu-hurd-dev rm -f /var/log/*.log
+docker compose exec gnu-hurd-dev rm -f /var/log/*.log
 
 # On host, check host disk usage
 df -h /
@@ -359,18 +359,18 @@ rm -f debian-hurd.img.tar.xz
 **Solutions:**
 ```bash
 # Check CPU usage inside container
-docker-compose exec gnu-hurd-dev top
+docker compose exec gnu-hurd-dev top
 
 # Reduce background processes
-docker-compose exec gnu-hurd-dev systemctl disable <service>
-docker-compose exec gnu-hurd-dev systemctl stop <service>
+docker compose exec gnu-hurd-dev systemctl disable <service>
+docker compose exec gnu-hurd-dev systemctl stop <service>
 
 # Monitor host CPU usage
 top
 # Check if QEMU process is high
 
 # Check disk I/O
-docker-compose exec gnu-hurd-dev iostat -x 1 5
+docker compose exec gnu-hurd-dev iostat -x 1 5
 
 # Increase host system resources if available
 # Or reduce QEMU RAM: -m 1G instead of 1.5G
@@ -384,14 +384,14 @@ docker-compose exec gnu-hurd-dev iostat -x 1 5
 docker stats gnu-hurd-dev
 
 # Kill runaway processes inside container
-docker-compose exec gnu-hurd-dev ps aux | grep -E "bash|python|node"
-docker-compose exec gnu-hurd-dev kill -9 <PID>
+docker compose exec gnu-hurd-dev ps aux | grep -E "bash|python|node"
+docker compose exec gnu-hurd-dev kill -9 <PID>
 
 # Disable unnecessary services
-docker-compose exec gnu-hurd-dev systemctl disable <service>
+docker compose exec gnu-hurd-dev systemctl disable <service>
 
 # Check for infinite loops in startup scripts
-docker-compose exec gnu-hurd-dev /var/log/syslog | tail -100
+docker compose exec gnu-hurd-dev /var/log/syslog | tail -100
 ```
 
 ## Network Configuration Issues
@@ -403,7 +403,7 @@ docker-compose exec gnu-hurd-dev /var/log/syslog | tail -100
 **Solutions:**
 ```bash
 # Verify port mapping
-docker-compose ps
+docker compose ps
 
 # Test port on localhost
 nc -zv localhost 2222      # Should succeed
@@ -426,17 +426,17 @@ sudo ufw allow 9999
 **Solutions:**
 ```bash
 # Check container can reach gateway
-docker-compose exec gnu-hurd-dev ping 10.0.2.2
+docker compose exec gnu-hurd-dev ping 10.0.2.2
 
 # Check Docker networks
 docker network ls
 docker network inspect hurd-net
 
 # Verify DNS works
-docker-compose exec gnu-hurd-dev nslookup google.com
+docker compose exec gnu-hurd-dev nslookup google.com
 
 # Check internet connectivity
-docker-compose exec gnu-hurd-dev curl https://www.google.com
+docker compose exec gnu-hurd-dev curl https://www.google.com
 
 # If blocked, check host firewall
 sudo iptables -L -n | grep FORWARD
@@ -448,8 +448,8 @@ sudo iptables -L -n | grep FORWARD
 
 1. **Check logs**
    ```bash
-   docker-compose logs --tail=100
-   docker-compose logs --since 10m
+   docker compose logs --tail=100
+   docker compose logs --since 10m
    ```
 
 2. **Verify resources**
@@ -461,26 +461,26 @@ sudo iptables -L -n | grep FORWARD
 
 3. **Test connectivity**
    ```bash
-   docker-compose ps
-   docker-compose exec gnu-hurd-dev ping 8.8.8.8
+   docker compose ps
+   docker compose exec gnu-hurd-dev ping 8.8.8.8
    ```
 
 4. **Check service status**
    ```bash
-   docker-compose exec gnu-hurd-dev systemctl status ssh
-   docker-compose exec gnu-hurd-dev ps aux
+   docker compose exec gnu-hurd-dev systemctl status ssh
+   docker compose exec gnu-hurd-dev ps aux
    ```
 
 5. **Rebuild and restart**
    ```bash
-   docker-compose down -v
-   docker-compose build --no-cache
-   docker-compose up -d
+   docker compose down -v
+   docker compose build --no-cache
+   docker compose up -d
    ```
 
 ## Getting Help
 
-- **Check logs first:** `docker-compose logs`
+- **Check logs first:** `docker compose logs`
 - **Verify configuration:** `./scripts/validate-config.sh`
 - **Search documentation:** See docs/ folder
 - **Open GitHub issue:** https://github.com/oaich/gnu-hurd-docker/issues

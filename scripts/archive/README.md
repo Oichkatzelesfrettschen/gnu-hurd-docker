@@ -29,7 +29,7 @@ This directory contains scripts that have been superseded or are no longer activ
 **Archived:** 2025-11-08
 **Reason:** Superseded by docker compose orchestration
 **Original Purpose:** Simple QEMU wrapper taking config file argument
-**Replaced By:** docker-compose.yml provides full orchestration with:
+**Replaced By:** compose.yaml provides full orchestration with:
 - Automated container management
 - Port forwarding configuration
 - Volume mounting

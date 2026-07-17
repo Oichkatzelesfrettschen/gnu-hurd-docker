@@ -510,7 +510,7 @@ vncviewer localhost:5901
 
 **Configuration**:
 ```yaml
-# docker-compose.yml
+# compose.yaml
 environment:
   ENABLE_VNC: 1
 ports:
@@ -998,7 +998,7 @@ iperf3 -c localhost -p 5201
 
 **Diagnosis**:
 ```bash
-docker-compose logs | grep ERROR
+docker compose logs | grep ERROR
 docker exec hurd-x86_64-qemu cat /tmp/qemu.log
 ```
 
@@ -1012,7 +1012,7 @@ docker exec hurd-x86_64-qemu cat /tmp/qemu.log
 2. **Port Conflict**:
    ```bash
    sudo lsof -i :2222
-   # If in use: change port in docker-compose.yml
+   # If in use: change port in compose.yaml
    ```
 
 3. **KVM Permission Denied**:

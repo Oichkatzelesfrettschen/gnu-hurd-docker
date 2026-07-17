@@ -106,7 +106,7 @@ Docker environment provides:
 
 Starting development container:
 
-  docker-compose up -d hurd           # Or use entrypoint.sh
+  docker compose up -d hurd           # Or use entrypoint.sh
   docker exec -it <container> bash
 
 Verify Mach source present:

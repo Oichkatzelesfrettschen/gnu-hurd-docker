@@ -6,7 +6,7 @@ This repository runs Debian GNU/Hurd as a QEMU virtual machine hosted inside a c
 
 - Canonical service/container: `gnu-hurd-dev`
 - Container runs unprivileged by default (`privileged: false`)
-- Optional KVM acceleration (Linux x86_64 hosts only) via `docker-compose.kvm.yml`
+- Optional KVM acceleration (Linux x86_64 hosts only) via `compose.kvm.yaml`
 - Disk image is external (not stored in git): `./images/debian-hurd-amd64.qcow2` (bind mode) or `hurd-disk` volume (portable mode)
 
 ## Recommended deployment flow

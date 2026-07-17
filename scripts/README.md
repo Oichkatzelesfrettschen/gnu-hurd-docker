@@ -459,7 +459,7 @@ ROOT_PASS=root AGENTS_PASS=agents ./bringup-and-provision.sh
 ```
 
 **Prerequisites**:
-- docker, docker-compose
+- docker, docker compose v2
 - telnet, expect, sshpass on host
 
 **Environment variables**:
@@ -469,7 +469,7 @@ ROOT_PASS=root AGENTS_PASS=agents ./bringup-and-provision.sh
 - `SERIAL_PORT` - Serial port (default: 5555)
 
 **What it does**:
-1. Boots container with docker-compose
+1. Boots container with docker compose
 2. Waits for serial console
 3. Enables SSH via install-ssh-hurd.sh
 4. Fixes Debian-Ports sources
@@ -874,12 +874,12 @@ Scripts for testing system functionality and analyzing codebase.
 ```
 
 **Prerequisites**:
-- docker, docker-compose
+- docker, docker compose v2
 - Base QCOW2 image
 - /dev/kvm (recommended for speed)
 
 **What it does**:
-1. Checks prerequisites (docker, docker-compose, KVM)
+1. Checks prerequisites (docker, docker compose, KVM)
 2. Locates or converts base image
 3. Builds provisioning Docker image
 4. Runs provisioning (10-15 minutes with KVM)
@@ -1030,7 +1030,7 @@ mig-version
 
 ```bash
 # 1. Start container
-docker-compose up -d
+docker compose up -d
 
 # 2. Run automation
 ./full-automated-setup.sh
@@ -1060,7 +1060,7 @@ passwd  # Change from 'agents'
 ./download-released-image.sh
 
 # 2. Start container
-docker-compose up -d
+docker compose up -d
 
 # 3. Connect
 ssh -p 2222 root@localhost
@@ -1120,7 +1120,7 @@ newgrp docker
 **Fix**:
 ```bash
 # Check container logs
-docker-compose logs
+docker compose logs
 
 # Verify image exists
 ls -lh images/*.qcow2
@@ -1269,7 +1269,7 @@ passwd root
 # Check KVM
 ls -l /dev/kvm
 
-# Check resource allocation in docker-compose.yml
+# Check resource allocation in compose.yaml
 # Increase CPU/memory limits
 
 # Enable KVM in QEMU args
@@ -1377,7 +1377,7 @@ ps aux
 
 2. **Review logs for issues**
    ```bash
-   docker-compose logs
+   docker compose logs
    ssh -p 2222 root@localhost 'dmesg | tail'
    ```
 

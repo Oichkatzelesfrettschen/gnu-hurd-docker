@@ -162,7 +162,7 @@ ChatGPT's analysis recommends creating a **streamlined, dual-mode workflow** for
 ### Recommendation 2: Ensure Docker Compose V2 Compatibility
 
 **ChatGPT Says**:
-> "Use Docker Compose v2 (`docker compose` not `docker-compose`). Ensure QEMU runs inside Docker with KVM support."
+> "Use Docker Compose v2 (`docker compose` not `docker compose`). Ensure QEMU runs inside Docker with KVM support."
 
 **Our Status**: **100% Complete** ✅
 - ✅ `docker-compose.yml` uses v2 syntax

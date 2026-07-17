@@ -6,7 +6,7 @@ name: Configuration Validation
     paths:
       - Dockerfile
       - entrypoint.sh
-      - docker-compose.yml
+      - compose.yaml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
       - 'scripts/fix-script.sh'
@@ -17,7 +17,7 @@ name: Configuration Validation
     paths:
       - Dockerfile
       - entrypoint.sh
-      - docker-compose.yml
+      - compose.yaml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
       - 'scripts/fix-script.sh'
@@ -73,17 +73,17 @@ jobs:
           shellcheck -S error scripts/health-check.sh
           echo "[OK] scripts/health-check.sh is executable"
 
-      - name: Validate docker-compose.yml
+      - name: Validate compose.yaml
         run: |
           echo "[*] Validating YAML syntax..."
-          python3 -c "import yaml; yaml.safe_load(open('docker-compose.yml')); print('[OK] Valid YAML syntax')"
+          python3 -c "import yaml; yaml.safe_load(open('compose.yaml')); print('[OK] Valid YAML syntax')"
 
       - name: Verify file structure
         run: |
           echo "[*] Checking required files..."
           test -f Dockerfile && echo "[OK] Dockerfile exists"
           test -f entrypoint.sh && echo "[OK] entrypoint.sh exists"
-          test -f docker-compose.yml && echo "[OK] docker-compose.yml exists"
+          test -f compose.yaml && echo "[OK] compose.yaml exists"
           test -f PKGBUILD && echo "[OK] PKGBUILD exists"
           test -x entrypoint.sh && echo "[OK] entrypoint.sh is executable"
           test -x scripts/fix-script.sh && echo "[OK] scripts/fix-script.sh is executable"
@@ -118,7 +118,7 @@ jobs:
           ### Files Validated
           - **Dockerfile:** ✓ Present
           - **entrypoint.sh:** ✓ Present and executable
-          - **docker-compose.yml:** ✓ Present and valid YAML
+          - **compose.yaml:** ✓ Present and valid YAML
           - **PKGBUILD:** ✓ Present
           - **fix-script.sh:** ✓ Executable
           - **health-check.sh:** ✓ Executable

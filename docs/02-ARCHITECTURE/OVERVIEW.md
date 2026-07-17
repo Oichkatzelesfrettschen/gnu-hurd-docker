@@ -11,9 +11,9 @@ GNU/Hurd Docker runs a full Debian GNU/Hurd system as a **QEMU virtual machine**
 ## Container/Compose model
 
 - Service/container name: `gnu-hurd-dev`
-- Baseline Compose (`docker-compose.yml`): uses an engine-managed volume (`hurd-disk`) mounted at `/opt/hurd-image`
-- Dev default (`docker-compose.bind.yml`): bind-mounts `./images` to `/opt/hurd-image`
-- Optional KVM (`docker-compose.kvm.yml`): mounts `/dev/kvm` (Linux x86_64 hosts only)
+- Baseline Compose (`compose.yaml`): uses an engine-managed volume (`hurd-disk`) mounted at `/opt/hurd-image`
+- Dev default (`compose.bind.yaml`): bind-mounts `./images` to `/opt/hurd-image`
+- Optional KVM (`compose.kvm.yaml`): mounts `/dev/kvm` (Linux x86_64 hosts only)
 
 ## Runtime invariants
 

@@ -22,13 +22,13 @@ shellcheck -S warning entrypoint.sh scripts/*.sh scripts/lib/*.sh scripts/test-p
 ## Image build strategy
 
 - Production pulls: `ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest`
-- Local dev builds: `docker-compose.override.yml` switches the service to `build: .`
+- Local dev builds: `compose.override.yaml` switches the service to `build: .`
 
 ## Compose sanity checks
 
 ```bash
-docker compose -f docker-compose.yml config >/dev/null
-docker compose -f docker-compose.yml -f docker-compose.bind.yml config >/dev/null
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml config >/dev/null
+docker compose -f compose.yaml config >/dev/null
+docker compose -f compose.yaml -f compose.bind.yaml config >/dev/null
+docker compose -f compose.yaml -f compose.kvm.yaml config >/dev/null
 ```
 

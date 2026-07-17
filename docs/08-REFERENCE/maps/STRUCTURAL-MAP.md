@@ -79,7 +79,7 @@
 │
 ├── Dockerfile                       (18 lines - Image specification)
 ├── entrypoint.sh                    (20 lines - QEMU launcher)
-├── docker-compose.yml               (27 lines - Container orchestration)
+├── compose.yaml               (27 lines - Container orchestration)
 ├── PKGBUILD                         (96 lines - Arch package spec)
 ├── gnu-hurd-docker-kernel-fix.install (52 lines - Package hooks)
 ├── fix-script.sh                    (89 lines - Fix utility)
@@ -173,7 +173,7 @@ Total Repository:   6.31 GB
 **Status:** PRODUCTION-READY
 **Validation:** Passes shellcheck with no errors
 
-#### 3. **docker-compose.yml** (27 lines, 379 bytes)
+#### 3. **compose.yaml** (27 lines, 379 bytes)
 **Purpose:** Container orchestration and service definition
 **Language:** YAML v3.9 format
 **Key Contents:**
@@ -195,7 +195,7 @@ Total Repository:   6.31 GB
 **Key Contents:**
 - Package: `gnu-hurd-docker-kernel-fix` v1.1.0
 - Architecture: x86_64
-- Depends: `docker`, `docker-compose`
+- Depends: `docker`, `docker compose`
 - Optional depends: `linux-headers`, `gcc`, `make`
 - Build phase: Validates Docker and kernel requirements
 - Package phase: Installs fix script and documentation
@@ -220,7 +220,7 @@ Total Repository:   6.31 GB
 **Contents:**
 - Disk images: `*.qcow2`, `*.img`, `*.tar.xz`
 - QEMU logs: `qemu*.log`, `serial*.log`, `hurd_serial.log`
-- Docker: `.docker/`, `docker-compose.override.yml`
+- Docker: `.docker/`, `compose.override.yaml`
 - Editor/IDE: `.vscode/`, `.idea/`, `*.swp`, `*.swo`
 - Python: `__pycache__/`, `*.pyc`, `.env.local`, `venv/`
 - Temporary: `/tmp/`, `/temp/`, `*.tmp`
@@ -264,7 +264,7 @@ All workflows located in `.github/workflows/` directory. Triggered on push, PR, 
 **Jobs:**
 1. **hadolint:** Validates Dockerfile syntax
 2. **shellcheck:** Validates shell scripts (`entrypoint.sh`, `fix-script.sh`)
-3. **YAML validation:** Python YAML parser for `docker-compose.yml`
+3. **YAML validation:** Python YAML parser for `compose.yaml`
 4. **File existence:** Checks required files present
 5. **Executability:** Verifies scripts have execute permissions
 
@@ -278,7 +278,7 @@ All workflows located in `.github/workflows/` directory. Triggered on push, PR, 
 
 **Jobs:**
 1. **build:** Builds Docker image with Buildx
-2. **validate-compose:** Validates docker-compose.yml
+2. **validate-compose:** Validates compose.yaml
 
 **Output:** `gnu-hurd-dev:latest` Docker image (cached)
 
@@ -308,7 +308,7 @@ All workflows located in `.github/workflows/` directory. Triggered on push, PR, 
 1. **Generate changelog** from tag and date
 2. **Create GitHub Release** with auto-generated body including:
    - Release version and date
-   - Contents: Dockerfile, entrypoint.sh, docker-compose.yml, PKGBUILD
+   - Contents: Dockerfile, entrypoint.sh, compose.yaml, PKGBUILD
    - Prerequisites: Docker, kernel requirements, disk space
    - Quick start: Build and deployment commands
    - Documentation links
@@ -324,7 +324,7 @@ All workflows located in `.github/workflows/` directory. Triggered on push, PR, 
 **Jobs:**
 1. **Validate Dockerfile:** Structure validation
 2. **Validate entrypoint.sh:** Shellcheck with Python setup
-3. **Validate docker-compose.yml:** YAML parser with Python
+3. **Validate compose.yaml:** YAML parser with Python
 4. **Validate files:** Check existence of critical files
 5. **Check executability:** Verify scripts are executable
 
@@ -390,7 +390,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 **Validation Stages:**
 
 1. **File Existence Check:**
-   - Dockerfile, entrypoint.sh, docker-compose.yml
+   - Dockerfile, entrypoint.sh, compose.yaml
 
 2. **Dockerfile Validation:**
    - Docker build dry-run syntax check
@@ -405,7 +405,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
    - Error handling: `set -e` present
    - QEMU launcher found
 
-4. **docker-compose.yml Validation:**
+4. **compose.yaml Validation:**
    - YAML syntax validation (Python)
    - Version field check
    - Services section validation
@@ -435,7 +435,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 2. **Test 2:** Docker daemon running
 3. **Test 3:** Docker Compose installed
 4. **Test 4:** Configuration files exist
-   - Dockerfile, entrypoint.sh, docker-compose.yml
+   - Dockerfile, entrypoint.sh, compose.yaml
 5. **Test 5:** QCOW2 image present
    - File exists and displays size
 6. **Test 6:** Docker build dry-run
@@ -879,7 +879,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 |------|-------|------|---------|
 | Dockerfile | 18 | 314 B | Image spec |
 | entrypoint.sh | 20 | 489 B | QEMU launcher |
-| docker-compose.yml | 27 | 379 B | Orchestration |
+| compose.yaml | 27 | 379 B | Orchestration |
 | PKGBUILD | 96 | 3.74 KB | Package spec |
 | fix-script.sh | 89 | 2.82 KB | Diagnostic utility |
 | **TOTAL** | **250** | **7.8 KB** | **Core config** |
@@ -903,7 +903,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 
 ```
 Docker Execution Flow:
-├── docker-compose.yml
+├── compose.yaml
 │   ├── Dockerfile
 │   │   ├── entrypoint.sh (COPY)
 │   │   └── Debian Bookworm base image
@@ -934,7 +934,7 @@ CI/CD Workflow Triggers:
 ├── .github/workflows/validate-config.yml
 │   ├── Dockerfile
 │   ├── entrypoint.sh
-│   ├── docker-compose.yml
+│   ├── compose.yaml
 │   ├── PKGBUILD
 │   ├── fix-script.sh
 │   └── gnu-hurd-docker-kernel-fix.install
@@ -942,13 +942,13 @@ CI/CD Workflow Triggers:
 ├── .github/workflows/build-docker.yml
 │   ├── Dockerfile
 │   ├── entrypoint.sh
-│   └── docker-compose.yml
+│   └── compose.yaml
 │
 ├── .github/workflows/build.yml
 │   ├── scripts/validate-config.sh (called)
 │   ├── Dockerfile
 │   ├── entrypoint.sh
-│   ├── docker-compose.yml
+│   ├── compose.yaml
 │   └── .github/workflows/build-docker.yml
 │
 └── .github/workflows/release.yml
@@ -970,7 +970,7 @@ Validation Chain:
 ├── scripts/validate-config.sh
 │   ├── Dockerfile (syntax)
 │   ├── entrypoint.sh (shellcheck)
-│   ├── docker-compose.yml (YAML)
+│   ├── compose.yaml (YAML)
 │   ├── fix-script.sh (optional shellcheck)
 │   └── QCOW2 image (if present)
 │
@@ -1042,7 +1042,7 @@ QEMU Runtime Dependencies:
 Package Building Dependencies (PKGBUILD):
 ├── makepkg (Arch build tool)
 ├── docker package
-├── docker-compose package
+├── docker compose package
 ├── Optional: linux-headers (for kernel rebuild option)
 ├── Optional: gcc (for kernel compilation)
 └── Optional: make (for kernel compilation)
@@ -1072,7 +1072,7 @@ System Administrator Path:
 Developer Path:
 ├── README.md
 ├── docs/ARCHITECTURE.md
-├── [Review: Dockerfile, entrypoint.sh, docker-compose.yml]
+├── [Review: Dockerfile, entrypoint.sh, compose.yaml]
 └── docs/TROUBLESHOOTING.md
 
 Support/Troubleshooting Path:
@@ -1104,7 +1104,7 @@ Support/Troubleshooting Path:
 |------|--------|-------|
 | Dockerfile syntax | PASS | Valid Docker syntax |
 | entrypoint.sh | PASS | Passes shellcheck, executable |
-| docker-compose.yml | PASS | Valid YAML, all required fields |
+| compose.yaml | PASS | Valid YAML, all required fields |
 | Configuration validation | PASS | CI/CD workflows configured |
 | Documentation | PASS | 14 comprehensive guides |
 | File permissions | PASS | Scripts are executable |
@@ -1166,7 +1166,7 @@ These are expected gaps for a pre-deployment project:
 ### Finding Files
 
 **By Purpose:**
-- **Docker config:** `Dockerfile`, `entrypoint.sh`, `docker-compose.yml`
+- **Docker config:** `Dockerfile`, `entrypoint.sh`, `compose.yaml`
 - **CI/CD:** `.github/workflows/*.yml`
 - **Scripts:** `scripts/`
 - **Disk images:** Root directory (*.qcow2, *.img, *.tar.xz)

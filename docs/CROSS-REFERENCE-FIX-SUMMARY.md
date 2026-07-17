@@ -60,7 +60,7 @@ Files in `08-REFERENCE/guidelines/CROSS-LINKING.md` and `assets/templates/`:
 ### 2. External Repository References
 Links to files outside `/docs`:
 - `../../entrypoint.sh`
-- `../../docker-compose.yml`
+- `../../compose.yaml`
 - `../../.github/workflows/build.yml`
 - `../../scripts/setup.sh`
 - These reference actual project files (valid but outside docs scope)

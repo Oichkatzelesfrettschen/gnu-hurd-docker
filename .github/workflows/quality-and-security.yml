@@ -134,7 +134,7 @@ jobs:
           echo "=== Running yamllint with strict configuration ==="
 
           FAILED=0
-          for file in docker-compose.yml mkdocs.yml .github/workflows/*.yml; do
+          for file in compose.yaml mkdocs.yml .github/workflows/*.yml; do
             if [ -f "$file" ]; then
               echo "Validating: $file"
               if ! yamllint -c .yamllint-strict.yml "$file"; then
@@ -421,7 +421,7 @@ jobs:
             "README.md"
             "LICENSE"
             "Dockerfile"
-            "docker-compose.yml"
+            "compose.yaml"
             "entrypoint.sh"
             "PKGBUILD"
             "docs/01-GETTING-STARTED/REQUIREMENTS.md"

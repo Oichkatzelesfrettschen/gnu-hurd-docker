@@ -177,7 +177,7 @@ docker exec gnu-hurd-dev cat /proc/meminfo | grep MemTotal
 ## Common Issues and Solutions
 
 ### Issue: Container shows i386 packages
-**Solution**: Rebuild with `docker-compose build --no-cache`
+**Solution**: Rebuild with `docker compose build --no-cache`
 
 ### Issue: QEMU binary not found
 **Solution**: Verify path is `/usr/bin/qemu-system-x86_64` (with underscore!)

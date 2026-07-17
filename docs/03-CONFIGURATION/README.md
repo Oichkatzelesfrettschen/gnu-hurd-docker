@@ -23,7 +23,7 @@ This section covers all configuration options for customizing the GNU/Hurd x86_6
 
 - Default ports (SSH 2222, Serial 5555)
 - Add custom port forwards (HTTP, databases, services)
-- Modify docker-compose.yml
+- Modify compose.yaml
 - Verify port accessibility
 - Firewall configuration
 
@@ -65,7 +65,7 @@ This section covers all configuration options for customizing the GNU/Hurd x86_6
 
 **Minimal Development** (default):
 ```yaml
-# docker-compose.yml (no changes needed)
+# compose.yaml (no changes needed)
 ports:
   - "2222:22"    # SSH access
 memory: 4GB      # Standard RAM
@@ -144,7 +144,7 @@ memory: 8GB      # Extra RAM for desktop
 
 ### Workflow 2: Enable HTTP Service
 
-1. **Edit docker-compose.yml** ([PORT-FORWARDING.md](PORT-FORWARDING.md)):
+1. **Edit compose.yaml** ([PORT-FORWARDING.md](PORT-FORWARDING.md)):
    ```yaml
    ports:
      - "8080:80"
@@ -152,8 +152,8 @@ memory: 8GB      # Extra RAM for desktop
 
 2. **Restart container**:
    ```bash
-   docker-compose down
-   docker-compose up -d
+   docker compose down
+   docker compose up -d
    ```
 
 3. **Install web server inside guest**:
@@ -180,7 +180,7 @@ memory: 8GB      # Extra RAM for desktop
 2. **Follow [CUSTOM-FEATURES.md](CUSTOM-FEATURES.md)**:
    - Install Xfce4 (~750 MB)
    - Configure VNC server
-   - Add VNC port to docker-compose.yml
+   - Add VNC port to compose.yaml
 
 3. **Connect via VNC**:
    ```bash
@@ -203,7 +203,7 @@ memory: 8GB      # Extra RAM for desktop
 
 2. **Document custom configurations**:
    - Note changes in project README or CHANGELOG
-   - Track docker-compose.yml changes in git
+   - Track compose.yaml changes in git
 
 3. **Test incremental changes**:
    - Make one change at a time
@@ -255,7 +255,7 @@ memory: 8GB      # Extra RAM for desktop
 
 **Configuration not persisting**:
 - Ensure changes made inside QCOW2 (not Docker container filesystem)
-- Verify docker-compose.yml volume mounts
+- Verify compose.yaml volume mounts
 - Check [Snapshots](../04-OPERATION/SNAPSHOTS.md) for state management
 
 ---

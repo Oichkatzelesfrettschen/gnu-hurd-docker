@@ -40,7 +40,7 @@ This document consolidates all research and execution details from the **BREAKIN
 **Rebuilt**:
 - ✅ Dockerfile for x86_64-only (Ubuntu 24.04)
 - ✅ entrypoint.sh with smart KVM/TCG detection
-- ✅ docker-compose.yml for single x86_64 service
+- ✅ compose.yaml for single x86_64 service
 - ✅ All scripts updated to qemu-system-x86_64
 - ✅ Streamlined CI/CD (1 simple workflow)
 
@@ -119,7 +119,7 @@ TOTAL:                                    14.9 GB
 ```bash
 # Full backup before changes
 tar czf backup-before-x86_64-migration-20251107-182840.tar.gz \
-  *.md docs/ scripts/ Dockerfile entrypoint.sh docker-compose.yml \
+  *.md docs/ scripts/ Dockerfile entrypoint.sh compose.yaml \
   .github/workflows/ *.img *.qcow2 *.tar.xz
 
 # Result: 687 MB backup
@@ -271,11 +271,11 @@ jobs:
         run: ./scripts/setup-hurd-amd64.sh
 
       - name: Build Docker image
-        run: docker-compose build
+        run: docker compose build
 
       - name: Start VM (TCG fallback)
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 300  # 5 min boot time (TCG)
 
       - name: Test SSH connectivity
@@ -442,7 +442,7 @@ Hurd:       guest:22   (SSH daemon)
 **Implementation**:
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 services:
   hurd-x86_64:
     ports:
@@ -468,7 +468,7 @@ exec qemu-system-x86_64 \
 **Container Build**:
 ```bash
 # 1. Verify Dockerfile builds
-docker-compose build
+docker compose build
 
 # Expected output:
 # [+] Building ... (amd64 architecture checks passing)
@@ -527,7 +527,7 @@ ls -lh debian-hurd-i386* 2>/dev/null
 
 **Start Container**:
 ```bash
-docker-compose up -d
+docker compose up -d
 
 # Wait for boot (x86_64 is slower)
 sleep 600  # 10 minutes (first boot)
@@ -664,9 +664,9 @@ jobs:
       - name: Download x86_64 image
         run: ./scripts/setup-hurd-amd64.sh
       - name: Build Docker image
-        run: docker-compose build
+        run: docker compose build
       - name: Start VM (TCG fallback)
-        run: docker-compose up -d && sleep 300
+        run: docker compose up -d && sleep 300
       - name: Test SSH connectivity
         run: |
           timeout 300 bash -c '
@@ -758,9 +758,9 @@ tar xf debian-hurd.img.tar.xz
 **Step 3: Rebuild Container**
 
 ```bash
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
 
 **Step 4: Git Revert (if committed)**
@@ -805,7 +805,7 @@ mv debian-hurd-amd64-*.img debian-hurd-amd64-80gb.qcow2
 **Step 3: Start Container**
 
 ```bash
-docker-compose up -d
+docker compose up -d
 
 # Monitor boot (5-10 minutes on first run)
 docker logs -f hurd-x86_64
@@ -837,7 +837,7 @@ dpkg --print-architecture
 
 ## Part 10: Environment Variables Reference
 
-### docker-compose.yml Configuration
+### compose.yaml Configuration
 
 **All configurable via environment section**:
 
@@ -865,7 +865,7 @@ environment:
 
 ### Resource Limits
 
-**Defined in docker-compose.yml**:
+**Defined in compose.yaml**:
 
 ```yaml
 deploy:
@@ -911,12 +911,12 @@ groups | grep kvm
 
 ### Issue: Container Won't Start
 
-**Symptom**: `docker-compose up -d` fails
+**Symptom**: `docker compose up -d` fails
 
 **Diagnosis**:
 ```bash
 # View detailed logs
-docker-compose logs hurd-x86_64
+docker compose logs hurd-x86_64
 
 # Common issues:
 # - Missing disk image
@@ -939,14 +939,14 @@ ls -lh debian-hurd-amd64-80gb.qcow2
 # Check what's using port 2222
 sudo lsof -i :2222
 
-# Kill process or change port in docker-compose.yml:
+# Kill process or change port in compose.yaml:
 ports:
   - "2223:2222"  # Use host port 2223 instead
 ```
 
 **Insufficient memory**:
 ```bash
-# Reduce QEMU_RAM in docker-compose.yml
+# Reduce QEMU_RAM in compose.yaml
 environment:
   QEMU_RAM: 2048  # Reduce to 2 GB
 ```

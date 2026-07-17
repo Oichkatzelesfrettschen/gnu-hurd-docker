@@ -13,7 +13,7 @@ By default, the guest exposes:
 
 These defaults are defined in:
 
-- `docker-compose.yml` (host↔container port mappings)
+- `compose.yaml` (host↔container port mappings)
 - `entrypoint.sh` (QEMU `hostfwd=` rules inside `-nic user,...`)
 
 ## Change host ports (recommended)

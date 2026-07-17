@@ -9,7 +9,7 @@
 
 ```bash
 # 1. Start QEMU with VNC (for GUI)
-docker-compose up -d
+docker compose up -d
 
 # Wait 60 seconds for boot
 sleep 60
@@ -225,13 +225,13 @@ ssh -p 2222 root@localhost
 ### VNC Not Connecting
 ```bash
 # Check QEMU is running
-docker-compose ps
+docker compose ps
 
 # Check VNC port is open
 ss -tlnp | grep 5901
 
 # Restart container
-docker-compose restart
+docker compose restart
 ```
 
 ### GUI Won't Start
@@ -261,7 +261,7 @@ grep "Mach development" ~/.bashrc
 mount -t 9p -o trans=virtio scripts /mnt/host
 
 # Check QEMU config
-docker-compose logs | grep virtfs
+docker compose logs | grep virtfs
 
 # Verify fstab entry
 cat /etc/fstab | grep 9p
@@ -303,7 +303,7 @@ cat /etc/fstab | grep 9p
 
 ### Container Logs
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---

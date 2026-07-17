@@ -102,9 +102,9 @@ IMPORTANT NOTES:
 
 1. Your work directory is preserved at: ~/.local/share/gnu-hurd-docker/
 
-2. If docker-compose.yml was updated, you may want to review changes:
-   diff ~/.local/share/gnu-hurd-docker/docker-compose.yml \\
-        /etc/gnu-hurd-docker/docker-compose.yml
+2. If compose.yaml was updated, you may want to review changes:
+   diff ~/.local/share/gnu-hurd-docker/compose.yaml \\
+        /etc/gnu-hurd-docker/compose.yaml
 
 3. Rebuild Docker image to pick up changes:
    gnu-hurd-docker build
@@ -141,7 +141,7 @@ This includes:
 
 To completely remove everything:
 1. Stop any running containers:
-   docker-compose down
+   docker compose down
    
 2. Remove Docker images:
    docker image rm gnu-hurd-dev

@@ -166,7 +166,7 @@ Host System (x86_64)
   │         │
   │         ├── Volume Mounts:
   │         │    ├── hurd-disk:/opt/hurd-image (default volume)
-  │         │    └── ./images:/opt/hurd-image (optional bind mount via docker-compose.bind.yml)
+  │         │    └── ./images:/opt/hurd-image (optional bind mount via compose.bind.yaml)
   │         │    ├── ./share:/share (9p file sharing)
   │         │    └── ./logs:/var/log/qemu (debug logs)
   │         │
@@ -253,7 +253,7 @@ detect_acceleration() {
 - **Minimal Privileges**: Only grant what QEMU needs
 - **Production-Ready**: Suitable for CI/CD and production
 
-**Configuration** (docker-compose.yml:37-38):
+**Configuration** (compose.yaml:37-38):
 ```yaml
 devices:
   - /dev/kvm:/dev/kvm:rw
@@ -481,7 +481,7 @@ gnu-hurd-docker/
 │
 ├── Dockerfile                  Container image definition
 ├── entrypoint.sh               QEMU launcher
-├── docker-compose.yml          Orchestration config
+├── compose.yaml          Orchestration config
 ├── README.md                   Project overview
 └── LICENSE                     MIT license
 ```
@@ -548,7 +548,7 @@ detect_acceleration() {
 
 **Status**: ✅ Production-ready, passes shellcheck
 
-#### 3. docker-compose.yml (173 lines)
+#### 3. compose.yaml (173 lines)
 **Purpose**: Container orchestration and service definition
 
 **Key Configuration**:
@@ -594,10 +594,10 @@ services:
 **Purpose**: Comprehensive configuration validation
 
 **Checks**:
-- File existence (Dockerfile, entrypoint.sh, docker-compose.yml)
+- File existence (Dockerfile, entrypoint.sh, compose.yaml)
 - Dockerfile syntax
 - Shell script validation (shellcheck)
-- YAML syntax (docker-compose.yml)
+- YAML syntax (compose.yaml)
 - Disk image presence
 - x86_64 architecture enforcement
 
@@ -619,7 +619,7 @@ services:
 
 ### Environment Variables
 
-Configurable via docker-compose.yml `environment:` section:
+Configurable via compose.yaml `environment:` section:
 
 | Variable       | Default                                      | Purpose                         |
 |----------------|----------------------------------------------|---------------------------------|
@@ -632,7 +632,7 @@ Configurable via docker-compose.yml `environment:` section:
 
 ### Resource Limits
 
-Defined in docker-compose.yml `deploy.resources`:
+Defined in compose.yaml `deploy.resources`:
 
 ```yaml
 deploy:
@@ -807,7 +807,7 @@ ping -c 10 8.8.8.8
 
 To run multiple GNU/Hurd systems simultaneously:
 
-**Method 1: Multiple docker-compose Services**
+**Method 1: Multiple docker compose Services**
 
 ```yaml
 services:

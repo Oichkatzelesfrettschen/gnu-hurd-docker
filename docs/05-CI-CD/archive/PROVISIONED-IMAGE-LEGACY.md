@@ -76,7 +76,7 @@ Pre-provisioned images dramatically reduce CI/CD run times by pre-installing SSH
 ### Method 1: Automated (Recommended)
 
 **Prerequisites**:
-- Docker and docker-compose installed
+- Docker and docker compose installed
 - KVM access (Linux) or TCG fallback (macOS/Windows)
 - 20 GB free disk space
 - 30-60 minutes time (KVM) or 2-4 hours (TCG)
@@ -94,10 +94,10 @@ cd gnu-hurd-docker
 # Extracts to: debian-hurd-amd64-80gb.qcow2 (~4 GB)
 
 # 3. Build provisioning environment
-docker-compose build
+docker compose build
 
 # 4. Start VM and wait for boot (5-10 minutes)
-docker-compose up -d
+docker compose up -d
 sleep 600  # Adjust based on your system
 
 # 5. Install SSH server via serial console
@@ -117,7 +117,7 @@ ssh -p 2222 root@localhost "bash -s" < ./share/install-essentials-hurd.sh
 # 7. Shutdown gracefully
 ssh -p 2222 root@localhost "shutdown -h now"
 sleep 30
-docker-compose down
+docker compose down
 
 # 8. Create provisioned image
 cp debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64-provisioned.qcow2
@@ -185,7 +185,7 @@ SECURITY: Change the password after first login!
 **Error Handling**:
 - If login prompt not detected: timeout after 10 minutes
 - If apt-get times out: manual intervention required
-- If SSH not listening: check logs with `docker-compose logs`
+- If SSH not listening: check logs with `docker compose logs`
 
 **Usage**:
 ```bash
@@ -529,8 +529,8 @@ jobs:
 
       - name: Start Hurd VM
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
 
       - name: Wait for SSH (fast with pre-provisioned image)
         run: |
@@ -555,7 +555,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 ```
 
 **Performance**: Boot + SSH ready in 5-10 minutes (vs 15-30 minutes with fresh image).
@@ -587,7 +587,7 @@ qemu-img resize debian-hurd-amd64-80gb.qcow2 +76G
 
 ```bash
 # Start VM
-docker-compose up -d
+docker compose up -d
 sleep 600  # Wait for boot
 
 # Install SSH
@@ -599,7 +599,7 @@ ssh -p 2222 root@localhost "bash -s" < ./share/install-essentials-hurd.sh
 # Shutdown
 ssh -p 2222 root@localhost "shutdown -h now"
 sleep 30
-docker-compose down
+docker compose down
 
 # Create provisioned snapshot
 cp debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64-provisioned.qcow2
@@ -609,7 +609,7 @@ cp debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64-provisioned.qcow2
 
 ```bash
 # Start from provisioned image
-QEMU_DRIVE=debian-hurd-amd64-provisioned.qcow2 docker-compose up -d
+QEMU_DRIVE=debian-hurd-amd64-provisioned.qcow2 docker compose up -d
 sleep 300
 
 # Install project-specific dependencies
@@ -627,7 +627,7 @@ EOF
 
 # Shutdown
 ssh -p 2222 root@localhost "shutdown -h now"
-docker-compose down
+docker compose down
 
 # Create CI-ready snapshot
 cp debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64-ci-ready.qcow2
@@ -694,7 +694,7 @@ tar xzf provisioned.tar.gz
 mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64-80gb.qcow2
 
 # 3. Start VM
-docker-compose up -d
+docker compose up -d
 
 # 4. Wait and test SSH
 sleep 300
@@ -713,7 +713,7 @@ lynx --version
 exit
 
 # 5. Cleanup
-docker-compose down
+docker compose down
 ```
 
 ### Verification Checklist
@@ -759,7 +759,7 @@ docker-compose down
 
 ```bash
 # 1. Verify VM is running
-docker-compose ps
+docker compose ps
 # Expected: hurd-x86_64 running
 
 # 2. Check serial console manually
@@ -771,10 +771,10 @@ telnet localhost 5555
 sleep 900  # Wait 15 minutes instead of 10
 
 # 4. Check QEMU logs
-docker-compose logs | grep -i "login\|boot"
+docker compose logs | grep -i "login\|boot"
 
-# 5. Verify serial port in docker-compose.yml
-grep "5555:5555" docker-compose.yml
+# 5. Verify serial port in compose.yaml
+grep "5555:5555" compose.yaml
 ```
 
 ### Package Installation Hangs
@@ -894,7 +894,7 @@ ls -lh debian-hurd-amd64-*.qcow2
 
 1. **Use KVM When Available**:
    ```yaml
-   # docker-compose.yml
+   # compose.yaml
    devices:
      - /dev/kvm:/dev/kvm:rw
    ```
@@ -978,10 +978,10 @@ ss -tlnp | grep :22
 telnet localhost 5555
 
 # Monitor provisioning
-docker-compose logs -f
+docker compose logs -f
 
 # Clean up after failed provisioning
-docker-compose down
+docker compose down
 rm -f debian-hurd-amd64-80gb.qcow2
 ./scripts/setup-hurd-amd64.sh  # Re-download base image
 ```

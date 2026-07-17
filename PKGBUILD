@@ -28,7 +28,7 @@ provides=('gnu-hurd-docker')
 conflicts=('gnu-hurd-docker-kernel-fix')
 replaces=('gnu-hurd-docker-kernel-fix')
 backup=(
-    'etc/gnu-hurd-docker/docker-compose.yml'
+    'etc/gnu-hurd-docker/compose.yaml'
     'etc/gnu-hurd-docker/entrypoint.sh'
 )
 install='gnu-hurd-docker.install'
@@ -60,7 +60,7 @@ build() {
 import yaml
 import sys
 
-files = ['docker-compose.yml', 'mkdocs.yml']
+files = ['compose.yaml', 'mkdocs.yml']
 for f in files:
     try:
         with open(f) as fp:
@@ -101,7 +101,7 @@ package() {
     # Install core files
     install -Dm644 Dockerfile "${pkgdir}/opt/gnu-hurd-docker/Dockerfile"
     install -Dm755 entrypoint.sh "${pkgdir}/opt/gnu-hurd-docker/entrypoint.sh"
-    install -Dm644 docker-compose.yml "${pkgdir}/etc/gnu-hurd-docker/docker-compose.yml"
+    install -Dm644 compose.yaml "${pkgdir}/etc/gnu-hurd-docker/compose.yaml"
     
     # Install scripts
     install -dm755 "${pkgdir}/opt/gnu-hurd-docker/scripts"
@@ -137,9 +137,9 @@ docker_compose() {
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
         # Docker Compose v2 (integrated into docker CLI)
         docker compose "$@"
-    elif command -v docker-compose >/dev/null 2>&1; then
+    elif command -v docker compose >/dev/null 2>&1; then
         # Docker Compose v1 (standalone)
-        docker-compose "$@"
+        docker compose "$@"
     else
         echo "Error: Neither 'docker compose' (v2) nor 'docker-compose' (v1) found"
         echo "Please install Docker Compose: https://docs.docker.com/compose/install/"
@@ -150,9 +150,9 @@ docker_compose() {
 # Ensure work directory exists
 mkdir -p "${WORK_DIR}"/{qmp,share,logs}
 
-# Copy docker-compose.yml if not exists
-if [ ! -f "${WORK_DIR}/docker-compose.yml" ]; then
-    cp "${CONFIG_DIR}/docker-compose.yml" "${WORK_DIR}/"
+# Copy compose.yaml if not exists
+if [ ! -f "${WORK_DIR}/compose.yaml" ]; then
+    cp "${CONFIG_DIR}/compose.yaml" "${WORK_DIR}/"
 fi
 
 # Copy Dockerfile if not exists
@@ -183,7 +183,7 @@ case "${1:-help}" in
         ;;
     up-kvm)
         echo "Starting GNU/Hurd Docker environment (KVM acceleration mode)..."
-        if docker_compose -f docker-compose.yml -f docker-compose.kvm.yml up -d; then
+        if docker_compose -f compose.yaml -f compose.kvm.yaml up -d; then
             echo "Container started with KVM acceleration. Access via:"
             echo "  SSH: ssh -p 2222 root@localhost"
             echo "  Serial: telnet localhost 5555"
@@ -307,7 +307,7 @@ The package creates a work directory at `~/.local/share/gnu-hurd-docker/` for:
 
 **Required:**
 - docker (>=20.10)
-- docker-compose (>=1.29)
+- docker compose (>=1.29)
 - qemu-base (>=7.0)
 - python (>=3.7)
 
@@ -319,7 +319,7 @@ The package creates a work directory at `~/.local/share/gnu-hurd-docker/` for:
 
 ## Configuration
 
-Edit `~/.local/share/gnu-hurd-docker/docker-compose.yml` to customize:
+Edit `~/.local/share/gnu-hurd-docker/compose.yaml` to customize:
 - RAM allocation
 - CPU cores
 - Port forwarding

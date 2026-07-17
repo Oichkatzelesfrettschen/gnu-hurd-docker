@@ -85,13 +85,13 @@ git remote add upstream https://github.com/Oichkatzelesfrettschen/gnu-hurd-docke
 ./scripts/setup-hurd-amd64.sh
 
 # Build Docker image
-docker-compose build
+docker compose build
 
 # Start container
-docker-compose up -d
+docker compose up -d
 
 # Check logs
-docker-compose logs -f gnu-hurd-dev
+docker compose logs -f gnu-hurd-dev
 ```
 
 ### Running Tests
@@ -203,7 +203,7 @@ Before submitting a pull request, verify:
 - [ ] QEMU boots Hurd guest (2-5 minutes)
 - [ ] SSH access works (`ssh -p 2222 root@localhost`)
 - [ ] Serial console accessible (`telnet localhost 5555`)
-- [ ] Health check passes (`docker-compose ps`)
+- [ ] Health check passes (`docker compose ps`)
 - [ ] Clean shutdown works (`shutdown -h now`)
 - [ ] Snapshots create/restore successfully
 - [ ] Documentation updated (if applicable)
@@ -228,7 +228,7 @@ Measure and document performance impact:
 
 ```bash
 # Boot time (should be < 5 minutes with KVM)
-time docker-compose up -d
+time docker compose up -d
 
 # Monitor resources
 ./scripts/monitor-qemu.sh
@@ -318,10 +318,10 @@ git checkout -b feature/your-feature-name
 shellcheck -S error scripts/*.sh
 
 # Docker Compose syntax
-docker-compose config
+docker compose config
 
 # Build test
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Documentation links
 markdown-link-check README.md docs/**/*.md

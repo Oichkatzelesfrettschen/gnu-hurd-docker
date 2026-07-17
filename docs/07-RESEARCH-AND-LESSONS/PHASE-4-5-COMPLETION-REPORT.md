@@ -142,7 +142,7 @@
 - **File**: PKGBUILD (launcher script)
 - **Changes**:
   - Added `up-kvm` command for KVM acceleration
-  - Uses docker-compose overlay for KVM support
+  - Uses docker compose overlay for KVM support
   - Improved help text distinguishing TCG vs KVM modes
   - Error handling for KVM unavailability
 - **Status**: Production-ready

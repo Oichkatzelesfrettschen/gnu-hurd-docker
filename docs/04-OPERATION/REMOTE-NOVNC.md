@@ -1,6 +1,6 @@
 # Remote noVNC (LAN access)
 
-By default, `docker-compose.vnc.yml` binds both VNC and noVNC to `127.0.0.1` for safety.
+By default, `compose.vnc.yaml` binds both VNC and noVNC to `127.0.0.1` for safety.
 If you need to connect from another computer on your LAN, you have two options:
 
 ## Option A (recommended): SSH tunnel (safe)

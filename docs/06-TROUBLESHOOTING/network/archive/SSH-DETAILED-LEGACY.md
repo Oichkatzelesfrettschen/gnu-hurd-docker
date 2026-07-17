@@ -751,7 +751,7 @@ echo "SSH connectivity tests complete!"
 ### Example 3: Complete Docker Integration
 
 ```yaml
-# docker-compose.yml - GNU/Hurd with automated SSH setup
+# compose.yaml - GNU/Hurd with automated SSH setup
 
 services:
   gnu-hurd-dev:
@@ -783,7 +783,7 @@ services:
 
 ```bash
 # Start container
-docker compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+docker compose -f compose.yaml -f compose.bind.yaml up -d
 
 # Wait for boot
 sleep 180

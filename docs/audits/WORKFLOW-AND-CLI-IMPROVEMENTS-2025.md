@@ -99,7 +99,7 @@ http://localhost:6080/vnc.html
 
 ### 3. VNC Docker Compose Configuration
 
-**File**: `docker-compose.vnc.yml`
+**File**: `compose.vnc.yaml`
 
 **Purpose**: Extend base configuration with VNC support
 
@@ -111,14 +111,14 @@ http://localhost:6080/vnc.html
 **Usage**:
 ```bash
 # Start with VNC
-docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+docker compose -f compose.yaml -f compose.vnc.yaml up -d
 
 # Access via browser
 open http://localhost:6080/vnc.html
 
 # Custom resolution
 DISPLAY_WIDTH=1920 DISPLAY_HEIGHT=1080 \
-  docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+  docker compose -f compose.yaml -f compose.vnc.yaml up -d
 ```
 
 ---
@@ -268,7 +268,7 @@ Hurd Desktop (X11 + LXDE)
 
 ```bash
 # Set VNC password via environment variable
-VNC_PASSWORD=mysecret docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+VNC_PASSWORD=mysecret docker compose -f compose.yaml -f compose.vnc.yaml up -d
 
 # Or in .env file
 echo "VNC_PASSWORD=mysecret" >> .env
@@ -278,7 +278,7 @@ echo "VNC_PASSWORD=mysecret" >> .env
 
 ```bash
 # Start with recording profile
-docker compose -f docker-compose.yml -f docker-compose.vnc.yml \
+docker compose -f compose.yaml -f compose.vnc.yaml \
   --profile recording up -d
 
 # Recordings saved to ./recordings/
@@ -398,7 +398,7 @@ vncsnapshot -passwd <(echo $VNC_PASSWORD) localhost:5900 test.png
 - ✅ Interactive VNC workflow syntax validated
 - ✅ MCP testing workflow structure verified
 - ✅ Matrix testing configuration reviewed
-- ✅ VNC docker-compose configuration tested
+- ✅ VNC docker compose configuration tested
 
 ---
 
@@ -443,7 +443,7 @@ vncsnapshot -passwd <(echo $VNC_PASSWORD) localhost:5900 test.png
 | `docs/04-OPERATION/DOCKER-QEMU-CLI.md` | 700+ | Complete CLI reference |
 | `docs/05-CI-CD/WORKFLOWS-ADVANCED.md` | 900+ | Advanced workflow patterns |
 | `.github/workflows/interactive-vnc.yml` | 150+ | Interactive VNC workflow |
-| `docker-compose.vnc.yml` | 180+ | VNC-enabled configuration |
+| `compose.vnc.yaml` | 180+ | VNC-enabled configuration |
 | `docs/audits/WORKFLOW-AND-CLI-IMPROVEMENTS-2025.md` | 500+ | This document |
 
 **Total**: ~2,400 lines of new documentation and configuration
@@ -451,7 +451,7 @@ vncsnapshot -passwd <(echo $VNC_PASSWORD) localhost:5900 test.png
 ### Files Enhanced
 
 - ✅ `entrypoint.sh` - VNC support already present, documented
-- ✅ `docker-compose.yml` - Monitor and serial ports already configured
+- ✅ `compose.yaml` - Monitor and serial ports already configured
 - ✅ `.github/workflows/` - New advanced workflows added
 
 ---
@@ -464,10 +464,10 @@ vncsnapshot -passwd <(echo $VNC_PASSWORD) localhost:5900 test.png
 ```bash
 # Option 1: Use VNC compose file
 docker compose down
-docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+docker compose -f compose.yaml -f compose.vnc.yaml up -d
 
 # Option 2: Set environment variable
-echo "ENABLE_VNC=1" >> docker-compose.override.yml
+echo "ENABLE_VNC=1" >> compose.override.yaml
 docker compose up -d
 ```
 
