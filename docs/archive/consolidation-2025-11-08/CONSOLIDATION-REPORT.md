@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The `/home/eirikr/Playground/gnu-hurd-docker/docs` directory contains significant redundancy between root-level legacy files and the organized numbered folder structure (01-08). Analysis reveals that approximately **40% of documentation is redundant**, with most organized sections having already consolidated content from multiple legacy files.
+The `/path/to/gnu-hurd-docker/docs` directory contains significant redundancy between root-level legacy files and the organized numbered folder structure (01-08). Analysis reveals that approximately **40% of documentation is redundant**, with most organized sections having already consolidated content from multiple legacy files.
 
 **Key Findings**:
 - 20 files in numbered folders already show "Consolidated From" headers
@@ -214,7 +214,7 @@ rm DOCKER-COMPOSE-CI-CD-GUIDE.md
 
 ### Phase 1: Backup (Day 1)
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker/docs
+cd /path/to/gnu-hurd-docker/docs
 tar czf ../docs-backup-20251108.tar.gz .
 git add ../docs-backup-20251108.tar.gz
 git commit -m "backup: pre-consolidation documentation snapshot"

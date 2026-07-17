@@ -90,7 +90,7 @@ Successfully completed the full Docker Compose architecture and implementation f
 ## Directory Structure
 
 ```
-/home/eirikr/GNUHurd2025/
+~/GNUHurd2025/
 ├── Disk Images
 │   ├── debian-hurd-i386-20251105.qcow2      (2.1 GB - PRODUCTION)
 │   ├── debian-hurd-i386-20251105.img        (4.2 GB - Raw format)
@@ -294,7 +294,7 @@ sudo systemctl enable --now docker
 
 ### Build Phase
 ```bash
-cd /home/eirikr/GNUHurd2025
+cd ~/GNUHurd2025
 docker compose build
 # Expected: Successfully tagged gnu-hurd-dev:latest
 ```

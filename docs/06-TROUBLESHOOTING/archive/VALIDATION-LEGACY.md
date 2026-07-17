@@ -161,7 +161,7 @@ docker ps
 
 ### Build Phase (1-2 minutes)
 ```bash
-cd /home/eirikr/GNUHurd2025
+cd ~/GNUHurd2025
 docker compose build
 # Expected: Successfully tagged gnu-hurd-dev:latest
 ```

@@ -1,7 +1,7 @@
 # GNU/Hurd Docker Repository - Complete Structural Map
 
 **Generated:** 2025-11-05
-**Repository:** /home/eirikr/Playground/gnu-hurd-docker
+**Repository:** /path/to/gnu-hurd-docker
 **Scope:** Comprehensive file structure, configuration inventory, and relationships
 
 ---
@@ -24,7 +24,7 @@
 ## Directory Tree
 
 ```
-/home/eirikr/Playground/gnu-hurd-docker/
+/path/to/gnu-hurd-docker/
 │
 ├── .claude/                          [Hidden Config Directory]
 │   └── settings.local.json          (MCP settings: 95 bytes)
@@ -1229,6 +1229,6 @@ This GNU/Hurd Docker repository is a **complete, production-ready implementation
 ---
 
 **Generated:** 2025-11-05  
-**Repository:** /home/eirikr/Playground/gnu-hurd-docker  
+**Repository:** /path/to/gnu-hurd-docker  
 **Map Version:** 1.0  
 **Last Updated:** 2025-11-05

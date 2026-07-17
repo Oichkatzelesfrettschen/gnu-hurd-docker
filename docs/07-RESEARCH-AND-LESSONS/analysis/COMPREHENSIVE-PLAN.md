@@ -595,7 +595,7 @@ jobs:
 1. ✓ Repository exists locally
 2. Configure GitHub remote:
    ```bash
-   cd /home/eirikr/Playground/gnu-hurd-docker
+   cd /path/to/gnu-hurd-docker
    gh repo create gnu-hurd-docker --public --source=. --remote=origin --push
    ```
 3. Enable GitHub Pages in repository settings
@@ -812,7 +812,7 @@ The gnu-hurd-docker repository is **production-ready** for its current scope but
 **RUN THIS COMMAND NOW:**
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 gh repo create gnu-hurd-docker --public --source=. --remote=origin --push
 ```
 

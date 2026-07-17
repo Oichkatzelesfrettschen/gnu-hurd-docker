@@ -2,7 +2,7 @@
 
 Date: 2025-11-08
 Auditor: Claude Code (Documentation Architect)
-Repository: /home/eirikr/Playground/gnu-hurd-docker/scripts/
+Repository: /path/to/gnu-hurd-docker/scripts/
 
 ## Executive Summary
 

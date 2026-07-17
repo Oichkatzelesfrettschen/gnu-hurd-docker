@@ -1,6 +1,6 @@
 # Link Fix Report
 
-Generated: /home/eirikr/Playground/gnu-hurd-docker/docs
+Generated: /path/to/gnu-hurd-docker/docs
 
 ## Summary Statistics
 

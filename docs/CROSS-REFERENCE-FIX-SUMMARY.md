@@ -1,7 +1,7 @@
 # Cross-Reference Fix Summary
 
 Generated: 2025-11-08
-Working Directory: /home/eirikr/Playground/gnu-hurd-docker/docs
+Working Directory: /path/to/gnu-hurd-docker/docs
 
 ## Executive Summary
 

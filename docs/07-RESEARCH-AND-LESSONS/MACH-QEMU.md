@@ -281,7 +281,7 @@ sha256sum -c SHA256SUMS --ignore-missing
 
 **Directory Structure**:
 ```
-/home/eirikr/Playground/
+~/Playground/
 ├── debian-hurd-amd64.img.tar.xz          (downloaded)
 ├── debian-hurd-amd64-20251105.img        (extracted)
 ├── debian-hurd-amd64-20251105.qcow2      (converted) ← READY TO USE

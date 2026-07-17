@@ -99,7 +99,7 @@ Control Channels:
 
 **File:** debian-hurd-i386-20251105.qcow2
 **Size:** 2.1 GB
-**Location:** /home/eirikr/Playground/gnu-hurd-docker/
+**Location:** /path/to/gnu-hurd-docker/
 **Status:** ✅ DETECTED
 
 **QEMU Command Line (Verified):**

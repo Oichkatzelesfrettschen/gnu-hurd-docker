@@ -69,7 +69,7 @@ docker run --rm hello-world
 THEN: DEPLOY GNU/HURD CONTAINER (20 minutes)
 =============================================================================
 
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 
 # Build Docker image (~10 minutes)
 docker compose build

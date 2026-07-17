@@ -275,7 +275,7 @@ Risk Level: Low (standard pacman upgrade) ✓
 **Objective:** Build GNU/Hurd containerized system
 
 **Steps:**
-1. Navigate: `cd /home/eirikr/Playground/gnu-hurd-docker`
+1. Navigate: `cd /path/to/gnu-hurd-docker`
 2. Build image: `docker compose build`
 3. Monitor output: Watch for qemu-system-i386 package installation
 4. Verify image: `docker images | grep gnu-hurd-dev`

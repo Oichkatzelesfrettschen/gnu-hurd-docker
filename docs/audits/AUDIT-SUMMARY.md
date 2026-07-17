@@ -152,7 +152,7 @@ All usage is for development automation. Scripts properly use single-quoted here
 ### Priority 1: CRITICAL (Must Fix)
 ```bash
 # Global find-replace in all scripts
-find /home/eirikr/Playground/gnu-hurd-docker/scripts -name "*.sh" -type f -exec \
+find /path/to/gnu-hurd-docker/scripts -name "*.sh" -type f -exec \
   sed -i 's/docker-compose/docker compose/g' {} +
 ```
 

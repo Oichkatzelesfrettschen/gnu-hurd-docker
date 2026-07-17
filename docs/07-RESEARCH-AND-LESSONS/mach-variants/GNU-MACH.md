@@ -111,7 +111,7 @@ Starting development container:
 
 Verify Mach source present:
 
-  ls -la /home/eirikr/Playground/gnu-hurd-docker/
+  ls -la /path/to/gnu-hurd-docker/
   # Look for gnumach source or git clone location
 
 Development workflow:

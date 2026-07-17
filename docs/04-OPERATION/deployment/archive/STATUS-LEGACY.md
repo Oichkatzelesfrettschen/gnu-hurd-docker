@@ -48,7 +48,7 @@ ls -lh debian-hurd-i386-20251105.qcow2
 ### Build Docker Image
 
 ```bash
-cd /home/eirikr/GNUHurd2025
+cd ~/GNUHurd2025
 
 # Build the Docker image
 docker compose build

@@ -1,6 +1,6 @@
 # GNU/Hurd Docker Repository - Complete Index
 
-**Repository:** `/home/eirikr/Playground/gnu-hurd-docker`  
+**Repository:** `/path/to/gnu-hurd-docker`  
 **Status:** Production-Ready  
 **Generated:** 2025-11-05  
 **Total Files:** 52+  
@@ -343,7 +343,7 @@ TOTAL:             52+ files, 6.31 GB
 
 ### Download System Image
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 ./scripts/download-image.sh
 ```
 
@@ -468,5 +468,5 @@ This repository contains a **complete, production-ready implementation** of GNU/
 
 **Generated:** 2025-11-05  
 **Last Updated:** 2025-11-05  
-**Repository:** /home/eirikr/Playground/gnu-hurd-docker  
+**Repository:** /path/to/gnu-hurd-docker  
 **Status:** Complete and ready for deployment

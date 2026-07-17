@@ -1,7 +1,7 @@
 # Baseline Metrics Summary
 
 **Analysis Date:** 2025-11-08
-**Directory:** /home/eirikr/Playground/gnu-hurd-docker/scripts
+**Directory:** /path/to/gnu-hurd-docker/scripts
 **Full Report:** BASELINE-METRICS.json (40KB)
 
 ## Executive Summary
@@ -165,8 +165,8 @@ Analyzed **27 shell scripts** totaling **4,742 lines of code** with **87 functio
 ---
 
 **Files Generated:**
-- /home/eirikr/Playground/gnu-hurd-docker/scripts/BASELINE-METRICS.json (40KB, full data)
-- /home/eirikr/Playground/gnu-hurd-docker/scripts/BASELINE-SUMMARY.md (this file)
+- /path/to/gnu-hurd-docker/scripts/BASELINE-METRICS.json (40KB, full data)
+- /path/to/gnu-hurd-docker/scripts/BASELINE-SUMMARY.md (this file)
 
 **Analysis Tool:** Python 3.13.7 with custom complexity analyzer
 **Analysis Runtime:** <5 seconds

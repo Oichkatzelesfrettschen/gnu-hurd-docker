@@ -1,7 +1,7 @@
 # GNU/Hurd Docker Scripts - Comprehensive Audit Report
 **Date:** 2025-11-08
 **Auditor:** Multi-Agent Analysis System (Code Review + Consolidation + Documentation + Measurement)
-**Scope:** 27 shell scripts, 4,742 LOC in /home/eirikr/Playground/gnu-hurd-docker/scripts/
+**Scope:** 27 shell scripts, 4,742 LOC in /path/to/gnu-hurd-docker/scripts/
 
 ---
 

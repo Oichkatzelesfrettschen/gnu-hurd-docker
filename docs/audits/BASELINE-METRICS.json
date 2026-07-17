@@ -1,7 +1,7 @@
 {
   "metadata": {
     "analysis_date": "2025-11-08",
-    "scripts_directory": "/home/eirikr/Playground/gnu-hurd-docker/scripts",
+    "scripts_directory": "/path/to/gnu-hurd-docker/scripts",
     "total_scripts_analyzed": 27,
     "analysis_version": "1.0"
   },
@@ -477,7 +477,7 @@
   ],
   "per_script_details": [
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/analyze-script-complexity.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/analyze-script-complexity.sh",
       "filename": "analyze-script-complexity.sh",
       "lines": {
         "total": 141,
@@ -538,7 +538,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/audit-documentation.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/audit-documentation.sh",
       "filename": "audit-documentation.sh",
       "lines": {
         "total": 126,
@@ -583,7 +583,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/boot_hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/boot_hurd.sh",
       "filename": "boot_hurd.sh",
       "lines": {
         "total": 84,
@@ -618,7 +618,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/bringup-and-provision.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/bringup-and-provision.sh",
       "filename": "bringup-and-provision.sh",
       "lines": {
         "total": 44,
@@ -664,7 +664,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/configure-shell.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/configure-shell.sh",
       "filename": "configure-shell.sh",
       "lines": {
         "total": 231,
@@ -712,7 +712,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/configure-users.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/configure-users.sh",
       "filename": "configure-users.sh",
       "lines": {
         "total": 144,
@@ -754,7 +754,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/connect-console.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/connect-console.sh",
       "filename": "connect-console.sh",
       "lines": {
         "total": 225,
@@ -795,7 +795,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/download-image.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/download-image.sh",
       "filename": "download-image.sh",
       "lines": {
         "total": 144,
@@ -835,7 +835,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/download-released-image.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/download-released-image.sh",
       "filename": "download-released-image.sh",
       "lines": {
         "total": 260,
@@ -876,7 +876,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/fix-script.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/fix-script.sh",
       "filename": "fix-script.sh",
       "lines": {
         "total": 101,
@@ -916,7 +916,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/fix-sources-hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/fix-sources-hurd.sh",
       "filename": "fix-sources-hurd.sh",
       "lines": {
         "total": 82,
@@ -959,7 +959,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/full-automated-setup.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/full-automated-setup.sh",
       "filename": "full-automated-setup.sh",
       "lines": {
         "total": 399,
@@ -1011,7 +1011,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/generate-complexity-report.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/generate-complexity-report.sh",
       "filename": "generate-complexity-report.sh",
       "lines": {
         "total": 79,
@@ -1049,7 +1049,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/health-check.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/health-check.sh",
       "filename": "health-check.sh",
       "lines": {
         "total": 106,
@@ -1085,7 +1085,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-claude-code-hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/install-claude-code-hurd.sh",
       "filename": "install-claude-code-hurd.sh",
       "lines": {
         "total": 191,
@@ -1130,7 +1130,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-essentials-hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/install-essentials-hurd.sh",
       "filename": "install-essentials-hurd.sh",
       "lines": {
         "total": 310,
@@ -1178,7 +1178,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-hurd-packages.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/install-hurd-packages.sh",
       "filename": "install-hurd-packages.sh",
       "lines": {
         "total": 231,
@@ -1227,7 +1227,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-nodejs-hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/install-nodejs-hurd.sh",
       "filename": "install-nodejs-hurd.sh",
       "lines": {
         "total": 194,
@@ -1272,7 +1272,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/install-ssh-hurd.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/install-ssh-hurd.sh",
       "filename": "install-ssh-hurd.sh",
       "lines": {
         "total": 169,
@@ -1313,7 +1313,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/manage-snapshots.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/manage-snapshots.sh",
       "filename": "manage-snapshots.sh",
       "lines": {
         "total": 260,
@@ -1354,7 +1354,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/monitor-qemu.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/monitor-qemu.sh",
       "filename": "monitor-qemu.sh",
       "lines": {
         "total": 162,
@@ -1396,7 +1396,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/setup-hurd-amd64.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/setup-hurd-amd64.sh",
       "filename": "setup-hurd-amd64.sh",
       "lines": {
         "total": 71,
@@ -1435,7 +1435,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/setup-hurd-dev.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/setup-hurd-dev.sh",
       "filename": "setup-hurd-dev.sh",
       "lines": {
         "total": 144,
@@ -1479,7 +1479,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-docker-provision.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/test-docker-provision.sh",
       "filename": "test-docker-provision.sh",
       "lines": {
         "total": 96,
@@ -1517,7 +1517,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-docker.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/test-docker.sh",
       "filename": "test-docker.sh",
       "lines": {
         "total": 112,
@@ -1556,7 +1556,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/test-hurd-system.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/test-hurd-system.sh",
       "filename": "test-hurd-system.sh",
       "lines": {
         "total": 418,
@@ -1603,7 +1603,7 @@
       }
     },
     {
-      "filepath": "/home/eirikr/Playground/gnu-hurd-docker/scripts/validate-config.sh",
+      "filepath": "/path/to/gnu-hurd-docker/scripts/validate-config.sh",
       "filename": "validate-config.sh",
       "lines": {
         "total": 218,

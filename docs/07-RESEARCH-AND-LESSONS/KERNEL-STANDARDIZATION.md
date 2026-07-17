@@ -365,7 +365,7 @@ After reboot, proceed with:
 
 ```bash
 # 1. Navigate to project directory
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 
 # 2. Build Docker image
 docker compose build

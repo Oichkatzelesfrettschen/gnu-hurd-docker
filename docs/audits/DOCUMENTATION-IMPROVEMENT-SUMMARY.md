@@ -2,7 +2,7 @@
 
 Date: 2025-11-08
 Project: GNU/Hurd Docker Scripts
-Location: /home/eirikr/Playground/gnu-hurd-docker/scripts/
+Location: /path/to/gnu-hurd-docker/scripts/
 
 ## Deliverables
 
@@ -26,7 +26,7 @@ This documentation audit has produced three key deliverables:
 - No categorization or discovery aids
 - Missing workflow documentation
 
-**Location**: `/home/eirikr/Playground/gnu-hurd-docker/scripts/DOCUMENTATION-AUDIT-REPORT.md`
+**Location**: `/path/to/gnu-hurd-docker/scripts/DOCUMENTATION-AUDIT-REPORT.md`
 
 ---
 
@@ -63,7 +63,7 @@ Quick Navigation
 
 **COVERAGE**: 100% (all 31 scripts documented)
 
-**Location**: `/home/eirikr/Playground/gnu-hurd-docker/scripts/README-PROPOSED.md`
+**Location**: `/path/to/gnu-hurd-docker/scripts/README-PROPOSED.md`
 
 ---
 
@@ -107,7 +107,7 @@ set -euo pipefail
 # Main execution
 ```
 
-**Location**: `/home/eirikr/Playground/gnu-hurd-docker/scripts/SCRIPT-HEADER-TEMPLATE.sh`
+**Location**: `/path/to/gnu-hurd-docker/scripts/SCRIPT-HEADER-TEMPLATE.sh`
 
 ---
 
@@ -230,7 +230,7 @@ grep "\.sh" README.md | grep -oP '[\w-]+\.sh' | sort | uniq -d
 ### 1. Replace Current README (30 minutes)
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker/scripts
+cd /path/to/gnu-hurd-docker/scripts
 mv README.md README-OLD.md
 mv README-PROPOSED.md README.md
 git add README.md
@@ -347,20 +347,20 @@ Apply template to most-used scripts:
 
 ## Files Created
 
-1. `/home/eirikr/Playground/gnu-hurd-docker/scripts/DOCUMENTATION-AUDIT-REPORT.md`
+1. `/path/to/gnu-hurd-docker/scripts/DOCUMENTATION-AUDIT-REPORT.md`
    - Comprehensive audit with gap analysis
    - 19 pages, detailed findings
 
-2. `/home/eirikr/Playground/gnu-hurd-docker/scripts/README-PROPOSED.md`
+2. `/path/to/gnu-hurd-docker/scripts/README-PROPOSED.md`
    - Complete script reference with 100% coverage
    - 30+ pages, production-ready
 
-3. `/home/eirikr/Playground/gnu-hurd-docker/scripts/SCRIPT-HEADER-TEMPLATE.sh`
+3. `/path/to/gnu-hurd-docker/scripts/SCRIPT-HEADER-TEMPLATE.sh`
    - Standard template for all scripts
    - WHY/WHAT/HOW compliant
    - Production-ready, executable example
 
-4. `/home/eirikr/Playground/gnu-hurd-docker/scripts/DOCUMENTATION-IMPROVEMENT-SUMMARY.md`
+4. `/path/to/gnu-hurd-docker/scripts/DOCUMENTATION-IMPROVEMENT-SUMMARY.md`
    - This file
    - Quick reference for implementation
 

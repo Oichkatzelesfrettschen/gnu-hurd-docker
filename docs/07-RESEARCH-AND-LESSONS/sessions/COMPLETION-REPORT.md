@@ -154,7 +154,7 @@ docker ps                 # Verify Docker works
 ### Subsequent Docker Deployment (20 minutes)
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 docker compose build      # Build image (10 min)
 docker compose up -d      # Deploy container (3 min)
 docker compose logs -f    # Monitor boot (5 min)
@@ -225,7 +225,7 @@ docker compose logs -f    # Monitor boot (5 min)
 ### Current File Structure
 
 ```
-/home/eirikr/Playground/gnu-hurd-docker/
+/path/to/gnu-hurd-docker/
 ├── README.md                           # Project overview
 ├── EXECUTION-SUMMARY.md                # NEW - Executive summary
 ├── SESSION-COMPLETION-REPORT.md        # NEW - This report

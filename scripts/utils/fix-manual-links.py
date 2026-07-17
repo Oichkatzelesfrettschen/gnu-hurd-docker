@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def fix_manual_links():
-    docs_root = Path("/home/eirikr/Playground/gnu-hurd-docker/docs")
+    docs_root = Path(__file__).resolve().parents[2] / "docs"
     json_path = docs_root / "link-fix-data.json"
 
     # Load the manual review items

@@ -2,7 +2,7 @@
   "audit_metadata": {
     "audit_date": "2025-11-08",
     "auditor": "Claude Code Review Specialist",
-    "scope": "/home/eirikr/Playground/gnu-hurd-docker/scripts/",
+    "scope": "/path/to/gnu-hurd-docker/scripts/",
     "total_scripts": 30,
     "total_loc": "4600+",
     "compliance_framework": "CLAUDE.md user memory requirements",

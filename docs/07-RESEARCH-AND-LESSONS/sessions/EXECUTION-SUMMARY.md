@@ -125,7 +125,7 @@ docker run --rm hello-world
 
 ### Phase 2: Docker Image Build (10 min)
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 docker compose build
 # Builds Debian Bookworm + QEMU container image
 ```
@@ -208,7 +208,7 @@ screen /dev/pts/X
 
 5. **Build and deploy:**
    ```bash
-   cd /home/eirikr/Playground/gnu-hurd-docker
+   cd /path/to/gnu-hurd-docker
    docker compose build
    docker compose up -d
    docker compose logs -f

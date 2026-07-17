@@ -187,7 +187,7 @@ To verify the implementation:
 
 ```bash
 # Run comprehensive test suite
-cd /home/eirikr/Playground/gnu-hurd-docker/scripts
+cd /path/to/gnu-hurd-docker/scripts
 bash TEST-TRAP-HANDLERS.sh
 
 # Expected output:

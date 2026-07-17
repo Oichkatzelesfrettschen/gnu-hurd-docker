@@ -1448,7 +1448,7 @@ Global variables used across scripts:
 
 ### Related Documentation
 
-- Parent README: `/home/eirikr/Playground/gnu-hurd-docker/README.md`
+- Parent README: `../README.md`
 - Architecture docs: `../docs/ARCHITECTURE.md`
 - Image building: `../docs/HURD-IMAGE-BUILDING.md`
 - QEMU optimization: `../docs/QEMU-OPTIMIZATION-2025.md`

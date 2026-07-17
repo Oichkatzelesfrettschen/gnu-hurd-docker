@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def fix_case_sensitive_links():
-    docs_root = Path("/home/eirikr/Playground/gnu-hurd-docker/docs")
+    docs_root = Path(__file__).resolve().parents[2] / "docs"
 
     fixes_to_apply = [
         # Fix INDEX.md case issues
