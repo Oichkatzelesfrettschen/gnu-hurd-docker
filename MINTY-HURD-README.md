@@ -31,11 +31,11 @@ docker compose -f compose.yaml -f compose.minty.yaml up -d
 
 # 4. wait ~60 sec for KVM boot, then SSH in.  Default credentials are
 #    root:root and user:user (set offline in the baseline image -- see
-#    HURD-CONFIG-2026-05-13.md for how to reproduce).
+#    docs/reports/HURD-CONFIG-2026-05-13.md for how to reproduce).
 ssh-keygen -t ed25519 -f hurd_test_key -N ''
 # (the install procedure in scripts/minty-hurd-install.sh expects this
 #  key to be pre-baked into /home/user/.ssh/authorized_keys; see
-#  HURD-CONFIG-2026-05-13.md sec "Offline-edit script".)
+#  docs/reports/HURD-CONFIG-2026-05-13.md sec "Offline-edit script".)
 ssh -i hurd_test_key -p 2222 user@127.0.0.1
 
 # 5. install the full Minty Hurd stack (XFCE + Mint themes + tmux + mosh + fastfetch)

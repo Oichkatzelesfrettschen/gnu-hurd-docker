@@ -1,8 +1,8 @@
 # Minty Hurd compose profile.
 #
 # Boots images/hurd-working.qcow2 with KVM + IDE + 16 GB disk + the
-# Hurd-specific workarounds documented in HURD-CONFIG-2026-05-13.md
-# and DISK-PERFORMANCE-RCA-2026-05-13.md.
+# Hurd-specific workarounds documented in docs/reports/HURD-CONFIG-2026-05-13.md
+# and docs/reports/DISK-PERFORMANCE-RCA-2026-05-13.md.
 #
 # Usage:
 #   docker compose -f compose.yaml -f compose.minty.yaml up -d
