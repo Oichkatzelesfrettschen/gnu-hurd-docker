@@ -28,6 +28,9 @@ permissions:
 
 jobs:
   smoke-boot:
+    # Scheduled runs need the released boot image; forks have no release
+    # artifacts, so only the canonical repository runs this on cron.
+    if: github.event_name == 'workflow_dispatch' || github.repository == 'Oichkatzelesfrettschen/gnu-hurd-docker'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     name: Boot and Port Accessibility Test (Experimental)
