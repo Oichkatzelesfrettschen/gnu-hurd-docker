@@ -113,7 +113,7 @@ gnu-hurd-docker/
 ├── Core Docker Configuration (COMPLETE ✓)
 │   ├── Dockerfile (18 lines, Debian Bookworm + QEMU)
 │   ├── entrypoint.sh (20 lines, QEMU launcher)
-│   └── docker-compose.yml (27 lines, container orchestration)
+│   └── compose.yaml (27 lines, container orchestration)
 │
 ├── Disk Images (PRESENT ✓)
 │   ├── debian-hurd-i386-20251105.qcow2 (2.1 GB, production format)
@@ -284,7 +284,7 @@ Based on `ls -la ~/GNUHurd2025/`:
 ├── debian-hurd-i386-20251105.qcow2 (2.1 GB)    [DUPLICATE - exists in repo]
 ├── debian-hurd.img.tar.xz (355 MB)             [DUPLICATE - exists in repo]
 ├── DEPLOYMENT-STATUS.md                        [DUPLICATE - exists in repo]
-├── docker-compose.yml                          [DUPLICATE - exists in repo]
+├── compose.yaml                          [DUPLICATE - exists in repo]
 ├── Dockerfile                                  [DUPLICATE - exists in repo]
 ├── entrypoint.sh                               [DUPLICATE - exists in repo]
 ├── hurd_serial.log (21 KB)                     [RUNTIME LOG - migrate to logs/]
@@ -595,7 +595,7 @@ jobs:
 1. ✓ Repository exists locally
 2. Configure GitHub remote:
    ```bash
-   cd /home/eirikr/Playground/gnu-hurd-docker
+   cd /path/to/gnu-hurd-docker
    gh repo create gnu-hurd-docker --public --source=. --remote=origin --push
    ```
 3. Enable GitHub Pages in repository settings
@@ -812,7 +812,7 @@ The gnu-hurd-docker repository is **production-ready** for its current scope but
 **RUN THIS COMMAND NOW:**
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 gh repo create gnu-hurd-docker --public --source=. --remote=origin --push
 ```
 

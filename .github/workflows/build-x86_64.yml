@@ -12,6 +12,9 @@ concurrency:
 
 jobs:
   build:
+    # Depends on release artifacts absent from forks; push builds run only
+    # in the canonical repository (manual dispatch works anywhere).
+    if: github.event_name == 'workflow_dispatch' || github.repository == 'Oichkatzelesfrettschen/gnu-hurd-docker'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -60,8 +63,8 @@ jobs:
           echo "root" > secrets/root_password.txt
           echo "agents" > secrets/agents_password.txt
 
-      - name: Remove override file (CI uses only base docker-compose.yml)
-        run: rm -f docker-compose.override.yml
+      - name: Remove override file (CI uses only base compose.yaml)
+        run: rm -f compose.override.yaml
 
       - name: Start VM (with TCG fallback, using GHCR image)
         run: docker compose up -d

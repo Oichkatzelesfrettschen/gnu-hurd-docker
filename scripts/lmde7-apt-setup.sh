@@ -18,11 +18,16 @@ dpkg -i /tmp/linuxmint-keyring.deb
 rm -f /tmp/linuxmint-keyring.deb
 
 log "Step 3: add LMDE7 (gigi) repo with restricted scope"
+# Mint publishes no hurd-amd64 index, so the line pins arch=amd64: apt then
+# fetches the binary-amd64 Packages index, and the pin whitelist below limits
+# installation to Architecture: all packages, which are arch-independent and
+# listed in every per-arch index.  A bare deb line would 404 fetching
+# binary-hurd-amd64 and break apt update.
 cat > /etc/apt/sources.list.d/lmde7.list <<'EOF'
 # Linux Mint Debian Edition 7 (gigi) - trixie-based.
 # Used ONLY for arch=all Mint-specific packages (themes, mintmenu, mintdesktop,
 # etc.).  See /etc/apt/preferences.d/lmde7 for the pin that enforces this.
-deb http://mirrors.kernel.org/linuxmint-packages/ gigi main upstream import backport
+deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/linuxmint-keyring.gpg] http://mirrors.kernel.org/linuxmint-packages/ gigi main upstream import backport
 EOF
 
 log "Step 4: pin LMDE7 packages so only arch=all wins"
@@ -34,10 +39,12 @@ Pin: release o=linuxmint
 Pin-Priority: 100
 
 # Allow only these specific Mint-specific arch=all packages to install from LMDE.
-# (These don't exist in Debian.)
-Package: mintmenu mint-themes mint-x-icons mint-y-icons mint-l-theme mint-l-icons \
-         mint-cursor-themes mintdesktop mint-artwork mint-common mint-translations \
-         mint-backgrounds-* mint-info-cinnamon mint-meta-codecs linuxmint-keyring
+# (These don't exist in Debian.)  apt_preferences(5) takes the package list as
+# one space-separated field; continuation lines fold RFC-822 style with leading
+# whitespace and no backslashes.
+Package: mintmenu mint-themes mint-x-icons mint-y-icons mint-l-theme mint-l-icons
+ mint-cursor-themes mintdesktop mint-artwork mint-common mint-translations
+ mint-backgrounds-* mint-info-cinnamon mint-meta-codecs linuxmint-keyring
 Pin: release o=linuxmint
 Pin-Priority: 500
 EOF

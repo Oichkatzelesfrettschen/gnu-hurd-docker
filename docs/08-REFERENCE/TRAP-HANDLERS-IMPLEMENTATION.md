@@ -402,7 +402,7 @@ All 8 tests passed:
 ### How to Run Tests
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker/scripts
+cd /path/to/gnu-hurd-docker/scripts
 bash TEST-TRAP-HANDLERS.sh
 ```
 
@@ -501,33 +501,33 @@ When adding new file creation or external resource:
 
 ## Files Modified
 
-1. `/home/eirikr/Playground/gnu-hurd-docker/scripts/full-automated-setup.sh`
+1. `/path/to/gnu-hurd-docker/scripts/full-automated-setup.sh`
    - Lines: Added trap handler (40+ lines)
    - Status: Ready for production
 
-2. `/home/eirikr/Playground/gnu-hurd-docker/scripts/bringup-and-provision.sh`
+2. `/path/to/gnu-hurd-docker/scripts/bringup-and-provision.sh`
    - Lines: Added trap handler and container tracking (62 lines)
    - Status: Ready for production
 
-3. `/home/eirikr/Playground/gnu-hurd-docker/scripts/download-image.sh`
+3. `/path/to/gnu-hurd-docker/scripts/download-image.sh`
    - Lines: Added trap handler, tracking for 2 temp files (40+ lines)
    - Status: Ready for production
 
-4. `/home/eirikr/Playground/gnu-hurd-docker/scripts/download-released-image.sh`
+4. `/path/to/gnu-hurd-docker/scripts/download-released-image.sh`
    - Lines: Added trap handler, dynamic file tracking (45+ lines)
    - Status: Ready for production
 
-5. `/home/eirikr/Playground/gnu-hurd-docker/scripts/manage-snapshots.sh`
+5. `/path/to/gnu-hurd-docker/scripts/manage-snapshots.sh`
    - Lines: Added trap handler for backup cleanup (35+ lines)
    - Status: Ready for production
 
-6. `/home/eirikr/Playground/gnu-hurd-docker/scripts/test-hurd-system.sh`
+6. `/path/to/gnu-hurd-docker/scripts/test-hurd-system.sh`
    - Lines: Added trap handler for test artifacts (35+ lines)
    - Status: Ready for production
 
 ## Test File
 
-- `/home/eirikr/Playground/gnu-hurd-docker/scripts/TEST-TRAP-HANDLERS.sh`
+- `/path/to/gnu-hurd-docker/scripts/TEST-TRAP-HANDLERS.sh`
   - Comprehensive test suite for all trap handlers
   - 8 test cases covering all cleanup scenarios
   - Can be run in CI/CD pipelines

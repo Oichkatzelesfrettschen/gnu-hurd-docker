@@ -19,8 +19,8 @@ Before diving into specific issues, run these commands to gather information:
 ```bash
 # System status
 docker ps -a
-docker-compose ps
-docker-compose logs --tail=50
+docker compose ps
+docker compose logs --tail=50
 
 # Resource usage
 docker stats gnu-hurd-dev
@@ -396,7 +396,7 @@ sudo systemctl restart docker
 
 ### Image Build Fails
 
-**Error**: `docker-compose build` fails with errors
+**Error**: `docker compose build` fails with errors
 
 **Causes and Solutions**:
 
@@ -434,40 +434,40 @@ curl -I https://deb.debian.org
 docker build --dry-run .
 
 # Build with detailed output
-docker-compose build --progress=plain
+docker compose build --progress=plain
 
 # Build without cache
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ---
 
 ### Container Won't Start
 
-**Error**: `docker-compose up -d` fails or container exits immediately
+**Error**: `docker compose up -d` fails or container exits immediately
 
 **Diagnostic Steps**:
 
 ```bash
 # 1. Check logs
-docker-compose logs --tail=100
+docker compose logs --tail=100
 
 # 2. Verify QCOW2 image exists
 ls -lh debian-hurd-amd64-80gb.qcow2
 
 # 3. Check volume mount paths
-grep -A 3 "volumes:" docker-compose.yml
+grep -A 3 "volumes:" compose.yaml
 
 # 4. Try interactive mode to see errors
-docker-compose up
+docker compose up
 # Press Ctrl+C to stop
 
 # 5. Check container status
 docker ps -a | grep gnu-hurd
 
 # 6. Remove failed container and retry
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 **Common Issues**:
@@ -503,7 +503,7 @@ qemu-img check -r all debian-hurd-amd64-80gb.qcow2
 
 ### Container Exits Immediately
 
-**Error**: `docker-compose ps` shows `Exited (1)` or `Exited (137)`
+**Error**: `docker compose ps` shows `Exited (1)` or `Exited (137)`
 
 **Exit Code Meanings**:
 - `Exited (1)`: General error in entrypoint script or QEMU
@@ -513,7 +513,7 @@ qemu-img check -r all debian-hurd-amd64-80gb.qcow2
 
 ```bash
 # View exit logs
-docker-compose logs --tail=50
+docker compose logs --tail=50
 
 # Check entrypoint.sh for syntax errors
 shellcheck entrypoint.sh
@@ -522,11 +522,11 @@ shellcheck entrypoint.sh
 docker image ls | grep gnu-hurd
 
 # Check QEMU command line
-docker-compose logs | grep "qemu-system"
+docker compose logs | grep "qemu-system"
 
 # Try rebuilding image
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 ```
 
 **If OOM (Out of Memory) killed container**:
@@ -536,7 +536,7 @@ docker-compose up -d
 docker events | grep -E "kill|oom"
 
 # Reduce QEMU RAM allocation
-# Edit docker-compose.yml:
+# Edit compose.yaml:
 environment:
   QEMU_RAM: 2048  # Reduced from 4096
 
@@ -561,15 +561,15 @@ ss -tlnp | grep 2222
 # Stop conflicting service
 sudo systemctl stop <service>
 
-# Or use different host port in docker-compose.yml
+# Or use different host port in compose.yaml
 # Change: "2222:22" to "2223:22"
 ports:
   - "2223:22"   # SSH (host:container)
   - "8080:80"   # HTTP
 
 # Then restart
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # Connect via new port
 ssh -p 2223 root@localhost
@@ -608,7 +608,7 @@ ls -la /dev/kvm
 
 # If missing, boot will be slow (5-10 minutes is normal)
 # Monitor boot progress
-docker-compose logs -f | grep -E "boot|grub|kernel"
+docker compose logs -f | grep -E "boot|grub|kernel"
 
 # Or increase timeout expectations
 # x86_64 + TCG: 10-15 minutes to SSH
@@ -619,18 +619,18 @@ docker-compose logs -f | grep -E "boot|grub|kernel"
 
 ```bash
 # Check current storage interface
-grep QEMU_STORAGE docker-compose.yml
+grep QEMU_STORAGE compose.yaml
 
 # x86_64 Hurd prefers SATA over IDE
-# Edit docker-compose.yml:
+# Edit compose.yaml:
 environment:
   QEMU_STORAGE: sata  # Not ide
   QEMU_EXTRA_ARGS: "-cpu host -machine type=pc,accel=kvm:tcg"
 
 # Rebuild and restart
-docker-compose down
-docker-compose build
-docker-compose up -d
+docker compose down
+docker compose build
+docker compose up -d
 ```
 
 **Rationale**: The official x86_64 Hurd image has better SATA/AHCI support than IDE. Q35 machine type may also cause issues; use `pc` instead.
@@ -649,7 +649,7 @@ ext2fs: part:1:device:wd0: Input/output error
 
 **Solution**: Switch to SATA storage and PC machine type.
 
-**Edit docker-compose.yml**:
+**Edit compose.yaml**:
 
 **Before** (IDE with Q35):
 ```yaml
@@ -673,12 +673,12 @@ environment:
 **Rebuild and test**:
 
 ```bash
-docker-compose down
-docker-compose build
-docker-compose up -d
+docker compose down
+docker compose build
+docker compose up -d
 
 # Monitor boot
-docker-compose logs -f
+docker compose logs -f
 ```
 
 **Expected**: No I/O errors, disk detected as SATA device (sd0).
@@ -693,14 +693,14 @@ docker-compose logs -f
 
 ```bash
 # 1. Find correct serial port
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 
 # 2. Try pressing Enter to wake console
 telnet localhost 5555
 # Press: Enter, Enter, Enter
 
 # 3. Check if QEMU serial is configured correctly
-docker-compose logs | grep -E "serial|monitor"
+docker compose logs | grep -E "serial|monitor"
 
 # 4. Verify entrypoint.sh has correct serial setup
 grep "serial" entrypoint.sh
@@ -729,18 +729,18 @@ docker stats gnu-hurd-dev
 
 ```bash
 # 1. Reduce QEMU memory allocation
-# Edit docker-compose.yml:
+# Edit compose.yaml:
 environment:
   QEMU_RAM: 2048  # Reduce from 4096 or 8192
 
 # 2. Check QEMU process inside container
-docker-compose exec gnu-hurd-dev ps aux | grep qemu
+docker compose exec gnu-hurd-dev ps aux | grep qemu
 
 # 3. Check host memory
 free -h
 
 # 4. Inside guest, clean up packages
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 apt-get clean
 apt-get autoremove
 ```
@@ -776,7 +776,7 @@ cp debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64-80gb.qcow2.backup
 qemu-img check -r all debian-hurd-amd64-80gb.qcow2
 
 # Test boot
-docker-compose up -d
+docker compose up -d
 ```
 
 **2. Convert and Reconvert** (if repair fails):
@@ -796,7 +796,7 @@ qemu-img convert -f raw -O qcow2 \
 rm temp.img
 
 # Test boot
-docker-compose up -d
+docker compose up -d
 ```
 
 **3. Restore from Backup or Re-download**:
@@ -867,14 +867,14 @@ docker system prune -af
 ls -la /dev/kvm
 
 # Check CPU usage inside container
-docker-compose exec gnu-hurd-dev top
+docker compose exec gnu-hurd-dev top
 
 # Monitor host CPU usage
 top
 # Look for qemu-system-x86_64 process
 
 # Check disk I/O (if iostat available)
-docker-compose exec gnu-hurd-dev iostat -x 1 5
+docker compose exec gnu-hurd-dev iostat -x 1 5
 ```
 
 **Solutions**:
@@ -882,7 +882,7 @@ docker-compose exec gnu-hurd-dev iostat -x 1 5
 **1. Enable KVM** (Linux hosts only):
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 devices:
   - /dev/kvm:/dev/kvm:rw
 ```
@@ -891,17 +891,17 @@ devices:
 
 ```bash
 # List running services
-docker-compose exec gnu-hurd-dev systemctl list-units --type=service --state=running
+docker compose exec gnu-hurd-dev systemctl list-units --type=service --state=running
 
 # Disable unnecessary services
-docker-compose exec gnu-hurd-dev systemctl disable <service>
-docker-compose exec gnu-hurd-dev systemctl stop <service>
+docker compose exec gnu-hurd-dev systemctl disable <service>
+docker compose exec gnu-hurd-dev systemctl stop <service>
 ```
 
 **3. Increase host system resources**:
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 environment:
   QEMU_SMP: 4     # More CPUs
   QEMU_RAM: 8192  # More RAM
@@ -933,16 +933,16 @@ environment:
 docker stats gnu-hurd-dev
 
 # Inside guest, find high-CPU processes
-docker-compose exec gnu-hurd-dev ps aux --sort=-%cpu | head -10
+docker compose exec gnu-hurd-dev ps aux --sort=-%cpu | head -10
 
 # Kill runaway processes
-docker-compose exec gnu-hurd-dev kill -9 <PID>
+docker compose exec gnu-hurd-dev kill -9 <PID>
 
 # Check for infinite loops in logs
-docker-compose logs | grep -E "error|loop|retry" | tail -50
+docker compose logs | grep -E "error|loop|retry" | tail -50
 
 # Disable unnecessary services
-docker-compose exec gnu-hurd-dev systemctl disable <service>
+docker compose exec gnu-hurd-dev systemctl disable <service>
 ```
 
 ---
@@ -957,7 +957,7 @@ docker-compose exec gnu-hurd-dev systemctl disable <service>
 
 ```bash
 # Verify port mapping
-docker-compose ps
+docker compose ps
 
 # Test SSH port on localhost
 nc -zv localhost 2222      # Should succeed
@@ -976,7 +976,7 @@ sudo ufw allow 8080
 
 **Solutions**:
 
-**1. Verify port mapping in docker-compose.yml**:
+**1. Verify port mapping in compose.yaml**:
 
 ```yaml
 ports:
@@ -988,7 +988,7 @@ ports:
 **2. Check container is running**:
 
 ```bash
-docker-compose ps
+docker compose ps
 # Should show "Up" status
 ```
 
@@ -996,10 +996,10 @@ docker-compose ps
 
 ```bash
 # Check if service is listening inside container
-docker-compose exec gnu-hurd-dev ss -tlnp | grep :22
+docker compose exec gnu-hurd-dev ss -tlnp | grep :22
 
 # If not listening, start SSH
-docker-compose exec gnu-hurd-dev systemctl start ssh
+docker compose exec gnu-hurd-dev systemctl start ssh
 ```
 
 ---
@@ -1012,18 +1012,18 @@ docker-compose exec gnu-hurd-dev systemctl start ssh
 
 ```bash
 # Test connectivity inside container
-docker-compose exec gnu-hurd-dev ping -c 3 8.8.8.8
+docker compose exec gnu-hurd-dev ping -c 3 8.8.8.8
 
 # Check routing
-docker-compose exec gnu-hurd-dev ip route show
+docker compose exec gnu-hurd-dev ip route show
 # Should have default via 10.0.2.2 (QEMU user network)
 
 # Check DNS resolution
-docker-compose exec gnu-hurd-dev cat /etc/resolv.conf
+docker compose exec gnu-hurd-dev cat /etc/resolv.conf
 # Should have nameserver entries
 
 # Test DNS
-docker-compose exec gnu-hurd-dev nslookup google.com
+docker compose exec gnu-hurd-dev nslookup google.com
 ```
 
 **Solutions**:
@@ -1031,7 +1031,7 @@ docker-compose exec gnu-hurd-dev nslookup google.com
 **1. Manually set DNS**:
 
 ```bash
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 # Inside guest:
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 echo "nameserver 1.1.1.1" >> /etc/resolv.conf
@@ -1050,7 +1050,7 @@ docker network ls
 docker network inspect hurd-net
 
 # Verify bridge mode
-grep "bridge" docker-compose.yml
+grep "bridge" compose.yaml
 ```
 
 **3. Check host firewall**:
@@ -1076,13 +1076,13 @@ When encountering any issue, follow this workflow:
 
 ```bash
 # Container logs (last 100 lines)
-docker-compose logs --tail=100
+docker compose logs --tail=100
 
 # Recent logs (last 10 minutes)
-docker-compose logs --since 10m
+docker compose logs --since 10m
 
 # Follow logs in real-time
-docker-compose logs -f
+docker compose logs -f
 
 # Docker daemon logs
 sudo journalctl -u docker -n 100
@@ -1109,10 +1109,10 @@ qemu-img info debian-hurd-amd64-80gb.qcow2
 
 ```bash
 # Container status
-docker-compose ps
+docker compose ps
 
 # Network connectivity inside container
-docker-compose exec gnu-hurd-dev ping -c 3 8.8.8.8
+docker compose exec gnu-hurd-dev ping -c 3 8.8.8.8
 
 # SSH connectivity
 ssh -p 2222 -o ConnectTimeout=5 root@localhost
@@ -1122,23 +1122,23 @@ ssh -p 2222 -o ConnectTimeout=5 root@localhost
 
 ```bash
 # Inside container, check running services
-docker-compose exec gnu-hurd-dev systemctl status ssh
-docker-compose exec gnu-hurd-dev ps aux
+docker compose exec gnu-hurd-dev systemctl status ssh
+docker compose exec gnu-hurd-dev ps aux
 
 # Check listening ports
-docker-compose exec gnu-hurd-dev ss -tlnp
+docker compose exec gnu-hurd-dev ss -tlnp
 ```
 
 **5. Rebuild and Restart**:
 
 ```bash
 # Full cleanup and rebuild
-docker-compose down -v
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down -v
+docker compose build --no-cache
+docker compose up -d
 
 # Monitor startup
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---
@@ -1147,7 +1147,7 @@ docker-compose logs -f
 
 ### Before Opening an Issue
 
-1. **Check logs**: `docker-compose logs --tail=100`
+1. **Check logs**: `docker compose logs --tail=100`
 2. **Verify configuration**: Run validation scripts
 3. **Search documentation**: Check `docs/` folder and README.md
 4. **Review this guide**: Most issues are documented here
@@ -1160,17 +1160,17 @@ Include:
    ```bash
    uname -a
    docker --version
-   docker-compose --version
+   docker compose version
    qemu-system-x86_64 --version
    ```
 
 2. **Error logs**:
    ```bash
-   docker-compose logs --tail=200 > error-log.txt
+   docker compose logs --tail=200 > error-log.txt
    ```
 
 3. **Configuration files**:
-   - `docker-compose.yml`
+   - `compose.yaml`
    - `entrypoint.sh`
    - Relevant scripts
 

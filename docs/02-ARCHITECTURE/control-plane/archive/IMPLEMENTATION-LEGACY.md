@@ -361,7 +361,7 @@ apt-get update
 apt-get install -y mosh
 ```
 
-### Expose mosh ports (update docker-compose.yml):
+### Expose mosh ports (update compose.yaml):
 
 ```yaml
 ports:
@@ -415,8 +415,8 @@ Requires=docker.service
 [Service]
 Type=simple
 WorkingDirectory=%h/Playground/gnu-hurd-docker
-ExecStart=/usr/bin/docker-compose up
-ExecStop=/usr/bin/docker-compose down
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
 Restart=on-failure
 RestartSec=10
 
@@ -529,7 +529,7 @@ echo "==================================================================="
 
 ### Infrastructure
 - [ ] Update entrypoint.sh with full control plane (QMP, HMP, serial)
-- [ ] Add HMP_PORT=4444 to docker-compose.yml
+- [ ] Add HMP_PORT=4444 to compose.yaml
 - [ ] Create qmp_ctl.py for automation
 - [ ] Test QMP commands (query-status, system_reset)
 - [ ] Test HMP via telnet (sendkey, info commands)

@@ -102,10 +102,10 @@ This section covers daily operations for managing the GNU/Hurd x86_64 Docker env
 **Start**:
 ```bash
 # Start container
-docker-compose up -d
+docker compose up -d
 
 # Wait for boot (2-5 minutes)
-docker-compose logs -f
+docker compose logs -f
 
 # Connect via SSH
 ssh -p 2222 root@localhost
@@ -118,12 +118,12 @@ shutdown -h now
 
 # Wait for "System halted" message
 # Then stop container
-docker-compose down
+docker compose down
 ```
 
 **Quick stop** (ungraceful, may cause fsck errors):
 ```bash
-docker-compose down
+docker compose down
 # Use only when necessary
 ```
 
@@ -172,7 +172,7 @@ htop
 **Check logs**:
 ```bash
 # Container logs
-docker-compose logs | tail -100
+docker compose logs | tail -100
 
 # Guest system logs
 ssh -p 2222 root@localhost
@@ -235,7 +235,7 @@ cat mydb-backup.sql | ssh -p 2222 root@localhost "psql mydb"
    # Inside guest
    shutdown -h now
    # Wait for "System halted"
-   # Then: docker-compose down
+   # Then: docker compose down
    ```
    **Why**: Prevents filesystem errors (fsck)
 
@@ -260,7 +260,7 @@ cat mydb-backup.sql | ssh -p 2222 root@localhost "psql mydb"
 
 5. **Check logs regularly**:
    ```bash
-   docker-compose logs | grep -i error
+   docker compose logs | grep -i error
    ```
    **Why**: Detect issues before they escalate
 
@@ -270,7 +270,7 @@ cat mydb-backup.sql | ssh -p 2222 root@localhost "psql mydb"
 
 ### Start Environment
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Stop Environment (Graceful)
@@ -278,7 +278,7 @@ docker-compose up -d
 # Inside guest
 shutdown -h now
 # Then on host
-docker-compose down
+docker compose down
 ```
 
 ### Restart Environment
@@ -287,7 +287,7 @@ docker-compose down
 ssh -p 2222 root@localhost shutdown -r now
 
 # Quick (may cause fsck)
-docker-compose restart
+docker compose restart
 ```
 
 ### Access SSH
@@ -323,7 +323,7 @@ scp -P 2222 file.txt root@localhost:/root/
 
 ### View Logs
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---
@@ -370,7 +370,7 @@ docker-compose logs -f
 ## Troubleshooting Operations
 
 **Container won't start**:
-- Check Docker logs: `docker-compose logs`
+- Check Docker logs: `docker compose logs`
 - Verify QCOW2 image exists: `ls -lh *.qcow2`
 - Check disk space: `df -h`
 

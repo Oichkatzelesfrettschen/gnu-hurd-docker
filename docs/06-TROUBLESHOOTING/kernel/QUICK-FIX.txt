@@ -69,16 +69,16 @@ docker run --rm hello-world
 THEN: DEPLOY GNU/HURD CONTAINER (20 minutes)
 =============================================================================
 
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 
 # Build Docker image (~10 minutes)
-docker-compose build
+docker compose build
 
 # Start container (~3 minutes)
-docker-compose up -d
+docker compose up -d
 
 # Monitor boot (~5 minutes)
-docker-compose logs -f
+docker compose logs -f
 
 # Expected: QEMU boots GNU/Hurd system, reaches login prompt
 

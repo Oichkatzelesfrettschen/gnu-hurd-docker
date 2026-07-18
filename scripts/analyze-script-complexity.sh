@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-SCRIPTS_DIR="/home/eirikr/Playground/gnu-hurd-docker/scripts"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Analyze a single script
 analyze_script() {

@@ -2,7 +2,7 @@
 # VNC-Enabled Docker Compose Configuration for GNU/Hurd
 # =============================================================================
 # PURPOSE:
-# - Extends base docker-compose.yml with VNC and noVNC support
+# - Extends base compose.yaml with VNC and noVNC support
 # - Enables graphical access to Hurd desktop via web browser
 # - Adds QEMU monitor and enhanced debugging capabilities
 # =============================================================================

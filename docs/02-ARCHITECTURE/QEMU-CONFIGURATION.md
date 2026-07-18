@@ -11,7 +11,7 @@ If you need the previous, long-form QEMU configuration document (including histo
 
 ## Key environment variables
 
-These are set in `docker-compose.yml` and read by `entrypoint.sh`:
+These are set in `compose.yaml` and read by `entrypoint.sh`:
 
 - `QEMU_DRIVE`: path to the QCOW2 inside the container
 - `QEMU_RAM`: RAM in MB (default in compose: `4096`)
@@ -30,6 +30,6 @@ These are set in `docker-compose.yml` and read by `entrypoint.sh`:
 
 ## Where the truth lives
 
-- Compose defaults: `docker-compose.yml`
+- Compose defaults: `compose.yaml`
 - Runtime logic: `entrypoint.sh`
 - Standalone (no container): `scripts/run-hurd-qemu.sh`

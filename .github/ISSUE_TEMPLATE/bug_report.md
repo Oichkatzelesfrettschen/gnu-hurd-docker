@@ -49,7 +49,7 @@ assignees: ''
 
 **Docker Compose logs**:
 ```
-# Paste output of: docker-compose logs hurd-x86_64 | tail -100
+# Paste output of: docker compose logs hurd-x86_64 | tail -100
 ```
 
 **QEMU logs** (if applicable):

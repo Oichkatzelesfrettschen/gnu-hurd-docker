@@ -178,7 +178,7 @@ jobs:
         run: |
           echo "=== Packaging configuration files ==="
           cp -v Dockerfile release-artifacts/
-          cp -v docker-compose.yml release-artifacts/
+          cp -v compose.yaml release-artifacts/
           cp -v entrypoint.sh release-artifacts/
           cp -v PKGBUILD release-artifacts/
           cp -v gnu-hurd-docker.install release-artifacts/

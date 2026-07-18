@@ -78,3 +78,4 @@ secrets/*.txt
 .claude/*.local.json
 ssh-test-keys/hurd_test_key
 mint-sources/
+*.db

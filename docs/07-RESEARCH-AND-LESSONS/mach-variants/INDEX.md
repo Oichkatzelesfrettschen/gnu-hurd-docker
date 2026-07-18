@@ -274,7 +274,7 @@ Topics covered:
 
 ```bash
 # This Docker environment
-docker-compose up -d
+docker compose up -d
 
 # Inside Hurd
 ./scripts/setup-hurd-dev.sh

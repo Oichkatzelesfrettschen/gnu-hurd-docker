@@ -79,7 +79,7 @@ jobs:
       - name: Enable VNC and noVNC
         run: |
           # Start Hurd with VNC enabled
-          docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+          docker compose -f compose.yaml -f compose.vnc.yaml up -d
 
       - name: Keep session alive
         run: |
@@ -326,7 +326,7 @@ jobs:
 
       - name: Configure test environment
         run: |
-          cat >> docker-compose.override.yml <<EOF
+          cat >> compose.override.yaml <<EOF
           services:
             gnu-hurd-dev:
               environment:
@@ -469,7 +469,7 @@ jobs:
 
       - name: Start Hurd with VNC
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d
+          docker compose -f compose.yaml -f compose.vnc.yaml up -d
           ./scripts/wait-for-boot.sh
 
       - name: Install GUI

@@ -2,7 +2,7 @@
 
 **Date:** 2025-11-05  
 **Status:** Ready for Docker Build and Deploy  
-**Files Created:** Dockerfile, entrypoint.sh, docker-compose.yml  
+**Files Created:** Dockerfile, entrypoint.sh, compose.yaml  
 
 ---
 
@@ -21,7 +21,7 @@ GNUHurd2025/
 ├── debian-hurd.img.tar.xz              (355 MB - source archive)
 ├── Dockerfile                          (Docker image specification)
 ├── entrypoint.sh                       (QEMU launcher script)
-├── docker-compose.yml                  (Container orchestration)
+├── compose.yaml                  (Container orchestration)
 ├── DOCKER-ARCHITECTURE-DESIGN.md       (Architecture documentation)
 └── DEPLOYMENT-STATUS.md                (This file)
 ```
@@ -35,7 +35,7 @@ GNUHurd2025/
 ```bash
 # Verify Docker is installed and running
 docker --version
-docker-compose --version
+docker compose version
 
 # Add current user to docker group (one-time)
 sudo usermod -a -G docker $USER
@@ -48,10 +48,10 @@ ls -lh debian-hurd-i386-20251105.qcow2
 ### Build Docker Image
 
 ```bash
-cd /home/eirikr/GNUHurd2025
+cd ~/GNUHurd2025
 
 # Build the Docker image
-docker-compose build
+docker compose build
 
 # Expected output: Successfully tagged gnu-hurd-dev:latest
 ```
@@ -60,10 +60,10 @@ docker-compose build
 
 ```bash
 # Start the container in background
-docker-compose up -d
+docker compose up -d
 
 # Verify container is running
-docker-compose ps
+docker compose ps
 
 # Expected output: gnu-hurd-dev  Up  [status]
 ```
@@ -72,10 +72,10 @@ docker-compose ps
 
 ```bash
 # View startup logs
-docker-compose logs -f
+docker compose logs -f
 
 # Access container shell
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 
 # Access serial console (PTY)
 # Find PTY path from logs: "char device redirected to /dev/pts/X"
@@ -92,20 +92,20 @@ screen /dev/pts/X
 ssh -p 2222 root@localhost
 
 # Custom port access (HTTP on 8080, etc.)
-# Add port mappings to docker-compose.yml
+# Add port mappings to compose.yaml
 ```
 
 ### Stop/Restart Container
 
 ```bash
 # Stop container
-docker-compose stop
+docker compose stop
 
 # Restart
-docker-compose start
+docker compose start
 
 # Full shutdown and cleanup
-docker-compose down
+docker compose down
 ```
 
 ---
@@ -132,7 +132,7 @@ Bash script that:
    - Serial: PTY for interactive access
    - Debug: Logging to /tmp/qemu.log
 
-### docker-compose.yml
+### compose.yaml
 
 YAML specification for container orchestration:
 - Build context: Current directory (GNUHurd2025/)
@@ -170,7 +170,7 @@ YAML specification for container orchestration:
 
 ### Container won't start
 ```bash
-docker-compose logs --tail=50
+docker compose logs --tail=50
 # Check for: QCOW2 not found, permission denied, port conflicts
 ```
 
@@ -185,7 +185,7 @@ screen /dev/pts/X
 ### Network connection issues
 ```bash
 # Inside container, check QEMU is running
-docker-compose exec gnu-hurd-dev ps aux | grep qemu
+docker compose exec gnu-hurd-dev ps aux | grep qemu
 
 # Test SSH from host
 ssh -p 2222 root@localhost
@@ -195,7 +195,7 @@ ssh -p 2222 root@localhost
 ```bash
 # Check for existing containers on port 2222/9999
 docker ps
-docker-compose down -v  # Remove and clean up
+docker compose down -v  # Remove and clean up
 ```
 
 ---
@@ -212,10 +212,10 @@ docker-compose down -v  # Remove and clean up
 ## Next Steps
 
 1. Ensure Docker daemon is running: `sudo systemctl start docker`
-2. Build image: `docker-compose build`
-3. Deploy: `docker-compose up -d`
-4. Verify boot: `docker-compose logs -f`
-5. Access system: `docker-compose exec gnu-hurd-dev bash`
+2. Build image: `docker compose build`
+3. Deploy: `docker compose up -d`
+4. Verify boot: `docker compose logs -f`
+5. Access system: `docker compose exec gnu-hurd-dev bash`
 
 ---
 

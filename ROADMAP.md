@@ -6,8 +6,8 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 1. [x] Standardize canonical service/container name to `gnu-hurd-dev` (legacy/long-form docs preserved under `docs/**/archive/`)
 2. [x] Standardize image reference to `ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest`
-3. [x] Ensure `docker-compose.yml` is TCG-safe by default (no mandatory `/dev/kvm`)
-4. [x] Provide explicit `docker-compose.kvm.yml` for Linux x86_64 acceleration
+3. [x] Ensure `compose.yaml` is TCG-safe by default (no mandatory `/dev/kvm`)
+4. [x] Provide explicit `compose.kvm.yaml` for Linux x86_64 acceleration
 5. [x] Ensure secrets are optional (no mandatory local secret files for first boot)
 6. [x] Keep `./images` as the canonical dev image directory (tracked via `images/.gitkeep`)
 7. [x] Make `./scripts/validate-config.sh` the source of truth for internal consistency
@@ -26,7 +26,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 15. [ ] Verify rootless Podman behavior on Linux and document required flags/limitations
 16. [x] Add a Docker/Podman invocation path using Compose-native `make` targets + `scripts/lib/container-runtime.sh`
-17. [ ] Ensure `docker compose` vs `docker-compose` vs `podman-compose` differences are documented and tested end-to-end
+17. [ ] Ensure `docker compose` vs `docker compose` vs `podman-compose` differences are documented and tested end-to-end
 18. [ ] Validate bind mounts and file paths on macOS/Windows via Docker Desktop/Podman Machine (document caveats)
 
 ## Milestone 3 — Reproducible image acquisition
@@ -58,7 +58,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 33. [x] Align `PKGBUILD` with runtime realities (host QEMU optional; scripts are arch-independent)
 34. [ ] Add a `podman` optional dependency path in packaging docs (where applicable)
-35. [ ] Ensure package-installed launcher supports `up-kvm` via `docker-compose.kvm.yml`
+35. [ ] Ensure package-installed launcher supports `up-kvm` via `compose.kvm.yaml`
 
 ## Definition of done (per change)
 

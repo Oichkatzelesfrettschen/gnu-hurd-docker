@@ -316,7 +316,7 @@ gunzip backups/initial-setup.qcow2.gz
 cp backups/initial-setup.qcow2 debian-hurd-amd64.qcow2
 
 # Restart QEMU
-docker-compose restart
+docker compose restart
 ```
 
 ---
@@ -379,7 +379,7 @@ SNAPSHOT_NAME="ci-test-$(date +%Y%m%d-%H%M%S)"
 ./scripts/manage-snapshots.sh restore ci-baseline
 
 # 2. Start VM
-docker-compose up -d
+docker compose up -d
 
 # 3. Wait for boot
 sleep 120
@@ -399,7 +399,7 @@ fi
 ./scripts/manage-snapshots.sh restore ci-baseline
 
 # 8. Shutdown
-docker-compose down
+docker compose down
 ```
 
 ### Workflow 4: Snapshot Archival Strategy
@@ -482,26 +482,26 @@ qemu-img snapshot -l debian-hurd-amd64.qcow2
 
 ```bash
 # Stop VM first
-docker-compose down
+docker compose down
 
 # Create snapshot
 qemu-img snapshot -c snapshot-name debian-hurd-amd64.qcow2
 
 # Restart VM
-docker-compose up -d
+docker compose up -d
 ```
 
 **Restore Snapshot (offline only):**
 
 ```bash
 # Stop VM
-docker-compose down
+docker compose down
 
 # Restore
 qemu-img snapshot -a snapshot-name debian-hurd-amd64.qcow2
 
 # Restart VM
-docker-compose up -d
+docker compose up -d
 ```
 
 **Delete Snapshot:**
@@ -585,10 +585,10 @@ qemu-img convert -O qcow2 \
 du -h debian-hurd-amd64-compact.qcow2
 
 # Replace original (VM must be stopped)
-docker-compose down
+docker compose down
 mv debian-hurd-amd64.qcow2 debian-hurd-amd64-old.qcow2
 mv debian-hurd-amd64-compact.qcow2 debian-hurd-amd64.qcow2
-docker-compose up -d
+docker compose up -d
 
 # Delete old file after verification
 rm debian-hurd-amd64-old.qcow2
@@ -677,7 +677,7 @@ qemu-img snapshot -l debian-hurd-amd64.qcow2
 
 ```bash
 # Check if QEMU process is running
-docker-compose ps
+docker compose ps
 # If "Up", VM is running
 ```
 
@@ -694,20 +694,20 @@ sleep 30
 ./scripts/manage-snapshots.sh restore snapshot-name
 
 # Restart VM
-docker-compose up -d
+docker compose up -d
 ```
 
 **Fix (Option 2 - Force):**
 
 ```bash
 # Stop container (forceful)
-docker-compose down
+docker compose down
 
 # Restore snapshot (offline)
 qemu-img snapshot -a snapshot-name debian-hurd-amd64.qcow2
 
 # Restart
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Problem: "Snapshot restore corrupts filesystem"
@@ -745,11 +745,11 @@ telnet localhost 5555
 fsck.ext2 /dev/sda1
 
 # Or from host (VM must be stopped)
-docker-compose down
+docker compose down
 qemu-nbd -c /dev/nbd0 debian-hurd-amd64.qcow2
 fsck.ext2 /dev/nbd0p1
 qemu-nbd -d /dev/nbd0
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Problem: "QCOW2 file is growing too large"
@@ -780,7 +780,7 @@ for i in {1..15}; do
 done
 
 # Compact QCOW2 (offline only)
-docker-compose down
+docker compose down
 qemu-img convert -O qcow2 -c \
     debian-hurd-amd64.qcow2 \
     debian-hurd-amd64-compact.qcow2
@@ -790,7 +790,7 @@ mv debian-hurd-amd64.qcow2 debian-hurd-amd64-old.qcow2
 mv debian-hurd-amd64-compact.qcow2 debian-hurd-amd64.qcow2
 
 # Restart
-docker-compose up -d
+docker compose up -d
 
 # Verify size reduction
 du -h debian-hurd-amd64.qcow2

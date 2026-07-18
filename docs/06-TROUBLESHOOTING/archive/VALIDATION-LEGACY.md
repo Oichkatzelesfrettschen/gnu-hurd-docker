@@ -30,7 +30,7 @@
   - Execution: exec qemu-system-i386 (process replacement, correct)
 - **Result:** No ShellCheck errors detected
 
-### docker-compose.yml
+### compose.yaml
 - **Status:** VALID - Valid YAML syntax
 - **Validation Method:** Python yaml.safe_load()
 - **Key Components:**
@@ -132,7 +132,7 @@ sudo systemctl restart docker
 ### What Works (Validated)
 - [x] Dockerfile: Valid syntax, correct base image, proper package selection
 - [x] entrypoint.sh: Valid bash, proper error handling, correct QEMU parameters
-- [x] docker-compose.yml: Valid YAML, correct service config, proper volume/network setup
+- [x] compose.yaml: Valid YAML, correct service config, proper volume/network setup
 - [x] System disk images: Present and verified (QCOW2 2.1GB, IMG 4.2GB)
 - [x] Documentation: Complete and accurate
 - [x] Configuration files: No syntax errors, warnings, or logic issues
@@ -161,21 +161,21 @@ docker ps
 
 ### Build Phase (1-2 minutes)
 ```bash
-cd /home/eirikr/GNUHurd2025
-docker-compose build
+cd ~/GNUHurd2025
+docker compose build
 # Expected: Successfully tagged gnu-hurd-dev:latest
 ```
 
 ### Deploy Phase (Immediate)
 ```bash
-docker-compose up -d
-docker-compose ps
+docker compose up -d
+docker compose ps
 # Expected: gnu-hurd-dev container running
 ```
 
 ### Validation Phase (2-3 minutes)
 ```bash
-docker-compose logs -f
+docker compose logs -f
 # Watch for: "Starting QEMU GNU/Hurd..." message
 # Watch for: QEMU boot sequences in serial log
 ```
@@ -190,7 +190,7 @@ All Docker Compose configuration files are complete and correct:
 |-----------|------|-------|--------|-----------|
 | Image specification | Dockerfile | 18 | Valid | Structure OK, no errors |
 | QEMU launcher | entrypoint.sh | 20 | Valid | shellcheck OK, no errors |
-| Container orchestration | docker-compose.yml | 27 | Valid | YAML OK, no errors |
+| Container orchestration | compose.yaml | 27 | Valid | YAML OK, no errors |
 | **Total Configuration** | **3 files** | **65 lines** | **✓ READY** | **100% validated** |
 
 ---
@@ -213,9 +213,9 @@ The Docker configuration files themselves have **ZERO errors** and are ready to 
 ### Immediate (This Session)
 1. Choose kernel fix option (1, 2, or 3 above)
 2. Apply fix and test Docker daemon startup
-3. Build Docker image: `docker-compose build`
-4. Deploy: `docker-compose up -d`
-5. Verify: `docker-compose logs -f`
+3. Build Docker image: `docker compose build`
+4. Deploy: `docker compose up -d`
+5. Verify: `docker compose logs -f`
 
 ### Alternative (If Kernel Fix Postponed)
 The Docker configuration files are committed and stored. They can be deployed immediately once the kernel networking issue is resolved on any system where Docker daemon runs properly.

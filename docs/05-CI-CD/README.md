@@ -92,7 +92,7 @@ jobs:
         run: docker build -t hurd-test .
 
       - name: Start container
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Wait for SSH
         run: |
@@ -110,7 +110,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 ```
 
 **Time**: 10-15 minutes (TCG on GitHub runners)
@@ -144,7 +144,7 @@ jobs:
           unxz debian-hurd-amd64-provisioned.qcow2.xz
 
       - name: Start container
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Test SSH (should be immediate)
         run: ssh -p 2222 root@localhost uname -a
@@ -276,11 +276,11 @@ Run different steps based on environment:
 
 - name: Fast boot (KVM)
   if: steps.accel.outputs.kvm == 'true'
-  run: QEMU_ACCEL="-accel kvm" docker-compose up -d
+  run: QEMU_ACCEL="-accel kvm" docker compose up -d
 
 - name: Slow boot (TCG)
   if: steps.accel.outputs.kvm != 'true'
-  run: QEMU_ACCEL="-accel tcg" docker-compose up -d
+  run: QEMU_ACCEL="-accel tcg" docker compose up -d
 ```
 
 **Use case**: Optimize for KVM when available
@@ -311,7 +311,7 @@ Cache images between runs:
 
 **SSH connection fails**:
 - Check wait loop timeout (increase iterations)
-- Verify port forwarding in docker-compose.yml
+- Verify port forwarding in compose.yaml
 - See [SSH Issues](../06-TROUBLESHOOTING/SSH-ISSUES.md)
 
 **Serial automation fails**:

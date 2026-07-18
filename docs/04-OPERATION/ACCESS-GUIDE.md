@@ -160,7 +160,7 @@ GNU localhost 0.9 GNU-Mach 1.8+git20230520-486/Hurd-0.9 i686-AT386
 Set environment variable before starting container:
 
 ```bash
-# In docker-compose.override.yml
+# In compose.override.yaml
 environment:
   - DISPLAY_MODE=vnc
   - QEMU_VIDEO=std
@@ -283,17 +283,17 @@ echo '{"execute":"query-block"}' | python3 scripts/qmp-helper.py
 
 ```bash
 # Using docker-compose
-docker-compose up -d
+docker compose up -d
 
 # Or with custom display mode
-DISPLAY_MODE=nographic docker-compose up -d
+DISPLAY_MODE=nographic docker compose up -d
 ```
 
 ### Step 2: Wait for Boot (3-5 minutes)
 
 ```bash
 # Monitor container logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check QEMU process
 docker exec gnu-hurd-dev ps aux | grep qemu
@@ -400,8 +400,8 @@ telnet localhost 5555
 docker exec gnu-hurd-dev cat /tmp/qemu.log
 
 # 4. Restart with VNC to see what's happening
-docker-compose down
-DISPLAY_MODE=vnc docker-compose up -d
+docker compose down
+DISPLAY_MODE=vnc docker compose up -d
 vncviewer localhost:5901
 ```
 

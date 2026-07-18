@@ -285,7 +285,19 @@ shell:
 	fi
 
 # ===== Minty Hurd targets =====
-.PHONY: minty-up minty-down minty-status minty-shell minty-vnc
+.PHONY: minty-up minty-down minty-status minty-shell minty-vnc oobe
+
+# Stage the out-of-box experience on the RUNNING guest: sets the documented
+# generic passwords (user/user, root/root) and expires them so the first
+# interactive login forces a password change. Run as the last step before
+# shutting the guest down to publish its image.
+OOBE_SSH_KEY ?= ssh-test-keys/hurd_test_key
+OOBE_SSH_PORT ?= 2222
+
+oobe:
+	@ssh -i $(OOBE_SSH_KEY) -p $(OOBE_SSH_PORT) \
+		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+		root@127.0.0.1 'sh -s' < scripts/oobe-first-login.sh
 
 minty-up:
 	docker compose -f compose.yaml -f compose.minty.yaml up -d

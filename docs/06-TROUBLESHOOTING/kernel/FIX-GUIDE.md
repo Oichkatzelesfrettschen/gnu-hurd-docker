@@ -187,7 +187,7 @@ An Arch Linux PKGBUILD is provided: `gnu-hurd-docker-kernel-fix`
 
 ```bash
 # Install package
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 makepkg -fsi
 
 # Run automated fix script
@@ -212,8 +212,8 @@ systemctl status docker
 docker ps
 
 # Verify Docker Compose works
-docker-compose --version
-docker-compose ps
+docker compose version
+docker compose ps
 
 # Build test image (minimal)
 docker build --tag test:latest - << 'EOF'

@@ -1,6 +1,6 @@
 # Link Fix Report
 
-Generated: /home/eirikr/Playground/gnu-hurd-docker/docs
+Generated: /path/to/gnu-hurd-docker/docs
 
 ## Summary Statistics
 
@@ -116,7 +116,7 @@ Generated: /home/eirikr/Playground/gnu-hurd-docker/docs
   - Reason: file_not_found
 - Line 213: `[entrypoint.sh](../../entrypoint.sh#L42)`
   - Reason: file_not_found
-- Line 214: `[docker-compose.yml](../../docker-compose.yml)`
+- Line 214: `[compose.yaml](../../compose.yaml)`
   - Reason: file_not_found
 - Line 220: `[.github/workflows/build.yml](../../.github/workflows/build.yml)`
   - Reason: file_not_found

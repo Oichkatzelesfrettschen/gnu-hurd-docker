@@ -24,7 +24,7 @@ set -euo pipefail
 # REQUIREMENTS:
 #   For Docker/Podman modes:
 #     - Docker or Podman installed
-#     - docker-compose.yml, docker-compose.kvm.yml present
+#     - compose.yaml, compose.kvm.yaml present
 #
 #   For Libvirt modes:
 #     - libvirt daemon running
@@ -116,7 +116,7 @@ benchmark_docker_kvm() {
     echo_info "Starting container with KVM overlay..."
     echo "[$(date)] Starting container..." >> "$logfile"
 
-    if ! docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d >> "$logfile" 2>&1; then
+    if ! docker compose -f compose.yaml -f compose.kvm.yaml up -d >> "$logfile" 2>&1; then
         echo "[ERROR] Failed to start container" | tee -a "$logfile"
         return 1
     fi
@@ -170,12 +170,12 @@ benchmark_docker_tcg() {
     echo_info "Cleaning up existing containers..."
     docker compose down >> "$logfile" 2>&1 || podman-compose down >> "$logfile" 2>&1 || true
 
-    # Start WITHOUT KVM overlay (standard docker-compose.yml only)
+    # Start WITHOUT KVM overlay (standard compose.yaml only)
     echo_info "Starting container without KVM (TCG mode)..."
     echo "[$(date)] Starting container..." >> "$logfile"
 
     # Set environment to disable KVM
-    if ! AUTO_DISABLE_KVM_FOR_IDE=1 docker compose -f docker-compose.yml up -d >> "$logfile" 2>&1; then
+    if ! AUTO_DISABLE_KVM_FOR_IDE=1 docker compose -f compose.yaml up -d >> "$logfile" 2>&1; then
         echo "[ERROR] Failed to start container" | tee -a "$logfile"
         return 1
     fi
@@ -439,7 +439,7 @@ EXAMPLES:
 
 NOTES:
 - Results are saved to: logs/benchmarks/<timestamp>-<mode>.log
-- For Docker/Podman benchmarks: docker-compose.yml and docker-compose.kvm.yml required
+- For Docker/Podman benchmarks: compose.yaml and compose.kvm.yaml required
 - For Libvirt benchmarks: domain must be defined (./scripts/libvirt-hurd.sh define)
 - SSH port must be accessible (default: 2222)
 EOF

@@ -2,7 +2,7 @@
 
 **Date**: 2025-11-08
 **Analyst**: Documentation Architecture Review
-**Scope**: /home/eirikr/Playground/gnu-hurd-docker/docs/
+**Scope**: /path/to/gnu-hurd-docker/docs/
 
 ---
 

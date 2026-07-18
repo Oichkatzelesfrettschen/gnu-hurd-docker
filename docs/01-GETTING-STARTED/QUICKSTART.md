@@ -410,7 +410,7 @@ cat /etc/fstab | grep 9p
 make up-kvm
 
 # Increase resources
-# In docker-compose.yml:
+# In compose.yaml:
 environment:
   QEMU_RAM: 8192  # More RAM
   QEMU_SMP: 4     # More CPUs

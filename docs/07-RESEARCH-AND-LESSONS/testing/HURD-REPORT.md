@@ -141,13 +141,13 @@ cd /path/to/gnu-hurd-docker
 ./scripts/download-image.sh
 
 # Build Docker image
-docker-compose build
+docker compose build
 
 # Start container
-docker-compose up -d
+docker compose up -d
 
 # Wait for boot (2-5 minutes)
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### 3. Run Comprehensive Tests
@@ -305,7 +305,7 @@ gcc /tmp/math_test.c -o /tmp/math_test -lm
 **Solution:**
 ```bash
 # Check if system is booted
-docker-compose logs | grep -i "login"
+docker compose logs | grep -i "login"
 
 # Connect via serial console
 telnet localhost 5555
@@ -359,8 +359,8 @@ jobs:
       
       - name: Build and start container
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
       
       - name: Wait for boot
         run: sleep 180

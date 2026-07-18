@@ -20,11 +20,11 @@ This document describes the MCP (Model Context Protocol) servers installed for Q
 **Configuration** (in `~/.claude/.mcp.json`):
 ```json
 "kvm-control": {
-  "command": "/home/eirikr/.local/share/kvm-mcp/.venv/bin/python",
-  "args": ["/home/eirikr/.local/share/kvm-mcp/kvm_mcp/server.py"],
-  "cwd": "/home/eirikr/.local/share/kvm-mcp",
+  "command": "~/.local/share/kvm-mcp/.venv/bin/python",
+  "args": ["~/.local/share/kvm-mcp/kvm_mcp/server.py"],
+  "cwd": "~/.local/share/kvm-mcp",
   "env": {
-    "VM_DISK_PATH": "/home/eirikr/Playground/gnu-hurd-docker",
+    "VM_DISK_PATH": "/path/to/gnu-hurd-docker",
     "VM_DEFAULT_NETWORK": "virbr0"
   }
 }
@@ -49,7 +49,7 @@ This document describes the MCP (Model Context Protocol) servers installed for Q
 **Configuration** (in `~/.claude/.mcp.json`):
 ```json
 "gdb-debugger": {
-  "command": "/home/eirikr/bin/mcp-server-gdb",
+  "command": "~/bin/mcp-server-gdb",
   "args": []
 }
 ```

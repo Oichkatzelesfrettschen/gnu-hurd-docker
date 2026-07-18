@@ -532,7 +532,7 @@ docker pull hello-world
 
 **Best Performance Configuration:**
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 ```
 
 **Expected Performance:**
@@ -583,7 +583,7 @@ docker --version
 docker ps
 
 # 2. Compose (Docker or Podman)
-docker compose version || docker-compose --version
+docker compose version || docker compose version
 podman-compose --version || true
 
 # 3. Git

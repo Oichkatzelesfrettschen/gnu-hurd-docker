@@ -446,7 +446,7 @@ However, avoid using Hurd running in libvirt **inside** a Docker container (nest
 
 For CI/CD or complex orchestration, you can define a service that manages the Hurd VM:
 
-**docker-compose.libvirt.yml** (Example):
+**compose.libvirt.yaml** (Example):
 ```yaml
 version: "3.8"
 services:

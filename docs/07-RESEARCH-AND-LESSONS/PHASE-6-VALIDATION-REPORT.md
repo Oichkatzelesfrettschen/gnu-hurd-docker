@@ -32,11 +32,11 @@
 ```
 ✓ Dockerfile
 ✓ entrypoint.sh
-✓ docker-compose.yml
-✓ docker-compose.bind.yml
-✓ docker-compose.override.yml
-✓ docker-compose.kvm.yml
-✓ docker-compose.vnc.yml
+✓ compose.yaml
+✓ compose.bind.yaml
+✓ compose.override.yaml
+✓ compose.kvm.yaml
+✓ compose.vnc.yaml
 ✓ scripts/health-check.sh
 ✓ scripts/download-image.sh
 ✓ scripts/setup-hurd-amd64.sh

@@ -261,7 +261,7 @@ ssh -p 2222 root@localhost  # Should connect if guest SSH is running
 # Find the process
 ss -tlnp | grep 2223
 
-# Kill it or use a different host port in docker-compose.yml
+# Kill it or use a different host port in compose.yaml
 ```
 
 ### Serial Console Connects But Shows Nothing

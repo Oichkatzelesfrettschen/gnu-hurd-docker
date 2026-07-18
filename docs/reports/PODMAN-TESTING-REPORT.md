@@ -195,7 +195,7 @@ Both backends achieve identical results for QEMU/KVM testing:
 ### Issue 1: Podman Network Subnet Conflict
 **Problem**: podman-compose fails when subnet 172.25.0.0/24 is already used by Docker
 **Workaround**: Use `podman run` directly or remove conflicting Docker network
-**Long-term Fix**: Define separate subnet ranges in docker-compose files
+**Long-term Fix**: Define separate subnet ranges in docker compose files
 
 ### Issue 2: Image Lock Conflict
 **Problem**: Only one container can access the QCOW2 image at a time
@@ -247,7 +247,7 @@ Both backends achieve identical results for QEMU/KVM testing:
    - Consider alternative image versions
 
 2. **Network configuration**: Document separate subnets for Docker and Podman
-   - Update docker-compose files with explicit subnet ranges
+   - Update docker compose files with explicit subnet ranges
    - Provide migration guide for switching backends
 
 3. **Shared image volumes**: Consider separate QCOW2 images per backend

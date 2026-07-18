@@ -374,7 +374,7 @@ apt_clean
 
 ```bash
 # Run test suite
-/home/eirikr/Playground/gnu-hurd-docker/scripts/lib/test-package-libs.sh
+/path/to/gnu-hurd-docker/scripts/lib/test-package-libs.sh
 
 # Test individual functions
 source scripts/lib/colors.sh

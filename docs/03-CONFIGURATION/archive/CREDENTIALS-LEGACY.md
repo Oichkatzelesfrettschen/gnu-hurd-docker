@@ -44,7 +44,7 @@ The serial console provides direct TTY access for troubleshooting and setup.
 
 ```bash
 # Find PTY from Docker logs
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 
 # Connect to serial console
 screen /dev/pts/X
@@ -151,14 +151,14 @@ Current port mappings from host to container:
 To add additional port mappings:
 
 ```bash
-# Edit docker-compose.yml
+# Edit compose.yaml
 ports:
   - "8080:8080"  # Add HTTP service
   - "3000:3000"  # Add Node.js service
   etc.
 
 # Rebuild and restart
-docker-compose up -d --force-recreate
+docker compose up -d --force-recreate
 ```
 
 ## Network Configuration
@@ -202,13 +202,13 @@ To persist data, use SSH/SCP to transfer files or create additional named volume
 
 ```bash
 # Check if SSH service is running inside container
-docker-compose exec gnu-hurd-dev systemctl status ssh
+docker compose exec gnu-hurd-dev systemctl status ssh
 
 # Restart SSH if needed
-docker-compose exec gnu-hurd-dev systemctl restart ssh
+docker compose exec gnu-hurd-dev systemctl restart ssh
 
 # Verify port mapping
-docker-compose ps
+docker compose ps
 # Should show 0.0.0.0:2222->22/tcp
 ```
 
@@ -237,13 +237,13 @@ ls /dev/pts/
 
 ```bash
 # Check container logs
-docker-compose logs
+docker compose logs
 
 # Verify image built successfully
 docker image ls | grep gnu-hurd
 
 # Rebuild if necessary
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ## References

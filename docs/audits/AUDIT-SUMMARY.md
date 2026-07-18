@@ -15,7 +15,7 @@
 ### Key Statistics
 - **Shellcheck Compliance:** 100% (all 30 scripts pass `shellcheck -S error`)
 - **Error Handling:** 90% use `set -e`, only 13% use `set -u` and `set -o pipefail`
-- **Critical Issues:** 1 (docker-compose v1 usage)
+- **Critical Issues:** 1 (docker compose v1 usage)
 - **High Issues:** 4 (hardcoded passwords, command injection risks)
 - **Medium Issues:** 8 (inconsistent error handling)
 - **Low Issues:** 12 (minor quality improvements)
@@ -26,9 +26,9 @@
 
 ### DOCKER-COMPOSE V1 LEGACY USAGE
 **Severity:** CRITICAL  
-**CLAUDE.md Requirement:** "Always use `docker compose` (v2) - never use `docker-compose` (v1 legacy)"
+**CLAUDE.md Requirement:** "Always use `docker compose` (v2) - never use `docker compose` (v1 legacy)"
 
-**Impact:** 13 scripts use `docker-compose` instead of `docker compose`
+**Impact:** 13 scripts use `docker compose` instead of `docker compose`
 
 **Affected Files:**
 - bringup-and-provision.sh (lines 3, 14)
@@ -41,7 +41,7 @@
 - monitor-qemu.sh (line 133)
 - test-hurd-system.sh (lines 54, 408)
 
-**Fix:** Global find-replace `docker-compose` → `docker compose`
+**Fix:** Global find-replace `docker compose` → `docker compose`
 
 **Effort:** LOW (automated find-replace)
 
@@ -50,7 +50,7 @@
 ## Top 5 Highest-Risk Scripts
 
 ### 1. bringup-and-provision.sh (HIGH RISK)
-- Uses docker-compose (v1 legacy)
+- Uses docker compose (v1 legacy)
 - Hardcoded passwords: ROOT_PASS=root, AGENTS_PASS=agents
 - Remote SSH execution with sshpass
 - **Mitigation:** Good error handling (set -euo pipefail), proper quoting
@@ -75,7 +75,7 @@
 - **Mitigation:** Excellent error handling (set -euo pipefail), single-quoted heredoc prevents expansion
 
 ### 5. test-docker-provision.sh (MEDIUM RISK)
-- Uses docker-compose (v1 legacy)
+- Uses docker compose (v1 legacy)
 - Missing set -u and set -o pipefail
 - **Mitigation:** Good prerequisite checking, test script only
 
@@ -142,7 +142,7 @@ All usage is for development automation. Scripts properly use single-quoted here
   - `set -o pipefail`: 4/30 scripts (13%) ← NEEDS IMPROVEMENT
 
 ### ❌ FAIL
-- **docker compose v2:** 13 scripts use legacy `docker-compose`
+- **docker compose v2:** 13 scripts use legacy `docker compose`
 - **POSIX sh preferred:** All use bash (justified - bash features required)
 
 ---
@@ -152,7 +152,7 @@ All usage is for development automation. Scripts properly use single-quoted here
 ### Priority 1: CRITICAL (Must Fix)
 ```bash
 # Global find-replace in all scripts
-find /home/eirikr/Playground/gnu-hurd-docker/scripts -name "*.sh" -type f -exec \
+find /path/to/gnu-hurd-docker/scripts -name "*.sh" -type f -exec \
   sed -i 's/docker-compose/docker compose/g' {} +
 ```
 
@@ -245,7 +245,7 @@ Scripts needing update:
 ## Recommendations by Timeline
 
 ### Immediate (Today)
-1. Global replace `docker-compose` → `docker compose` (5 minutes)
+1. Global replace `docker compose` → `docker compose` (5 minutes)
 2. Add `set -u` to 26 scripts (30 minutes)
 3. Add `set -o pipefail` to 26 scripts (included in step 2)
 
@@ -279,7 +279,7 @@ The GNU/Hurd Docker scripts are **well-written and production-ready** with minor
 - Clear documentation
 
 **Critical Fix Required:**
-- Replace `docker-compose` with `docker compose` (CLAUDE.md compliance)
+- Replace `docker compose` with `docker compose` (CLAUDE.md compliance)
 
 **Recommended Improvements:**
 - Add `set -u` and `set -o pipefail` to all scripts

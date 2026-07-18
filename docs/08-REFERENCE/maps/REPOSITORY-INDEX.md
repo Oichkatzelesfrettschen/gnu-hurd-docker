@@ -1,6 +1,6 @@
 # GNU/Hurd Docker Repository - Complete Index
 
-**Repository:** `/home/eirikr/Playground/gnu-hurd-docker`  
+**Repository:** `/path/to/gnu-hurd-docker`  
 **Status:** Production-Ready  
 **Generated:** 2025-11-05  
 **Total Files:** 52+  
@@ -69,7 +69,7 @@ LICENSE                                MIT License
 
 Dockerfile                             Docker image spec (18 lines)
 entrypoint.sh                          QEMU launcher (20 lines)
-docker-compose.yml                     Container config (27 lines)
+compose.yaml                     Container config (27 lines)
 PKGBUILD                               Arch package spec
 gnu-hurd-docker-kernel-fix.install     Package hooks
 fix-script.sh                          Fix utility script
@@ -81,7 +81,7 @@ fix-script.sh                          Fix utility script
 |------|-------|---------|--------|
 | `Dockerfile` | 18 | Docker image specification | ✓ Ready |
 | `entrypoint.sh` | 20 | QEMU launcher script | ✓ Ready |
-| `docker-compose.yml` | 27 | Container orchestration | ✓ Ready |
+| `compose.yaml` | 27 | Container orchestration | ✓ Ready |
 
 ### Documentation (14 Files)
 
@@ -175,7 +175,7 @@ scripts/
 #### Docker Configuration (Essential)
 - `Dockerfile` - Image specification
 - `entrypoint.sh` - QEMU launcher
-- `docker-compose.yml` - Container orchestration
+- `compose.yaml` - Container orchestration
 
 #### Linux Packaging
 - `PKGBUILD` - Arch Linux package spec
@@ -225,7 +225,7 @@ scripts/
 ### For Developers
 1. **Overview:** [README.md](../README.md) (5 min)
 2. **Design:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) (15 min)
-3. **Code:** Dockerfile, entrypoint.sh, docker-compose.yml (10 min)
+3. **Code:** Dockerfile, entrypoint.sh, compose.yaml (10 min)
 4. **Build:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) - Build section (5 min)
 5. **Issues:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) (as needed)
 
@@ -249,7 +249,7 @@ scripts/
 - **Overview:** [README.md](../README.md)
 - **Design:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md)
 - **Deploy:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md)
-- **Configuration:** `Dockerfile`, `entrypoint.sh`, `docker-compose.yml`
+- **Configuration:** `Dockerfile`, `entrypoint.sh`, `compose.yaml`
 - **Validation:** `scripts/validate-config.sh`, `scripts/test-docker.sh`
 
 ### Kernel & System Configuration
@@ -343,7 +343,7 @@ TOTAL:             52+ files, 6.31 GB
 
 ### Download System Image
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
+cd /path/to/gnu-hurd-docker
 ./scripts/download-image.sh
 ```
 
@@ -359,17 +359,17 @@ cd /home/eirikr/Playground/gnu-hurd-docker
 
 ### Build Docker Image
 ```bash
-docker-compose build
+docker compose build
 ```
 
 ### Deploy Container
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### View Logs
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Access System
@@ -378,11 +378,11 @@ docker-compose logs -f
 ssh -p 2222 root@localhost
 
 # Serial console (find PTY from logs)
-docker-compose logs | grep "char device"
+docker compose logs | grep "char device"
 screen /dev/pts/X
 
 # Docker shell
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 ```
 
 ---
@@ -468,5 +468,5 @@ This repository contains a **complete, production-ready implementation** of GNU/
 
 **Generated:** 2025-11-05  
 **Last Updated:** 2025-11-05  
-**Repository:** /home/eirikr/Playground/gnu-hurd-docker  
+**Repository:** /path/to/gnu-hurd-docker  
 **Status:** Complete and ready for deployment

@@ -78,13 +78,13 @@ PODMAN_COMPOSE_PROVIDER=podman-compose CONTAINER_RUNTIME=podman make down
 
 ```bash
 # Start services
-podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+podman-compose -f compose.yaml -f compose.bind.yaml up -d
 
 # View logs
 podman-compose logs -f
 
 # Stop services
-podman-compose -f docker-compose.yml -f docker-compose.bind.yml down
+podman-compose -f compose.yaml -f compose.bind.yaml down
 ```
 
 ### Using Podman CLI Directly
@@ -363,16 +363,16 @@ systemctl --user start hurd.service
    echo "alias docker=podman" >> ~/.bashrc
    ```
 
-3. Use existing docker-compose.yml:
+3. Use existing compose.yaml:
    ```bash
-   podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+   podman-compose -f compose.yaml -f compose.bind.yaml up -d
    ```
 
 ### Full Migration
 
 1. **Stop Docker services**:
    ```bash
-   podman-compose -f docker-compose.yml -f docker-compose.bind.yml down
+   podman-compose -f compose.yaml -f compose.bind.yaml down
    ```
 
 2. **Export images** (optional):
@@ -389,7 +389,7 @@ systemctl --user start hurd.service
 
 4. **Use Podman**:
    ```bash
-   podman-compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+   podman-compose -f compose.yaml -f compose.bind.yaml up -d
    ```
 
 ## Best Practices

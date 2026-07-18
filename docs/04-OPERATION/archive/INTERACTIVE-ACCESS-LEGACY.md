@@ -66,7 +66,7 @@ ssh -p 2222 root@localhost
 
 ```
 Host: localhost:2222
-  ↓ (Docker port mapping from docker-compose.yml)
+  ↓ (Docker port mapping from compose.yaml)
 Container: 2222
   ↓ (QEMU hostfwd=tcp::2222-:22 in entrypoint.sh)
 Guest: port 22 (sshd)
@@ -80,7 +80,7 @@ nc -zv localhost 2222
 # Expected: Connection succeeded
 
 # Method 2: Check Docker logs
-docker-compose logs -f | grep -i ssh
+docker compose logs -f | grep -i ssh
 # Look for: "Server listening on 0.0.0.0 port 22"
 
 # Method 3: Check via serial console
@@ -265,7 +265,7 @@ mosh provides resilient SSH sessions that survive network interruptions:
 apt-get install -y mosh
 
 # Open UDP ports 60000-61000 for mosh
-# Add to docker-compose.yml:
+# Add to compose.yaml:
 # ports:
 #   - "60000-61000:60000-61000/udp"
 ```
@@ -325,7 +325,7 @@ socat -,raw,echo=0 tcp:localhost:5555
 - `server` - QEMU acts as server (waits for client connection)
 - `nowait` - Boot immediately, don't wait for telnet client
 
-**Port Forwarding** (docker-compose.yml):
+**Port Forwarding** (compose.yaml):
 
 ```yaml
 ports:
@@ -374,7 +374,7 @@ telnet> quit
 
 ```bash
 # Check QEMU is running
-docker-compose ps
+docker compose ps
 # Expected: hurd-x86_64-qemu running
 
 # Check port is listening
@@ -382,19 +382,19 @@ nc -zv localhost 5555
 # Expected: Connection succeeded
 
 # Check Docker logs
-docker-compose logs -f | grep serial
+docker compose logs -f | grep serial
 # Look for: "-serial telnet:0.0.0.0:5555"
 ```
 
 **Problem: Connection refused**
 
 ```bash
-# Verify port mapping in docker-compose.yml
-grep 5555 docker-compose.yml
+# Verify port mapping in compose.yaml
+grep 5555 compose.yaml
 # Expected: - "5555:5555"
 
 # Restart container
-docker-compose restart
+docker compose restart
 ```
 
 **Problem: Garbled output**
@@ -515,7 +515,7 @@ nc localhost 9999
 -monitor telnet:0.0.0.0:9999,server,nowait
 ```
 
-**Port Forwarding** (docker-compose.yml):
+**Port Forwarding** (compose.yaml):
 
 ```yaml
 ports:
@@ -828,7 +828,7 @@ QMP supports event subscriptions:
 - `mount_tag=scripts` - Guest mount identifier
 - `security_model=none` - No permission mapping (simple mode)
 
-**Docker Volume Mount** (docker-compose.yml):
+**Docker Volume Mount** (compose.yaml):
 
 ```yaml
 volumes:
@@ -1027,7 +1027,7 @@ telnet localhost 9999
 (qemu) info status
 
 # Terminal 3: Docker logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Example 2: Development Setup
@@ -1054,7 +1054,7 @@ telnet localhost 9999
 #!/bin/bash
 
 # Start VM via docker-compose
-docker-compose up -d
+docker compose up -d
 
 # Wait for boot via QMP
 python3 qmp-control.py status
@@ -1085,11 +1085,11 @@ python3 qmp-control.py powerdown
 
 ```bash
 # Check Docker container running
-docker-compose ps
+docker compose ps
 # Expected: hurd-x86_64-qemu Up
 
 # Check port forwarding
-docker-compose port hurd-x86_64-qemu 2222
+docker compose port hurd-x86_64-qemu 2222
 # Expected: 0.0.0.0:2222
 
 # Check guest SSH service (via serial console)
@@ -1118,7 +1118,7 @@ nc -zv localhost 5555
 # Expected: Connection succeeded
 
 # Check QEMU process
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu
 # Expected: /usr/bin/qemu-system-x86_64 ... -serial telnet:0.0.0.0:5555
 ```
 
@@ -1126,7 +1126,7 @@ docker-compose exec hurd-x86_64-qemu ps aux | grep qemu
 
 ```bash
 # Restart container
-docker-compose restart
+docker compose restart
 
 # Reconnect
 telnet localhost 5555
@@ -1142,19 +1142,19 @@ nc -zv localhost 9999
 # Expected: Connection succeeded
 
 # Check entrypoint.sh has monitor config
-docker-compose exec hurd-x86_64-qemu cat /entrypoint.sh | grep monitor
+docker compose exec hurd-x86_64-qemu cat /entrypoint.sh | grep monitor
 # Expected: -monitor telnet:0.0.0.0:9999,server,nowait
 ```
 
 **Fix:**
 
 ```bash
-# Verify docker-compose.yml port mapping
-grep 9999 docker-compose.yml
+# Verify compose.yaml port mapping
+grep 9999 compose.yaml
 # Expected: - "9999:9999"
 
 # Restart if changed
-docker-compose restart
+docker compose restart
 ```
 
 ### 9p Mount Fails
@@ -1163,7 +1163,7 @@ docker-compose restart
 
 ```bash
 # Check QEMU virtfs parameter
-docker-compose exec hurd-x86_64-qemu ps aux | grep virtfs
+docker compose exec hurd-x86_64-qemu ps aux | grep virtfs
 # Expected: -virtfs local,path=/share,mount_tag=scripts
 
 # Check host share directory exists
@@ -1191,11 +1191,11 @@ mount -t 9p -o trans=virtio scripts /mnt/host
 
 ```bash
 # Check QEMU process has QMP socket
-docker-compose exec hurd-x86_64-qemu ps aux | grep qmp
+docker compose exec hurd-x86_64-qemu ps aux | grep qmp
 # Expected: -qmp unix:/var/run/qemu-monitor.sock
 
 # Check socket exists
-docker-compose exec hurd-x86_64-qemu ls -la /var/run/
+docker compose exec hurd-x86_64-qemu ls -la /var/run/
 # Expected: qemu-monitor.sock
 ```
 
@@ -1207,7 +1207,7 @@ docker-compose exec hurd-x86_64-qemu ls -la /var/run/
 # -qmp unix:/var/run/qemu-monitor.sock,server,nowait
 
 # Restart container
-docker-compose restart
+docker compose restart
 ```
 
 ---
@@ -1332,7 +1332,7 @@ mount -t 9p -o trans=virtio,msize=524288 scripts /mnt/host
 **Host:**
 - SSH config: `~/.ssh/config`
 - Shared directory: `./share/`
-- Docker Compose: `./docker-compose.yml`
+- Docker Compose: `./compose.yaml`
 
 **Container:**
 - Entrypoint: `/entrypoint.sh`

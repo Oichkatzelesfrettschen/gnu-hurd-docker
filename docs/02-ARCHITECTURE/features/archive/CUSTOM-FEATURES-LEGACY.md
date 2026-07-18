@@ -413,8 +413,8 @@ echo $DISPLAY
 ## 📚 Additional Resources
 
 ### QEMU Configuration Reference
-- `docker-compose.yml` - Service definitions
-- `docker-compose.override.yml` - Custom overrides
+- `compose.yaml` - Service definitions
+- `compose.override.yaml` - Custom overrides
 - `entrypoint.sh` - QEMU launcher with feature detection
 
 ### Provisioning Reference
@@ -447,7 +447,7 @@ cat /etc/fstab | grep 9p
 mount -t 9p -o trans=virtio scripts /mnt/host
 
 # Check QEMU sharing enabled (from host)
-docker-compose logs | grep virtfs
+docker compose logs | grep virtfs
 ```
 
 ### Aliases Not Working

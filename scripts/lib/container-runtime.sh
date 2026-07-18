@@ -84,8 +84,8 @@ get_compose_command() {
             # Try docker compose (v2, plugin-based) first
             if docker compose version >/dev/null 2>&1; then
                 echo "docker compose"
-            # Fall back to docker-compose (v1, standalone)
-            elif command -v docker-compose >/dev/null 2>&1; then
+            # Fall back to docker compose (v1, standalone)
+            elif command -v docker compose >/dev/null 2>&1; then
                 echo "docker-compose"
             else
                 echo_error "Docker Compose not found. Please install Docker Compose v2."

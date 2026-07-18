@@ -106,12 +106,12 @@ Docker environment provides:
 
 Starting development container:
 
-  docker-compose up -d hurd           # Or use entrypoint.sh
+  docker compose up -d hurd           # Or use entrypoint.sh
   docker exec -it <container> bash
 
 Verify Mach source present:
 
-  ls -la /home/eirikr/Playground/gnu-hurd-docker/
+  ls -la /path/to/gnu-hurd-docker/
   # Look for gnumach source or git clone location
 
 Development workflow:

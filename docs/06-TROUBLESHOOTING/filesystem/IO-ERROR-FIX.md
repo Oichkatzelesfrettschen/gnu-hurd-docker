@@ -34,7 +34,7 @@ The official x86_64 Hurd image appears to have better support for SATA/AHCI than
 
 ## Solution
 
-Changed docker-compose.yml configuration:
+Changed compose.yaml configuration:
 
 **Before** (IDE with Q35):
 ```yaml

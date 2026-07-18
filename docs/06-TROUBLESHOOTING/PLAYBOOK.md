@@ -105,7 +105,7 @@ Is container running?
 │
 └─ YES → Is port 2222 bound?
     ├─ NO → Problem: Port binding failed
-    │        Solution: Check docker-compose.yml, firewall rules
+    │        Solution: Check compose.yaml, firewall rules
     │
     └─ YES → Does nc -zv localhost 2222 succeed?
         ├─ NO → Problem: SSH port open but service not ready
@@ -336,7 +336,7 @@ Is ENABLE_VNC=1?
         │
         └─ YES → Can you connect with noVNC?
             ├─ NO → Problem: noVNC container issue
-            │        Solution: Check docker-compose.vnc.yml
+            │        Solution: Check compose.vnc.yaml
             │
             └─ YES → VNC working! Enjoy GUI!
 ```
@@ -365,7 +365,7 @@ docker ps | grep novnc
 
 ### Solution Checklist
 
-- [ ] Enable VNC: Use `docker-compose.vnc.yml`
+- [ ] Enable VNC: Use `compose.vnc.yaml`
 - [ ] Check port: `ss -tlnp | grep 5900` should show qemu
 - [ ] Check firewall: `sudo ufw allow 6080/tcp`
 - [ ] Try vncviewer first: `vncviewer localhost:5900`

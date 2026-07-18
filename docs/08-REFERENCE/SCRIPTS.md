@@ -166,7 +166,7 @@ cluster_size: 65536
 [INFO] Actual size: 3.5G
 
 [INFO] To start x86_64 Hurd VM:
-  docker-compose up -d
+  docker compose up -d
 ```
 
 ---
@@ -724,7 +724,7 @@ export AGENTS_PASS=agents
 ```
 
 **Requirements**:
-- docker, docker-compose (container management)
+- docker, docker compose (container management)
 - telnet or nc (serial console check)
 - expect (serial automation)
 - sshpass (SSH automation)
@@ -735,7 +735,7 @@ export AGENTS_PASS=agents
 
 **Workflow stages**:
 ```
-Stage 1: Boot container (docker-compose up -d)
+Stage 1: Boot container (docker compose up -d)
 Stage 2: Wait for serial console (telnet localhost:5555)
 Stage 3: Enable SSH (install-ssh-hurd.sh)
 Stage 4: Fix sources (fix-sources-hurd.sh)
@@ -1069,7 +1069,7 @@ export AGENTS_PASSWORD=agents
 
 **What it validates**:
 - Dockerfile syntax
-- docker-compose.yml YAML syntax
+- compose.yaml YAML syntax
 - entrypoint.sh shell syntax (via shellcheck)
 - QCOW2 image presence and format
 - Port availability (2222, 5555)
@@ -1094,8 +1094,8 @@ export AGENTS_PASSWORD=agents
 [INFO] Validating Dockerfile...
 [SUCCESS] Dockerfile is valid
 
-[INFO] Validating docker-compose.yml...
-[SUCCESS] docker-compose.yml is valid YAML
+[INFO] Validating compose.yaml...
+[SUCCESS] compose.yaml is valid YAML
 
 [INFO] Validating entrypoint.sh...
 [SUCCESS] entrypoint.sh passes shellcheck
@@ -1180,10 +1180,10 @@ export AGENTS_PASSWORD=agents
 ./scripts/setup-hurd-amd64.sh
 
 # Step 2: Start container
-docker-compose up -d
+docker compose up -d
 
 # Step 3: Wait for boot (watch logs)
-docker-compose logs -f
+docker compose logs -f
 
 # Step 4: Connect via serial console and enable SSH manually
 ./scripts/connect-console.sh
@@ -1254,7 +1254,7 @@ ssh -p 2222 root@localhost
 ```bash
 # Day 1: Setup clean environment
 ./scripts/setup-hurd-amd64.sh
-docker-compose up -d
+docker compose up -d
 
 # Day 2: Configure for development
 ssh -p 2222 root@localhost

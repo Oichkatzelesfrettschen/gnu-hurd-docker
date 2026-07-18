@@ -124,7 +124,7 @@ docker ps
 docker compose down 2>/dev/null || true
 
 # 3. Start with KVM overlay
-docker compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
 
 # 4. Monitor startup (watch boot logs)
 docker compose logs -f gnu-hurd-dev &
@@ -183,7 +183,7 @@ podman info | grep "rootless"
 podman-compose down 2>/dev/null || true
 
 # 4. Start with KVM overlay (auto-detects /dev/kvm)
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 
 # 5. Monitor startup
 podman-compose logs -f gnu-hurd-dev &
@@ -401,8 +401,8 @@ export CPUS=2
 
 podman-compose up -d
 
-# Or via docker-compose.override.yml
-cat > docker-compose.override.yml << 'EOF'
+# Or via compose.override.yaml
+cat > compose.override.yaml << 'EOF'
 version: "3.8"
 services:
   gnu-hurd-dev:
@@ -448,11 +448,11 @@ lsof -i :2222
 # Kill the process
 pkill -f "port 2222" || true
 
-# Or change port in docker-compose.override.yml
+# Or change port in compose.override.yaml
 echo 'services:
   gnu-hurd-dev:
     ports:
-      - "2223:22"' > docker-compose.override.yml
+      - "2223:22"' > compose.override.yaml
 
 podman-compose up -d
 ssh -p 2223 root@localhost
@@ -512,7 +512,7 @@ sudo chmod 666 /dev/kvm  # Less secure, but works
 - ✓ All Docker v2 criteria
 - ✓ Works in rootless mode (no sudo)
 - ✓ No daemon required to run
-- ✓ Compatible with docker-compose syntax
+- ✓ Compatible with docker compose syntax
 
 ### Libvirt Backend
 - ✓ Domain defines successfully

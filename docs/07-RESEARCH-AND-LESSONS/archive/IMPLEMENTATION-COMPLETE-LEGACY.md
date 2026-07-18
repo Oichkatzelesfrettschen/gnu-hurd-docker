@@ -55,7 +55,7 @@ Successfully completed the full Docker Compose architecture and implementation f
   - Serial: PTY for interactive console
   - Logging to /tmp/qemu.log
 
-- Created docker-compose.yml (27 lines) with:
+- Created compose.yaml (27 lines) with:
   - Service definition: gnu-hurd-dev
   - Build context and Dockerfile reference
   - Privileged mode (required for QEMU)
@@ -90,7 +90,7 @@ Successfully completed the full Docker Compose architecture and implementation f
 ## Directory Structure
 
 ```
-/home/eirikr/GNUHurd2025/
+~/GNUHurd2025/
 ├── Disk Images
 │   ├── debian-hurd-i386-20251105.qcow2      (2.1 GB - PRODUCTION)
 │   ├── debian-hurd-i386-20251105.img        (4.2 GB - Raw format)
@@ -99,7 +99,7 @@ Successfully completed the full Docker Compose architecture and implementation f
 ├── Docker Configuration (IMPLEMENTED)
 │   ├── Dockerfile                           (18 lines - Image spec)
 │   ├── entrypoint.sh                        (20 lines - Launcher)
-│   ├── docker-compose.yml                   (27 lines - Orchestration)
+│   ├── compose.yaml                   (27 lines - Orchestration)
 │   └── [Total: 65 lines of configuration]
 │
 ├── Documentation
@@ -191,7 +191,7 @@ set -e                                  # Exit on error
 #   -D /tmp/qemu.log                  # Debug logging
 ```
 
-### docker-compose.yml Analysis
+### compose.yaml Analysis
 ```yaml
 version: '3.9'                          # Latest stable compose format
 services:
@@ -221,7 +221,7 @@ networks:
 |------|-------|------|---------|
 | Dockerfile | 18 | 314 B | Image specification |
 | entrypoint.sh | 20 | 489 B | QEMU launcher |
-| docker-compose.yml | 27 | 379 B | Container orchestration |
+| compose.yaml | 27 | 379 B | Container orchestration |
 | **Total Configuration** | **65** | **1.2 KB** | Docker setup |
 | DOCKER-ARCHITECTURE-DESIGN.md | 213 | 4.6 KB | Detailed design doc |
 | DEPLOYMENT-STATUS.md | 206 | 3.2 KB | Deployment guide |
@@ -243,7 +243,7 @@ networks:
 
 ## Deployment Readiness Checklist
 
-- [x] Docker configuration files created (Dockerfile, entrypoint.sh, docker-compose.yml)
+- [x] Docker configuration files created (Dockerfile, entrypoint.sh, compose.yaml)
 - [x] Configuration files syntax validated
 - [x] QCOW2 disk image present and verified (2.1 GB)
 - [x] Volume mount paths verified
@@ -294,21 +294,21 @@ sudo systemctl enable --now docker
 
 ### Build Phase
 ```bash
-cd /home/eirikr/GNUHurd2025
-docker-compose build
+cd ~/GNUHurd2025
+docker compose build
 # Expected: Successfully tagged gnu-hurd-dev:latest
 ```
 
 ### Deployment Phase
 ```bash
-docker-compose up -d
-docker-compose ps
+docker compose up -d
+docker compose ps
 # Expected: gnu-hurd-dev container running
 ```
 
 ### Validation Phase
 ```bash
-docker-compose logs -f
+docker compose logs -f
 # Watch for: QEMU startup messages, boot sequences
 # Look for: "Starting QEMU GNU/Hurd..." message
 ```
@@ -316,7 +316,7 @@ docker-compose logs -f
 ### Operational Phase
 ```bash
 # Access shell
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 
 # Access serial console (find PTY from logs)
 screen /dev/pts/X
@@ -333,7 +333,7 @@ Your Docker Compose implementation is complete and production-ready when:
 
 1. ✓ Dockerfile exists and is valid Docker syntax
 2. ✓ entrypoint.sh exists, is executable, and launches QEMU correctly
-3. ✓ docker-compose.yml exists and has valid YAML syntax
+3. ✓ compose.yaml exists and has valid YAML syntax
 4. ✓ QCOW2 disk image is accessible to container via volume mount
 5. ✓ Container builds without errors
 6. ✓ Container starts and runs QEMU GNU/Mach
@@ -350,8 +350,8 @@ The Docker Compose architecture for native i386 GNU/Mach environment is now **fu
 
 1. System kernel configuration verification (nf_tables/iptables)
 2. Docker daemon startup
-3. Image build: `docker-compose build`
-4. Container deployment: `docker-compose up -d`
+3. Image build: `docker compose build`
+4. Container deployment: `docker compose up -d`
 
 The solution elegantly circumvents the microkernel kernel-swap limitation by running QEMU inside a privileged container, achieving the goal of "native" i386 GNU/Mach environment within Docker's containerization model.
 

@@ -38,13 +38,13 @@ cd gnu-hurd-docker
 ./scripts/download-image.sh
 
 # Build Docker image
-docker-compose build
+docker compose build
 
 # Launch container
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Access the System
@@ -52,7 +52,7 @@ docker-compose logs -f
 **Via Serial Console:**
 ```bash
 # Find PTY from logs
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 
 # Connect (replace /dev/pts/X with actual PTY)
 screen /dev/pts/X
@@ -66,7 +66,7 @@ ssh -p 2222 root@localhost
 
 **Direct Shell:**
 ```bash
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 ```
 
 ## Configuration
@@ -106,7 +106,7 @@ docker-compose exec gnu-hurd-dev bash
 .
 ├── Dockerfile                    # Docker image specification
 ├── entrypoint.sh                # QEMU launcher script
-├── docker-compose.yml           # Container orchestration
+├── compose.yaml           # Container orchestration
 ├── README.md                    # This file
 ├── .gitignore                   # Git ignore rules
 ├── .github/
@@ -157,10 +157,10 @@ See [USER-SETUP.md](../../03-CONFIGURATION/user/SETUP.md) for detailed instructi
 ./scripts/validate-config.sh
 
 # Build image
-docker-compose build
+docker compose build
 
 # Watch build progress
-docker-compose build --progress=plain
+docker compose build --progress=plain
 
 # Inspect image
 docker image inspect gnu-hurd-dev:latest
@@ -191,7 +191,7 @@ See [TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) - Kernel Configura
 
 **Container won't start:**
 ```bash
-docker-compose logs --tail=100
+docker compose logs --tail=100
 # Check for: file not found, permission denied, port conflicts
 ```
 
@@ -205,8 +205,8 @@ screen /dev/pts/X
 **SSH connection refused:**
 ```bash
 # Verify SSH is running inside container
-docker-compose exec gnu-hurd-dev ps aux | grep sshd
-# Check port mapping: docker-compose ps
+docker compose exec gnu-hurd-dev ps aux | grep sshd
+# Check port mapping: docker compose ps
 ```
 
 See [TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) for complete troubleshooting guide.
@@ -262,7 +262,7 @@ All configuration files validated:
 
 - ✓ Dockerfile: Valid syntax (18 lines)
 - ✓ entrypoint.sh: ShellCheck passed (20 lines)
-- ✓ docker-compose.yml: Valid YAML (27 lines)
+- ✓ compose.yaml: Valid YAML (27 lines)
 - ✓ System images: Present and verified (6.5GB total)
 - ✓ Documentation: Complete and accurate
 
@@ -301,7 +301,7 @@ All configuration files validated:
 
 ### For Performance Testing
 
-- Increase RAM: Edit `docker-compose.yml` -m parameter
+- Increase RAM: Edit `compose.yaml` -m parameter
 - Use CPU passthrough: Change `-cpu pentium` to `-cpu host` (requires same-arch CPU)
 - Enable QEMU TCG acceleration (if available)
 

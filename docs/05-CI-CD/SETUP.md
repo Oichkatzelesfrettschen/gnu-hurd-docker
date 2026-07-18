@@ -57,7 +57,7 @@ This guide covers two production-grade CI/CD strategies for GNU/Hurd:
 - Linux host with KVM support (or Docker Desktop on macOS/Windows)
 - GitHub repository with Actions enabled
 - `gh` CLI tool installed
-- Docker and docker-compose installed
+- Docker and docker compose installed
 
 ### Step 1: Create Pre-Provisioned Image
 
@@ -154,8 +154,8 @@ jobs:
           mv debian-hurd-amd64-provisioned.qcow2 debian-hurd-amd64.qcow2
 
           # Build and start
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
 
       - name: Wait for system
         run: |
@@ -192,7 +192,7 @@ jobs:
         if: always()
         run: |
           docker cp gnu-hurd-dev:/tmp/test-results.xml ./
-          docker-compose logs > docker-logs.txt
+          docker compose logs > docker-logs.txt
 
       - name: Upload artifacts
         if: always()
@@ -205,7 +205,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down
+        run: docker compose down
 ```
 
 ### Step 4: Push and Test
@@ -259,7 +259,7 @@ project/
 │   ├── download-image.sh          # Download Hurd image
 │   ├── provision-image.sh         # Provision image script
 │   └── ci-build-hurd.sh           # CI build automation
-├── docker-compose.yml             # Docker environment
+├── compose.yaml             # Docker environment
 └── Dockerfile                     # Container definition
 ```
 
@@ -401,8 +401,8 @@ jobs:
 
       - name: Start Hurd with KVM
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
 ```
 
 ### Performance Comparison
@@ -449,13 +449,13 @@ jobs:
         exit 0
       fi
       # Check if QEMU is running
-      docker-compose ps
+      docker compose ps
       # Check logs
-      docker-compose logs --tail=20
+      docker compose logs --tail=20
       sleep 5
     done
     echo "SSH timeout after 10 minutes"
-    docker-compose logs
+    docker compose logs
     exit 1
 ```
 
@@ -463,7 +463,7 @@ jobs:
 
 ```bash
 # Check QEMU syntax
-docker-compose config
+docker compose config
 
 # Verify image exists
 ls -lh images/debian-hurd-amd64.qcow2
@@ -472,7 +472,7 @@ ls -lh images/debian-hurd-amd64.qcow2
 qemu-img check images/debian-hurd-amd64.qcow2
 
 # Test locally
-docker-compose up
+docker compose up
 ```
 
 **Problem: "Out of disk space"**

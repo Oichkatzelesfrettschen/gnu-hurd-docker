@@ -190,14 +190,14 @@ restore-keys: |
 ### Checks Performed
 - ✓ Dockerfile validation
 - ✓ entrypoint.sh validation and executability
-- ✓ docker-compose.yml YAML syntax
+- ✓ compose.yaml YAML syntax
 - ✓ Script executability (excluding templates)
 - ✓ Security configuration validation
 
 ### Files Validated
 - **Dockerfile:** Present and valid
 - **entrypoint.sh:** Executable and passes ShellCheck
-- **docker-compose.yml:** Valid YAML syntax
+- **compose.yaml:** Valid YAML syntax
 - **Scripts:** All non-template scripts executable
 - **Security config:** Validated successfully
 

@@ -130,7 +130,7 @@ trap cleanup EXIT INT TERM
 ## Files Modified
 
 ```
-/home/eirikr/Playground/gnu-hurd-docker/scripts/
+/path/to/gnu-hurd-docker/scripts/
 ├── full-automated-setup.sh           (MODIFIED)
 ├── bringup-and-provision.sh          (MODIFIED)
 ├── download-image.sh                 (MODIFIED)

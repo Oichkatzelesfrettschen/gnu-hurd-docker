@@ -169,7 +169,7 @@ Development convenience vs security trade-off:
 #### Localhost-Only Access (Recommended for Development)
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 services:
   gnu-hurd-dev:
     ports:
@@ -183,7 +183,7 @@ services:
 #### Production Deployment (External Access Required)
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 services:
   gnu-hurd-dev:
     ports:

@@ -97,7 +97,7 @@ The GNU/Hurd Docker control plane provides **five independent channels** for acc
 ```
 Host: localhost:2222
   ↓
-Container: 2222 (exposed in docker-compose.yml)
+Container: 2222 (exposed in compose.yaml)
   ↓
 QEMU: hostfwd=tcp::2222-:22
   ↓
@@ -250,7 +250,7 @@ tail -f /var/log/syslog
 -virtfs local,path=/share,mount_tag=scripts,security_model=none,id=fsdev0
 ```
 
-**Docker Volume Mount** (docker-compose.yml):
+**Docker Volume Mount** (compose.yaml):
 ```yaml
 volumes:
   - ./share:/share:rw
@@ -698,7 +698,7 @@ brew install mosh
 
 ### Port Configuration
 
-**Update docker-compose.yml** (expose mosh UDP ports):
+**Update compose.yaml** (expose mosh UDP ports):
 ```yaml
 ports:
   - "2222:2222"                     # SSH
@@ -1006,8 +1006,8 @@ Requires=docker.service
 [Service]
 Type=simple
 WorkingDirectory=%h/Playground/gnu-hurd-docker
-ExecStart=/usr/bin/docker-compose up
-ExecStop=/usr/bin/docker-compose down
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
 Restart=on-failure
 RestartSec=10
 
@@ -1065,7 +1065,7 @@ systemctl --user status hurd-docker.service
 
 ### Resilience
 - [ ] Install mosh inside Hurd guest
-- [ ] Expose mosh UDP ports (60000-60010) in docker-compose.yml
+- [ ] Expose mosh UDP ports (60000-60010) in compose.yaml
 - [ ] Add QEMU port forwarding for mosh
 - [ ] Test mosh connection from host
 - [ ] Setup tmux auto-attach
@@ -1137,8 +1137,8 @@ docker exec hurd-x86_64-qemu ps aux | grep qemu
 **Fixes**:
 1. Ensure `/qmp` directory created in entrypoint.sh: `mkdir -p /qmp`
 2. Check QEMU command includes: `-chardev socket,id=qmp0,path=/qmp/qmp.sock,server=on,wait=off`
-3. Verify volume mount in docker-compose.yml
-4. Restart container: `docker-compose restart`
+3. Verify volume mount in compose.yaml
+4. Restart container: `docker compose restart`
 
 ### 9p Mount Fails
 
@@ -1199,7 +1199,7 @@ ssh hurd-local "echo OK"
 
 **Fixes**:
 1. Install mosh inside guest: `apt-get install -y mosh`
-2. Expose UDP ports in docker-compose.yml: `60000-60010:60000-60010/udp`
+2. Expose UDP ports in compose.yaml: `60000-60010:60000-60010/udp`
 3. Add QEMU port forwarding for UDP: `hostfwd=udp::60000-:60000,...`
 4. Check firewall: `iptables -L -n -v | grep 60000`
 5. Try explicit port range: `mosh -p 60000:60010 --ssh="ssh hurd-local" localhost`

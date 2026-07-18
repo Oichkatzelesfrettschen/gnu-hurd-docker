@@ -1,7 +1,7 @@
 # Cross-Reference Fix Summary
 
 Generated: 2025-11-08
-Working Directory: /home/eirikr/Playground/gnu-hurd-docker/docs
+Working Directory: /path/to/gnu-hurd-docker/docs
 
 ## Executive Summary
 
@@ -60,7 +60,7 @@ Files in `08-REFERENCE/guidelines/CROSS-LINKING.md` and `assets/templates/`:
 ### 2. External Repository References
 Links to files outside `/docs`:
 - `../../entrypoint.sh`
-- `../../docker-compose.yml`
+- `../../compose.yaml`
 - `../../.github/workflows/build.yml`
 - `../../scripts/setup.sh`
 - These reference actual project files (valid but outside docs scope)

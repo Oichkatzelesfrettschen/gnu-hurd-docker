@@ -654,15 +654,15 @@ Before deploying Debian GNU/Hurd with SSH access:
 ### Project-Specific Documentation
 
 11. **gnu-hurd-docker: CREDENTIALS.md**
-    Path: `/home/eirikr/Playground/gnu-hurd-docker/docs/CREDENTIALS.md`
+    Path: `/path/to/gnu-hurd-docker/docs/CREDENTIALS.md`
     Date: 2025-11-05
 
 12. **gnu-hurd-docker: HURD-TESTING-REPORT.md**
-    Path: `/home/eirikr/Playground/gnu-hurd-docker/docs/HURD-TESTING-REPORT.md`
+    Path: `/path/to/gnu-hurd-docker/docs/HURD-TESTING-REPORT.md`
     Date: 2025-11-06
 
 13. **gnu-hurd-docker: README.md**
-    Path: `/home/eirikr/Playground/gnu-hurd-docker/README.md`
+    Path: `/path/to/gnu-hurd-docker/README.md`
     Date: 2025-11-05
 
 ---
@@ -751,7 +751,7 @@ echo "SSH connectivity tests complete!"
 ### Example 3: Complete Docker Integration
 
 ```yaml
-# docker-compose.yml - GNU/Hurd with automated SSH setup
+# compose.yaml - GNU/Hurd with automated SSH setup
 
 services:
   gnu-hurd-dev:
@@ -783,7 +783,7 @@ services:
 
 ```bash
 # Start container
-docker compose -f docker-compose.yml -f docker-compose.bind.yml up -d
+docker compose -f compose.yaml -f compose.bind.yaml up -d
 
 # Wait for boot
 sleep 180

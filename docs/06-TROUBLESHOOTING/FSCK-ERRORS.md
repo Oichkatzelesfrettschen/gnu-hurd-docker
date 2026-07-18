@@ -192,7 +192,7 @@ If QEMU won't boot at all, repair the QCOW2 image from the host machine:
 
 ```bash
 # 1. Stop QEMU if running
-docker-compose down
+docker compose down
 # or
 pkill qemu-system-x86_64
 
@@ -222,7 +222,7 @@ mv debian-hurd-amd64-80gb.qcow2 debian-hurd-amd64-80gb.qcow2.corrupt
 mv debian-hurd-amd64-80gb-repaired.qcow2 debian-hurd-amd64-80gb.qcow2
 
 # 6. Restart QEMU
-docker-compose up -d
+docker compose up -d
 ```
 
 **When to use**: When QEMU hangs completely or the QCOW2 file is damaged.
@@ -249,7 +249,7 @@ shutdown -h now
 
 ```bash
 # Via Docker Compose
-docker-compose down
+docker compose down
 
 # Or via QEMU monitor (if accessible)
 # Ctrl+Alt+2 (in VNC/GTK window), then:
@@ -284,10 +284,10 @@ quit
 
 ```bash
 # Send SIGTERM to container (gives 10 seconds for shutdown)
-docker-compose stop
+docker compose stop
 
 # Or force stop after timeout
-docker-compose stop -t 30
+docker compose stop -t 30
 ```
 
 **Option 3: QEMU Kill (Last Resort, WILL CAUSE FSCK)**:
@@ -297,7 +297,7 @@ docker-compose stop -t 30
 pkill qemu-system-x86_64
 
 # OR
-docker-compose kill
+docker compose kill
 ```
 
 **Warning**: Killing QEMU abruptly WILL cause fsck errors on next boot. Use only when necessary.
@@ -348,7 +348,7 @@ fsck.ext2: Cannot allocate memory while trying to open /dev/hd0s2
 **Solution**:
 
 ```yaml
-# Increase QEMU RAM in docker-compose.yml
+# Increase QEMU RAM in compose.yaml
 environment:
   QEMU_RAM: 4096  # Increase to 4 GB or 8192 for 8 GB
 ```
@@ -356,9 +356,9 @@ environment:
 **Rebuild and restart**:
 
 ```bash
-docker-compose down
-docker-compose build
-docker-compose up -d
+docker compose down
+docker compose build
+docker compose up -d
 ```
 
 ---
@@ -469,7 +469,7 @@ shutdown -h now
 # Wait for "System halted" message
 
 # Then stop QEMU
-docker-compose down
+docker compose down
 ```
 
 ### 2. Enable QCOW2 Image Snapshots

@@ -235,13 +235,13 @@ docker stats hurd-x86_64-qemu
 
 ```bash
 # Follow logs
-docker-compose logs -f
+docker compose logs -f
 
 # Last 100 lines
-docker-compose logs --tail=100
+docker compose logs --tail=100
 
 # Specific time range
-docker-compose logs --since 10m
+docker compose logs --since 10m
 ```
 
 **Container Inspection:**
@@ -257,7 +257,7 @@ docker inspect hurd-x86_64-qemu | jq '.[].HostConfig.CpuQuota'
 
 ### Container Resource Limits
 
-**Current Limits** (docker-compose.yml):
+**Current Limits** (compose.yaml):
 
 ```yaml
 services:
@@ -275,8 +275,8 @@ services:
 **Apply Limits:**
 
 ```bash
-# Edit docker-compose.yml with limits above
-docker-compose up -d --force-recreate
+# Edit compose.yaml with limits above
+docker compose up -d --force-recreate
 ```
 
 **Verify Limits:**
@@ -544,7 +544,7 @@ iftop -i eth0
 START_TIME=$(date +%s)
 
 # Start VM
-docker-compose up -d
+docker compose up -d
 
 # Wait for SSH to be available
 while ! nc -z localhost 2222; do
@@ -655,17 +655,17 @@ iperf3 -c <host-ip>
 
 ```bash
 # Check if KVM is enabled
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-accel [^ ]*"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-accel [^ ]*"
 # Expected: -accel kvm
 # If TCG only: performance will be poor
 
 # Check CPU model
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-cpu [^ ]*"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-cpu [^ ]*"
 # KVM: -cpu host
 # TCG: -cpu max
 
 # Check vCPU count
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-smp [^ ]*"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-smp [^ ]*"
 # Should match guest needs (2 recommended)
 ```
 
@@ -673,16 +673,16 @@ docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "\-smp [^ ]*"
 
 ```bash
 # Enable KVM (Linux only)
-# Uncomment in docker-compose.yml:
+# Uncomment in compose.yaml:
 devices:
   - /dev/kvm:/dev/kvm:rw
 
 # Restart
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # Verify KVM is used
-docker-compose logs | grep -i kvm
+docker compose logs | grep -i kvm
 # Expected: "KVM acceleration enabled"
 ```
 
@@ -713,13 +713,13 @@ free -h | grep Swap
 
 ```bash
 # Reduce guest RAM if host is constrained
-# Edit docker-compose.yml:
+# Edit compose.yaml:
 environment:
   QEMU_RAM: 2048  # Reduce from 4096 to 2048 MB
 
 # Restart
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # Disable host swap (emergency)
 swapoff -a
@@ -736,11 +736,11 @@ swapoff -a
 
 ```bash
 # Check QCOW2 cache mode
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "cache=[^ ]*"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "cache=[^ ]*"
 # Expected: cache=writeback (fastest)
 
 # Check AIO mode
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "aio=[^ ]*"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "aio=[^ ]*"
 # Expected: aio=threads or aio=native
 
 # Check host disk I/O
@@ -766,7 +766,7 @@ mv debian-hurd-amd64.qcow2 /path/to/ssd/
 ln -s /path/to/ssd/debian-hurd-amd64.qcow2 .
 
 # Restart
-docker-compose restart
+docker compose restart
 ```
 
 ### Network Slowness
@@ -780,7 +780,7 @@ docker-compose restart
 
 ```bash
 # Check NIC model
-docker-compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "e1000"
+docker compose exec hurd-x86_64-qemu ps aux | grep qemu | grep -o "e1000"
 # Expected: e1000 (compatible with Hurd)
 
 # Check for packet drops (inside guest)
@@ -954,7 +954,7 @@ sar -u 1 1                   # CPU statistics
 
 # Container layer
 docker stats                 # Real-time container stats
-docker-compose logs -f       # Container logs
+docker compose logs -f       # Container logs
 docker inspect <container>   # Container details
 
 # QEMU layer

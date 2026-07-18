@@ -47,7 +47,7 @@ secrets/
 
 ## Docker Compose Integration
 
-The `docker-compose.yml` file references these secrets:
+The `compose.yaml` file references these secrets:
 
 ```yaml
 secrets:
@@ -117,6 +117,6 @@ chown $USER:$USER secrets/*.txt
 
 **Secrets not mounted in container**:
 ```bash
-# Check docker-compose logs
-docker-compose logs hurd-x86_64 | grep secret
+# Check docker compose logs
+docker compose logs hurd-x86_64 | grep secret
 ```

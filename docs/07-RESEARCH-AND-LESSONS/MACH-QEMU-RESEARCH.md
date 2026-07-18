@@ -247,7 +247,7 @@ qemu-img check debian-hurd-i386-20251105.qcow2
 
 ### Directory Structure
 ```
-/home/eirikr/Playground/
+~/Playground/
 ├── debian-hurd.img.tar.xz          (downloaded)
 ├── debian-hurd-i386-20251105.img   (extracted)
 ├── debian-hurd-i386-20251105.qcow2 (converted) ← READY TO USE

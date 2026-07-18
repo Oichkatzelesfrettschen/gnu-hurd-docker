@@ -156,7 +156,7 @@ jobs:
 
             - **Dockerfile**: Docker image specification for QEMU-based GNU/Hurd
             - **entrypoint.sh**: QEMU launcher script with KVM acceleration
-            - **docker-compose.yml**: Container orchestration configuration
+            - **compose.yaml**: Container orchestration configuration
             - **PKGBUILD**: Arch Linux package definition
             - **scripts/**: Utility scripts for setup, testing, and management
 
@@ -306,7 +306,7 @@ jobs:
 
           # Copy core files
           cp -v Dockerfile release-artifacts/
-          cp -v docker-compose.yml release-artifacts/
+          cp -v compose.yaml release-artifacts/
           cp -v entrypoint.sh release-artifacts/
           cp -v PKGBUILD release-artifacts/
           cp -v gnu-hurd-docker.install release-artifacts/

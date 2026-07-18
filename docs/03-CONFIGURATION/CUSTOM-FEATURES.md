@@ -28,7 +28,7 @@ This document details all **custom configurations, provisioning scripts, and fea
 
 ### Optimized x86_64 Settings
 
-**Current Configuration** (from entrypoint.sh and docker-compose.yml):
+**Current Configuration** (from entrypoint.sh and compose.yaml):
 
 ```yaml
 CPU: host (KVM) or max (TCG)
@@ -78,7 +78,7 @@ export QEMU_SMP=4  # 4 cores
 export DISPLAY_MODE="vnc"  # or "sdl", "gtk", "nographic"
 
 # Restart container to apply
-docker-compose up -d --force-recreate
+docker compose up -d --force-recreate
 ```
 
 **Supported Display Modes**:
@@ -285,7 +285,7 @@ startx
 
 ### VNC Access to GUI
 
-**Enable VNC in docker-compose.yml**:
+**Enable VNC in compose.yaml**:
 ```yaml
 environment:
   ENABLE_VNC: 1
@@ -507,7 +507,7 @@ mach-doc() {
 
 **Docker Volume**:
 ```yaml
-# docker-compose.yml
+# compose.yaml
 volumes:
   - ./share:/share:rw
 ```
@@ -973,7 +973,7 @@ docker logs gnu-hurd-dev | grep virtfs
 - Provisioning scripts: `./share/*.sh`
 - Helper scripts: `./scripts/*.sh`
 - Architecture docs: `docs/02-ARCHITECTURE/`
-- QEMU configuration: `entrypoint.sh`, `docker-compose.yml`
+- QEMU configuration: `entrypoint.sh`, `compose.yaml`
 
 ---
 

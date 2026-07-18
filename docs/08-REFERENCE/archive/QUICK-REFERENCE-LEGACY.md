@@ -51,7 +51,7 @@ cd gnu-hurd-docker-1.0.0
 
 # Download Hurd image and run
 ./scripts/download-image.sh
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Method 3: Build from Source
@@ -62,8 +62,8 @@ docker-compose up -d
 git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
 cd gnu-hurd-docker
 ./scripts/download-image.sh
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
 ### Method 4: Arch Linux AUR
@@ -194,19 +194,19 @@ docker rm -f gnu-hurd
 
 ```bash
 # Start
-docker-compose up -d
+docker compose up -d
 
 # Stop
-docker-compose down
+docker compose down
 
 # Restart
-docker-compose restart
+docker compose restart
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Rebuild
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### Guest System

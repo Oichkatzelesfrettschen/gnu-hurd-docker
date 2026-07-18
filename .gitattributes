@@ -1,2 +1,5 @@
 *.qcow2 filter=lfs diff=lfs merge=lfs -text
 images/debian-hurd-amd64.qcow2* filter=lfs diff=lfs merge=lfs -text
+ARCHIVE/ export-ignore
+docs/reports/ export-ignore
+ssh-test-keys/ export-ignore

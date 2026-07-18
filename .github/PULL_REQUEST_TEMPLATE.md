@@ -75,8 +75,8 @@
 ### Testing
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] I have tested the Docker build: `docker-compose build`
-- [ ] I have tested the container start: `docker-compose up -d`
+- [ ] I have tested the Docker build: `docker compose build`
+- [ ] I have tested the container start: `docker compose up -d`
 - [ ] I have tested SSH access: `ssh -p 2222 root@localhost`
 - [ ] I have verified no regression in existing functionality
 

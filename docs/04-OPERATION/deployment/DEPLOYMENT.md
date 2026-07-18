@@ -5,7 +5,7 @@
 Before deploying the Docker image, verify the following:
 
 - [ ] Docker Engine installed (`docker --version`)
-- [ ] Docker Compose installed (`docker-compose --version`)
+- [ ] Docker Compose installed (`docker compose version`)
 - [ ] 8GB+ free disk space
 - [ ] 2GB+ available RAM
 - [ ] QCOW2 image downloaded or available
@@ -123,14 +123,14 @@ file debian-hurd-amd64.qcow2
 # Or manually validate
 docker build --dry-run .              # Validate Dockerfile
 shellcheck entrypoint.sh              # Validate shell script
-python3 -c "import yaml; yaml.safe_load(open('docker-compose.yml'))"  # Validate YAML
+python3 -c "import yaml; yaml.safe_load(open('compose.yaml'))"  # Validate YAML
 ```
 
 ### Build Image
 
 ```bash
 # Build Docker image
-docker-compose build
+docker compose build
 
 # Expected output:
 # Step 1/9 : FROM debian:bookworm
@@ -139,7 +139,7 @@ docker-compose build
 # Successfully tagged gnu-hurd-dev:latest
 
 # Monitor progress
-docker-compose build --progress=plain
+docker compose build --progress=plain
 ```
 
 ### Verify Image Built
@@ -161,7 +161,7 @@ docker image inspect gnu-hurd-dev:latest --format='{{.Size}}' | awk '{print $1/1
 
 ```bash
 # Start container in background
-docker-compose up -d
+docker compose up -d
 
 # Expected output:
 # Creating network "gnu-hurd-docker_hurd-net" with driver "bridge"
@@ -170,7 +170,7 @@ docker-compose up -d
 # Creating gnu-hurd-dev ... done
 
 # Verify container is running
-docker-compose ps
+docker compose ps
 # Expected: gnu-hurd-dev  Up (running)
 ```
 
@@ -178,7 +178,7 @@ docker-compose ps
 
 ```bash
 # Watch logs in real-time
-docker-compose logs -f
+docker compose logs -f
 
 # Expected startup sequence:
 # [INFO] Starting QEMU GNU/Hurd...
@@ -195,7 +195,7 @@ docker-compose logs -f
 
 ```bash
 # Check container running
-docker-compose ps
+docker compose ps
 
 # Get detailed container information
 docker inspect gnu-hurd-dev
@@ -209,7 +209,7 @@ docker stats gnu-hurd-dev
 **Via Serial Console:**
 ```bash
 # Find PTY from logs
-docker-compose logs | grep "char device redirected"
+docker compose logs | grep "char device redirected"
 # Example output: char device redirected to /dev/pts/5
 
 # Connect to serial console
@@ -238,10 +238,10 @@ ssh -p 2222 root@localhost
 **Via Docker Shell:**
 ```bash
 # Access bash inside container (for debugging)
-docker-compose exec gnu-hurd-dev bash
+docker compose exec gnu-hurd-dev bash
 
 # Run commands inside container
-docker-compose exec gnu-hurd-dev ls /opt/hurd-image/
+docker compose exec gnu-hurd-dev ls /opt/hurd-image/
 ```
 
 ### Network Connectivity
@@ -293,23 +293,23 @@ scp -P 2222 /path/to/config root@localhost:/etc/
 
 ```bash
 # Stop running container (saves state)
-docker-compose stop
+docker compose stop
 
 # Restart container
-docker-compose start
+docker compose start
 
 # Restart container (full restart)
-docker-compose restart
+docker compose restart
 ```
 
 ### Remove Container
 
 ```bash
 # Stop and remove container
-docker-compose down
+docker compose down
 
 # Remove container and volumes
-docker-compose down -v
+docker compose down -v
 
 # Note: Removes container but preserves disk image
 ```
@@ -318,32 +318,32 @@ docker-compose down -v
 
 ```bash
 # Show recent logs
-docker-compose logs --tail=50
+docker compose logs --tail=50
 
 # Show logs from specific time
-docker-compose logs --since 5m
+docker compose logs --since 5m
 
 # Follow logs in real-time
-docker-compose logs -f
+docker compose logs -f
 
 # Search logs
-docker-compose logs | grep "error"
+docker compose logs | grep "error"
 ```
 
 ### Container Health Checks
 
 ```bash
 # QEMU process running?
-docker-compose exec gnu-hurd-dev ps aux | grep qemu
+docker compose exec gnu-hurd-dev ps aux | grep qemu
 
 # SSH service running?
-docker-compose exec gnu-hurd-dev systemctl status ssh
+docker compose exec gnu-hurd-dev systemctl status ssh
 
 # Disk space usage?
-docker-compose exec gnu-hurd-dev df -h
+docker compose exec gnu-hurd-dev df -h
 
 # Network connectivity?
-docker-compose exec gnu-hurd-dev ping 8.8.8.8
+docker compose exec gnu-hurd-dev ping 8.8.8.8
 ```
 
 ## Troubleshooting Deployment
@@ -396,13 +396,13 @@ docker compose logs | tail -100
 
 ```bash
 # Verify SSH service running
-docker-compose exec gnu-hurd-dev systemctl status ssh
+docker compose exec gnu-hurd-dev systemctl status ssh
 
 # Restart SSH
-docker-compose exec gnu-hurd-dev systemctl restart ssh
+docker compose exec gnu-hurd-dev systemctl restart ssh
 
 # Check port mapping
-docker-compose ps
+docker compose ps
 
 # Verify SSH accessible on port 2222
 nc -zv localhost 2222  # Port open?
@@ -414,19 +414,19 @@ nc -zv localhost 2222  # Port open?
 
 ```bash
 # Create separate compose file for each instance
-cp docker-compose.yml docker-compose.prod.yml
+cp compose.yaml docker-compose.prod.yml
 
 # Edit docker-compose.prod.yml
 # Change: container_name: gnu-hurd-prod
 # Change: ports: "2223:2222" (different port)
 
 # Deploy with specific compose file
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Custom Ports
 
-Edit `docker-compose.yml`:
+Edit `compose.yaml`:
 ```yaml
 ports:
   - "2222:2222"    # SSH
@@ -434,12 +434,12 @@ ports:
   - "3000:3000"    # Add Node.js service
 
 # Rebuild and restart
-docker-compose up -d --force-recreate
+docker compose up -d --force-recreate
 ```
 
 ### Resource Limits
 
-Edit `docker-compose.yml`:
+Edit `compose.yaml`:
 ```yaml
 services:
   gnu-hurd-dev:
@@ -459,7 +459,7 @@ services:
 
 ```bash
 # Commit running container to image
-docker-compose exec gnu-hurd-dev ...  # Stop/finalize system first
+docker compose exec gnu-hurd-dev ...  # Stop/finalize system first
 docker commit gnu-hurd-dev my-backup:latest
 
 # Save image to file

@@ -225,7 +225,7 @@ Usage:
 # Better interactive monitor (with readline support)
 socat -,echo=0,icanon=0 TCP:localhost:9999
 
-# Or if using UNIX socket (configure in docker-compose.yml)
+# Or if using UNIX socket (configure in compose.yaml)
 socat -,echo=0,icanon=0 UNIX-CONNECT:/var/run/qemu-monitor.sock
 ```
 
@@ -290,7 +290,7 @@ watch -n 1 "docker compose logs hurd-x86_64 | tail -20"
 
 VNC provides graphical console access to Hurd's display.
 
-### Enable VNC in docker-compose.yml
+### Enable VNC in compose.yaml
 
 ```yaml
 services:
@@ -317,7 +317,7 @@ open vnc://localhost:5900
 
 ### noVNC Web Interface
 
-Add noVNC service to docker-compose.yml:
+Add noVNC service to compose.yaml:
 
 ```yaml
 services:
@@ -397,7 +397,7 @@ Relevant to Hurd development:
 ### Using MCP with Hurd Environment
 
 ```yaml
-# docker-compose.yml - Add MCP server
+# compose.yaml - Add MCP server
 services:
   hurd-x86_64:
     # ... existing configuration ...

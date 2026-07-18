@@ -281,7 +281,7 @@ sha256sum -c SHA256SUMS --ignore-missing
 
 **Directory Structure**:
 ```
-/home/eirikr/Playground/
+~/Playground/
 ├── debian-hurd-amd64.img.tar.xz          (downloaded)
 ├── debian-hurd-amd64-20251105.img        (extracted)
 ├── debian-hurd-amd64-20251105.qcow2      (converted) ← READY TO USE
@@ -620,7 +620,7 @@ gcc /tmp/math_test.c -o /tmp/math_test -lm
 **Solution**:
 ```bash
 # Check if system is booted
-docker-compose logs | grep -i "login"
+docker compose logs | grep -i "login"
 
 # Connect via serial console
 telnet localhost 5555
@@ -721,8 +721,8 @@ jobs:
 
       - name: Build and start container
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
 
       - name: Wait for boot
         run: sleep 180
@@ -843,15 +843,15 @@ Result: GUI window, interactive GRUB, full desktop
 
 This repository no longer recommends a privileged container for QEMU. Use the canonical Compose files instead:
 
-- `docker-compose.yml` (portable baseline)
-- `docker-compose.bind.yml` (dev: bind-mount `./images`)
-- `docker-compose.kvm.yml` (Linux x86_64 KVM overlay via `/dev/kvm` device mapping)
+- `compose.yaml` (portable baseline)
+- `compose.bind.yaml` (dev: bind-mount `./images`)
+- `compose.kvm.yaml` (Linux x86_64 KVM overlay via `/dev/kvm` device mapping)
 
 Examples:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.bind.yml up -d
-docker compose -f docker-compose.yml -f docker-compose.bind.yml -f docker-compose.kvm.yml up -d
+docker compose -f compose.yaml -f compose.bind.yaml up -d
+docker compose -f compose.yaml -f compose.bind.yaml -f compose.kvm.yaml up -d
 ```
 
 ---

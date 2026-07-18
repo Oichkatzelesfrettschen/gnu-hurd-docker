@@ -58,7 +58,7 @@ jobs:
             ## Contents
             - Dockerfile: Docker image specification
             - entrypoint.sh: QEMU launcher script
-            - docker-compose.yml: Container orchestration
+            - compose.yaml: Container orchestration
             - PKGBUILD: Arch Linux kernel fix package
 
             ## Prerequisites

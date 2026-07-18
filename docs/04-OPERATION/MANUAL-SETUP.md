@@ -342,7 +342,7 @@ docker exec gnu-hurd-dev ps aux | grep virtfs
 
 **Solution:**
 - Verify `/share` directory exists on host
-- Restart container if needed: `docker-compose restart`
+- Restart container if needed: `docker compose restart`
 
 ### Issue 4: Package Installation Fails
 

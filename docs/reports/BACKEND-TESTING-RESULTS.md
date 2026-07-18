@@ -229,7 +229,7 @@ SSH_PORT=2223 docker compose up -d
 
 All scripts validated:
 - ShellCheck: 0 errors (30+ scripts)
-- YAML validation: 0 errors (docker-compose files)
+- YAML validation: 0 errors (docker compose files)
 - Documentation: 2,100+ lines (8 files)
 
 ---

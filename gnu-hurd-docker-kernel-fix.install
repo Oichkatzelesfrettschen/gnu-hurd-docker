@@ -21,7 +21,7 @@ NEXT STEPS:
 2. After running the script, verify Docker works:
    
    docker ps
-   docker-compose --version
+   docker compose version
 
 3. If automatic fix fails, choose from three manual options:
    

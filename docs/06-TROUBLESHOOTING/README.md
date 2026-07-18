@@ -71,9 +71,9 @@ This section provides comprehensive troubleshooting guides for common issues enc
 **Go to**: [SSH-ISSUES.md](SSH-ISSUES.md)
 
 **Quick fixes**:
-1. Check container running: `docker-compose ps`
+1. Check container running: `docker compose ps`
 2. Check SSH service: Use serial console
-3. Verify port: `docker-compose ps | grep 2222`
+3. Verify port: `docker compose ps | grep 2222`
 
 ---
 
@@ -94,12 +94,12 @@ reboot
 
 ### Issue: Container Won't Start
 
-**Symptom**: `docker-compose up -d` fails
+**Symptom**: `docker compose up -d` fails
 
 **Go to**: [COMMON-ISSUES.md](COMMON-ISSUES.md#container-wont-start)
 
 **Quick fixes**:
-1. Check logs: `docker-compose logs`
+1. Check logs: `docker compose logs`
 2. Verify image exists: `ls -lh *.qcow2`
 3. Check disk space: `df -h`
 
@@ -113,7 +113,7 @@ reboot
 
 **Quick fixes**:
 1. Check acceleration: KVM vs TCG
-2. Increase RAM: Edit docker-compose.yml (4GB → 8GB)
+2. Increase RAM: Edit compose.yaml (4GB → 8GB)
 3. Monitor resources: `./scripts/monitor-qemu.sh`
 
 ---
@@ -124,24 +124,24 @@ reboot
 Problem?
 │
 ├─ Cannot SSH
-│  ├─ Container not running? → docker-compose up -d
+│  ├─ Container not running? → docker compose up -d
 │  ├─ SSH service down? → Use serial console, systemctl restart ssh
 │  └─ Password wrong? → Try empty password or 'root'
 │
 ├─ Boot failures
 │  ├─ Drops to emergency mode? → Run fsck (see FSCK-ERRORS.md)
-│  ├─ QEMU crashes? → Check logs (docker-compose logs)
+│  ├─ QEMU crashes? → Check logs (docker compose logs)
 │  └─ Hangs on boot? → Wait 5 minutes or check KVM/TCG
 │
 ├─ Network issues
 │  ├─ No internet inside guest? → Check dhclient eth0
 │  ├─ DNS not resolving? → Add nameservers to /etc/resolv.conf
-│  └─ Port forwarding broken? → Verify docker-compose.yml ports
+│  └─ Port forwarding broken? → Verify compose.yaml ports
 │
 └─ Performance issues
    ├─ Slow boot? → Check KVM acceleration
    ├─ High CPU usage? → Reduce SMP cores (2 → 1)
-   └─ Out of RAM? → Increase QEMU_RAM in docker-compose.yml
+   └─ Out of RAM? → Increase QEMU_RAM in compose.yaml
 ```
 
 ---
@@ -177,7 +177,7 @@ Problem?
 **Quick fix**:
 ```bash
 # Check container
-docker-compose ps
+docker compose ps
 
 # Check SSH service (via serial console)
 telnet localhost 5555
@@ -226,7 +226,7 @@ reboot
 
 **Quick fix**:
 ```yaml
-# Edit docker-compose.yml
+# Edit compose.yaml
 environment:
   QEMU_RAM: 8192  # Increase from 4096 to 8192
 ```
@@ -243,7 +243,7 @@ environment:
 # Find process using port
 lsof -i :2222
 
-# Kill process or change port in docker-compose.yml
+# Kill process or change port in compose.yaml
 # ports:
 #   - "3333:22"  # Use 3333 instead of 2222
 ```
@@ -257,7 +257,7 @@ lsof -i :2222
    # Inside guest
    shutdown -h now
    # Wait for "System halted"
-   docker-compose down
+   docker compose down
    ```
    **Prevents**: Filesystem errors, data corruption
 
@@ -292,13 +292,13 @@ lsof -i :2222
 ### Container Diagnostics
 ```bash
 # Check container status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs | tail -100
+docker compose logs | tail -100
 
 # Enter container shell (NOT guest!)
-docker-compose exec gnu-hurd-dev /bin/bash
+docker compose exec gnu-hurd-dev /bin/bash
 ```
 
 ---
@@ -368,7 +368,7 @@ reboot
 # Backup important data first (via SSH or SCP)
 # Then download fresh image
 ./scripts/setup-hurd-amd64.sh
-docker-compose up -d
+docker compose up -d
 ```
 
 ---
@@ -389,7 +389,7 @@ systemctl restart ssh
 ```bash
 # Replace with pre-provisioned backup
 cp hurd-provisioned-backup.qcow2 debian-hurd-amd64-80gb.qcow2
-docker-compose restart
+docker compose restart
 ```
 
 ---
@@ -398,7 +398,7 @@ docker-compose restart
 
 **Escalation Path**:
 1. **Check this section first** (solves 80% of issues)
-2. **Check logs** (`docker-compose logs`)
+2. **Check logs** (`docker compose logs`)
 3. **Try serial console** (emergency access)
 4. **Restore snapshot** (known good state)
 5. **Consult Research section** (deep dives, advanced troubleshooting)

@@ -59,16 +59,16 @@ ls -lh debian-hurd-i386-20251105.qcow2
 
 ```bash
 # Build Docker image
-docker-compose build
+docker compose build
 
 # Start container
-docker-compose up -d
+docker compose up -d
 
 # Wait for boot (2-3 minutes)
 sleep 180
 
 # Check logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 #### 3. Connect and Run Setup Scripts
@@ -121,10 +121,10 @@ shutdown -h now
 
 ```bash
 # Wait for shutdown to complete
-docker-compose logs | tail -20
+docker compose logs | tail -20
 
 # Stop container
-docker-compose down
+docker compose down
 
 # Optional: Create snapshot before committing
 ./scripts/manage-snapshots.sh create pre-rice
@@ -144,10 +144,10 @@ qemu-img convert -O qcow2 -c \
 # Update entrypoint.sh to use new image name (if renamed)
 sed -i 's/debian-hurd-i386-20251105.qcow2/debian-hurd-riced-20251105.qcow2/' entrypoint.sh
 
-# Update docker-compose.yml (no changes needed if using same filename)
+# Update compose.yaml (no changes needed if using same filename)
 
 # Rebuild Docker image with new QCOW2
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ---
@@ -188,7 +188,7 @@ mv debian-hurd-i386-20251105.qcow2 /path/to/gnu-hurd-docker/
 
 # Build Docker image
 cd /path/to/gnu-hurd-docker
-docker-compose build
+docker compose build
 ```
 
 ---
@@ -215,7 +215,7 @@ set -e
 echo "Starting automated Hurd image build..."
 
 # Start Docker
-docker-compose up -d
+docker compose up -d
 
 # Wait for SSH
 echo "Waiting for SSH..."
@@ -255,7 +255,7 @@ echo "Waiting for shutdown..."
 sleep 30
 
 # Stop container
-docker-compose down
+docker compose down
 
 echo "Build complete!"
 ```
@@ -269,8 +269,8 @@ After building, verify the riced image:
 ### Boot Test
 
 ```bash
-docker-compose up -d
-docker-compose logs -f
+docker compose up -d
+docker compose logs -f
 # Look for: "Starting QEMU GNU/Hurd..."
 ```
 
@@ -320,7 +320,7 @@ ll                   # Should be aliased (colorized ls)
 
 ```bash
 # Build final Docker image
-docker-compose build
+docker compose build
 
 # Tag with version
 docker tag gnu-hurd-dev:latest gnu-hurd-dev:riced-v1.0
@@ -391,7 +391,7 @@ resize2fs /dev/hd0s1   # Adjust device as needed
 **Solution:**
 ```bash
 # Force shutdown (from host)
-docker-compose down --timeout 60
+docker compose down --timeout 60
 
 # Or kill QEMU process
 pkill -9 qemu-system-i386
@@ -403,7 +403,7 @@ pkill -9 qemu-system-i386
 
 **Solution:**
 ```bash
-# Check docker-compose.yml volume mount
+# Check compose.yaml volume mount
 # Should be:
 volumes:
   - .:/opt/hurd-image:rw   # NOT :ro

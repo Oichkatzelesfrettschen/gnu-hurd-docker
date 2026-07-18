@@ -154,10 +154,10 @@ docker ps                 # Verify Docker works
 ### Subsequent Docker Deployment (20 minutes)
 
 ```bash
-cd /home/eirikr/Playground/gnu-hurd-docker
-docker-compose build      # Build image (10 min)
-docker-compose up -d      # Deploy container (3 min)
-docker-compose logs -f    # Monitor boot (5 min)
+cd /path/to/gnu-hurd-docker
+docker compose build      # Build image (10 min)
+docker compose up -d      # Deploy container (3 min)
+docker compose logs -f    # Monitor boot (5 min)
 ```
 
 ---
@@ -225,13 +225,13 @@ docker-compose logs -f    # Monitor boot (5 min)
 ### Current File Structure
 
 ```
-/home/eirikr/Playground/gnu-hurd-docker/
+/path/to/gnu-hurd-docker/
 ├── README.md                           # Project overview
 ├── EXECUTION-SUMMARY.md                # NEW - Executive summary
 ├── SESSION-COMPLETION-REPORT.md        # NEW - This report
 ├── Dockerfile                          # Container image spec
 ├── entrypoint.sh                       # QEMU launcher
-├── docker-compose.yml                  # Container orchestration
+├── compose.yaml                  # Container orchestration
 ├── PKGBUILD                           # Arch package spec
 ├── gnu-hurd-docker-kernel-fix.install # Package hooks
 ├── fix-script.sh                       # Diagnostic utility
@@ -323,12 +323,12 @@ Execute the three-phase procedure documented in EXECUTION-SUMMARY.md and KERNEL-
    - Confirm `docker ps` works
 
 5. **Build Docker image** (10 min)
-   - `docker-compose build`
+   - `docker compose build`
    - Creates Debian + QEMU container image
    - No external downloads needed
 
 6. **Deploy container** (3 min)
-   - `docker-compose up -d`
+   - `docker compose up -d`
    - Starts GNU/Hurd in QEMU container
    - Begins system boot sequence
 

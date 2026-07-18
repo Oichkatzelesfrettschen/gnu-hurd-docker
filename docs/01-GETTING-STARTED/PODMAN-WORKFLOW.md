@@ -6,7 +6,7 @@ This guide covers using **Podman** as the preferred container runtime for GNU/Hu
 
 - **Rootless execution** (no daemon, better security)
 - **Daemonless operation** (simpler than Docker daemon)
-- **Docker-compatible syntax** (use existing docker-compose files)
+- **Docker-compatible syntax** (use existing docker compose files)
 - **Direct KVM access** (no special permission setup)
 - **No installation hassle** (on Linux systems)
 
@@ -54,7 +54,7 @@ podman-compose --version  # Should be 1.0+
 podman-compose down 2>/dev/null || true
 
 # Start with KVM acceleration
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 
 # Wait for boot (~30-60 seconds with KVM)
 sleep 30
@@ -132,7 +132,7 @@ groups | grep kvm
 ### Start GNU/Hurd (with KVM)
 
 ```bash
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 # Or shorter:
 podman-compose up -d  # Uses default compose file
 ```
@@ -180,7 +180,7 @@ podman-compose down
 podman volume rm $(podman volume ls -q) 2>/dev/null
 
 # Start fresh
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 ```
 
 ---
@@ -189,7 +189,7 @@ podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
 
 ### Adjust Memory/CPU
 
-Create `docker-compose.override.yml`:
+Create `compose.override.yaml`:
 
 ```yaml
 version: "3.8"
@@ -208,7 +208,7 @@ MEMORY=2048 CPUS=1 podman-compose up -d
 ### Change SSH Port
 
 ```yaml
-# docker-compose.override.yml
+# compose.override.yaml
 services:
   gnu-hurd-dev:
     ports:
@@ -221,14 +221,14 @@ Then: `ssh -p 2223 root@localhost`
 
 ```bash
 # Method 1: Unset overlay
-podman-compose -f docker-compose.yml up -d
+podman-compose -f compose.yaml up -d
 # (Uses default, no KVM)
 
 # Method 2: Environment variable
 AUTO_DISABLE_KVM_FOR_IDE=1 podman-compose up -d
 
 # Method 3: Modify compose file
-# Remove "-f docker-compose.kvm.yml" from command
+# Remove "-f compose.kvm.yaml" from command
 ```
 
 ### Use TCG Emulation (Slower)
@@ -255,11 +255,11 @@ lsof -i :2222
 # Option 1: Kill the process
 pkill -f something
 
-# Option 2: Use different port in docker-compose.override.yml
+# Option 2: Use different port in compose.override.yaml
 echo 'services:
   gnu-hurd-dev:
     ports:
-      - "2223:22"' > docker-compose.override.yml
+      - "2223:22"' > compose.override.yaml
 ```
 
 ### SSH Timeout (Can't connect)
@@ -287,7 +287,7 @@ free -h
 # Reduce container memory limit
 echo 'services:
   gnu-hurd-dev:
-    mem_limit: "2GB"' > docker-compose.override.yml
+    mem_limit: "2GB"' > compose.override.yaml
 
 podman-compose down
 podman-compose up -d
@@ -316,7 +316,7 @@ sudo podman-compose up -d
 Always include the KVM overlay:
 
 ```bash
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 ```
 
 Verify KVM is used:
@@ -383,7 +383,7 @@ gcc --version
 Use bind mount:
 
 ```yaml
-# docker-compose.override.yml
+# compose.override.yaml
 services:
   gnu-hurd-dev:
     volumes:
@@ -402,7 +402,7 @@ ssh -p 2222 root@localhost "ls /root/projects"
 Map additional ports:
 
 ```yaml
-# docker-compose.override.yml
+# compose.override.yaml
 services:
   gnu-hurd-dev:
     ports:
@@ -440,7 +440,7 @@ If using SELinux:
 ```bash
 # Add SELinux labels if needed
 podman-compose down
-# Modify docker-compose.yml to add:
+# Modify compose.yaml to add:
 # security_opt:
 #   - label=disable
 podman-compose up -d
@@ -454,7 +454,7 @@ podman network ls
 podman inspect gnu-hurd-dev | grep -A 10 NetworkSettings
 
 # Use host network (less isolated but simpler)
-# In docker-compose.override.yml:
+# In compose.override.yaml:
 # network_mode: "host"
 ```
 
@@ -493,8 +493,8 @@ podman-compose up -d
 ## Next Steps
 
 1. **[COMPLETE PHASE 1-3]**: Installation and basic usage ✓
-2. **[PHASE 4]**: Understand compose files (docker-compose.yml)
-3. **[PHASE 5]**: Customize for your workflow (docker-compose.override.yml)
+2. **[PHASE 4]**: Understand compose files (compose.yaml)
+3. **[PHASE 5]**: Customize for your workflow (compose.override.yaml)
 4. **[PHASE 6]**: Advanced usage (pods, networking, volumes)
 5. **[PHASE 7]**: Integration with your projects
 
@@ -527,7 +527,7 @@ podman-compose up -d
 ./scripts/download-image.sh
 
 # Start development
-podman-compose -f docker-compose.yml -f docker-compose.kvm.yml up -d
+podman-compose -f compose.yaml -f compose.kvm.yaml up -d
 
 # Access
 ssh -p 2222 root@localhost

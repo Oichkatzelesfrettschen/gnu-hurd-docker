@@ -6,7 +6,7 @@ This document replaces an older “completion report” that described an i386-f
 
 - **Guest OS**: Debian GNU/Hurd **x86_64** running under QEMU
 - **Container**: `gnu-hurd-dev` (multi-arch container; guest remains x86_64)
-- **Orchestration**: `docker-compose.yml` baseline + overlays (`docker-compose.bind.yml`, `docker-compose.kvm.yml`, `docker-compose.vnc.yml`)
+- **Orchestration**: `compose.yaml` baseline + overlays (`compose.bind.yaml`, `compose.kvm.yaml`, `compose.vnc.yaml`)
 - **Acceleration**:
   - KVM only on Linux `x86_64` hosts with `/dev/kvm`
   - TCG fallback everywhere else (including `arm64` hosts)

@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **M6.35**: KVM launcher support in PKGBUILD
   - Added `up-kvm` command to gnu-hurd-docker launcher
-  - Uses docker-compose overlay for KVM acceleration
+  - Uses docker compose overlay for KVM acceleration
   - Clear documentation of TCG vs KVM modes
 
 **Documentation Enhancements:**
@@ -308,7 +308,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### Docker Compose
-- Updated examples to use `docker compose` (v2) instead of `docker-compose` (v1)
+- Updated examples to use `docker compose` (v2) instead of `docker compose` (v1)
   - README quick start
   - Documentation examples
   - Workflow configurations
@@ -396,7 +396,7 @@ No breaking changes. Continue using:
 docker compose up -d
 ```
 
-Note: `docker-compose` (v1) is deprecated but still works. Migrate to `docker compose` (v2) when convenient.
+Note: `docker compose` (v1) is deprecated but still works. Migrate to `docker compose` (v2) when convenient.
 
 #### New Standalone QEMU Option
 If you want native performance without Docker:

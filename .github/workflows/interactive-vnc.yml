@@ -72,10 +72,10 @@ jobs:
           echo "root" > secrets/root_password.txt
           echo "agents" > secrets/agents_password.txt
 
-      - name: Update docker-compose for VNC
+      - name: Update docker compose for VNC
         run: |
           # Enable VNC in environment
-          cat >> docker-compose.override.yml <<EOF
+          cat >> compose.override.yaml <<EOF
           services:
             gnu-hurd-dev:
               environment:
@@ -102,10 +102,10 @@ jobs:
 
       - name: Setup noVNC web interface
         run: |
-          # Use the docker-compose.vnc.yml overlay (theasp/novnc container).
+          # Use the compose.vnc.yaml overlay (theasp/novnc container).
           # This avoids ad-hoc cloning/running noVNC in CI.
-          docker compose -f docker-compose.yml -f docker-compose.vnc.yml up -d novnc
-          echo "noVNC is exposed via the novnc service (see docker-compose.vnc.yml)."
+          docker compose -f compose.yaml -f compose.vnc.yaml up -d novnc
+          echo "noVNC is exposed via the novnc service (see compose.vnc.yaml)."
 
       - name: Install GUI if requested
         if: ${{ github.event.inputs.enable_gui == 'true' }}

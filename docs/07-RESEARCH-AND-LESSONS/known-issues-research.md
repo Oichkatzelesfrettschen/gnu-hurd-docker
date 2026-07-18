@@ -77,7 +77,7 @@ AUTO_DISABLE_KVM_FOR_IDE=1 make up
 
 **Implementation**:
 ```bash
-# In docker-compose.override.yml or environment
+# In compose.override.yaml or environment
 QEMU_DISK_BUS=ahci make up
 # Or
 QEMU_DISK_BUS=scsi make up

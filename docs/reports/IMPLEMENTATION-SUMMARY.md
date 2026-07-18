@@ -36,7 +36,7 @@ The ChatGPT analysis identified several areas where the project had inconsistenc
 
 **Change**: Added `docker_compose()` function to the launcher script that:
 - Tries `docker compose` (v2) first
-- Falls back to `docker-compose` (v1) if v2 not available
+- Falls back to `docker compose` (v1) if v2 not available
 - Provides clear error message if neither is found
 
 **Implementation**:
@@ -45,9 +45,9 @@ docker_compose() {
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
         # Docker Compose v2 (integrated into docker CLI)
         docker compose "$@"
-    elif command -v docker-compose >/dev/null 2>&1; then
+    elif command -v docker compose >/dev/null 2>&1; then
         # Docker Compose v1 (standalone)
-        docker-compose "$@"
+        docker compose "$@"
     else
         echo "Error: Neither 'docker compose' (v2) nor 'docker-compose' (v1) found"
         echo "Please install Docker Compose: https://docs.docker.com/compose/install/"
