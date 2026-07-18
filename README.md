@@ -125,14 +125,52 @@ make vbox-full-auto
 # built per MINTY-HURD-README.md)
 make minty-up
 
-# Start the desktop and view it: VNC on :5901 / noVNC in the browser
-make minty-vnc
+# The desktop autostarts at boot (see "Desktop modes" below).
+# Plain VNC: connect a viewer to 127.0.0.1:5901 (password: hurdhurd)
+# Browser:   the compose vnc profile's noVNC container on :6080
 ```
 
 The Minty profile layers Linux Mint's arch-independent theme and menu
 packages (LMDE 7 "gigi", pinned so Debian always wins for real code --
 see `scripts/lmde7-apt-setup.sh`) over XFCE on Debian GNU/Hurd. Full
 walkthrough: [MINTY-HURD-README.md](MINTY-HURD-README.md).
+
+## Desktop modes: one image, two frontends
+
+The provisioned image starts its desktop from `/etc/hurd-desktop.mode`
+(staged by `scripts/hurd-desktop-autostart.sh`, verified on both
+frontends):
+
+| Mode | What starts at boot | For |
+|---|---|---|
+| `vnc` (shipped default) | XFCE rendered into **Xvfb :1**, exported by **x11vnc** on 5901 | The containerized QEMU route (podman/docker) -- headless hosts, browser access via the noVNC side-container |
+| `xorg` | XFCE on the real VGA console via **startx** + the vesa driver | VirtualBox or QEMU with a display window |
+| `none` | Nothing (SSH only) | Servers, CI |
+
+Switch by writing the mode file inside the guest and rebooting, e.g.
+`echo xorg > /etc/hurd-desktop.mode`.
+
+### Running the image under VirtualBox
+
+Convert the maintained qcow2 and attach it to a VM:
+
+```bash
+qemu-img convert -O vmdk images/hurd-working.qcow2 DebianGNUHurd.vmdk
+```
+
+VM settings that gnumach (1.8+git20260224) requires, found the hard
+way: **HPET enabled** (the kernel panics in `hpet_init` without it),
+**APIC and IOAPIC enabled** (it hangs before any console output with
+them off), PIIX3/4 IDE storage, and either VMSVGA or VBoxVGA graphics
+(Xorg drives both with the vesa driver). KVM paravirtualization is
+fine. 2 GiB RAM / 2 vCPUs match the QEMU defaults.
+
+Hurd-specific X11 plumbing (why the desktop is wired the way it is):
+lightdm cannot spawn a greeter without a logind seat, dbus-launch's
+default session bus dies on Hurd's missing SO_PEERCRED (sessions run
+via `minty-hurd-xfce` against a TCP session bus instead), x11vnc needs
+`-noshm`, and the session account starts via `runuser` so the
+OOBE-expired password blocks logins without blocking the desktop.
 
 ## First login (out-of-box experience)
 
