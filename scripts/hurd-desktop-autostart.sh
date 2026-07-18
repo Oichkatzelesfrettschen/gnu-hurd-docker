@@ -4,10 +4,14 @@
 #
 # One provisioned image serves two frontends, selected by a mode file:
 #
-#   vnc    headless route (QEMU/podman/docker): tigervnc Xvnc :1 renders
-#          the XFCE session into its own virtual framebuffer (the Xvfb
-#          role and the VNC export in one server) and websockify serves
-#          noVNC on 6080, so a browser on the host shows the desktop.
+#   vnc    headless route (QEMU/podman/docker): Xvfb :1 renders the
+#          XFCE session into a virtual framebuffer and x11vnc exports
+#          it on 5901. Browser access comes from the compose vnc
+#          profile's novnc container on the host side; debian-ports
+#          currently has no hurd-amd64 websockify/tigervnc candidates,
+#          and tightvnc's 1.3-era Xtightvnc cannot open the modern
+#          font layout ("could not open default font 'fixed'"), so the
+#          Xvfb + x11vnc pair is the supported stack.
 #   xorg   console route (VirtualBox/QEMU with a display): lightdm
 #          starts XFCE on the real VGA console via the Xorg vesa/fbdev
 #          driver.
@@ -26,7 +30,9 @@ say "Install /usr/local/sbin/hurd-desktop"
 cat > /usr/local/sbin/hurd-desktop <<'EOF'
 #!/bin/sh
 # Boot-time desktop launcher; mode comes from /etc/hurd-desktop.mode.
-# Runs as root from rc.local; the vnc session itself runs as 'user'.
+# Runs as root from rc.local; the desktop session runs as 'user' via
+# runuser, whose PAM stack skips account aging -- su would refuse the
+# OOBE-expired password and the desktop would never start.
 MODE=$(cat /etc/hurd-desktop.mode 2>/dev/null || echo none)
 LOG=/var/log/hurd-desktop.log
 
@@ -34,17 +40,24 @@ case "$MODE" in
 vnc)
     {
         echo "hurd-desktop: vnc mode $(date 2>/dev/null)"
-        # Xvnc :1 = virtual framebuffer + VNC on 5901, XFCE inside.
-        su - user -c '
+        /etc/init.d/dbus start 2>&1 || true
+        rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+        # Xvfb renders; the session runs via minty-hurd-xfce because
+        # startxfce4 would go through dbus-launch, whose default-config
+        # session bus offers only EXTERNAL auth and dies on Hurd's
+        # missing SO_PEERCRED. x11vnc needs -noshm: MIT-SHM attaches
+        # fail on Hurd and kill the poller.
+        runuser -l user -c '
             mkdir -p ~/.vnc
-            [ -f ~/.vnc/passwd ] || printf hurdhurd | vncpasswd -f > ~/.vnc/passwd
+            [ -f ~/.vnc/passwd ] || x11vnc -storepasswd hurdhurd ~/.vnc/passwd
             chmod 600 ~/.vnc/passwd
-            printf "#!/bin/sh\nexec startxfce4\n" > ~/.vnc/xstartup
-            chmod +x ~/.vnc/xstartup
-            tigervncserver :1 -geometry 1280x800 -depth 24 -localhost no 2>&1
+            nohup Xvfb :1 -screen 0 1280x800x24 >>/tmp/xvfb.log 2>&1 &
+            sleep 8
+            DISPLAY=:1 nohup /usr/local/bin/minty-hurd-xfce >>/tmp/xfce-vnc.log 2>&1 &
+            sleep 5
+            nohup x11vnc -noshm -display :1 -rfbauth ~/.vnc/passwd \
+                -rfbport 5901 -forever -shared >>/tmp/x11vnc.log 2>&1 &
         '
-        # noVNC bridge: browser at http://host:6080/vnc.html
-        websockify --daemon --web /usr/share/novnc 6080 localhost:5901 2>&1
     } >> "$LOG" 2>&1 &
     ;;
 xorg)
@@ -58,7 +71,7 @@ xorg)
         # minty-hurd-xfce runs xfce4-session against the TCP session bus
         # from start-dbus-hurd instead. Requires Xwrapper allowed_users=
         # anybody (staged below) since 'user' does not hold the console.
-        su - user -c 'startx /usr/local/bin/minty-hurd-xfce -- :0' 2>&1
+        runuser -l user -c 'startx /usr/local/bin/minty-hurd-xfce -- :0' 2>&1
     } >> "$LOG" 2>&1 &
     ;;
 esac
