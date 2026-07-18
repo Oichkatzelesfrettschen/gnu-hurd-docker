@@ -51,7 +51,14 @@ xorg)
     {
         echo "hurd-desktop: xorg mode $(date 2>/dev/null)"
         /etc/init.d/dbus start 2>&1 || true
-        /etc/init.d/lightdm start 2>&1
+        # startx as 'user' with the minty-hurd-xfce wrapper: lightdm's
+        # greeter never spawns on Hurd (no logind seat), and startxfce4's
+        # dbus-launch starts a default-config session bus whose only auth
+        # is EXTERNAL, which needs the SO_PEERCRED that pflocal lacks.
+        # minty-hurd-xfce runs xfce4-session against the TCP session bus
+        # from start-dbus-hurd instead. Requires Xwrapper allowed_users=
+        # anybody (staged below) since 'user' does not hold the console.
+        su - user -c 'startx /usr/local/bin/minty-hurd-xfce -- :0' 2>&1
     } >> "$LOG" 2>&1 &
     ;;
 esac
@@ -70,6 +77,37 @@ grep -q hurd-desktop /etc/rc.local || {
         printf '/usr/local/sbin/hurd-desktop\n' >> /etc/rc.local
     fi
 }
+
+say "Xwrapper policy for non-console startx"
+cat > /etc/X11/Xwrapper.config <<'EOF'
+# 'user' launches X from an rc-started shell, not a console session, so
+# the console-ownership check must be waived; Hurd Xorg needs root for
+# direct VGA/input device access regardless.
+allowed_users=anybody
+needs_root_rights=yes
+EOF
+
+say "lightdm vt-argument shim (for anyone starting lightdm manually)"
+cat > /usr/local/sbin/xserver-novt <<'EOF'
+#!/bin/sh
+# lightdm passes vtN to the X server; Hurd Xorg has no VT concept and
+# rejects the option. Strip vtN and pass everything else through.
+args=""
+for a in "$@"; do
+    case "$a" in
+        vt[0-9]*) ;;
+        *) args="$args $a" ;;
+    esac
+done
+# shellcheck disable=SC2086
+exec /usr/bin/Xorg $args
+EOF
+chmod 0755 /usr/local/sbin/xserver-novt
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-hurd-novt.conf <<'EOF'
+[Seat:*]
+xserver-command=/usr/local/sbin/xserver-novt
+EOF
 
 say "Default mode"
 [ -f /etc/hurd-desktop.mode ] || echo none > /etc/hurd-desktop.mode
