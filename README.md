@@ -19,6 +19,57 @@
 
 ## Quick Start (Choose Your Path)
 
+### Path 0: Fastest -- released desktop image, any OS with Docker
+
+Works the same on Linux, macOS (Intel or Apple Silicon), and Windows.
+Prerequisite: [Docker](https://docs.docker.com/get-docker/) (Docker
+Desktop on macOS/Windows; on Windows enable the WSL 2 backend, which
+the Docker Desktop installer does by default). Podman works as a
+drop-in on Linux and macOS: substitute `podman` for `docker`.
+
+**1. Get the released guest image** (841 MB download, unpacks to a
+6.7 GiB qcow2) from the
+[latest release](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/releases/latest):
+
+```bash
+# Linux / macOS / Windows (WSL or Git Bash):
+git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
+cd gnu-hurd-docker
+./scripts/download-released-image.sh     # downloads, verifies, unpacks into images/
+```
+
+No bash at all (plain Windows)? Download
+`debian-hurd-amd64-latest.qcow2.xz` from the release page in a
+browser, extract it with 7-Zip (or `tar -xf` in PowerShell 7+), rename
+the result to `debian-hurd-amd64.qcow2`, and place it in the repo's
+`images/` folder.
+
+**2. Start it:**
+
+```bash
+# Linux (KVM acceleration if /dev/kvm exists):
+docker compose -f compose.yaml -f compose.kvm.yaml up -d
+
+# macOS / Windows (no KVM inside Docker Desktop's VM -- QEMU falls
+# back to TCG emulation; boot takes 5-10 min instead of 1-2):
+docker compose up -d
+```
+
+**3. Use it:**
+
+- **Desktop (UI):** the guest autostarts XFCE into a virtual
+  framebuffer -- connect any VNC viewer to `localhost:5901`
+  (password `hurdhurd`), or add the browser route with
+  `docker compose -f compose.yaml -f compose.vnc.yaml --profile vnc up -d`
+  and open `http://localhost:6080`.
+- **SSH:** `ssh -p 2222 user@localhost` (initial password `user`) --
+  the first login makes you set your own password.
+- **Watch it boot:** `docker compose logs -f`
+
+The same container image serves all platforms (`linux/amd64` +
+`linux/arm64`); QEMU inside emulates x86_64 for the Hurd guest even on
+Apple Silicon.
+
 ### Path A: Docker-based (Recommended for Most Users)
 
 ```bash
