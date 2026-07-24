@@ -86,9 +86,13 @@ echo ""
 
 if command -v shellcheck >/dev/null 2>&1; then
     # Discover the scripts rather than listing them.  A literal list only covers
-    # what someone remembered to add, so a new script under scripts/ stays
-    # unchecked until the list is edited, and whole tiers (test-phases/, most of
-    # lib/) were never added at all.  Globbing ties coverage to the tree.
+    # what someone remembered to add, so a new script stays unchecked until the
+    # list is edited, and whole tiers (test-phases/, most of lib/) were never
+    # added at all.  Globbing ties coverage to the tree.
+    #
+    # share/ is included alongside scripts/: those files are delivered into the
+    # guest through the /share mount and are maintained here, so they belong in
+    # the same gate.
     #
     # Archived scripts are excluded: they are kept for history and are not
     # maintained against current standards.
@@ -103,7 +107,7 @@ if command -v shellcheck >/dev/null 2>&1; then
         if ! shellcheck -S error "$script_path"; then
             shellcheck_failed=$((shellcheck_failed + 1))
         fi
-    done < <(find entrypoint.sh scripts -name '*.sh' -type f -not -path '*/archive/*' | sort)
+    done < <(find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' | sort)
 
     if [ "$shellcheck_failed" -eq 0 ]; then
         pass "$shellcheck_checked shell scripts pass shellcheck (errors)"
@@ -118,10 +122,12 @@ if command -v shellcheck >/dev/null 2>&1; then
     # the expected case, so the substitution absorbs that status.
     # (A comment opening with the tool's own name parses as a directive, so this
     # one deliberately does not.)
-    shellcheck_advisory=$( { find entrypoint.sh scripts -name '*.sh' -type f -not -path '*/archive/*' \
-        -exec shellcheck -S warning -f gcc {} + 2>/dev/null || true; } | wc -l)
-    if [ "$shellcheck_advisory" -gt 0 ]; then
-        echo "[INFO] $shellcheck_advisory shellcheck findings at warning level (advisory, not enforced)"
+    advisory_output="$( { find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' \
+        -exec shellcheck -S warning -f gcc {} + 2>/dev/null || true; } )"
+    if [ -n "$advisory_output" ]; then
+        shellcheck_advisory=$(printf '%s\n' "$advisory_output" | wc -l)
+        echo "[INFO] $shellcheck_advisory findings at warning level (advisory, not enforced):"
+        printf '%s\n' "$advisory_output"
     fi
 else
     warn "shellcheck not installed"
