@@ -85,35 +85,50 @@ echo "2. Validating shell scripts (ShellCheck)..."
 echo ""
 
 if command -v shellcheck >/dev/null 2>&1; then
-    shellcheck -S error entrypoint.sh && pass "entrypoint.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/health-check.sh && pass "scripts/health-check.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/download-image.sh && pass "scripts/download-image.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/setup-hurd-amd64.sh && pass "scripts/setup-hurd-amd64.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/resolve-latest-hurd-amd64.sh && pass "scripts/resolve-latest-hurd-amd64.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/resolve-latest-hurd-amd64-daily-installer.sh && pass "scripts/resolve-latest-hurd-amd64-daily-installer.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/setup-hurd-amd64-latest.sh && pass "scripts/setup-hurd-amd64-latest.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/setup-hurd-amd64-daily-installer.sh && pass "scripts/setup-hurd-amd64-daily-installer.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/build-hurd-unattended-iso.sh && pass "scripts/build-hurd-unattended-iso.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/rebuild-hurd-unattended-iso.sh && pass "scripts/rebuild-hurd-unattended-iso.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/wait-for-guest-ssh.sh && pass "scripts/wait-for-guest-ssh.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/provision-hurd-x11.sh && pass "scripts/provision-hurd-x11.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/vboxmanage-hurd.sh && pass "scripts/vboxmanage-hurd.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/install-hurd-unattended.sh && pass "scripts/install-hurd-unattended.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/qemu-auto-verify.sh && pass "scripts/qemu-auto-verify.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/qemu-matrix-runner.sh && pass "scripts/qemu-matrix-runner.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/qemu-install-serial-fsm.sh && pass "scripts/qemu-install-serial-fsm.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/qemu-stall-probe.sh && pass "scripts/qemu-stall-probe.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/scripts-inventory-audit.sh && pass "scripts/scripts-inventory-audit.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/lib/installer/serial-log-utils.sh && pass "scripts/lib/installer/serial-log-utils.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/qemu/qemu-auto-verify.sh && pass "scripts/automation/qemu/qemu-auto-verify.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/qemu/qemu-matrix-runner.sh && pass "scripts/automation/qemu/qemu-matrix-runner.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/qemu/qemu-install-serial-fsm.sh && pass "scripts/automation/qemu/qemu-install-serial-fsm.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/qemu/qemu-stall-probe.sh && pass "scripts/automation/qemu/qemu-stall-probe.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/qemu/rebuild-hurd-unattended-iso.sh && pass "scripts/automation/qemu/rebuild-hurd-unattended-iso.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/stubs/vbox-conceptual-stub.sh && pass "scripts/automation/stubs/vbox-conceptual-stub.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/automation/audit/audit-scripts-inventory.sh && pass "scripts/automation/audit/audit-scripts-inventory.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/sudo-askpass.sh && pass "scripts/sudo-askpass.sh passes shellcheck (errors)"
-    shellcheck -S error scripts/bootstrap-latest-hurd.sh && pass "scripts/bootstrap-latest-hurd.sh passes shellcheck (errors)"
+    # Discover the scripts rather than listing them.  A literal list only covers
+    # what someone remembered to add, so a new script stays unchecked until the
+    # list is edited, and whole tiers (test-phases/, most of lib/) were never
+    # added at all.  Globbing ties coverage to the tree.
+    #
+    # share/ is included alongside scripts/: those files are delivered into the
+    # guest through the /share mount and are maintained here, so they belong in
+    # the same gate.
+    #
+    # Archived scripts are excluded: they are kept for history and are not
+    # maintained against current standards.
+    #
+    # -S error is the enforced level and every live script passes it.  Findings at
+    # warning and below are reported without failing, because clearing them is
+    # separate work; raising the enforced level is tracked as roadmap item 43.
+    shellcheck_checked=0
+    shellcheck_failed=0
+    while IFS= read -r script_path; do
+        shellcheck_checked=$((shellcheck_checked + 1))
+        if ! shellcheck -S error "$script_path"; then
+            shellcheck_failed=$((shellcheck_failed + 1))
+        fi
+    done < <(find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' | sort)
+
+    if [ "$shellcheck_failed" -eq 0 ]; then
+        pass "$shellcheck_checked shell scripts pass shellcheck (errors)"
+    else
+        fail "$shellcheck_failed of $shellcheck_checked shell scripts fail shellcheck (errors)"
+    fi
+
+    # Reported, not counted: warn() increments the error total and would fail the
+    # run, while clearing these findings is separate work tracked as roadmap item 43.
+    # A non-zero exit means findings were reported, which propagates through find
+    # and, under `set -e` with pipefail, would abort the run.  Findings here are
+    # the expected case, so the substitution absorbs that status.
+    # (A comment opening with the tool's own name parses as a directive, so this
+    # one deliberately does not.)
+    advisory_output="$( { find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' \
+        -exec shellcheck -S warning -f gcc {} + 2>/dev/null || true; } )"
+    if [ -n "$advisory_output" ]; then
+        shellcheck_advisory=$(printf '%s\n' "$advisory_output" | wc -l)
+        echo "[INFO] $shellcheck_advisory findings at warning level (advisory, not enforced):"
+        printf '%s\n' "$advisory_output"
+    fi
 else
     warn "shellcheck not installed"
 fi
