@@ -71,9 +71,9 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 42. [ ] Glob the shellcheck targets in `scripts/validate-config.sh` (29 enumerated paths cover 102 live scripts)
 43. [ ] Reconcile the shellcheck severity threshold across `validate-config.sh`, `validate-config.yml`, and `quality-and-security.yml` (`-S error` vs `-S warning`)
-44. [ ] Drop the deleted `scripts/docker-orchestration.sh` from the `release-artifacts.yml` required-script gate, which fires `exit 1` on every `v*` tag
+44. [ ] Repair the `release-artifacts.yml` required-script gate, which fires `exit 1` on every `v*` tag: `docker-orchestration.sh` is deleted and `entrypoint.sh` is never copied into the checked directory
 45. [ ] Replace the tab at `.github/workflows/release.yml:83` (sole yamllint error)
-46. [ ] Deduplicate the five doubly-defined `up-podman*` Makefile targets
+46. [ ] Count recipe blocks, not target lines, in any Makefile duplicate-target check (the five `up-podman*` pairs are the GNU make target-specific variable idiom and are correct)
 47. [ ] Reconnect `scripts/test-hurd-system.sh` (and the seven `test-phases/` scripts it reaches) to a Makefile target
 48. [ ] Classify the 41 orphan scripts as operator-tool, guest-scoped, or unreachable-automation in `scripts/INVENTORY.md`
 49. [ ] Correct the 14 dead `make` targets and 41 phantom `QEMU_*` env vars cited in live docs

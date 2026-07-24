@@ -65,10 +65,14 @@ for script in $REQUIRED_SCRIPTS; do
 done
 ```
 
+Two of the four required scripts can never satisfy this check.
 `scripts/docker-orchestration.sh` was deleted in commit `2b66c90` when the control plane
-migrated to Compose. The copy step can never supply it, so the gate always fires `exit 1`.
-The workflow triggers on `push: tags: ['v*']`, so this fails on every attempted release and
-on no ordinary push.
+migrated to Compose, so the copy step cannot supply it. `entrypoint.sh` lives at the
+repository root, so `cp scripts/*.sh` does not match it either; a later step at line 182
+packages it to the artifact root, which is both a different directory and a step that has
+not yet run. The gate therefore checks two paths that cannot exist at the moment it runs,
+and always fires `exit 1`. The workflow triggers on `push: tags: ['v*']`, so this fails on
+every attempted release and on no ordinary push.
 
 Two further references publish stale instructions rather than failing:
 `.github/workflows/push-ghcr.yml:165` and `.github/workflows/release-qemu-image.yml:113`
@@ -127,7 +131,7 @@ Commands and their results as of this audit.
 | `smoke-host.sh` | rc=0 | `bash scripts/smoke-host.sh` |
 | Tracked binaries (qcow2/iso/pyc) | 0 | `git ls-files \| grep -E '\.(qcow2\|iso\|pyc)$'` |
 | Orphan scripts (zero inbound edges) | 36 of 102 | dependency graph, below |
-| Duplicate Makefile targets | 5 | `grep -oP '^[a-zA-Z][\w-]*(?=:)' Makefile \| sort \| uniq -d` |
+| Makefile targets with more than one recipe block | 0 | see the target-specific variable note below |
 | Live `docker-compose` v1 invocations | 0 | see the compose-v2 note below |
 
 The zero-error shellcheck result and both green gates are real. Repository hygiene at the
@@ -465,11 +469,24 @@ Blocking prerequisite for all runtime verification.
 10. **Fix the yamllint error.**
     Do: `.github/workflows/release.yml:83` contains a literal tab. Replace with spaces.
     Accept: `yamllint -c .yamllint .github/` reports zero errors.
-11. **Deduplicate the Makefile targets.**
-    Do: `up-podman`, `up-podman-kvm`, `up-podman-vnc`, `up-podman-latest`, and
-    `up-podman-installer` are each defined twice, at adjacent line pairs 186/187, 190/191,
-    194/195, 198/199, 202/203. Make silently takes the last.
-    Accept: `grep -oP '^[a-zA-Z][\w-]*(?=:)' Makefile | sort | uniq -d` is empty.
+11. **No action: the apparent duplicate Makefile targets are correct.**
+    A naive `grep -oP '^[a-zA-Z][\w-]*(?=:)' Makefile | sort | uniq -d` reports five
+    doubly-defined targets (`up-podman`, `up-podman-kvm`, `up-podman-vnc`,
+    `up-podman-latest`, `up-podman-installer`). Each pair is the GNU make
+    target-specific variable idiom, where the first line assigns and the second carries the
+    recipe:
+
+    ```make
+    up-podman: CONTAINER_RUNTIME=podman
+    up-podman:
+    	PODMAN_COMPOSE_PROVIDER=... up -d
+    ```
+
+    Counting only target lines followed by a tab-indented recipe gives zero targets with
+    more than one recipe block across all 56 recipe-bearing targets, and `make -n up-podman`
+    resolves the variable correctly while emitting no override warning. The line-oriented
+    query is what is wrong, not the Makefile. Any future duplicate-target check must count
+    recipe blocks rather than target-line occurrences.
 
 ### Reconcile the script inventory
 
