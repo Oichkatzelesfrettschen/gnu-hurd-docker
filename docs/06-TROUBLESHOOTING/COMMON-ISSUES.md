@@ -619,13 +619,13 @@ docker compose logs -f | grep -E "boot|grub|kernel"
 
 ```bash
 # Check current storage interface
-grep QEMU_STORAGE compose.yaml
+grep QEMU_DISK_BUS compose.yaml
 
-# x86_64 Hurd prefers SATA over IDE
+# x86_64 Hurd prefers AHCI over IDE
 # Edit compose.yaml:
 environment:
-  QEMU_STORAGE: sata  # Not ide
-  QEMU_EXTRA_ARGS: "-cpu host -machine type=pc,accel=kvm:tcg"
+  QEMU_DISK_BUS: ahci  # Not ide
+  QEMU_MACHINE: pc
 
 # Rebuild and restart
 docker compose down
@@ -654,19 +654,19 @@ ext2fs: part:1:device:wd0: Input/output error
 **Before** (IDE with Q35):
 ```yaml
 environment:
-  QEMU_STORAGE: ide
-  QEMU_EXTRA_ARGS: "-cpu host,+svm,+vmx -machine type=q35,accel=kvm:tcg"
+  QEMU_DISK_BUS: ide
+  QEMU_MACHINE: q35
 ```
 
 **After** (SATA with PC):
 ```yaml
 environment:
-  QEMU_STORAGE: sata
-  QEMU_EXTRA_ARGS: "-cpu host -machine type=pc,accel=kvm:tcg"
+  QEMU_DISK_BUS: ahci
+  QEMU_MACHINE: pc
 ```
 
 **Changes**:
-1. Storage: `ide` → `sata` (SATA/AHCI controller)
+1. Disk bus: `ide` -> `ahci` (SATA/AHCI controller)
 2. Machine: `q35` → `pc` (standard PC platform)
 3. CPU flags: Removed `+svm,+vmx` (not needed)
 

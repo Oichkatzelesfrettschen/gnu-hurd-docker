@@ -469,26 +469,31 @@ Test Coordinator (LLM)
 
 **Docker**
 ```bash
-make docker-up
-make docker-test-ssh
-make docker-test-serial
-make docker-down
+make up            # start the stack
+make smoke-guest   # SSH reachability and in-guest checks
+make monitor       # QEMU monitor console
+make down          # stop and remove the stack
 ```
 
 **Podman**
 ```bash
-make podman-up
-make podman-test-ssh
-make podman-test-serial
-make podman-down
+make up-podman     # start via podman-compose (compose.podman.yaml)
+make smoke-guest   # SSH reachability and in-guest checks
+make monitor       # QEMU monitor console
+make down          # stop and remove the stack
 ```
 
 **Libvirt**
+
+Libvirt has no make targets; it is driven by `scripts/libvirt-hurd.sh`, whose
+subcommands are `define`, `start`, `stop`, `undefine`, `status`, `info`,
+`console`, `serial`, `ssh`, and `vnc`.
+
 ```bash
-make libvirt-define
-make libvirt-start
-make libvirt-test-virsh
-make libvirt-destroy
+./scripts/libvirt-hurd.sh define
+./scripts/libvirt-hurd.sh start
+./scripts/libvirt-hurd.sh ssh "uname -a"
+./scripts/libvirt-hurd.sh stop
 ```
 
 ### Diagnostic Output
