@@ -75,7 +75,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 45. [ ] Replace the tab at `.github/workflows/release.yml:83` (sole yamllint error)
 46. [ ] Count recipe blocks, not target lines, in any Makefile duplicate-target check (the five `up-podman*` pairs are the GNU make target-specific variable idiom and are correct)
 47. [ ] Reconnect `scripts/test-hurd-system.sh` (and the seven `test-phases/` scripts it reaches) to a Makefile target
-48. [ ] Classify the 41 orphan scripts as operator-tool, guest-scoped, or unreachable-automation in `scripts/INVENTORY.md`
+48. [ ] Classify the 36 live host-side orphan scripts (41 raw zero-inbound graph nodes, five of which fall outside the live-shell denominator) as operator-tool, guest-scoped, or unreachable-automation in `scripts/INVENTORY.md`
 49. [ ] Correct the 14 dead `make` targets and 41 phantom `QEMU_*` env vars cited in live docs
 50. [ ] Rebuild the `mkdocs.yml` nav against the `01-08` tree -- all 26 entries name pre-consolidation paths that no longer exist, and `deploy-pages.yml` runs `mkdocs build --strict`
 51. [ ] Include or explicitly exclude the 260-plus documents absent from the mkdocs nav

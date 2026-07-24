@@ -103,7 +103,8 @@ Result: exit 1. The Pages deployment fails on every push touching `docs/**` or
 ### 5. The shellcheck gate inspects 28 percent of the shell surface
 
 `scripts/validate-config.sh` enumerates its shellcheck targets one literal path per line
-(29 invocations of `shellcheck -S error <path>`) against 102 live shell scripts. New scripts
+(29 invocations of `shellcheck -S error <path>`) against 102 host-control shell scripts,
+and against 106 once the four `share/` guest-delivery scripts are counted. New scripts
 are not covered until someone remembers to add a line. Entire tiers are unenumerated: all
 seven `scripts/test-phases/*.sh` and five of the seven `scripts/lib/*.sh`.
 
@@ -122,7 +123,8 @@ Commands and their results as of this audit.
 | Tracked files | 445 | `git ls-files \| wc -l` |
 | Markdown / shell / YAML / Python | 271 / 109 / 25 / 4 | `git ls-files \| sed 's/.*\.//' \| sort \| uniq -c` |
 | C or header files | 0 | `git ls-files '*.c' '*.h' \| wc -l` |
-| Live shell scripts (excluding archive) | 102 | `find scripts entrypoint.sh -name '*.sh' \| grep -v /archive/ \| wc -l` |
+| Host-control shell surface (`entrypoint.sh`, `scripts/`, excluding archive) | 102 | `find entrypoint.sh scripts -name '*.sh' -not -path '*/archive/*' \| wc -l` |
+| Guest-delivery shell surface (`share/`) | 4 | `find share -name '*.sh' \| wc -l` |
 | shellcheck errors | 0 | `shellcheck -f gcc $(...)` |
 | shellcheck warnings / notes | 15 / 78 | as above, grouped by severity |
 | yamllint errors / warnings | 1 / 1 | `yamllint -c .yamllint -f parsable compose*.yaml .github/ config/` |
@@ -156,7 +158,7 @@ Structural observations:
 - `scripts/lib/colors.sh` and `scripts/lib/container-runtime.sh` are the graph hubs. Every
   other `lib/` member has at most two inbound edges.
 - `scripts/validate-config.sh` has 30 outbound `exec` edges, all of them shellcheck target
-  enumerations. It is the widest node in the graph and the narrowest gate, which is finding 4.
+  enumerations. It is the widest node in the graph and the narrowest gate, which is finding 5.
 - `scripts/test-hurd-system.sh` sources all seven `test-phases/*.sh`, which each source
   `test-phases/common.sh`. This tier is reachable only from `test-hurd-system.sh`, which is
   itself an orphan: no Makefile target, CI job, or script invokes it. The integration test
@@ -345,8 +347,10 @@ robust against missing configuration; the documentation is the drifted surface.
 ## Boot evidence
 
 Two-arm instrumented capture, KVM and TCG, same image, same disk bus, same machine type.
-Base image untouched: each arm writes to a fresh qcow2 overlay whose backing file is the
-canonical image, verified by `stat` before and after.
+Each arm writes to a fresh qcow2 overlay whose backing file is the canonical image, so the
+base is read rather than written by construction. Size and mtime were unchanged before and
+after, which is evidence that no ordinary write occurred; establishing byte identity would
+need a SHA-256 comparison, which this pass did not run.
 
 The capture ran twice. The first pass started both arms concurrently, which co-schedules a
 CPU-bound TCG guest against a KVM guest and inflates the TCG figure by an unknown amount.
@@ -378,7 +382,7 @@ Results:
 | Guest timestamp at `fsck` failure, concurrent pass | 8.05 s | 37.95 s |
 | Console content | maintenance shell prompt | same text, differing only in the kernel timestamp column |
 | Overlay bytes written | 393216 | 393216 |
-| Base image mtime and size | unchanged | unchanged |
+| Base image size and mtime | unchanged | unchanged |
 
 Three conclusions follow, and one non-conclusion.
 
@@ -400,12 +404,15 @@ why `guestfish-bootstrap-hurd-console.sh` exists, and it means any automation th
 serial output against this image waits forever.
 
 **Not concluded: ROADMAP item 33.** The KVM plus IDE DMA error is neither reproduced nor
-refuted by this capture. Neither arm emitted a DMA error, and `rerror=report,werror=report`
-was set so one would have surfaced. But the guest halts in `fsck` before mounting the root
-filesystem read-write, so it never reaches the sustained write workload under which the
-reported errors occur. The correct reading is that this capture does not exercise the
-condition. Item 33 stays open, and testing it requires a clean image first, which makes
-finding 1 a blocking prerequisite.
+refuted by this capture. Neither arm emitted a DMA error, but that observation carries less
+weight than it appears to. `rerror=report,werror=report` govern what QEMU does when its own
+block backend returns a read or write error; they are not instrumentation for a guest
+controller's missing-interrupt path, so their presence does not establish that a bus-master
+defect would have surfaced. More decisively, the guest halts in `fsck` before mounting the
+root filesystem read-write, so it never reaches the sustained write workload under which the
+reported errors occur. This capture does not exercise the condition. Item 33 stays open, and
+testing it requires a clean image, captured guest logs, and QEMU trace events rather than
+block-layer error reporting, which makes finding 1 a blocking prerequisite.
 
 Nothing in this section speaks to guest SSH, package state, or translator behavior. No
 capture reached multi-user state, so every runtime claim in that territory remains
@@ -558,10 +565,11 @@ traceability rather than as pending work:
 - Item 17 no longer reads "`docker compose` vs `docker compose`"; it names v2 against
   `podman-compose` and records the zero-live-v1-invocation measurement.
 - Items 33 and 34 are annotated as blocked on the image repair, with the reason stated.
-- Milestone 5b (items 35-38, bootable image integrity) and Milestone 7 (items 42-49, gate
-  coverage and reference integrity) are added, carrying the findings above.
+- Milestone 5b (items 35-38, bootable image integrity) and Milestone 7 (items 42-51, gate
+  coverage and reference integrity, including the mkdocs nav work as 50 and 51) are added,
+  carrying the findings above.
 
-The `mkdocs` items 21 and 22 in this section are not yet reflected in ROADMAP.md.
+The `mkdocs` items 21 and 22 in this section correspond to ROADMAP items 50 and 51.
 
 ## What this audit does not establish
 
@@ -574,5 +582,7 @@ Stated plainly so that no downstream reader mistakes static findings for runtime
 - The GitHub Actions findings are read from workflow source, not from observed runs. The
   `exit 1` in `release-artifacts.yml` is proven by reading the gate and confirming the file
   is absent; it is not proven by a failed run log.
-- The 4.7x KVM speedup measures time to a `fsck` failure, not time to a usable system. It is
-  a valid same-endpoint comparison and not a boot-time benchmark.
+- The 4.51x KVM figure is guest-reported elapsed time to a common pre-multi-user failure
+  milestone, not time to a usable system and not a boot-time benchmark. Durable provenance
+  for it would need the host CPU and kernel, QEMU version, image SHA-256, and the retained
+  console artifacts, none of which this pass recorded.
