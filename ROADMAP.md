@@ -83,6 +83,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 51. [x] Classify every document as nav, `not_in_nav`, or `exclude_docs`, so adding a report or an audit cannot break the strict build
 
 52. [ ] Make the runtime self-identifying, so operators read the accelerator QEMU selected rather than infer it from a target name. `compose.kvm.yaml` exposes `/dev/kvm`, and the entrypoint then chooses between `-accel kvm` and `-accel tcg` -- under the default `QEMU_MACHINE=pc` plus `QEMU_DISK_BUS=ide` with `AUTO_DISABLE_KVM_FOR_IDE=1` it chooses TCG. A `make runtime-info` target should report the observed container runtime, QEMU binary, accelerator (from the monitor, not from `/dev/kvm`), machine, disk bus, image path, and image SHA256, and the `up-kvm` target name should say that it exposes KVM rather than that it uses it
+53. [x] Define the release source product with `git archive`, so the repository tree and the `.gitattributes` `export-ignore` policy determine its contents, and build it from `scripts/build-release-archive.sh` so the pull-request check and the release job accept the same artifact against the same contract (`make -n up`, `make -n build`, the packaged `scripts/validate-config.sh`, a clean documentation link scan, and the default Compose overlay)
 
 ## Definition of done (per change)
 
