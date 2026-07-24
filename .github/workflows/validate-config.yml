@@ -6,23 +6,24 @@ name: Configuration Validation
     paths:
       - Dockerfile
       - entrypoint.sh
+      - Makefile
       - compose.yaml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'scripts/fix-script.sh'
-      - 'scripts/health-check.sh'
-      - 'scripts/lib/**'
+      - 'scripts/**'
+      - 'share/**'
       - '.github/workflows/validate-config.yml'
   pull_request:
     paths:
       - Dockerfile
       - entrypoint.sh
+      - Makefile
       - compose.yaml
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'scripts/fix-script.sh'
-      - 'scripts/health-check.sh'
-      - 'scripts/lib/**'
+      - 'scripts/**'
+      - 'share/**'
+      - '.github/workflows/validate-config.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,23 +56,15 @@ jobs:
           fi
           echo "[OK] Dockerfile structure valid"
 
-      - name: Validate entrypoint.sh
+      # Naming three scripts here left the rest of the maintained surface
+      # unchecked by this workflow while scripts/validate-config.sh checked all of
+      # it, so the two gates reported different answers about the same tree.
+      # `make lint` reads scripts/list-maintained-shell.sh, the shared enumerator.
+      - name: Validate the maintained shell surface
         run: |
-          echo "[*] Running shellcheck on entrypoint.sh..."
-          shellcheck -S error entrypoint.sh
-          echo "[OK] entrypoint.sh has no critical errors"
-
-      - name: Validate fix-script.sh
-        run: |
-          echo "[*] Running shellcheck on scripts/fix-script.sh..."
-          shellcheck -S error scripts/fix-script.sh
-          echo "[OK] scripts/fix-script.sh is executable"
-
-      - name: Validate health-check.sh
-        run: |
-          echo "[*] Running shellcheck on scripts/health-check.sh..."
-          shellcheck -S error scripts/health-check.sh
-          echo "[OK] scripts/health-check.sh is executable"
+          echo "[*] Running shellcheck over the maintained shell surface..."
+          make lint
+          echo "[OK] maintained shell scripts have no errors"
 
       - name: Validate compose.yaml
         run: |
@@ -109,9 +102,7 @@ jobs:
           **Run ID:** ${{ github.run_id }}
 
           ### Checks Performed
-          - ✓ ShellCheck on entrypoint.sh (errors only)
-          - ✓ ShellCheck on fix-script.sh
-          - ✓ ShellCheck on health-check.sh
+          - ✓ ShellCheck over the maintained shell surface (errors only)
           - ✓ YAML syntax validation
           - ✓ File structure verification
 

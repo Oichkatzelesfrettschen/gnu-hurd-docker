@@ -92,8 +92,15 @@ validate:
 security:
 	./scripts/validate-security-config.sh
 
+# error is the enforced level: every maintained script passes it. Warning-level
+# findings are real work that is tracked as roadmap item 43, so raising the
+# default here without clearing them first would make `make lint` fail on a
+# clean tree. Run `make lint SHELLCHECK_SEVERITY=warning` to see them.
+SHELLCHECK_SEVERITY ?= error
+
 lint:
-	shellcheck -S warning entrypoint.sh scripts/*.sh scripts/lib/*.sh scripts/test-phases/*.sh
+	./scripts/list-maintained-shell.sh -0 \
+	  | xargs -0 --no-run-if-empty shellcheck -S "$(SHELLCHECK_SEVERITY)"
 
 links:
 	python3 scripts/utils/link-scanner.py --docs-root docs

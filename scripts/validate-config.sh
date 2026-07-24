@@ -85,21 +85,14 @@ echo "2. Validating shell scripts (ShellCheck)..."
 echo ""
 
 if command -v shellcheck >/dev/null 2>&1; then
-    # Discover the scripts rather than listing them.  A literal list only covers
-    # what someone remembered to add, so a new script stays unchecked until the
-    # list is edited, and whole tiers (test-phases/, most of lib/) were never
-    # added at all.  Globbing ties coverage to the tree.
+    # scripts/list-maintained-shell.sh defines the file set for every gate in
+    # the repository, so this check, `make lint`, and the workflows that call it
+    # agree by construction.  Reading the set from one enumerator is what keeps a
+    # new script from being covered here and missed there.
     #
-    # share/ is included alongside scripts/: those files are delivered into the
-    # guest through the /share mount and are maintained here, so they belong in
-    # the same gate.
-    #
-    # Archived scripts are excluded: they are kept for history and are not
-    # maintained against current standards.
-    #
-    # -S error is the enforced level and every live script passes it.  Findings at
-    # warning and below are reported without failing, because clearing them is
-    # separate work; raising the enforced level is tracked as roadmap item 43.
+    # -S error is the enforced level and every maintained script passes it.
+    # Findings at warning and below are reported without failing, because
+    # clearing them is separate work tracked as roadmap item 43.
     shellcheck_checked=0
     shellcheck_failed=0
     while IFS= read -r script_path; do
@@ -107,7 +100,7 @@ if command -v shellcheck >/dev/null 2>&1; then
         if ! shellcheck -S error "$script_path"; then
             shellcheck_failed=$((shellcheck_failed + 1))
         fi
-    done < <(find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' | sort)
+    done < <(./scripts/list-maintained-shell.sh)
 
     if [ "$shellcheck_failed" -eq 0 ]; then
         pass "$shellcheck_checked shell scripts pass shellcheck (errors)"
@@ -117,13 +110,13 @@ if command -v shellcheck >/dev/null 2>&1; then
 
     # Reported, not counted: warn() increments the error total and would fail the
     # run, while clearing these findings is separate work tracked as roadmap item 43.
-    # A non-zero exit means findings were reported, which propagates through find
-    # and, under `set -e` with pipefail, would abort the run.  Findings here are
-    # the expected case, so the substitution absorbs that status.
+    # A non-zero exit means findings were reported, and under `set -e` with
+    # pipefail that would abort the run.  Findings here are the expected case, so
+    # the substitution absorbs that status.
     # (A comment opening with the tool's own name parses as a directive, so this
     # one deliberately does not.)
-    advisory_output="$( { find entrypoint.sh scripts share -name '*.sh' -type f -not -path '*/archive/*' \
-        -exec shellcheck -S warning -f gcc {} + 2>/dev/null || true; } )"
+    advisory_output="$( { ./scripts/list-maintained-shell.sh -0 \
+        | xargs -0 --no-run-if-empty shellcheck -S warning -f gcc 2>/dev/null || true; } )"
     if [ -n "$advisory_output" ]; then
         shellcheck_advisory=$(printf '%s\n' "$advisory_output" | wc -l)
         echo "[INFO] $shellcheck_advisory findings at warning level (advisory, not enforced):"
