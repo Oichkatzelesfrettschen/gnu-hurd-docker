@@ -160,7 +160,7 @@ jobs:
           ## Quick Start
           - [README.md](README.md) - Project overview and quick start
           - [INSTALLATION.md](INSTALLATION.md) - Installation guide for all platforms
-          - [requirements.md](requirements.md) - System requirements
+          - [REQUIREMENTS.md](REQUIREMENTS.md) - System requirements
 
           ## Comprehensive Guides
           - [docs/QEMU-OPTIMIZATION-2025.md](docs/QEMU-OPTIMIZATION-2025.md) - QEMU optimization guide
@@ -187,6 +187,17 @@ jobs:
           cp -v PKGBUILD release-artifacts/
           cp -v gnu-hurd-docker.install release-artifacts/
           cp -v mkdocs.yml release-artifacts/ 2>/dev/null || true
+
+          # The quick start in these release notes runs `make up`, whose default
+          # development composition layers compose.bind.yaml over compose.yaml.
+          # Both, and the Makefile itself, have to be in the archive for that
+          # instruction to work.
+          cp -v Makefile release-artifacts/
+          cp -v compose.bind.yaml release-artifacts/
+          cp -v compose.kvm.yaml release-artifacts/
+          cp -v compose.vnc.yaml release-artifacts/
+          cp -v compose.podman.yaml release-artifacts/
+          cp -v compose.override.yaml release-artifacts/ 2>/dev/null || true
 
       - name: Package workflows
         run: |
@@ -233,9 +244,12 @@ jobs:
         run: |
           echo "=== Creating release archive ==="
           VER="${{ steps.version.outputs.version_clean }}"
-          cd release-artifacts
-          tar -czf ../gnu-hurd-docker-$VER.tar.gz .
-          cd ..
+          # Archive with a named top-level directory.  The release notes extract
+          # this tarball and then `cd gnu-hurd-docker-$VER`, which only works if
+          # the archive carries that prefix rather than unpacking into the cwd.
+          tar -czf gnu-hurd-docker-$VER.tar.gz \
+            --transform "s,^release-artifacts,gnu-hurd-docker-$VER," \
+            release-artifacts
 
           # Create checksums
           sha256sum gnu-hurd-docker-$VER.tar.gz > gnu-hurd-docker-$VER.tar.gz.sha256
@@ -243,6 +257,55 @@ jobs:
           # List contents
           echo "Archive contents:"
           tar -tzf gnu-hurd-docker-$VER.tar.gz | head -20
+
+      - name: Verify the extracted archive
+        run: |
+          echo "=== Verifying the archive a user actually downloads ==="
+          VER="${{ steps.version.outputs.version_clean }}"
+          # Checking repository sources proves the inputs exist; it cannot catch a
+          # packaging step that drops a file. This checks the output, from a clean
+          # directory, the way a user consumes it.
+          workdir="$(mktemp -d)"
+          tar -xzf "gnu-hurd-docker-$VER.tar.gz" -C "$workdir"
+
+          root="$workdir/gnu-hurd-docker-$VER"
+          if [ ! -d "$root" ]; then
+            echo "ERROR: archive has no gnu-hurd-docker-$VER/ top-level directory"
+            ls -la "$workdir"
+            exit 1
+          fi
+
+          # Every file the quick start in these release notes depends on.
+          REQUIRED="entrypoint.sh Dockerfile compose.yaml compose.bind.yaml Makefile
+                    scripts/validate-config.sh scripts/setup-hurd-amd64.sh
+                    README.md INSTALLATION.md REQUIREMENTS.md"
+          missing=0
+          for required_path in $REQUIRED; do
+            if [ ! -f "$root/$required_path" ]; then
+              echo "ERROR: archive is missing $required_path"
+              missing=$((missing + 1))
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+
+          # The documented entry point has to parse against the packaged Makefile.
+          ( cd "$root" && make -n up >/dev/null ) || {
+            echo "ERROR: 'make -n up' fails inside the extracted archive"
+            exit 1
+          }
+
+          # The default development composition has to resolve from the archive.
+          if command -v docker >/dev/null 2>&1; then
+            ( cd "$root" && docker compose -f compose.yaml -f compose.bind.yaml config -q ) || {
+              echo "ERROR: packaged compose files do not validate"
+              exit 1
+            }
+          else
+            echo "[SKIP] docker unavailable; compose validation not run"
+          fi
+
+          echo "[OK] extracted archive satisfies the documented quick start"
+          rm -rf "$workdir"
 
       - name: Create standalone scripts package
         run: |
@@ -259,7 +322,7 @@ jobs:
           VER="${{ steps.version.outputs.version_clean }}"
           cd release-artifacts
           tar -czf ../gnu-hurd-docker-docs-$VER.tar.gz \
-            README.md INSTALLATION.md requirements.md DOCUMENTATION-INDEX.md docs/
+            README.md INSTALLATION.md REQUIREMENTS.md DOCUMENTATION-INDEX.md docs/
           cd ..
           sha256sum gnu-hurd-docker-docs-$VER.tar.gz > gnu-hurd-docker-docs-$VER.tar.gz.sha256
 
