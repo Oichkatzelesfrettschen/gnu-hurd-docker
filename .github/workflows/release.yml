@@ -80,14 +80,14 @@ jobs:
             pacman -S gnu-hurd-docker-kernel-fix
             sudo gnu-hurd-docker-kernel-fix
 
-	            # Build Docker image
-	            docker compose build
+            # Build Docker image
+            docker compose build
 
-	            # Deploy container
-	            docker compose up -d
+            # Deploy container
+            docker compose up -d
 
-	            # View logs
-	            docker compose logs -f
+            # View logs
+            docker compose logs -f
             ```
 
             ## Documentation
