@@ -1,0 +1,60 @@
+---
+name: Docs Build Check
+
+# deploy-pages.yml builds and publishes on push only, so a documentation change
+# reaches a build for the first time after it has already merged.  This job runs
+# the same strict build on pull requests and publishes nothing.
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs-build-check.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-build-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs-material \
+                      mkdocs-git-revision-date-localized-plugin \
+                      pymdown-extensions
+
+      - name: Build strictly
+        run: mkdocs build --clean --strict --verbose
+
+      - name: Verify the published root
+        run: |
+          # A strict build succeeding says every source page resolved.  It says
+          # nothing about the site root: MkDocs treats README.md as a directory
+          # index but gives any other page its own directory, so a homepage named
+          # INDEX.md builds to site/INDEX/index.html and Pages serves a 404 at /.
+          # deploy-pages.yml uploads ./site directly, so the root file is the
+          # contract that matters.
+          if [ ! -s site/index.html ]; then
+            echo "ERROR: site/index.html is missing or empty."
+            echo "The Pages root would 404.  The homepage source must be docs/index.md."
+            ls -la site | head -20
+            exit 1
+          fi
+          echo "[OK] site/index.html present ($(stat -c%s site/index.html) bytes)"

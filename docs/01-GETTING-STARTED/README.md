@@ -94,4 +94,4 @@ This section provides everything you need to get started with the GNU/Hurd x86_6
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

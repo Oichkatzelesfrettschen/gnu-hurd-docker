@@ -132,7 +132,7 @@ gnu-hurd-docker/
 │   ├── MACH_QEMU_RESEARCH_REPORT.md (technical research)
 │   ├── MCP-TOOLS-ASSESSMENT-MATRIX.md (tool evaluation)
 │   └── docs/
-│       ├── INDEX.md (documentation index)
+│       ├── index.md (documentation index)
 │       ├── ARCHITECTURE.md (design decisions)
 │       ├── DEPLOYMENT.md (step-by-step guide)
 │       ├── TROUBLESHOOTING.md (issue resolution)
@@ -440,7 +440,7 @@ EOF
 
 ```
 docs/mach-variants/
-├── INDEX.md                  # Overview of Mach family
+├── index.md                  # Overview of Mach family
 ├── GNU-MACH.md               # Current primary target
 ├── DARWIN-XNU.md             # Apple's Mach-based kernel
 ├── OSF1-MACH.md              # Historical OSF/1 reference

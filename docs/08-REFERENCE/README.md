@@ -381,4 +381,4 @@ echo_success "Script complete"
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

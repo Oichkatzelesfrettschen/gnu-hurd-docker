@@ -683,7 +683,7 @@ gnu-hurd-docker/
 │   ├── test-hurd-system.sh      # Integration tests
 │   └── ...
 ├── docs/                         # 26 documents, 1.3 MB
-│   ├── INDEX.md                  # Master documentation index
+│   ├── index.md                  # Master documentation index
 │   ├── 01-GETTING-STARTED/       # Installation and quickstart
 │   ├── 02-ARCHITECTURE/          # System design
 │   ├── 03-CONFIGURATION/         # Port forwarding, users
@@ -719,7 +719,7 @@ gnu-hurd-docker/
 
 3. **Documentation Organization**:
    - **8 logical sections** (01-GETTING-STARTED through 08-REFERENCE)
-   - **Cross-linked**: INDEX.md provides entry point
+   - **Cross-linked**: index.md provides entry point
    - **Versioned**: Dated updates in headers
 
 4. **Clean Migration**:

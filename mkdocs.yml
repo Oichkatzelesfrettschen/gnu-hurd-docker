@@ -43,17 +43,19 @@ exclude_docs: |
   archive/**
 
 # Documents that are built and reachable by link but kept out of the navigation.
-# Session reports and the link-fix and consolidation records describe past work
-# rather than current usage.  Declaring them keeps `mkdocs build --strict`
+# Session reports, audits, and the link-fix and consolidation records describe past
+# work rather than current usage.  Audits are declared as a directory rather than
+# enumerated so that adding one cannot break a strict build.  Declaring them keeps `mkdocs build --strict`
 # meaningful: an omission that is not listed here is a real error.
 not_in_nav: |
   /reports/**
+  /audits/**
   /CONSOLIDATION-FINAL-REPORT.md
   /CROSS-REFERENCE-FIX-SUMMARY.md
   /LINK-FIX-REPORT.md
 
 nav:
-  - Home: INDEX.md
+  - Home: index.md
   - Getting Started:
       - Overview: 01-GETTING-STARTED/README.md
       - Installation: 01-GETTING-STARTED/INSTALLATION.md
@@ -204,18 +206,6 @@ nav:
       - Validation AND Troubleshooting: 08-REFERENCE/maps/VALIDATION-AND-TROUBLESHOOTING.md
   - 09 Testing Roadmap: 09-TESTING-ROADMAP.md
   - 10 LLM Control GUIDE: 10-LLM-CONTROL-GUIDE.md
-  - Audits:
-      - AUDIT Report 2025 11 08: audits/AUDIT-REPORT-2025-11-08.md
-      - AUDIT Summary: audits/AUDIT-SUMMARY.md
-      - Baseline Summary: audits/BASELINE-SUMMARY.md
-      - CLI Orchestration Session 2025 11 17: audits/CLI-ORCHESTRATION-SESSION-2025-11-17.md
-      - Documentation AUDIT Report: audits/DOCUMENTATION-AUDIT-REPORT.md
-      - Documentation Improvement Summary: audits/DOCUMENTATION-IMPROVEMENT-SUMMARY.md
-      - HURD 2025 Update Correction: audits/HURD-2025-UPDATE-CORRECTION.md
-      - HURD 2025 Update Synthesis: audits/HURD-2025-UPDATE-SYNTHESIS.md
-      - HURD AMD64 Latest AS OF 2026 02 24: audits/HURD-AMD64-LATEST-AS-OF-2026-02-24.md
-      - LINK SCAN Report: audits/LINK-SCAN-REPORT.md
-      - Workflow AND CLI Improvements 2025: audits/WORKFLOW-AND-CLI-IMPROVEMENTS-2025.md
 
 plugins:
   - search

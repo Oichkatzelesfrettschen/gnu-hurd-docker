@@ -334,7 +334,7 @@
    ```
 
 3. **Documentation Audit**
-   - Verify INDEX.md references all new files
+   - Verify index.md references all new files
    - Cross-check documentation links
    - Validate markdown formatting
 

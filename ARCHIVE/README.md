@@ -13,7 +13,7 @@ This directory preserves historical documentation from:
 1. **i386 → x86_64 Architecture Migration** (2025-11-07)
 2. **Documentation Consolidation** (2025-11-07)
 
-All active documentation is in [`/docs`](../docs/INDEX.md).
+All active documentation is in [`/docs`](../docs/index.md).
 
 ---
 
@@ -76,7 +76,7 @@ All active documentation is in [`/docs`](../docs/INDEX.md).
 - Troubleshooting
 - Architecture reference
 
-**Instead**: See current documentation at [`/docs/INDEX.md`](../docs/INDEX.md)
+**Instead**: See current documentation at [`/docs/index.md`](../docs/index.md)
 
 ---
 
@@ -136,13 +136,13 @@ All active documentation is in [`/docs`](../docs/INDEX.md).
 - Consistent formatting
 - x86_64-only content
 
-**See**: [/docs/INDEX.md](../docs/INDEX.md)
+**See**: [/docs/index.md](../docs/index.md)
 
 ---
 
 ## Related Resources
 
-**Current documentation**: [/docs/INDEX.md](../docs/INDEX.md)
+**Current documentation**: [/docs/index.md](../docs/index.md)
 
 **Migration details**: [/docs/07-RESEARCH/X86_64-MIGRATION.md](../docs/07-RESEARCH/X86_64-MIGRATION.md)
 
@@ -156,10 +156,10 @@ All active documentation is in [`/docs`](../docs/INDEX.md).
 
 **For historical context**: Browse this archive directory
 
-**For current usage**: See [/docs/INDEX.md](../docs/INDEX.md)
+**For current usage**: See [/docs/index.md](../docs/index.md)
 
 **For migration rationale**: See [/docs/07-RESEARCH/](../docs/07-RESEARCH/)
 
 ---
 
-[← Back to Repository Root](../README.md) | [→ Current Documentation](../docs/INDEX.md)
+[← Back to Repository Root](../README.md) | [→ Current Documentation](../docs/index.md)

@@ -68,7 +68,7 @@ docs/
 │   ├── scripts/              # Documentation helper scripts
 │   └── templates/            # Document templates
 │
-└── INDEX.md                   # Master documentation index
+└── index.md                   # Master documentation index
 
 ================================================================================
 DOCUMENT NAMING CONVENTIONS
@@ -385,7 +385,7 @@ Phase 1: Structure Creation
 - [ ] Create directory structure under docs/
 - [ ] Create section README.md files
 - [ ] Create document templates in assets/templates/
-- [ ] Set up INDEX.md master navigation
+- [ ] Set up index.md master navigation
 
 Phase 2: Content Consolidation
 - [ ] Map existing 58 files to new structure
@@ -408,7 +408,7 @@ Phase 4: Link Updates
 
 Phase 5: Validation
 - [ ] Run markdown link checker
-- [ ] Verify all files accessible from INDEX.md
+- [ ] Verify all files accessible from index.md
 - [ ] Check for orphaned documents
 - [ ] Test navigation paths for each audience
 
@@ -491,7 +491,7 @@ MAINTENANCE GUIDELINES
 
 3. Ownership
    - Each section has primary maintainer
-   - Document owners listed in INDEX.md
+   - Document owners listed in index.md
    - Reviews required for cross-section changes
 
 4. Quality Standards

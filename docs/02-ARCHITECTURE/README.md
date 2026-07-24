@@ -137,4 +137,4 @@ This section explains the technical architecture of the GNU/Hurd x86_64 Docker e
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

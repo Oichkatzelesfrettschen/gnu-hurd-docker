@@ -260,4 +260,4 @@ memory: 8GB      # Extra RAM for desktop
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

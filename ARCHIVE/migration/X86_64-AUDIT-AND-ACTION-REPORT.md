@@ -147,7 +147,7 @@ Line 276: - qemu-system-i386: Run QEMU outside Docker
 - docs/: 34
 
 **Duplicates identified**:
-- INDEX.md (2 copies: docs/ and docs/mach-variants/)
+- index.md (2 copies: docs/ and docs/mach-variants/)
 - README.md (2 copies: root and scripts/)
 - CI-CD guides (3 files: CI-CD-GUIDE-HURD.md, docs/CI-CD-GUIDE.md, CI-CD-MIGRATION-SUMMARY.md)
 - Quickstart guides (4 files: QUICKSTART.md, SIMPLE-START.md, QUICKSTART-CI-SETUP.md, docs/QUICK_START_GUIDE.md)
@@ -158,7 +158,7 @@ Line 276: - qemu-system-i386: Run QEMU outside Docker
 
 ```
 docs/
-├── INDEX.md (master index)
+├── index.md (master index)
 ├── 01-GETTING-STARTED/
 │   ├── QUICKSTART.md              [CREATED ✓]
 │   ├── INSTALLATION.md            [TODO]
@@ -311,7 +311,7 @@ mv QUICKSTART.md ARCHIVE/QUICKSTART-i386-historical.md
 mv SIMPLE-START.md ARCHIVE/
 # ... etc
 
-# 4.4 Create master INDEX.md
+# 4.4 Create master index.md
 # Reference all new consolidated docs
 ```
 
@@ -382,7 +382,7 @@ git push origin v2.0.0-x86_64-only
 - [ ] Zero duplicate content across active docs
 - [ ] All lessons learned preserved in appropriate sections
 - [ ] Clear directory structure (01-08 categories)
-- [ ] Master INDEX.md references all docs with descriptions
+- [ ] Master index.md references all docs with descriptions
 - [ ] All internal links validated and working
 - [ ] Consolidated docs have proper headers (metadata, sources, history)
 - [ ] ARCHIVE/ contains all deprecated/historical content

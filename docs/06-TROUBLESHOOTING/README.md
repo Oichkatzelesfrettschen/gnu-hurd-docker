@@ -426,4 +426,4 @@ docker compose restart
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

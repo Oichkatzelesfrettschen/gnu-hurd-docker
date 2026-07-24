@@ -105,7 +105,7 @@ All obvious duplicates and outdated files removed.
 
 These files serve specific purposes and remain in root:
 
-1. **INDEX.md** - Main documentation navigation
+1. **index.md** - Main documentation navigation
 2. **CONSOLIDATION-REPORT.md** - Consolidation planning document
 3. **DOCUMENTATION-CONSOLIDATION-REPORT.md** - Detailed analysis
 4. **DUPLICATION-HEATMAP.md** - Duplication visualization
@@ -167,7 +167,7 @@ docs/
 
 2. **Cleanup** (Priority: MEDIUM)
    - Move consolidation reports to archive/ when complete
-   - Update INDEX.md to reflect new structure
+   - Update index.md to reflect new structure
    - Clean up temporary scripts (consolidate.sh, check-conflicts.sh, move-safe-files.sh)
 
 3. **Validation** (Priority: HIGH)

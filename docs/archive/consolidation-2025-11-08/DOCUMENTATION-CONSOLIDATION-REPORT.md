@@ -140,9 +140,9 @@ Categorized by intended destination based on content analysis.
 
 | File | Size | Action | Priority |
 |------|------|--------|----------|
-| INDEX.md | 15.7KB | Keep at root (main index) | ✅ Keep |
+| index.md | 15.7KB | Keep at root (main index) | ✅ Keep |
 | index.md | 9.9KB | Archive (older lowercase version) | MEDIUM |
-| REPOSITORY-INDEX.md | 16KB | Merge with INDEX.md | HIGH |
+| REPOSITORY-INDEX.md | 16KB | Merge with index.md | HIGH |
 | STRUCTURAL-MAP.md | 38.9KB | Move to 08-REFERENCE/MAPS/ | MEDIUM |
 | CROSS-LINKING-GUIDELINES.md | 7.9KB | Move to 08-REFERENCE/GUIDELINES/ | LOW |
 
@@ -157,9 +157,9 @@ Categorized by intended destination based on content analysis.
    - Action: Keep .md, delete .txt
    - Confidence: 95%
 
-2. **INDEX.md vs index.md**
+2. **index.md vs index.md**
    - Size: 15.7KB vs 9.9KB
-   - Action: Keep INDEX.md (newer), archive index.md
+   - Action: Keep index.md (newer), archive index.md
    - Confidence: 90%
 
 ### Medium Confidence Duplicates (60-89% similar)
@@ -240,7 +240,7 @@ Categorized by intended destination based on content analysis.
 ### Phase 4: Final Cleanup (Week 4)
 1. **Update cross-references**
    - Fix all internal links
-   - Update INDEX.md with new structure
+   - Update index.md with new structure
 
 2. **Archive deprecated content**
    - Create docs/archive/ directory
@@ -262,7 +262,7 @@ Categorized by intended destination based on content analysis.
 
 ### Long-term Improvements
 1. **Implement naming conventions**
-   - All-caps for top-level docs (INDEX.md, README.md)
+   - All-caps for top-level docs (index.md, README.md)
    - Title-case for section docs
    - Kebab-case for multi-word files
 

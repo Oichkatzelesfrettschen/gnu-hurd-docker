@@ -195,7 +195,7 @@ git archive <i386-commit> scripts/ | tar -x -C /tmp/i386-scripts/
 **Use x86_64**:
 - All new work on x86_64 only
 - Follow [docs/01-GETTING-STARTED/INSTALLATION.md](../../docs/01-GETTING-STARTED/INSTALLATION.md)
-- Use [docs/INDEX.md](../../docs/INDEX.md) for navigation
+- Use [docs/index.md](../../docs/index.md) for navigation
 
 **Do NOT use i386**:
 - No i386 support in current codebase
@@ -223,7 +223,7 @@ git archive <i386-commit> scripts/ | tar -x -C /tmp/i386-scripts/
 - Git history - Full commit history with all i386 code
 
 **Current documentation**:
-- [docs/INDEX.md](../../docs/INDEX.md) - Master documentation index
+- [docs/index.md](../../docs/index.md) - Master documentation index
 - [docs/01-GETTING-STARTED/](../../docs/01-GETTING-STARTED/) - Getting started (x86_64 only)
 - [docs/02-ARCHITECTURE/](../../docs/02-ARCHITECTURE/) - Architecture docs (x86_64 only)
 
@@ -235,10 +235,10 @@ git archive <i386-commit> scripts/ | tar -x -C /tmp/i386-scripts/
 
 **For migration details**: See [docs/07-RESEARCH/X86_64-MIGRATION.md](../../docs/07-RESEARCH/X86_64-MIGRATION.md)
 
-**For current x86_64 usage**: See [docs/INDEX.md](../../docs/INDEX.md)
+**For current x86_64 usage**: See [docs/index.md](../../docs/index.md)
 
 **For migration planning**: See [ARCHIVE/migration/](../migration/)
 
 ---
 
-[← Back to ARCHIVE](../) | [→ Current Documentation](../../docs/INDEX.md)
+[← Back to ARCHIVE](../) | [→ Current Documentation](../../docs/index.md)

@@ -179,7 +179,7 @@ docs/HURD-IMAGE-BUILDING.md
 docs/HURD-TESTING-REPORT.md
 docs/IMPLEMENTATION-COMPLETE.md
 docs/index.md
-docs/INDEX.md (duplicate index?)
+docs/index.md (duplicate index?)
 docs/INTERACTIVE-ACCESS-GUIDE.md
 docs/KERNEL-FIX-GUIDE.md
 docs/KERNEL-STANDARDIZATION-PLAN.md
@@ -206,7 +206,7 @@ docs/VALIDATION-AND-TROUBLESHOOTING.md
 ├── QUICKSTART.md                      # Fast 5-minute start
 │
 ├── docs/
-│   ├── INDEX.md                       # Master documentation index
+│   ├── index.md                       # Master documentation index
 │   │
 │   ├── 01-GETTING-STARTED/
 │   │   ├── INSTALLATION.md           # Merge: INSTALLATION*.md, MANUAL-SETUP-REQUIRED.md
@@ -482,7 +482,7 @@ docs/KERNEL-FIX-GUIDE.md            - Kernel issue resolution
 - [ ] Zero duplicate content across docs
 - [ ] All lessons learned preserved in appropriate sections
 - [ ] Clear directory structure (01-08 categories)
-- [ ] Master INDEX.md references all docs
+- [ ] Master index.md references all docs
 - [ ] All internal links validated
 
 ### 6.3 Functional Validation

@@ -38,7 +38,7 @@
 - Year: 2025
 - Quality: 100/100
 
-**docs/INDEX.md** - EXCELLENT
+**docs/index.md** - EXCELLENT
 - Master documentation index
 - Role-based navigation
 - 26 documents cataloged
@@ -156,7 +156,7 @@ Clear 8-section hierarchy:
 
 Additional strengths:
 - Section README files present in all 8 sections
-- Master INDEX.md with role-based navigation
+- Master index.md with role-based navigation
 - ARCHIVE/ directory for deprecated content
 - Consistent naming convention
 - Cross-linking between documents
@@ -194,7 +194,7 @@ Additional strengths:
 
 - Clear headings
 - Keywords in filenames
-- INDEX.md for discovery
+- index.md for discovery
 - Section READMEs for navigation
 - No search function (static docs limitation)
 - No tags/metadata
@@ -547,7 +547,7 @@ GitHub Community Standards: 3/7 met
 │   │   └── documentation.md (MEDIUM - create)
 │   └── PULL_REQUEST_TEMPLATE.md (HIGH - create)
 ├── docs/
-│   ├── INDEX.md (exists)
+│   ├── index.md (exists)
 │   ├── FAQ.md (MEDIUM - create)
 │   ├── GLOSSARY.md (MEDIUM - create)
 │   └── ... (existing sections)

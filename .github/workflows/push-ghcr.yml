@@ -172,7 +172,7 @@ jobs:
 
           echo "### 📚 Documentation" >> $GITHUB_STEP_SUMMARY
           BASE="https://github.com/$REPO/blob/main"
-          echo "- [Documentation Index]($BASE/docs/INDEX.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Documentation Index]($BASE/docs/index.md)" >> $GITHUB_STEP_SUMMARY
           echo "- [Quickstart]($BASE/docs/01-GETTING-STARTED/QUICKSTART.md)" >> $GITHUB_STEP_SUMMARY
           echo "- [System Design]($BASE/docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

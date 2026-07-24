@@ -61,7 +61,7 @@
 │   ├── ARCHITECTURE.md              (4.6 KB - System design)
 │   ├── CREDENTIALS.md               (Default access info)
 │   ├── DEPLOYMENT.md                (9.8 KB - Deployment procedures)
-│   ├── INDEX.md                     (Documentation index and navigation)
+│   ├── index.md                     (Documentation index and navigation)
 │   ├── KERNEL-FIX-GUIDE.md         (nf_tables problem solution)
 │   ├── KERNEL-STANDARDIZATION-PLAN.md (Kernel upgrade procedure)
 │   ├── RESEARCH-FINDINGS.md         (12.0 KB - Research results)
@@ -693,7 +693,7 @@ All scripts use POSIX-compatible bash with `set -e` error handling.
 - Recovery procedures
 - Verification steps
 
-#### 17. **docs/INDEX.md**
+#### 17. **docs/index.md**
 **Audience:** Documentation readers
 **Reading Time:** 5 minutes (navigation guide)
 **Contents:**
@@ -1001,7 +1001,7 @@ Documentation Cross-References:
 │   ├── → docs/RESEARCH-FINDINGS.md (analysis)
 │   └── → docs/DEPLOYMENT.md (procedures)
 │
-├── docs/INDEX.md (navigation hub)
+├── docs/index.md (navigation hub)
 │   ├── → All tier 1-7 documents
 │   └── → Quick reference by role
 │
@@ -1174,7 +1174,7 @@ These are expected gaps for a pre-deployment project:
 - **Packaging:** `PKGBUILD`, `fix-script.sh`
 
 **By Audience:**
-- **First-time users:** `README.md` → `docs/INDEX.md`
+- **First-time users:** `README.md` → `docs/index.md`
 - **Operators:** `EXECUTION-SUMMARY.md` → `docs/DEPLOYMENT.md`
 - **Developers:** `docs/ARCHITECTURE.md` → Dockerfile/entrypoint.sh
 - **Troubleshooting:** `QUICK-START-KERNEL-FIX.txt` → `docs/TROUBLESHOOTING.md`

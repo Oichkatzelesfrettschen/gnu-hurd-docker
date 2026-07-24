@@ -387,4 +387,4 @@ docker compose logs -f
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

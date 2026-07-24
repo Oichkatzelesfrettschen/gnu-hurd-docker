@@ -356,4 +356,4 @@ Cache images between runs:
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)
