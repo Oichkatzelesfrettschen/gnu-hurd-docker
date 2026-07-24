@@ -297,7 +297,7 @@ chmod +x test-hurd-system.sh
 - [Architecture](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs/ARCHITECTURE.md)
 
 ### Complete Index
-- [Documentation Index](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs/INDEX.md)
+- [Documentation Index](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs/index.md)
 
 ---
 

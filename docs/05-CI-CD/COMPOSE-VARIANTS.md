@@ -583,8 +583,8 @@ sudo chmod 666 /dev/kvm
 
 - [PODMAN-SUPPORT.md](../01-GETTING-STARTED/PODMAN-SUPPORT.md) - Detailed Podman setup guide
 - [DOCKER-COMPOSE-GUIDE.md](DOCKER-COMPOSE-GUIDE.md) - docker compose usage patterns
-- [Makefile](../../Makefile) - Compose control plane targets
-- [compose.kvm.yaml](../../compose.kvm.yaml) - KVM acceleration overlay
+- [Makefile](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/Makefile) - Compose control plane targets
+- [compose.kvm.yaml](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/compose.kvm.yaml) - KVM acceleration overlay
 
 ---
 

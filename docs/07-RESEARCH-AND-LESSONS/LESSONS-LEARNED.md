@@ -516,7 +516,7 @@ Failure Modes:
 - User confusion (which guide to follow?)
 
 **Symptoms of Sprawl**:
-- Multiple `INDEX.md` files (docs/, docs/mach-variants/)
+- Multiple `index.md` files (docs/, docs/mach-variants/)
 - Multiple `README.md` files (root, scripts/)
 - Duplicate content across files (copy-pasted sections)
 - Orphan files (not linked from anywhere)
@@ -527,7 +527,7 @@ Failure Modes:
 53 files → 24 files (55% reduction)
 8 clear categories (01-GETTING-STARTED through 08-REFERENCE)
 Single source of truth per topic
-Master INDEX.md with navigation
+Master index.md with navigation
 ```
 
 **Consolidation Benefits**:

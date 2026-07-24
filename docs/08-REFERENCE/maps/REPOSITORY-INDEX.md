@@ -40,7 +40,7 @@
 → **[docs/RESEARCH-FINDINGS.md](../../07-RESEARCH-AND-LESSONS/FINDINGS.md)** - CachyOS nf_tables issue analysis and solution
 
 #### Understand Everything
-→ **[docs/INDEX.md](../../INDEX.md)** - Documentation navigation by role and topic
+→ **[docs/index.md](../../index.md)** - Documentation navigation by role and topic
 
 ---
 
@@ -96,7 +96,7 @@ fix-script.sh                          Fix utility script
 | `docs/TROUBLESHOOTING.md` | - | Support | Variable |
 | `docs/CREDENTIALS.md` | - | Security | 5 min |
 | `docs/USER-SETUP.md` | - | Admins | 15 min |
-| `docs/INDEX.md` | - | Navigators | 5 min |
+| `docs/index.md` | - | Navigators | 5 min |
 | `SESSION-COMPLETION-REPORT.md` | 15.5 KB | Stakeholders | 20 min |
 | `MACH_QEMU_RESEARCH_REPORT.md` | 12.0 KB | Researchers | 20 min |
 | `QUICK_START_GUIDE.md` | 3.8 KB | Users | 5 min |
@@ -134,7 +134,7 @@ fix-script.sh                          Fix utility script
 
 ```
 docs/
-├── INDEX.md                    Documentation index and navigation
+├── index.md                    Documentation index and navigation
 ├── ARCHITECTURE.md             System design and decisions
 ├── DEPLOYMENT.md               Deployment procedures
 ├── KERNEL-FIX-GUIDE.md        nf_tables problem solutions
@@ -212,7 +212,7 @@ scripts/
 1. **Start:** [README.md](../README.md) (5 min)
 2. **Understand:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) (15 min)
 3. **Deploy:** [docs/DEPLOYMENT.md](../../04-OPERATION/deployment/DEPLOYMENT.md) (20 min)
-4. **Reference:** [docs/INDEX.md](../../INDEX.md) (5 min)
+4. **Reference:** [docs/index.md](../../index.md) (5 min)
 5. **Help:** [docs/TROUBLESHOOTING.md](../../06-TROUBLESHOOTING/GENERAL.md) (as needed)
 
 ### For System Administrators
@@ -259,7 +259,7 @@ scripts/
 - **QEMU Parameters:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) - System Parameters
 
 ### Disk Images
-- **Download:** [scripts/download-image.sh](../../../scripts/download-image.sh)
+- **Download:** [scripts/download-image.sh](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/scripts/download-image.sh)
 - **Formats:** [STRUCTURAL-MAP.md](STRUCTURAL-MAP.md) - Disk Image Files
 - **Specifications:** [QUICK_START_GUIDE.md](../../01-GETTING-STARTED/archive/QUICK_START_GUIDE.md)
 
@@ -392,7 +392,7 @@ docker compose exec gnu-hurd-dev bash
 ### Internal Documentation
 - [Repository Summary](REPO-SUMMARY.txt)
 - [Structural Map](STRUCTURAL-MAP.md)
-- [Documentation Index](../../INDEX.md)
+- [Documentation Index](../../index.md)
 
 ### Getting Started
 - [README](../README.md)
@@ -434,7 +434,7 @@ docker compose exec gnu-hurd-dev bash
 ## Support & Help
 
 ### For Quick Questions
-→ See [docs/INDEX.md](../../INDEX.md) "Getting Help" section
+→ See [docs/index.md](../../index.md) "Getting Help" section
 
 ### For Specific Issues
 → Browse by category in **Key Topics Quick Reference** above

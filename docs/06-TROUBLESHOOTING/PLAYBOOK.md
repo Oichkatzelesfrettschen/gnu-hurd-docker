@@ -661,7 +661,7 @@ make up                       # Start fresh
 **Still stuck?**
 
 1. Review [COMMON-ISSUES.md](COMMON-ISSUES.md) for known issues
-2. Check [docs/07-RESEARCH-AND-LESSONS/](../07-RESEARCH-AND-LESSONS/) for research notes
+2. Check [docs/07-RESEARCH-AND-LESSONS/](../07-RESEARCH-AND-LESSONS/README.md) for research notes
 3. Search existing GitHub issues
 4. Create detailed issue report with:
    - Output from `docker logs gnu-hurd-dev`

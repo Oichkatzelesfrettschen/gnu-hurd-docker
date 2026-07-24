@@ -5,7 +5,7 @@
 [![QEMU](https://img.shields.io/badge/QEMU-x86__64-FF6600?logo=qemu&logoColor=white)](https://www.qemu.org/)
 [![Architecture](https://img.shields.io/badge/Container-amd64%20%7C%20arm64-success)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
 [![Guest](https://img.shields.io/badge/Guest-x86__64%20only-blue)](docs/02-ARCHITECTURE/SYSTEM-DESIGN.md)
-[![Documentation](https://img.shields.io/badge/docs-comprehensive-brightgreen)](docs/INDEX.md)
+[![Documentation](https://img.shields.io/badge/docs-comprehensive-brightgreen)](docs/index.md)
 
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
@@ -254,7 +254,7 @@ forensic artifacts under `logs/runs/<run-id>/fsm/stall-probe/` before final abor
 
 ## Documentation
 
-**Complete documentation**: [docs/INDEX.md](docs/INDEX.md)
+**Complete documentation**: [docs/index.md](docs/index.md)
 
 ### Quick Links
 
@@ -434,7 +434,7 @@ docker compose restart
 ```
 .
 ├── docs/                          # Complete documentation (26 files)
-│   ├── INDEX.md                   # Master documentation index
+│   ├── index.md                   # Master documentation index
 │   ├── 01-GETTING-STARTED/        # Installation and quickstart
 │   ├── 02-ARCHITECTURE/           # System design and QEMU config
 │   ├── 03-CONFIGURATION/          # Port forwarding, users, features
@@ -493,13 +493,13 @@ i386 references are preserved for historical context under `ARCHIVE/` and `docs/
 - Run validation scripts
 - Submit pull request
 
-**See**: [docs/INDEX.md](docs/INDEX.md) for documentation standards
+**See**: [docs/index.md](docs/index.md) for documentation standards
 
 ---
 
 ## Resources
 
-**Documentation**: [docs/INDEX.md](docs/INDEX.md)
+**Documentation**: [docs/index.md](docs/index.md)
 
 **Debian GNU/Hurd**: https://www.debian.org/ports/hurd/
 
@@ -545,8 +545,8 @@ ssh -p 2222 root@localhost
 ./scripts/monitor-qemu.sh
 ```
 
-**For everything else**: [docs/INDEX.md](docs/INDEX.md)
+**For everything else**: [docs/index.md](docs/index.md)
 
 ---
 
-[Complete Documentation](docs/INDEX.md) | [Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) | [Troubleshooting](docs/06-TROUBLESHOOTING/)
+[Complete Documentation](docs/index.md) | [Quickstart](docs/01-GETTING-STARTED/QUICKSTART.md) | [Troubleshooting](docs/06-TROUBLESHOOTING/)

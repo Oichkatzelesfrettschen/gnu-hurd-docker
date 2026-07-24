@@ -12,7 +12,7 @@ This section covers all configuration options for customizing the GNU/Hurd x86_6
 
 **Audience**: Users who want to customize their setup beyond defaults
 
-**Prerequisites**: Completed [Getting Started](../01-GETTING-STARTED/)
+**Prerequisites**: Completed [Getting Started](../01-GETTING-STARTED/README.md)
 
 ---
 
@@ -260,4 +260,4 @@ memory: 8GB      # Extra RAM for desktop
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

@@ -147,7 +147,7 @@ jobs:
         run: |
           echo "=== Packaging documentation ==="
           cp -v README.md release-artifacts/
-          cp -v docs/INDEX.md release-artifacts/
+          cp -v docs/index.md release-artifacts/
           cp -v docs/01-GETTING-STARTED/INSTALLATION.md release-artifacts/
           cp -v docs/01-GETTING-STARTED/REQUIREMENTS.md release-artifacts/
           cp -v LICENSE release-artifacts/ 2>/dev/null || echo "No LICENSE file"
@@ -170,7 +170,7 @@ jobs:
           - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment procedures
 
           ## Reference
-          - [docs/INDEX.md](docs/INDEX.md) - Complete documentation index
+          - [docs/index.md](docs/index.md) - Complete documentation index
           - [docs/CREDENTIALS.md](docs/CREDENTIALS.md) - Default credentials
           - [docs/USER-SETUP.md](docs/USER-SETUP.md) - User management
 
@@ -422,7 +422,7 @@ jobs:
 
           ### 📚 Documentation
 
-          - [Documentation Index](docs/INDEX.md)
+          - [Documentation Index](docs/index.md)
           - [Installation Guide](docs/01-GETTING-STARTED/INSTALLATION.md)
           - [System Requirements](docs/01-GETTING-STARTED/REQUIREMENTS.md)
           - [CI/CD Guide](docs/CI-CD-GUIDE.md)

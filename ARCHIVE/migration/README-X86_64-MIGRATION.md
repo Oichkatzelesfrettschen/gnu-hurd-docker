@@ -68,7 +68,7 @@ rm -f debian-hurd-i386-20250807.qcow2.bak.1762464911
 - Consolidate 53 markdown files → 24 modular docs
 - Move duplicates to ARCHIVE/
 - Update all i386 references to x86_64
-- Create master INDEX.md with navigation
+- Create master index.md with navigation
 
 **Example consolidations**:
 - 4 quickstart guides → 1 comprehensive guide (already done as template)

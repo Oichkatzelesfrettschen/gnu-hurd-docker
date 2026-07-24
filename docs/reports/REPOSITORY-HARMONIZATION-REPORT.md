@@ -67,7 +67,7 @@ gnu-hurd-docker/
 │   │   ├── PACKAGE-LIBS-QUICK-REFERENCE.md
 │   │   ├── TRAP-HANDLERS-IMPLEMENTATION.md
 │   │   └── TRAP-HANDLERS-QUICK-REFERENCE.md
-│   └── INDEX.md
+│   └── index.md
 ├── scripts/
 │   ├── lib/            # Shared library functions
 │   ├── utils/          # Utility scripts and tools
@@ -140,7 +140,7 @@ gnu-hurd-docker/
 
 ✅ **Consistency**: All section README files follow same format
 ✅ **Completeness**: REQUIREMENTS.md is comprehensive and production-ready
-✅ **Organization**: Clear hierarchy with INDEX.md navigation
+✅ **Organization**: Clear hierarchy with index.md navigation
 ✅ **Standards**: Root contains only standard GitHub files
   - README.md, CHANGELOG.md, CODE_OF_CONDUCT.md
   - CONTRIBUTING.md, SECURITY.md

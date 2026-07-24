@@ -204,7 +204,7 @@ docker compose logs -f    # Monitor boot (5 min)
 - docs/DEPLOYMENT-STATUS.md - Operational procedures
 - docs/CREDENTIALS.md - Default access info
 - docs/TROUBLESHOOTING.md - Common issues
-- docs/INDEX.md - Documentation navigation
+- docs/index.md - Documentation navigation
 
 ### GitHub Actions Workflows (Implemented)
 
@@ -242,7 +242,7 @@ docker compose logs -f    # Monitor boot (5 min)
 │       ├── build-docker.yml
 │       └── release.yml
 └── docs/
-    ├── INDEX.md                        # Navigation guide
+    ├── index.md                        # Navigation guide
     ├── ARCHITECTURE.md                 # Design decisions
     ├── DEPLOYMENT.md                   # Deployment procedures
     ├── DEPLOYMENT-STATUS.md            # Operational status

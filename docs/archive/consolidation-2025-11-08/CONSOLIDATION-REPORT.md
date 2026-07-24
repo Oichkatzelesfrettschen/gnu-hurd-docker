@@ -109,13 +109,13 @@ The `/path/to/gnu-hurd-docker/docs` directory contains significant redundancy be
 
 | Root-Level File | Lines | Status | Reason |
 |-----------------|-------|--------|---------|
-| PROJECT-SUMMARY.md | 450 | DELETE | Superseded by INDEX.md |
+| PROJECT-SUMMARY.md | 450 | DELETE | Superseded by index.md |
 | IMPLEMENTATION-COMPLETE.md | 178 | DELETE | Obsolete status report |
 | DEPLOYMENT-STATUS.md | 289 | DELETE | Obsolete status report |
 | EXECUTION-SUMMARY.md | 234 | DELETE | Obsolete status report |
 | SESSION-COMPLETION-REPORT.md | 489 | DELETE | Obsolete session report |
 | STRUCTURAL-MAP.md | 1234 | ARCHIVE | Historical structure reference |
-| REPOSITORY-INDEX.md | 472 | DELETE | Superseded by INDEX.md |
+| REPOSITORY-INDEX.md | 472 | DELETE | Superseded by index.md |
 | COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md | 847 | ARCHIVE | Historical planning document |
 
 ---
@@ -125,7 +125,7 @@ The `/path/to/gnu-hurd-docker/docs` directory contains significant redundancy be
 | File | Status | Action |
 |------|--------|--------|
 | index.md | KEEP | Entry point for documentation |
-| INDEX.md | KEEP | Main navigation index |
+| index.md | KEEP | Main navigation index |
 | CROSS-LINKING-GUIDELINES.md | KEEP | Documentation standards |
 | MCP-TOOLS-ASSESSMENT-MATRIX.md | MIGRATE | Move to 07-RESEARCH/ |
 | MCP-SERVERS-SETUP.md | MIGRATE | Move to 03-CONFIGURATION/ |
@@ -296,7 +296,7 @@ git commit -m "reorganize: move specialized docs to appropriate sections"
 grep -r "QUICKSTART.md" --include="*.md" . | grep -v "01-GETTING-STARTED"
 # Fix all references to point to organized structure
 
-# Update INDEX.md
+# Update index.md
 # Remove references to deleted files
 # Add archive section if needed
 
@@ -348,7 +348,7 @@ After consolidation, verify:
 
 - [ ] All organized folders have README.md navigation
 - [ ] No broken internal links (use link checker)
-- [ ] INDEX.md correctly lists all remaining files
+- [ ] index.md correctly lists all remaining files
 - [ ] Archive folder properly organized
 - [ ] CI/CD documentation still builds correctly
 - [ ] Search functionality returns correct results

@@ -98,8 +98,8 @@ This section explains the technical architecture of the GNU/Hurd x86_64 Docker e
 - [Monitoring](../04-OPERATION/MONITORING.md)
 
 **Deep Dives**:
-- [Research](../07-RESEARCH-AND-LESSONS/) - Migration insights, lessons learned
-- [CI/CD](../05-CI-CD/) - Automated workflows
+- [Research](../07-RESEARCH-AND-LESSONS/README.md) - Migration insights, lessons learned
+- [CI/CD](../05-CI-CD/README.md) - Automated workflows
 
 ---
 
@@ -137,4 +137,4 @@ This section explains the technical architecture of the GNU/Hurd x86_64 Docker e
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

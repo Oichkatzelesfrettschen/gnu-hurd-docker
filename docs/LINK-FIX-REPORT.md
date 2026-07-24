@@ -18,8 +18,8 @@ Generated: /path/to/gnu-hurd-docker/docs
 - Line 99: `[docs/DEPLOYMENT.md]`
   - Old: `docs/DEPLOYMENT.md`
   - New: `04-OPERATION/deployment/DEPLOYMENT.md`
-- Line 102: `[docs/INDEX.md]`
-  - Old: `docs/INDEX.md`
+- Line 102: `[docs/index.md]`
+  - Old: `docs/index.md`
   - New: `07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md`
 - Line 108: `[docs/CREDENTIALS.md]`
   - Old: `docs/CREDENTIALS.md`
@@ -69,7 +69,7 @@ Generated: /path/to/gnu-hurd-docker/docs
 - Line 129: `[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)`
   - Reason: pattern_not_found
   - Suggested: `04-OPERATION/deployment/DEPLOYMENT.md`
-- Line 132: `[docs/INDEX.md](docs/INDEX.md)`
+- Line 132: `[docs/index.md](docs/index.md)`
   - Reason: pattern_not_found
   - Suggested: `07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md`
 
@@ -162,7 +162,7 @@ Generated: /path/to/gnu-hurd-docker/docs
 - Line 446: `[REPO-SUMMARY.txt](REPO-SUMMARY.txt)`
   - Reason: file_not_found
 
-### INDEX.md
+### index.md
 
 - Line 18: `[First Steps](01-GETTING-STARTED/first-steps.md)`
   - Reason: file_not_found
@@ -534,12 +534,12 @@ Generated: /path/to/gnu-hurd-docker/docs
 
 **Before:**
 ```markdown
-[docs/INDEX.md](docs/INDEX.md)
+[docs/index.md](docs/index.md)
 ```
 
 **After:**
 ```markdown
-[docs/INDEX.md](07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md)
+[docs/index.md](07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md)
 ```
 
 ### Example 3

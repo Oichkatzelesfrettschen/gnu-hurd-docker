@@ -138,7 +138,7 @@ TOTAL:             63,000 lines
 | File | Score | Quality | Key Sections Present |
 |------|-------|---------|----------------------|
 | README.md | 7/7 | Excellent | Title, Quick Start, Architecture, Troubleshooting, Contributing, License, Links |
-| docs/INDEX.md | 6/7 | Very Good | Missing: License reference |
+| docs/index.md | 6/7 | Very Good | Missing: License reference |
 | docs/01-GETTING-STARTED/README.md | 5/7 | Good | Missing: Contributing, License |
 
 **Analysis**:
@@ -159,7 +159,7 @@ TOTAL:             63,000 lines
 - Cross-reference quality: High
 
 **Documentation Structure Quality**:
-- Clear hierarchy: docs/01-GETTING-STARTED → docs/INDEX.md → linked files
+- Clear hierarchy: docs/01-GETTING-STARTED → docs/index.md → linked files
 - Breadcrumb navigation present in most files
 - Table of contents in primary documentation
 - Consistent naming conventions

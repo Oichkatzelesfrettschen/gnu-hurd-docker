@@ -252,7 +252,7 @@ lsof -i :2222
 
 ## Prevention Best Practices
 
-1. **Always shut down cleanly** ([Operation](../04-OPERATION/))
+1. **Always shut down cleanly** ([Operation](../04-OPERATION/README.md))
    ```bash
    # Inside guest
    shutdown -h now
@@ -426,4 +426,4 @@ docker compose restart
 
 ---
 
-[← Back to Documentation Index](../INDEX.md)
+[← Back to Documentation Index](../index.md)

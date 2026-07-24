@@ -1133,7 +1133,7 @@ This QEMU configuration provides **production-grade performance and compatibilit
 **Next Steps**:
 - See [CONTROL-PLANE.md](CONTROL-PLANE.md) for automation and access methods
 - See [../01-GETTING-STARTED/QUICKSTART.md](../01-GETTING-STARTED/QUICKSTART.md) for usage
-- See [../06-TROUBLESHOOTING/](../06-TROUBLESHOOTING/) for detailed problem-solving
+- See [../../06-TROUBLESHOOTING/README.md](../../06-TROUBLESHOOTING/README.md) for detailed problem-solving
 
 ---
 

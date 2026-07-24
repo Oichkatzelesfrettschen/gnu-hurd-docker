@@ -21,12 +21,12 @@ Performed comprehensive scan and repair of cross-references in consolidated docu
 - `04-OPERATION/deployment/DEPLOYMENT.md` - Fixed CREDENTIALS.md reference
 - `08-REFERENCE/guidelines/CROSS-LINKING.md` - Fixed multiple example links
 - `08-REFERENCE/maps/REPOSITORY-INDEX.md` - Fixed 15 document references
-- `INDEX.md` - Fixed section references
+- `index.md` - Fixed section references
 - `archive/deprecated/index.md` - Fixed historical references
 
 ### 2. Case-Sensitivity Fixes
 
-Fixed 21 case-sensitivity issues in INDEX.md where lowercase filenames didn't match actual uppercase files:
+Fixed 21 case-sensitivity issues in index.md where lowercase filenames didn't match actual uppercase files:
 - `installation.md` → `INSTALLATION.md`
 - `requirements.md` → `REQUIREMENTS.md`
 - `quickstart.md` → `QUICKSTART.md`

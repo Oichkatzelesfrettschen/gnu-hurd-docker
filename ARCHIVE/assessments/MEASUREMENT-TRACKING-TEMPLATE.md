@@ -89,7 +89,7 @@ Primary README:             [baseline: 7/7] → ____/7
   - License:                [✓] → [✓/✗]
   - Links/References:       [✓] → [✓/✗]
 
-docs/INDEX.md:              [baseline: 6/7] → ____/7
+docs/index.md:              [baseline: 6/7] → ____/7
 Getting Started README:     [baseline: 5/7] → ____/7
 ```
 

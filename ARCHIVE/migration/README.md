@@ -33,7 +33,7 @@ These documents served critical purposes during migration but are now:
 - **Reference**: Useful for understanding migration choices
 - **Transitional**: Temporary guides during migration period
 
-**For current documentation**: See `/docs/INDEX.md`
+**For current documentation**: See `/docs/index.md`
 
 ---
 
@@ -170,7 +170,7 @@ These documents served critical purposes during migration but are now:
 
 **Impact**: 55% reduction in file count, vastly improved usability
 
-**Reference**: [docs/INDEX.md](../../docs/INDEX.md)
+**Reference**: [docs/index.md](../../docs/index.md)
 
 ---
 
@@ -236,7 +236,7 @@ debian-hurd-amd64-20250807.img
 - CI/CD configuration
 - Troubleshooting
 
-**Instead, Use**: Current documentation at `/docs/INDEX.md`
+**Instead, Use**: Current documentation at `/docs/index.md`
 
 ---
 
@@ -280,7 +280,7 @@ debian-hurd-amd64-20250807.img
 
 **For historical context**: Read the archived documents in this directory
 
-**For current usage**: See [docs/INDEX.md](../../docs/INDEX.md)
+**For current usage**: See [docs/index.md](../../docs/index.md)
 
 **For migration rationale**: See [docs/07-RESEARCH/](../../docs/07-RESEARCH/)
 
@@ -288,4 +288,4 @@ debian-hurd-amd64-20250807.img
 
 ---
 
-[← Back to Repository Root](../../README.md) | [→ Current Documentation](../../docs/INDEX.md)
+[← Back to Repository Root](../../README.md) | [→ Current Documentation](../../docs/index.md)

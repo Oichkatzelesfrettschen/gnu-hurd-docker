@@ -60,12 +60,12 @@ CREDENTIALS.md                [■■■■■] → 08-REFERENCE/CREDENTIALS.md
 
 PROJECT MANAGEMENT (Obsolete)
 ------------------------------
-PROJECT-SUMMARY.md            [■■■■■] → INDEX.md (superseded)
+PROJECT-SUMMARY.md            [■■■■■] → index.md (superseded)
 IMPLEMENTATION-COMPLETE.md    [     ] → (obsolete status report)
 DEPLOYMENT-STATUS.md          [     ] → (obsolete status report)
 EXECUTION-SUMMARY.md          [     ] → (obsolete status report)
 SESSION-COMPLETION-REPORT.md  [     ] → (obsolete session report)
-REPOSITORY-INDEX.md           [■■■■■] → INDEX.md (superseded)
+REPOSITORY-INDEX.md           [■■■■■] → index.md (superseded)
 STRUCTURAL-MAP.md             [■    ] → (historical reference)
 
 RESEARCH & ANALYSIS (Unique)
@@ -80,7 +80,7 @@ COMPREHENSIVE-ANALYSIS-*.md      [     ] → Keep/Archive (planning doc)
 SPECIAL FILES (Mixed)
 ---------------------
 index.md                      [     ] → Keep (entry point)
-INDEX.md                      [     ] → Keep (navigation)
+index.md                      [     ] → Keep (navigation)
 CROSS-LINKING-GUIDELINES.md  [     ] → Keep (standards)
 MCP-TOOLS-ASSESSMENT-MATRIX.md [     ] → Move to 07-RESEARCH/
 MCP-SERVERS-SETUP.md         [■■   ] → Move to 03-CONFIGURATION/

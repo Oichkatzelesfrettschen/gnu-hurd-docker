@@ -48,7 +48,7 @@ NAVIGATION PATTERNS
 
 At the top of deep documents:
 ```markdown
-[Docs](../) > [Getting Started](../01-getting-started/) > Installation
+[Docs](../README.md) > [Getting Started](../01-getting-started/) > Installation
 ```
 
 ### 2. SEE ALSO SECTIONS
@@ -99,7 +99,7 @@ In CI/CD pipeline:
 - [ ] All internal links use relative paths
 - [ ] All external links use https where possible
 - [ ] Anchor links match actual section headers
-- [ ] No orphaned documents (unreachable from INDEX.md)
+- [ ] No orphaned documents (unreachable from index.md)
 - [ ] No circular dependencies
 
 ================================================================================
@@ -144,7 +144,7 @@ Before moving a file:
 ### 2. WHEN RENAMING FILES
 
 1. Update all internal references
-2. Update INDEX.md
+2. Update index.md
 3. Update section README.md files
 4. Check CI/CD scripts for hardcoded paths
 

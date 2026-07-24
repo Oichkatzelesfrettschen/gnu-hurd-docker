@@ -161,7 +161,7 @@ Status: In Progress
 - [x] Create directory structure under docs/
 - [x] Create section README.md files
 - [x] Create document templates in assets/templates/
-- [ ] Set up INDEX.md master navigation
+- [ ] Set up index.md master navigation
 
 ## Phase 2: Content Consolidation [IN PROGRESS]
 - [ ] Map existing 58 files to new structure
@@ -213,7 +213,7 @@ Status: In Progress
 
 ## Phase 5: Validation [TODO]
 - [ ] Run markdown link checker
-- [ ] Verify all files accessible from INDEX.md
+- [ ] Verify all files accessible from index.md
 - [ ] Check for orphaned documents
 - [ ] Test navigation paths for each audience
 
@@ -270,7 +270,7 @@ Purpose: Track where each file should be migrated
 | CONTROL-PLANE-IMPLEMENTATION.md | docs/00-overview/ARCHITECTURE.md | Merge |
 | PROJECT-SUMMARY.md | docs/00-overview/README.md | Merge |
 | STRUCTURAL-MAP.md | docs/00-overview/ARCHITECTURE.md | Merge |
-| REPOSITORY-INDEX.md | docs/INDEX.md | Transform |
+| REPOSITORY-INDEX.md | docs/index.md | Transform |
 | requirements.md | docs/01-getting-started/REQUIREMENTS.md | Move |
 | MANUAL-SETUP-REQUIRED.md | docs/01-getting-started/INSTALLATION.md | Merge |
 
