@@ -45,8 +45,11 @@ jobs:
       - name: Setup environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck python3 python3-pip
-          pip install pyyaml
+          # PyYAML and ShellCheck both come from apt: a system-level pip install
+          # is refused on the runner image under PEP 668, which would abort setup
+          # before any gate runs.
+          sudo apt-get install -y shellcheck python3 python3-yaml
+          shellcheck --version
 
       - name: Validate Dockerfile
         run: |
