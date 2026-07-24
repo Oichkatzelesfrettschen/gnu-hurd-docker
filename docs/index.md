@@ -169,7 +169,7 @@ New to GNU/Hurd Docker? Follow this path:
 ## Additional Resources
 
 ### Internal Links
-- **[Repository debt inventory](audits/repo-debt-inventory-script-graph-boot-evidence.md)** - Dependency graph, gate coverage measurements, and two-arm boot evidence; the canonical image halts in `fsck` and the release gate references a deleted script
+- **[Repository debt inventory](audits/repo-debt-inventory-script-graph-boot-evidence.md)** - Dependency graph, gate coverage measurements, and two-arm boot evidence recorded against commit `807aec5`. The findings are a dated baseline; `ROADMAP.md` carries their current remediation state
 - **[Archive](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/tree/main/docs/archive)** - Historical documentation and versions
 - **[Assets](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/tree/main/docs/assets)** - Templates and migration tools
 - **[Project Root](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/README.md)** - Main project directory
