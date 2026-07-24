@@ -110,7 +110,7 @@ jobs:
           Using Docker Compose (Recommended):
             1. Download this release's debian-hurd-amd64.qcow2 file
             2. Place it in the 'images' directory of the repository
-            3. Run: ./scripts/docker-orchestration.sh up
+            3. Run: make up
             4. Connect via SSH: ssh -p 2222 root@localhost
 
           Using QEMU directly:
