@@ -269,13 +269,21 @@ that carries the same intent, where one exists.
 | `QEMU_NIC` | `QEMU_NET_MODEL` | Selects the network device model. |
 | `QEMU_FSCK` | none | The guest runs `fsck` from its own boot scripts. Repair the filesystem offline with `scripts/guestfish-check-guest-filesystem.sh`. |
 | `QEMU_DISK_SIZE` | none | Disk size is a property of the qcow2, changed with `qemu-img resize`. |
-| `QEMU_MONITOR`, `QEMU_LOG` | `MONITOR_PORT`, `DISABLE_MONITOR` | The monitor is exposed over TCP rather than a socket path. |
+| `QEMU_MONITOR` | `MONITOR_PORT`, `DISABLE_MONITOR` | The monitor is exposed over TCP rather than a socket path. |
+| `QEMU_LOG` | none | The guest-error log path is fixed at `/tmp/qemu-guest-errors.log` inside the container. |
 
-To regenerate the authoritative list:
+To list candidate names while auditing this table:
 
 ```sh
 grep -oP '\$\{\K[A-Z][A-Z0-9_]*' entrypoint.sh | sort -u
 ```
+
+This is a discovery aid rather than a generated contract. It matches only braced
+`${NAME}` expansions, so it misses bare `$NAME` reads, and it cannot separate
+externally supplied configuration from variables the script sets for itself.
+Treat its output as a list to check by hand. Making this reference generated and
+enforceable needs an explicit configuration schema that `entrypoint.sh` and this
+document both derive from.
 
 ## References
 
