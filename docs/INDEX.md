@@ -169,6 +169,7 @@ New to GNU/Hurd Docker? Follow this path:
 ## Additional Resources
 
 ### Internal Links
+- **[Repository debt inventory](audits/repo-debt-inventory-script-graph-boot-evidence.md)** - Dependency graph, gate coverage measurements, and two-arm boot evidence; the canonical image halts in `fsck` and the release gate references a deleted script
 - **[Archive](archive/)** - Historical documentation and versions
 - **[Assets](assets/)** - Templates and migration tools
 - **[Project Root](../)** - Main project directory
