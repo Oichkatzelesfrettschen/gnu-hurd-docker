@@ -75,9 +75,13 @@ jobs:
         run: |
           echo "=== Verifying the archive a user actually downloads ==="
           VER="${{ steps.version.outputs.version_clean }}"
+          # The packaged validator runs ShellCheck and parses the Compose files
+          # with PyYAML, exiting 1 if either is unavailable.  Both come from apt:
+          # a system-level `pip install` is refused on the runner image under
+          # PEP 668, which would abort this step before the gate runs at all.
           sudo apt-get update
-          sudo apt-get install -y shellcheck
-          python3 -m pip install --quiet pyyaml
+          sudo apt-get install -y shellcheck python3-yaml
+          shellcheck --version
 
           workdir="$(mktemp -d)"
           echo "extract_dir=$workdir" >> "$GITHUB_ENV"
