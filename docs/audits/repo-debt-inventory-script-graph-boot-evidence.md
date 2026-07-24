@@ -6,6 +6,10 @@ the repository's own gates, and a two-arm instrumented QEMU boot capture against
 overlays.
 Repository state: branch `main` at `807aec5`, working tree clean.
 
+Every count and command result below is measured against that commit. This is a dated
+baseline rather than a live inventory: once the follow-up changes land, the numbers here
+describe the state that motivated them, not the state of the tree.
+
 This audit reports measured integers and reproduce commands. Every claim below carries the
 command that produces it. Claims that require a booted guest are marked as such and are
 backed by the capture in the boot evidence section; claims that no capture reached are
