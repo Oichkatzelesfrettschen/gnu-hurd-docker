@@ -48,7 +48,7 @@ NAVIGATION PATTERNS
 
 At the top of deep documents:
 ```markdown
-[Docs](../) > [Getting Started](../01-getting-started/) > Installation
+[Docs](../README.md) > [Getting Started](../01-getting-started/) > Installation
 ```
 
 ### 2. SEE ALSO SECTIONS

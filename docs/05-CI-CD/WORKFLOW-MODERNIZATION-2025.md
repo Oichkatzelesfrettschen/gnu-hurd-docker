@@ -336,7 +336,7 @@ fi
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub Actions Best Practices](./GITHUB-ACTIONS-BEST-PRACTICES.md)
 - [Workflow Advanced Guide](./WORKFLOWS-ADVANCED.md)
-- [CHANGELOG.md](../../CHANGELOG.md)
+- [CHANGELOG.md](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/CHANGELOG.md)
 
 ## Changelog
 

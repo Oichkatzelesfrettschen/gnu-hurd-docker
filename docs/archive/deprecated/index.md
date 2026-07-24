@@ -2,7 +2,7 @@
 
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)](https://github.com/oaich/gnu-hurd-docker)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://docs.docker.com/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/LICENSE)
 
 Run the complete GNU/Hurd microkernel (i386) inside Docker containers using QEMU emulation.
 
@@ -307,13 +307,13 @@ All configuration files validated:
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/LICENSE) for details.
 
 ## Support
 
 - **Issues:** Open a GitHub issue for bugs or feature requests
 - **Discussions:** Use GitHub Discussions for questions
-- **Documentation:** See [docs/](docs/) for detailed guides
+- **Documentation:** See [docs/](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/docs) for detailed guides
 
 ## References
 

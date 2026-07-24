@@ -23,17 +23,17 @@ New to GNU/Hurd Docker? Follow this path:
 
 ### For Different Roles
 
-- **👨‍💻 Developers**: Start with [Architecture](02-ARCHITECTURE/) → [Configuration](03-CONFIGURATION/) → [CI/CD](05-CI-CD/)
-- **Researchers**: Focus on [Research & Lessons](07-RESEARCH-AND-LESSONS/) → [Architecture](02-ARCHITECTURE/)
-- **Operations**: Priority on [Operation](04-OPERATION/) → [Troubleshooting](06-TROUBLESHOOTING/)
-- **Learners**: Begin with [Getting Started](01-GETTING-STARTED/) → [Reference](08-REFERENCE/)
+- **👨‍💻 Developers**: Start with [Architecture](02-ARCHITECTURE/README.md) → [Configuration](03-CONFIGURATION/README.md) → [CI/CD](05-CI-CD/README.md)
+- **Researchers**: Focus on [Research & Lessons](07-RESEARCH-AND-LESSONS/README.md) → [Architecture](02-ARCHITECTURE/README.md)
+- **Operations**: Priority on [Operation](04-OPERATION/README.md) → [Troubleshooting](06-TROUBLESHOOTING/README.md)
+- **Learners**: Begin with [Getting Started](01-GETTING-STARTED/README.md) → [Reference](08-REFERENCE/README.md)
 
 ### Navigation Tips
 
 - Each section (01-08) is self-contained with its own README
 - Documents are cross-linked where relevant
 - Use the Quick Reference section below for common tasks
-- Historical content is preserved in [archive/](archive/)
+- Historical content is preserved in [archive/](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/tree/main/docs/archive)
 
 ---
 
@@ -170,9 +170,9 @@ New to GNU/Hurd Docker? Follow this path:
 
 ### Internal Links
 - **[Repository debt inventory](audits/repo-debt-inventory-script-graph-boot-evidence.md)** - Dependency graph, gate coverage measurements, and two-arm boot evidence; the canonical image halts in `fsck` and the release gate references a deleted script
-- **[Archive](archive/)** - Historical documentation and versions
-- **[Assets](assets/)** - Templates and migration tools
-- **[Project Root](../)** - Main project directory
+- **[Archive](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/tree/main/docs/archive)** - Historical documentation and versions
+- **[Assets](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/tree/main/docs/assets)** - Templates and migration tools
+- **[Project Root](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/README.md)** - Main project directory
 
 ### External Resources
 - [GNU/Hurd Official Site](https://www.gnu.org/software/hurd/)
@@ -195,10 +195,10 @@ To contribute to this documentation:
 
 Based on your role and needs:
 
-1. **New Users** → Start with [Getting Started](01-GETTING-STARTED/)
-2. **Developers** → Dive into [Architecture](02-ARCHITECTURE/) and [Configuration](03-CONFIGURATION/)
-3. **Operations** → Focus on [Operation](04-OPERATION/) and [Troubleshooting](06-TROUBLESHOOTING/)
-4. **Researchers** → Explore [Research & Lessons](07-RESEARCH-AND-LESSONS/)
+1. **New Users** → Start with [Getting Started](01-GETTING-STARTED/README.md)
+2. **Developers** → Dive into [Architecture](02-ARCHITECTURE/README.md) and [Configuration](03-CONFIGURATION/README.md)
+3. **Operations** → Focus on [Operation](04-OPERATION/README.md) and [Troubleshooting](06-TROUBLESHOOTING/README.md)
+4. **Researchers** → Explore [Research & Lessons](07-RESEARCH-AND-LESSONS/README.md)
 
 ---
 

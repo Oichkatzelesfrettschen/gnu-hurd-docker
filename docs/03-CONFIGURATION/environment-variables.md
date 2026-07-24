@@ -288,8 +288,8 @@ document both derive from.
 ## References
 
 - [RESOURCE-SIZING.md](RESOURCE-SIZING.md) - Detailed resource allocation guidance
-- [entrypoint.sh](../../entrypoint.sh) - Source of truth for variable usage
-- [compose.yaml](../../compose.yaml) - Default values
+- [entrypoint.sh](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/entrypoint.sh) - Source of truth for variable usage
+- [compose.yaml](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/compose.yaml) - Default values
 - [OPTIMIZATION-2025.md](../02-ARCHITECTURE/qemu/OPTIMIZATION-2025.md) - Performance tuning
 
 ---

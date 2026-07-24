@@ -74,7 +74,7 @@ podman run -d --rm --name hurd-vm \
   *"Starting OpenBSD Secure Shell server: sshd."* with no crash and
   end-to-end `ssh root@:2222` returning a live shell.
 * **Kernel-side proper fix**: file
-  [`upstream-bug-reports/openssl-hurd-simd-sshd-crash.md`](upstream-bug-reports/openssl-hurd-simd-sshd-crash.md)
+  [`upstream-bug-reports/openssl-hurd-simd-sshd-crash.md`](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/upstream-bug-reports/openssl-hurd-simd-sshd-crash.md)
   describes the suspected `i386/i386/fpu.c:fpinherit` issue in
   GNU Mach.
 * **Also**: Debian bug

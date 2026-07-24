@@ -31,39 +31,191 @@ theme:
     - content.code.copy
     - content.code.annotate
 
+# Files the build skips entirely.  Archived and legacy documents record the
+# pre-consolidation layout, so their links point at paths that no longer exist and
+# are correct as history rather than as guidance.  Document templates carry
+# placeholder links (../another-section/) that resolve only once a template is
+# copied and filled in.  Both are preserved in the repository and omitted from the
+# published site.
+exclude_docs: |
+  assets/templates/**
+  **/archive/**
+  archive/**
+
+# Documents that are built and reachable by link but kept out of the navigation.
+# Session reports and the link-fix and consolidation records describe past work
+# rather than current usage.  Declaring them keeps `mkdocs build --strict`
+# meaningful: an omission that is not listed here is a real error.
+not_in_nav: |
+  /reports/**
+  /CONSOLIDATION-FINAL-REPORT.md
+  /CROSS-REFERENCE-FIX-SUMMARY.md
+  /LINK-FIX-REPORT.md
+
 nav:
-  - Home: index.md
-  - Quick Start:
-      - Overview: QUICK_START_GUIDE.md
-      - Kernel Fix: QUICK-START-KERNEL-FIX.txt
+  - Home: INDEX.md
+  - Getting Started:
+      - Overview: 01-GETTING-STARTED/README.md
+      - Installation: 01-GETTING-STARTED/INSTALLATION.md
+      - Latest IMAGE Workflow: 01-GETTING-STARTED/LATEST-IMAGE-WORKFLOW.md
+      - Podman Support: 01-GETTING-STARTED/PODMAN-SUPPORT.md
+      - Podman Workflow: 01-GETTING-STARTED/PODMAN-WORKFLOW.md
+      - Quickstart: 01-GETTING-STARTED/QUICKSTART.md
+      - Requirements: 01-GETTING-STARTED/REQUIREMENTS.md
+      - Standalone QEMU: 01-GETTING-STARTED/STANDALONE-QEMU.md
+      - USAGE MODES: 01-GETTING-STARTED/USAGE-MODES.md
+      - Docker Compose Basics: 01-GETTING-STARTED/docker-compose-basics.md
+      - First Steps: 01-GETTING-STARTED/first-steps.md
   - Architecture:
-      - Design Overview: ARCHITECTURE.md
-      - Deployment Guide: DEPLOYMENT.md
-      - QEMU Research: MACH_QEMU_RESEARCH_REPORT.md
-  - Mach Variants:
-      - Overview: mach-variants/INDEX.md
-      - GNU Mach: mach-variants/GNU-MACH.md
-      - Darwin/XNU: mach-variants/DARWIN-XNU.md
-      - OSF/1 Mach: mach-variants/OSF1-MACH.md
-      - OpenMach: mach-variants/OPENMACH.md
-      - xMach: mach-variants/XMACH.md
-      - Comparative Analysis: mach-variants/COMPARATIVE-ANALYSIS.md
-  - Development:
-      - User Setup: USER-SETUP.md
-      - Credentials: CREDENTIALS.md
-      - Troubleshooting: TROUBLESHOOTING.md
-  - Research:
-      - Research Findings: RESEARCH-FINDINGS.md
-      - Kernel Standardization: KERNEL-STANDARDIZATION-PLAN.md
-      - Kernel Fix Guide: KERNEL-FIX-GUIDE.md
-      - Tools Assessment: MCP-TOOLS-ASSESSMENT-MATRIX.md
-  - Status Reports:
-      - Implementation: IMPLEMENTATION-COMPLETE.md
-      - Deployment: DEPLOYMENT-STATUS.md
-      - Execution Summary: EXECUTION-SUMMARY.md
-      - Session Report: SESSION-COMPLETION-REPORT.md
-      - Validation: VALIDATION-AND-TROUBLESHOOTING.md
-      - Analysis Plan: COMPREHENSIVE-ANALYSIS-AND-IMPLEMENTATION-PLAN.md
+      - Overview: 02-ARCHITECTURE/README.md
+      - Control PLANE: 02-ARCHITECTURE/CONTROL-PLANE.md
+      - Overview: 02-ARCHITECTURE/OVERVIEW.md
+      - QEMU Configuration: 02-ARCHITECTURE/QEMU-CONFIGURATION.md
+      - System Design: 02-ARCHITECTURE/SYSTEM-DESIGN.md
+      - Filesystem Layout: 02-ARCHITECTURE/filesystem-layout.md
+      - Network Architecture: 02-ARCHITECTURE/network-architecture.md
+      - Implementation: 02-ARCHITECTURE/control-plane/IMPLEMENTATION.md
+      - Custom Features: 02-ARCHITECTURE/features/CUSTOM-FEATURES.md
+      - Libvirt GUIDE: 02-ARCHITECTURE/libvirt/LIBVIRT-GUIDE.md
+      - Optimization 2025: 02-ARCHITECTURE/qemu/OPTIMIZATION-2025.md
+      - Tuning: 02-ARCHITECTURE/qemu/TUNING.md
+  - Configuration:
+      - Overview: 03-CONFIGURATION/README.md
+      - APT Sources: 03-CONFIGURATION/APT-SOURCES.md
+      - Credentials: 03-CONFIGURATION/CREDENTIALS.md
+      - Custom Features: 03-CONFIGURATION/CUSTOM-FEATURES.md
+      - PORT Forwarding: 03-CONFIGURATION/PORT-FORWARDING.md
+      - PORT Mapping: 03-CONFIGURATION/PORT-MAPPING.md
+      - Resource Sizing: 03-CONFIGURATION/RESOURCE-SIZING.md
+      - USER Configuration: 03-CONFIGURATION/USER-CONFIGURATION.md
+      - Environment Variables: 03-CONFIGURATION/environment-variables.md
+      - Mcp Servers: 03-CONFIGURATION/mcp-servers.md
+      - MCP Servers: 03-CONFIGURATION/development/MCP-SERVERS.md
+      - SETUP: 03-CONFIGURATION/user/SETUP.md
+  - Operation:
+      - Overview: 04-OPERATION/README.md
+      - Access GUIDE: 04-OPERATION/ACCESS-GUIDE.md
+      - CLI Orchestration: 04-OPERATION/CLI-ORCHESTRATION.md
+      - Docker QEMU CLI: 04-OPERATION/DOCKER-QEMU-CLI.md
+      - GUI SETUP: 04-OPERATION/GUI-SETUP.md
+      - HOST Network INFO: 04-OPERATION/HOST-NETWORK-INFO.md
+      - Interactive Access: 04-OPERATION/INTERACTIVE-ACCESS.md
+      - Manual SETUP: 04-OPERATION/MANUAL-SETUP.md
+      - Monitoring: 04-OPERATION/MONITORING.md
+      - Remote NOVNC: 04-OPERATION/REMOTE-NOVNC.md
+      - Snapshots: 04-OPERATION/SNAPSHOTS.md
+      - Translators: 04-OPERATION/TRANSLATORS.md
+      - Workstation XFCE: 04-OPERATION/WORKSTATION-XFCE.md
+      - Backup Restore: 04-OPERATION/backup-restore.md
+      - Performance Tuning: 04-OPERATION/performance-tuning.md
+      - Testing: 04-OPERATION/testing.md
+      - Deployment: 04-OPERATION/deployment/DEPLOYMENT.md
+      - Status: 04-OPERATION/deployment/STATUS.md
+      - LOCAL Testing: 04-OPERATION/testing/LOCAL-TESTING.md
+  - CI/CD:
+      - Overview: 05-CI-CD/README.md
+      - Advanced Security: 05-CI-CD/ADVANCED-SECURITY.md
+      - Compose Variants: 05-CI-CD/COMPOSE-VARIANTS.md
+      - Docker Compose GUIDE: 05-CI-CD/DOCKER-COMPOSE-GUIDE.md
+      - Github Actions BEST Practices: 05-CI-CD/GITHUB-ACTIONS-BEST-PRACTICES.md
+      - GUIDE: 05-CI-CD/GUIDE.md
+      - Provisioned IMAGE: 05-CI-CD/PROVISIONED-IMAGE.md
+      - SETUP: 05-CI-CD/SETUP.md
+      - Workflow Modernization 2025: 05-CI-CD/WORKFLOW-MODERNIZATION-2025.md
+      - Workflows Advanced: 05-CI-CD/WORKFLOWS-ADVANCED.md
+      - Workflows: 05-CI-CD/WORKFLOWS.md
+      - Image Building: 05-CI-CD/image-building.md
+      - Release Process: 05-CI-CD/release-process.md
+      - Testing Automation: 05-CI-CD/testing-automation.md
+      - Building: 05-CI-CD/images/BUILDING.md
+      - Provisioned IMAGE: 05-CI-CD/images/PROVISIONED-IMAGE.md
+  - Troubleshooting:
+      - Overview: 06-TROUBLESHOOTING/README.md
+      - Common Issues: 06-TROUBLESHOOTING/COMMON-ISSUES.md
+      - FSCK Errors: 06-TROUBLESHOOTING/FSCK-ERRORS.md
+      - General: 06-TROUBLESHOOTING/GENERAL.md
+      - Playbook: 06-TROUBLESHOOTING/PLAYBOOK.md
+      - SSH Issues: 06-TROUBLESHOOTING/SSH-ISSUES.md
+      - Validation: 06-TROUBLESHOOTING/VALIDATION.md
+      - Kernel Fixes: 06-TROUBLESHOOTING/kernel-fixes.md
+      - Network Debugging: 06-TROUBLESHOOTING/network-debugging.md
+      - Performance Issues: 06-TROUBLESHOOTING/performance-issues.md
+      - FSCK FIX: 06-TROUBLESHOOTING/filesystem/FSCK-FIX.md
+      - IO ERROR FIX: 06-TROUBLESHOOTING/filesystem/IO-ERROR-FIX.md
+      - FIX GUIDE: 06-TROUBLESHOOTING/kernel/FIX-GUIDE.md
+      - SSH Detailed: 06-TROUBLESHOOTING/network/SSH-DETAILED.md
+  - Research and Lessons:
+      - Overview: 07-RESEARCH-AND-LESSONS/README.md
+      - Development Environment: 07-RESEARCH-AND-LESSONS/DEVELOPMENT-ENVIRONMENT.md
+      - Findings: 07-RESEARCH-AND-LESSONS/FINDINGS.md
+      - Implementation Complete: 07-RESEARCH-AND-LESSONS/IMPLEMENTATION-COMPLETE.md
+      - Kernel Standardization: 07-RESEARCH-AND-LESSONS/KERNEL-STANDARDIZATION.md
+      - Lessons Learned: 07-RESEARCH-AND-LESSONS/LESSONS-LEARNED.md
+      - MACH QEMU Research: 07-RESEARCH-AND-LESSONS/MACH-QEMU-RESEARCH.md
+      - MACH QEMU: 07-RESEARCH-AND-LESSONS/MACH-QEMU.md
+      - PHASE 4 5 Completion Report: 07-RESEARCH-AND-LESSONS/PHASE-4-5-COMPLETION-REPORT.md
+      - PHASE 6 Validation Report: 07-RESEARCH-AND-LESSONS/PHASE-6-VALIDATION-REPORT.md
+      - PHASE 7 Testing AND Validation: 07-RESEARCH-AND-LESSONS/PHASE-7-TESTING-AND-VALIDATION.md
+      - Project Summary: 07-RESEARCH-AND-LESSONS/PROJECT-SUMMARY.md
+      - Session Completion Summary: 07-RESEARCH-AND-LESSONS/SESSION-COMPLETION-SUMMARY.md
+      - X86 64 Migration: 07-RESEARCH-AND-LESSONS/X86_64-MIGRATION.md
+      - Implementation Notes: 07-RESEARCH-AND-LESSONS/implementation-notes.md
+      - Known Issues Research: 07-RESEARCH-AND-LESSONS/known-issues-research.md
+      - Mach Variants Research: 07-RESEARCH-AND-LESSONS/mach-variants-research.md
+      - Performance Analysis: 07-RESEARCH-AND-LESSONS/performance-analysis.md
+      - Security Considerations: 07-RESEARCH-AND-LESSONS/security-considerations.md
+      - Testing Reports: 07-RESEARCH-AND-LESSONS/testing-reports.md
+      - Overview: 07-RESEARCH-AND-LESSONS/sessions/README.md
+      - Comprehensive PLAN: 07-RESEARCH-AND-LESSONS/analysis/COMPREHENSIVE-PLAN.md
+      - Comparative Analysis: 07-RESEARCH-AND-LESSONS/mach-variants/COMPARATIVE-ANALYSIS.md
+      - Darwin XNU: 07-RESEARCH-AND-LESSONS/mach-variants/DARWIN-XNU.md
+      - GNU MACH: 07-RESEARCH-AND-LESSONS/mach-variants/GNU-MACH.md
+      - INDEX: 07-RESEARCH-AND-LESSONS/mach-variants/INDEX.md
+      - Openmach: 07-RESEARCH-AND-LESSONS/mach-variants/OPENMACH.md
+      - OSF1 MACH: 07-RESEARCH-AND-LESSONS/mach-variants/OSF1-MACH.md
+      - XMACH: 07-RESEARCH-AND-LESSONS/mach-variants/XMACH.md
+      - Completion Report: 07-RESEARCH-AND-LESSONS/sessions/COMPLETION-REPORT.md
+      - Execution Summary: 07-RESEARCH-AND-LESSONS/sessions/EXECUTION-SUMMARY.md
+      - HURD Report: 07-RESEARCH-AND-LESSONS/testing/HURD-REPORT.md
+      - Results: 07-RESEARCH-AND-LESSONS/testing/RESULTS.md
+      - MCP Assessment: 07-RESEARCH-AND-LESSONS/tools/MCP-ASSESSMENT.md
+  - Reference:
+      - Overview: 08-REFERENCE/README.md
+      - Credentials: 08-REFERENCE/CREDENTIALS.md
+      - Package LIBS Analysis: 08-REFERENCE/PACKAGE-LIBS-ANALYSIS.md
+      - Package LIBS QUICK Reference: 08-REFERENCE/PACKAGE-LIBS-QUICK-REFERENCE.md
+      - QUICK Reference: 08-REFERENCE/QUICK-REFERENCE.md
+      - Scripts: 08-REFERENCE/SCRIPTS.md
+      - TRAP Handlers Implementation: 08-REFERENCE/TRAP-HANDLERS-IMPLEMENTATION.md
+      - TRAP Handlers QUICK Reference: 08-REFERENCE/TRAP-HANDLERS-QUICK-REFERENCE.md
+      - Api Reference: 08-REFERENCE/api-reference.md
+      - Glossary: 08-REFERENCE/glossary.md
+      - Guidelines: 08-REFERENCE/guidelines.md
+      - Maps: 08-REFERENCE/maps.md
+      - Overview: 08-REFERENCE/maps/README.md
+      - X86 64 Validation: 08-REFERENCE/checklists/X86_64-VALIDATION.md
+      - CROSS Linking: 08-REFERENCE/guidelines/CROSS-LINKING.md
+      - Deployment Status: 08-REFERENCE/maps/DEPLOYMENT-STATUS.md
+      - MACH QEMU Research Report: 08-REFERENCE/maps/MACH_QEMU_RESEARCH_REPORT.md
+      - MCP TOOLS Assessment Matrix: 08-REFERENCE/maps/MCP-TOOLS-ASSESSMENT-MATRIX.md
+      - Repository INDEX: 08-REFERENCE/maps/REPOSITORY-INDEX.md
+      - Session Completion Report: 08-REFERENCE/maps/SESSION-COMPLETION-REPORT.md
+      - Structural MAP: 08-REFERENCE/maps/STRUCTURAL-MAP.md
+      - Validation AND Troubleshooting: 08-REFERENCE/maps/VALIDATION-AND-TROUBLESHOOTING.md
+  - 09 Testing Roadmap: 09-TESTING-ROADMAP.md
+  - 10 LLM Control GUIDE: 10-LLM-CONTROL-GUIDE.md
+  - Audits:
+      - AUDIT Report 2025 11 08: audits/AUDIT-REPORT-2025-11-08.md
+      - AUDIT Summary: audits/AUDIT-SUMMARY.md
+      - Baseline Summary: audits/BASELINE-SUMMARY.md
+      - CLI Orchestration Session 2025 11 17: audits/CLI-ORCHESTRATION-SESSION-2025-11-17.md
+      - Documentation AUDIT Report: audits/DOCUMENTATION-AUDIT-REPORT.md
+      - Documentation Improvement Summary: audits/DOCUMENTATION-IMPROVEMENT-SUMMARY.md
+      - HURD 2025 Update Correction: audits/HURD-2025-UPDATE-CORRECTION.md
+      - HURD 2025 Update Synthesis: audits/HURD-2025-UPDATE-SYNTHESIS.md
+      - HURD AMD64 Latest AS OF 2026 02 24: audits/HURD-AMD64-LATEST-AS-OF-2026-02-24.md
+      - LINK SCAN Report: audits/LINK-SCAN-REPORT.md
+      - Workflow AND CLI Improvements 2025: audits/WORKFLOW-AND-CLI-IMPROVEMENTS-2025.md
 
 plugins:
   - search

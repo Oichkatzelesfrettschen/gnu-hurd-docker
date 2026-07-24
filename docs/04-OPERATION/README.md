@@ -12,7 +12,7 @@ This section covers daily operations for managing the GNU/Hurd x86_64 Docker env
 
 **Audience**: All users (daily operations)
 
-**Prerequisites**: Completed [Getting Started](../01-GETTING-STARTED/) and basic [Configuration](../03-CONFIGURATION/)
+**Prerequisites**: Completed [Getting Started](../01-GETTING-STARTED/README.md) and basic [Configuration](../03-CONFIGURATION/README.md)
 
 ---
 

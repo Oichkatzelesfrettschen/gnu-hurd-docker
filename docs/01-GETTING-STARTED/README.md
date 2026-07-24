@@ -45,18 +45,18 @@ This section provides everything you need to get started with the GNU/Hurd x86_6
 ## Quick Navigation
 
 **Next Steps After Getting Started**:
-- [Architecture](../02-ARCHITECTURE/) - Understand system design
-- [Configuration](../03-CONFIGURATION/) - Customize your setup
-- [Operation](../04-OPERATION/) - Day-to-day usage
+- [Architecture](../02-ARCHITECTURE/README.md) - Understand system design
+- [Configuration](../03-CONFIGURATION/README.md) - Customize your setup
+- [Operation](../04-OPERATION/README.md) - Day-to-day usage
 
 **Reference Materials**:
-- [Troubleshooting](../06-TROUBLESHOOTING/) - Fix common issues
+- [Troubleshooting](../06-TROUBLESHOOTING/README.md) - Fix common issues
 - [Scripts Reference](../08-REFERENCE/SCRIPTS.md) - Automation tools
 - [Credentials](../08-REFERENCE/CREDENTIALS.md) - Access and security
 
 **Advanced Topics**:
-- [CI/CD](../05-CI-CD/) - Automated workflows
-- [Research](../07-RESEARCH-AND-LESSONS/) - Deep dives and lessons learned
+- [CI/CD](../05-CI-CD/README.md) - Automated workflows
+- [Research](../07-RESEARCH-AND-LESSONS/README.md) - Deep dives and lessons learned
 
 ---
 
@@ -74,9 +74,9 @@ This section provides everything you need to get started with the GNU/Hurd x86_6
    - Verify functionality
 
 3. **Next Steps**
-   - Customize configuration ([Configuration](../03-CONFIGURATION/))
-   - Learn daily operations ([Operation](../04-OPERATION/))
-   - Explore advanced features ([CI/CD](../05-CI-CD/))
+   - Customize configuration ([Configuration](../03-CONFIGURATION/README.md))
+   - Learn daily operations ([Operation](../04-OPERATION/README.md))
+   - Explore advanced features ([CI/CD](../05-CI-CD/README.md))
 
 ---
 

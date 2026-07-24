@@ -259,7 +259,7 @@ scripts/
 - **QEMU Parameters:** [docs/ARCHITECTURE.md](../../02-ARCHITECTURE/SYSTEM-DESIGN.md) - System Parameters
 
 ### Disk Images
-- **Download:** [scripts/download-image.sh](../../../scripts/download-image.sh)
+- **Download:** [scripts/download-image.sh](https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/blob/main/scripts/download-image.sh)
 - **Formats:** [STRUCTURAL-MAP.md](STRUCTURAL-MAP.md) - Disk Image Files
 - **Specifications:** [QUICK_START_GUIDE.md](../../01-GETTING-STARTED/archive/QUICK_START_GUIDE.md)
 
