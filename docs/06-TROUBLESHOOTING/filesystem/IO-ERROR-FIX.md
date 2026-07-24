@@ -38,18 +38,18 @@ Changed compose.yaml configuration:
 
 **Before** (IDE with Q35):
 ```yaml
-- QEMU_STORAGE=ide
-- QEMU_EXTRA_ARGS=-cpu host,+svm,+vmx -machine type=q35,accel=kvm:tcg
+- QEMU_DISK_BUS=ide
+- QEMU_MACHINE=q35
 ```
 
 **After** (SATA with PC):
 ```yaml
-- QEMU_STORAGE=sata
-- QEMU_EXTRA_ARGS=-cpu host -machine type=pc,accel=kvm:tcg
+- QEMU_DISK_BUS=ahci
+- QEMU_MACHINE=pc
 ```
 
 **Changes**:
-1. Storage: `ide` → `sata` (SATA/AHCI controller)
+1. Disk bus: `ide` -> `ahci` (SATA/AHCI controller)
 2. Machine: `q35` → `pc` (standard PC platform)
 3. CPU flags: Removed `+svm,+vmx` (not needed for basic boot)
 

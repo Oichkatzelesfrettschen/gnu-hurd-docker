@@ -469,26 +469,47 @@ Test Coordinator (LLM)
 
 **Docker**
 ```bash
-make docker-up
-make docker-test-ssh
-make docker-test-serial
-make docker-down
+make up                              # start the stack
+make smoke-guest                     # SSH reachability and in-guest checks
+make monitor CMD='info status'       # query the QEMU monitor
+make down                            # stop and remove the stack
 ```
 
+`make monitor` requires `CMD` and exits 2 with a usage message without it.
+
 **Podman**
+
+Every target defaults to Docker.  `CONTAINER_RUNTIME=podman` has to be passed on
+each invocation: the target-specific assignment on `up-podman` applies to that
+target only and does not persist into a later `make`.  Podman also publishes the
+QEMU monitor on host port 9998 rather than 9999, so `MONITOR_PORT` has to follow.
+
 ```bash
-make podman-up
-make podman-test-ssh
-make podman-test-serial
-make podman-down
+make up-podman
+make CONTAINER_RUNTIME=podman smoke-guest
+make monitor MONITOR_PORT=9998 CMD='info status'
+make CONTAINER_RUNTIME=podman down
 ```
 
 **Libvirt**
+
+Libvirt has no make targets; it is driven by `scripts/libvirt-hurd.sh`, whose
+dispatcher implements `define`, `start`, `stop`, `undefine`, `status`, `info`,
+`console`, and `ssh`.
+
 ```bash
-make libvirt-define
-make libvirt-start
-make libvirt-test-virsh
-make libvirt-destroy
+./scripts/libvirt-hurd.sh define
+./scripts/libvirt-hurd.sh start
+./scripts/libvirt-hurd.sh status
+./scripts/libvirt-hurd.sh stop
+```
+
+`cmd_ssh` ends its SSH invocation with `|| true`, so it reports success whatever
+the guest returns.  Use a direct SSH command when the result is the thing being
+tested:
+
+```bash
+ssh -p 2222 root@localhost 'uname -a'; echo "exit=$?"
 ```
 
 ### Diagnostic Output

@@ -250,6 +250,41 @@ docker exec gnu-hurd-dev free -h        # RAM
 docker exec gnu-hurd-dev df -h /        # Disk space
 ```
 
+## Variables that are not read
+
+Documentation and older reports name several variables that `entrypoint.sh` never
+reads. Setting them has no effect, which is worse than an unknown option because a
+reader concludes the setting was tried and did not help. Each maps to the variable
+that carries the same intent, where one exists.
+
+| Named in older docs | Actually read | Notes |
+| --- | --- | --- |
+| `QEMU_STORAGE` | `QEMU_DISK_BUS` | Values are `ide`, `ahci`, `scsi`. The old `sata` corresponds to `ahci`. |
+| `QEMU_VIDEO` | `QEMU_VGA_DEVICE` | Passed through to `-device`. |
+| `QEMU_AIO` | `ENABLE_NATIVE_AIO` | Boolean, not an AIO backend name. |
+| `QEMU_ACCEL` | `DISABLE_KVM`, `FORCE_KVM`, `AUTO_DISABLE_KVM_FOR_IDE` | Acceleration is selected by these booleans rather than by a QEMU flag string. |
+| `QEMU_EXTRA_ARGS` | none | No passthrough for arbitrary QEMU arguments. Machine type is `QEMU_MACHINE`. |
+| `QEMU_CPU` | none | The CPU model is not configurable through the entrypoint. |
+| `QEMU_ARCH` | none | The image is x86_64 only; i386 was retired 2025-11-07. |
+| `QEMU_NIC` | `QEMU_NET_MODEL` | Selects the network device model. |
+| `QEMU_FSCK` | none | The guest runs `fsck` from its own boot scripts. Repair the filesystem offline with `scripts/guestfish-check-guest-filesystem.sh`. |
+| `QEMU_DISK_SIZE` | none | Disk size is a property of the qcow2, changed with `qemu-img resize`. |
+| `QEMU_MONITOR` | `MONITOR_PORT`, `DISABLE_MONITOR` | The monitor is exposed over TCP rather than a socket path. |
+| `QEMU_LOG` | none | The guest-error log path is fixed at `/tmp/qemu-guest-errors.log` inside the container. |
+
+To list candidate names while auditing this table:
+
+```sh
+grep -oP '\$\{\K[A-Z][A-Z0-9_]*' entrypoint.sh | sort -u
+```
+
+This is a discovery aid rather than a generated contract. It matches only braced
+`${NAME}` expansions, so it misses bare `$NAME` reads, and it cannot separate
+externally supplied configuration from variables the script sets for itself.
+Treat its output as a list to check by hand. Making this reference generated and
+enforceable needs an explicit configuration schema that `entrypoint.sh` and this
+document both derive from.
+
 ## References
 
 - [RESOURCE-SIZING.md](RESOURCE-SIZING.md) - Detailed resource allocation guidance
