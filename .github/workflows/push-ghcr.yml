@@ -162,7 +162,7 @@ jobs:
           echo "./scripts/setup-hurd-amd64.sh" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Run (dev bind mode)" >> $GITHUB_STEP_SUMMARY
-          echo "./scripts/docker-orchestration.sh up" >> $GITHUB_STEP_SUMMARY
+          echo "make up" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# Access via SSH (once booted, ~60 seconds)" >> $GITHUB_STEP_SUMMARY
           echo "ssh -p 2222 root@localhost  # Password: root" >> $GITHUB_STEP_SUMMARY

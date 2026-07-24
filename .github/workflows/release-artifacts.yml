@@ -60,15 +60,19 @@ jobs:
           chmod +x release-artifacts/scripts/*.sh
           chmod +x release-artifacts/scripts/*.py
 
-          # Verify required scripts are present
-          REQUIRED_SCRIPTS="entrypoint.sh docker-orchestration.sh validate-config.sh setup-hurd-amd64.sh"
-          for script in $REQUIRED_SCRIPTS; do
-            if [ ! -f "release-artifacts/scripts/$script" ]; then
-              echo "ERROR: Required script missing: $script"
+          # Verify the sources a release must ship, named at their repository paths.
+          # Checking sources rather than staged copies keeps this gate independent of
+          # which packaging step has run and of where each file lands in the artifact
+          # tree: entrypoint.sh is packaged to the artifact root by a later step, while
+          # the scripts below are packaged to scripts/ by the copy above.
+          REQUIRED_SOURCES="entrypoint.sh scripts/validate-config.sh scripts/setup-hurd-amd64.sh"
+          for source_path in $REQUIRED_SOURCES; do
+            if [ ! -f "$source_path" ]; then
+              echo "ERROR: Required source missing: $source_path"
               exit 1
             fi
           done
-          echo "[OK] All required scripts present"
+          echo "[OK] All required sources present"
 
           # Create scripts README
           cat > release-artifacts/scripts/README.md << 'EOF'
@@ -126,7 +130,7 @@ jobs:
           ### Docker-based (Recommended for most users)
           ```bash
           ./scripts/setup-hurd-amd64.sh
-          ./scripts/docker-orchestration.sh up
+          make up
           ssh -p 2222 root@localhost
           ```
 
@@ -322,7 +326,7 @@ jobs:
           docker compose pull
 
           # Run (no privileged container required; KVM uses /dev/kvm device mapping when enabled)
-          ./scripts/docker-orchestration.sh up
+          make up
 
           # Access
           ssh -p 2222 root@localhost  # Password: root
@@ -342,7 +346,7 @@ jobs:
           ./scripts/setup-hurd-amd64.sh
 
           # Build and run
-          ./scripts/docker-orchestration.sh up
+          make up
           ```
 
           **Option 3: Clone Repository**
@@ -350,7 +354,7 @@ jobs:
           git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
           cd gnu-hurd-docker
           ./scripts/setup-hurd-amd64.sh
-          ./scripts/docker-orchestration.sh up
+          make up
           ```
 
           ### 📚 Documentation
