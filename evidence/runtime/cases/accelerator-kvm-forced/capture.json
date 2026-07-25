@@ -1,0 +1,563 @@
+{
+  "schema_version": 2,
+  "captured_at_utc": "20260725T154202Z",
+  "reproduce": {
+    "command": [
+      "scripts/capture-runtime-evidence.py",
+      "--redact"
+    ],
+    "environment": {
+      "COMPOSE_FILE": "compose.yaml:compose.minty.yaml"
+    }
+  },
+  "evidence_classes": {
+    "observed": "read from the live system",
+    "derived": "computed from an observed value",
+    "declared": "read from configuration, stating intent",
+    "not-captured": "unavailable, with the reason the probe reported"
+  },
+  "instance": {
+    "container": {
+      "value": "hurd-minty",
+      "class": "observed",
+      "source": "container ps + qemu process check"
+    },
+    "compose_service": {
+      "value": "hurd",
+      "class": "observed",
+      "source": "com.docker.compose.service label"
+    },
+    "compose_project": {
+      "value": "gnu-hurd-docker",
+      "class": "observed",
+      "source": "com.docker.compose.project label"
+    },
+    "container_image_id": {
+      "value": "sha256:d3adb4cdef38e306014732ee37e33735471e57fc2c5458cbad9a82e2c50e87b8",
+      "class": "observed",
+      "source": "container inspect .Image"
+    },
+    "qemu_pid": {
+      "value": "1",
+      "class": "observed",
+      "source": "ps inside the container"
+    }
+  },
+  "repository": {
+    "commit": {
+      "value": "b5db85a6c14ceddc5c42de0361d07194be926dc0",
+      "class": "observed",
+      "source": "git rev-parse HEAD"
+    },
+    "dirty": {
+      "value": true,
+      "class": "observed",
+      "source": "git status --porcelain"
+    },
+    "maintained_shell_surface": {
+      "value": 110,
+      "class": "observed",
+      "source": "scripts/list-maintained-shell.sh"
+    }
+  },
+  "host": {
+    "uname": {
+      "value": "Linux <host> 7.1.4-1-cachyos #1 SMP PREEMPT_DYNAMIC Sun, 19 Jul 2026 18:57:38 +0000 x86_64 GNU/Linux",
+      "class": "observed",
+      "source": "uname -a"
+    },
+    "cpu_model": {
+      "value": "AMD Ryzen 5 5600X3D 6-Core Processor",
+      "class": "observed",
+      "source": "/proc/cpuinfo"
+    },
+    "cpu_count": {
+      "value": 12,
+      "class": "observed",
+      "source": "os.cpu_count"
+    },
+    "kvm_device": {
+      "value": {
+        "exists": true,
+        "readable": true,
+        "writable": true,
+        "mode": "crw-rw-rw-"
+      },
+      "class": "observed",
+      "source": "stat and access on /dev/kvm"
+    },
+    "container_runtime": {
+      "value": "docker",
+      "class": "declared",
+      "source": "CONTAINER_RUNTIME"
+    },
+    "container_runtime_version": {
+      "value": "29.6.2",
+      "class": "observed",
+      "source": "container runtime version"
+    }
+  },
+  "declared": {
+    "environment": {
+      "value": {
+        "ENABLE_VNC": "1",
+        "FORCE_KVM": "1",
+        "QEMU_DISK_CACHE": "writeback",
+        "QEMU_DRIVE": "/opt/hurd-image/hurd-working.qcow2",
+        "QEMU_HOSTFWDS": "tcp::2222-:22,tcp::8080-:80,tcp::5901-:5901,udp::60000-:60000,udp::60001-:60001,udp::60002-:60002",
+        "QEMU_IDE_WRITE_CACHE": "auto",
+        "QEMU_RAM": "2048",
+        "QEMU_SMP": "2"
+      },
+      "class": "declared",
+      "source": "docker compose config --format json, service 'hurd'"
+    }
+  },
+  "live_container": {
+    "environment": {
+      "value": {
+        "QEMU_DRIVE": "/opt/hurd-image/hurd-working.qcow2",
+        "QEMU_DISK_CACHE": "writeback",
+        "ENABLE_VNC": "1",
+        "QEMU_RAM": "2048",
+        "FORCE_KVM": "1",
+        "QEMU_HOSTFWDS": "tcp::2222-:22,tcp::8080-:80,tcp::5901-:5901,udp::60000-:60000,udp::60001-:60001,udp::60002-:60002",
+        "QEMU_IDE_WRITE_CACHE": "auto",
+        "QEMU_SMP": "2",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "DEBIAN_FRONTEND": "noninteractive"
+      },
+      "class": "observed",
+      "source": "container inspect .Config.Env",
+      "reason": "the live container may predate the resolved Compose document, so this is recorded separately"
+    },
+    "published_ssh_port": {
+      "value": "2222",
+      "class": "observed",
+      "source": "container inspect .NetworkSettings.Ports"
+    }
+  },
+  "observed_runtime": {
+    "qemu_version": {
+      "value": "QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.17)",
+      "class": "observed",
+      "source": "qemu-system-x86_64 --version inside the container"
+    },
+    "qemu_argv": {
+      "value": [
+        "/usr/bin/qemu-system-x86_64",
+        "-machine",
+        "pc",
+        "-accel",
+        "kvm",
+        "-cpu",
+        "host",
+        "-m",
+        "2048",
+        "-smp",
+        "2",
+        "-drive",
+        "id=drive0,file=/opt/hurd-image/hurd-working.qcow2,if=none,cache=writeback,aio=threads,format=qcow2",
+        "-device",
+        "ide-hd,drive=drive0,write-cache=auto,rerror=auto,werror=auto",
+        "-nic",
+        "user,model=e1000,hostfwd=tcp::2222-:22,hostfwd=tcp::8080-:80,hostfwd=tcp::5901-:5901,hostfwd=udp::60000-:60000,hostfwd=udp::60001-:60001,hostfwd=udp::60002-:60002",
+        "-serial",
+        "telnet:0.0.0.0:5555,server,nowait",
+        "-monitor",
+        "telnet:0.0.0.0:9999,server,nowait",
+        "-vnc",
+        ":0",
+        "-rtc",
+        "base=utc,clock=host",
+        "-d",
+        "guest_errors",
+        "-D",
+        "/tmp/qemu-guest-errors.log"
+      ],
+      "class": "observed",
+      "source": "/proc/<pid>/cmdline, NUL-delimited"
+    },
+    "accelerator": {
+      "value": "kvm",
+      "class": "observed",
+      "source": "QEMU argv -accel"
+    },
+    "machine": {
+      "value": "pc",
+      "class": "observed",
+      "source": "QEMU argv -machine"
+    },
+    "smp": {
+      "value": "2",
+      "class": "observed",
+      "source": "QEMU argv -smp"
+    },
+    "container_kvm_device": {
+      "value": {
+        "exists": true,
+        "readable": true,
+        "writable": true
+      },
+      "class": "observed",
+      "source": "test -e/-r/-w /dev/kvm inside the container"
+    },
+    "monitor_kvm_enabled": {
+      "value": true,
+      "class": "observed",
+      "source": "QEMU monitor: info kvm"
+    },
+    "monitor_vcpu_threads": {
+      "value": 2,
+      "class": "observed",
+      "source": "QEMU monitor: info cpus"
+    }
+  },
+  "observed_guest": {
+    "uname": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest uname -a",
+      "reason": "ssh probe exited 1: Warning: Permanently added '[127.0.0.1]:2222' (ED25519) to the list of known hosts. You are required to change your password immediately (administrator enforced). WARNING: Your password has expired. P"
+    },
+    "nproc": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest nproc",
+      "reason": "ssh probe exited 1: Warning: Permanently added '[127.0.0.1]:2222' (ED25519) to the list of known hosts. You are required to change your password immediately (administrator enforced). WARNING: Your password has expired. P"
+    },
+    "installed_packages": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest dpkg-query -W",
+      "reason": "ssh probe exited 1: Warning: Permanently added '[127.0.0.1]:2222' (ED25519) to the list of known hosts. You are required to change your password immediately (administrator enforced). WARNING: Your password has expired. P"
+    },
+    "dpkg_status_sha256": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest sha256sum /var/lib/dpkg/status",
+      "reason": "ssh probe exited 1: Warning: Permanently added '[127.0.0.1]:2222' (ED25519) to the list of known hosts. You are required to change your password immediately (administrator enforced). WARNING: Your password has expired. P"
+    }
+  },
+  "image": {
+    "guest_path": {
+      "value": "/opt/hurd-image/hurd-working.qcow2",
+      "class": "observed",
+      "source": "QEMU argv -drive file="
+    },
+    "host_path": {
+      "value": "<repo>/images/hurd-working.qcow2",
+      "class": "derived",
+      "source": "guest path resolved through container mounts"
+    },
+    "virtual_size_bytes": {
+      "value": 17179869184,
+      "class": "observed",
+      "source": "qemu-img info --output=json"
+    },
+    "actual_size_bytes": {
+      "value": 11389657088,
+      "class": "observed",
+      "source": "qemu-img info --output=json"
+    },
+    "format": {
+      "value": "qcow2",
+      "class": "observed",
+      "source": "qemu-img info --output=json"
+    },
+    "snapshot_tags": {
+      "value": [
+        "pre-fullupgrade-20260716",
+        "pre-fullupgrade-20260724",
+        "post-fsck-clean-20260724",
+        "post-upgrade-20260724"
+      ],
+      "class": "observed",
+      "source": "qemu-img info --output=json"
+    },
+    "sha256": {
+      "value": null,
+      "class": "not-captured",
+      "source": "sha256sum",
+      "reason": "hashing a running writable qcow2 yields no stable digest; stop the VM and rerun with --image-digest"
+    }
+  },
+  "probes": {
+    "git-status": {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/git-status.out",
+      "stderr_file": "raw/git-status.err",
+      "stdout_sha256": "d8ad2db270ffc93a0461de0250f09d9880e063437e828c4025ec533f45e3b095"
+    },
+    "shell-surface": {
+      "argv": [
+        "./scripts/list-maintained-shell.sh"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/shell-surface.out",
+      "stderr_file": "raw/shell-surface.err",
+      "stdout_sha256": "131b85af57911c0445449decb387cf51fd592848d19f29862103ca0133187a4b"
+    },
+    "host-uname": {
+      "argv": [
+        "uname",
+        "-a"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/host-uname.out",
+      "stderr_file": "raw/host-uname.err",
+      "stdout_sha256": "ad0539159ff95278c03bc05b9aff50117eae1c547d9106d6f29bf70ca699b953"
+    },
+    "runtime-version": {
+      "argv": [
+        "docker",
+        "version",
+        "--format",
+        "{{.Server.Version}}"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/runtime-version.out",
+      "stderr_file": "raw/runtime-version.err",
+      "stdout_sha256": "192810742b73c1e5e7226e070cc85be0f626f41b8d36e39da78fe434e3d58ac3"
+    },
+    "container-list": {
+      "argv": [
+        "docker",
+        "ps",
+        "--filter",
+        "status=running",
+        "--format",
+        "{{.Names}}\t{{.Label \"com.docker.compose.service\"}}"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/container-list.out",
+      "stderr_file": "raw/container-list.err",
+      "stdout_sha256": "55dcd37884657439335b19766da5c3de1dc2c01f5c728f1af9d4db7a9226d99a"
+    },
+    "qemu-present-hurd-minty": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "sh",
+        "-c",
+        "ps -eo pid,args | grep '[q]emu-system-x86_64' || true"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-present-hurd-minty.out",
+      "stderr_file": "raw/qemu-present-hurd-minty.err",
+      "stdout_sha256": "821bdbd41fcfb39c92547e9f71279ec5c8c933250bfcbb70c97c093595b0115d"
+    },
+    "qemu-present-bsd-deepwiki-local-deepwiki-1": {
+      "argv": [
+        "docker",
+        "exec",
+        "bsd-deepwiki-local-deepwiki-1",
+        "sh",
+        "-c",
+        "ps -eo pid,args | grep '[q]emu-system-x86_64' || true"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-present-bsd-deepwiki-local-deepwiki-1.out",
+      "stderr_file": "raw/qemu-present-bsd-deepwiki-local-deepwiki-1.err",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qemu-present-bsd-deepwiki-local-ollama-1": {
+      "argv": [
+        "docker",
+        "exec",
+        "bsd-deepwiki-local-ollama-1",
+        "sh",
+        "-c",
+        "ps -eo pid,args | grep '[q]emu-system-x86_64' || true"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-present-bsd-deepwiki-local-ollama-1.out",
+      "stderr_file": "raw/qemu-present-bsd-deepwiki-local-ollama-1.err",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "container-inspect": {
+      "argv": [
+        "docker",
+        "inspect",
+        "hurd-minty"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/container-inspect.out",
+      "stderr_file": "raw/container-inspect.err",
+      "stdout_sha256": "07842e000d165b4a70220501233ffb1d448dbe4685e3735ea5745715d4212647"
+    },
+    "compose-config": {
+      "argv": [
+        "docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/compose-config.out",
+      "stderr_file": "raw/compose-config.err",
+      "stdout_sha256": "d4921d2381a7b1f4a7c2ef30f1b6d68e191f3c24fa7f1e0ced99739262891f3f"
+    },
+    "qemu-pid": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "sh",
+        "-c",
+        "ps -eo pid,args | grep '[q]emu-system-x86_64' | awk '{print $1}'"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-pid.out",
+      "stderr_file": "raw/qemu-pid.err",
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "qemu-cmdline": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "sh",
+        "-c",
+        "tr '\\0' '\\n' < /proc/1/cmdline"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-cmdline.out",
+      "stderr_file": "raw/qemu-cmdline.err",
+      "stdout_sha256": "673475c022bd91af975c955b86709d7412c0ea5829b53a1c2a45440b136f1d57"
+    },
+    "qemu-version": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "qemu-system-x86_64",
+        "--version"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/qemu-version.out",
+      "stderr_file": "raw/qemu-version.err",
+      "stdout_sha256": "dcd5d573c55b7faaa757e5d4d7ae8376706837b30e7fcf7c17b80eb77330d548"
+    },
+    "container-kvm": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "sh",
+        "-c",
+        "if [ -e /dev/kvm ]; then echo exists=1; else echo exists=0; fi; if [ -r /dev/kvm ]; then echo readable=1; else echo readable=0; fi; if [ -w /dev/kvm ]; then echo writable=1; else echo writable=0; fi"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:02Z",
+      "exit_status": 0,
+      "stdout_file": "raw/container-kvm.out",
+      "stderr_file": "raw/container-kvm.err",
+      "stdout_sha256": "623d71d5403f9ad3c3e0473ca131b073461781ad4f2eefe0ca3bd07edb73e681"
+    },
+    "monitor-info": {
+      "argv": [
+        "docker",
+        "exec",
+        "hurd-minty",
+        "sh",
+        "-c",
+        "printf 'info status\\ninfo kvm\\ninfo cpus\\n' | timeout 10 nc 127.0.0.1 9999"
+      ],
+      "started_at_utc": "2026-07-25T15:42:02Z",
+      "completed_at_utc": "2026-07-25T15:42:12Z",
+      "exit_status": 124,
+      "stdout_file": "raw/monitor-info.out",
+      "stderr_file": "raw/monitor-info.err",
+      "stdout_sha256": "e9344e927934ff0397ba3b04d3da2c8270f9258b7a7e9d9946e9e19011d44abc"
+    },
+    "image-info": {
+      "argv": [
+        "qemu-img",
+        "info",
+        "--output=json",
+        "-U",
+        "<repo>/images/hurd-working.qcow2"
+      ],
+      "started_at_utc": "2026-07-25T15:42:12Z",
+      "completed_at_utc": "2026-07-25T15:42:12Z",
+      "exit_status": 0,
+      "stdout_file": "raw/image-info.out",
+      "stderr_file": "raw/image-info.err",
+      "stdout_sha256": "fa1253a2f0d93cfb78f06647bf64bc3208acd82e162df769121c5947424e5822"
+    },
+    "image-snapshots": {
+      "argv": [
+        "qemu-img",
+        "snapshot",
+        "-l",
+        "-U",
+        "<repo>/images/hurd-working.qcow2"
+      ],
+      "started_at_utc": "2026-07-25T15:42:12Z",
+      "completed_at_utc": "2026-07-25T15:42:12Z",
+      "exit_status": 0,
+      "stdout_file": "raw/image-snapshots.out",
+      "stderr_file": "raw/image-snapshots.err",
+      "stdout_sha256": "15ff8f3eb23d5ef33cf860794aff3a92822b638929f3f1ad7ce7906e6114bb1f"
+    },
+    "guest-probe": {
+      "argv": [
+        "ssh",
+        "-i",
+        "<repo>/ssh-test-keys/hurd_test_key",
+        "-p",
+        "2222",
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "ConnectTimeout=15",
+        "-o",
+        "BatchMode=yes",
+        "root@127.0.0.1",
+        "uname -a; nproc; dpkg-query -f \"${Status}\\n\" -W 2>/dev/null | grep -c \"install ok installed\"; sha256sum /var/lib/dpkg/status | cut -d\" \" -f1"
+      ],
+      "started_at_utc": "2026-07-25T15:42:12Z",
+      "completed_at_utc": "2026-07-25T15:42:12Z",
+      "exit_status": 1,
+      "stdout_file": "raw/guest-probe.out",
+      "stderr_file": "raw/guest-probe.err",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

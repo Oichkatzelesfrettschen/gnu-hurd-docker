@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker/schemas/runtime-evidence-v2.schema.json",
+  "title": "Runtime evidence capture",
+  "description": "One capture binds every field to a single identified QEMU instance. A field states its evidence class so a reader distinguishes what the system does from what its configuration requests.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "captured_at_utc",
+    "reproduce",
+    "evidence_classes",
+    "instance",
+    "repository",
+    "host",
+    "declared",
+    "live_container",
+    "observed_runtime",
+    "observed_guest",
+    "image",
+    "probes"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "captured_at_utc": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z$" },
+    "reproduce": {
+      "type": "object",
+      "required": ["command", "environment"],
+      "properties": {
+        "command": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "environment": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "evidence_classes": { "type": "object" },
+    "instance": { "$ref": "#/$defs/section" },
+    "repository": { "$ref": "#/$defs/section" },
+    "host": { "$ref": "#/$defs/section" },
+    "declared": { "$ref": "#/$defs/section" },
+    "live_container": { "$ref": "#/$defs/section" },
+    "observed_runtime": { "$ref": "#/$defs/section" },
+    "observed_guest": { "$ref": "#/$defs/section" },
+    "image": { "$ref": "#/$defs/section" },
+    "probes": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/probe" }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/field" }
+    },
+    "field": {
+      "type": "object",
+      "required": ["value", "class", "source"],
+      "properties": {
+        "value": {
+          "description": "null exactly when class is not-captured. An empty array is an observation of emptiness, not an absence.",
+          "type": ["string", "number", "boolean", "object", "array", "null"]
+        },
+        "class": { "enum": ["observed", "derived", "declared", "not-captured"] },
+        "source": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "description": "A not-captured field carries a null value and the reason the probe reported.",
+          "if": { "properties": { "class": { "const": "not-captured" } }, "required": ["class"] },
+          "then": { "properties": { "value": { "type": "null" } }, "required": ["reason"] }
+        },
+        {
+          "description": "A field carrying a value states a class other than not-captured.",
+          "if": {
+            "properties": { "value": { "not": { "type": "null" } } },
+            "required": ["value"]
+          },
+          "then": {
+            "properties": { "class": { "enum": ["observed", "derived", "declared"] } }
+          }
+        }
+      ]
+    },
+    "probe": {
+      "description": "A probe record is the reproduction unit: argv re-runs it, and the retained streams are compared against this capture's parse.",
+      "type": "object",
+      "required": [
+        "argv",
+        "started_at_utc",
+        "completed_at_utc",
+        "exit_status",
+        "stdout_file",
+        "stderr_file",
+        "stdout_sha256"
+      ],
+      "properties": {
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "started_at_utc": { "type": "string" },
+        "completed_at_utc": { "type": "string" },
+        "exit_status": {
+          "description": "null when the probe could not be executed. A nonzero status may still accompany usable output: the monitor probe omits quit, so timeout reaps nc and returns 124 after a complete transcript.",
+          "type": ["integer", "null"]
+        },
+        "stdout_file": { "type": "string" },
+        "stderr_file": { "type": "string" },
+        "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}
