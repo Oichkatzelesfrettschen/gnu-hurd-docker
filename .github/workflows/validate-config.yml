@@ -4,25 +4,35 @@ name: Configuration Validation
 "on":
   push:
     paths:
+      # Every file the validator reads belongs to its trigger set: it loads all
+      # five compose overlays, docker-bake.hcl, and the unattended and
+      # VirtualBox configuration, so watching compose.yaml alone let a change to
+      # compose.kvm.yaml alter an asserted invariant without running the gate.
       - Dockerfile
       - entrypoint.sh
       - Makefile
-      - compose.yaml
+      - 'compose*.yaml'
+      - docker-bake.hcl
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
       - 'scripts/**'
       - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
       - '.github/workflows/validate-config.yml'
   pull_request:
     paths:
       - Dockerfile
       - entrypoint.sh
       - Makefile
-      - compose.yaml
+      - 'compose*.yaml'
+      - docker-bake.hcl
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
       - 'scripts/**'
       - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
       - '.github/workflows/validate-config.yml'
 
 concurrency:

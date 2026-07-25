@@ -99,8 +99,7 @@ security:
 SHELLCHECK_SEVERITY ?= error
 
 lint:
-	./scripts/list-maintained-shell.sh -0 \
-	  | xargs -0 --no-run-if-empty shellcheck -S "$(SHELLCHECK_SEVERITY)"
+	SHELLCHECK_SEVERITY="$(SHELLCHECK_SEVERITY)" ./scripts/check-maintained-shell.sh
 
 links:
 	python3 scripts/utils/link-scanner.py --docs-root docs

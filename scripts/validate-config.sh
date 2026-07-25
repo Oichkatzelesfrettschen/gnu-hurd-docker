@@ -30,6 +30,17 @@ require_file() {
     fi
 }
 
+require_executable() {
+    local path="$1"
+    if [[ -x "$path" ]]; then
+        pass "Found executable $path"
+    elif [[ -f "$path" ]]; then
+        fail "$path is present but not executable"
+    else
+        fail "Missing $path"
+    fi
+}
+
 echo "1. Checking required files..."
 echo ""
 
@@ -41,6 +52,11 @@ require_file compose.kvm.yaml
 require_file compose.vnc.yaml
 require_file compose.podman.yaml
 require_file docker-bake.hcl
+# The gate's own mechanism is an invariant of the tree: a missing or
+# non-executable enumerator or runner makes every ShellCheck surface report
+# success over zero files.
+require_executable scripts/list-maintained-shell.sh
+require_executable scripts/check-maintained-shell.sh
 require_file scripts/health-check.sh
 require_file scripts/download-image.sh
 require_file scripts/setup-hurd-amd64.sh
@@ -85,27 +101,20 @@ echo "2. Validating shell scripts (ShellCheck)..."
 echo ""
 
 if command -v shellcheck >/dev/null 2>&1; then
-    # scripts/list-maintained-shell.sh defines the file set for every gate in
-    # the repository, so this check, `make lint`, and the workflows that call it
-    # agree by construction.  Reading the set from one enumerator is what keeps a
-    # new script from being covered here and missed there.
+    # scripts/check-maintained-shell.sh is the single enforcement mechanism for
+    # every gate in the repository, so this check, `make lint`, and the workflows
+    # that call it agree by construction and fail together.  Running the check
+    # here rather than reimplementing the loop is what keeps this validator from
+    # passing over an empty file set when the enumerator breaks.
     #
-    # -S error is the enforced level and every maintained script passes it.
+    # error is the enforced level and every maintained script passes it.
     # Findings at warning and below are reported without failing, because
     # clearing them is separate work tracked as roadmap item 43.
-    shellcheck_checked=0
-    shellcheck_failed=0
-    while IFS= read -r script_path; do
-        shellcheck_checked=$((shellcheck_checked + 1))
-        if ! shellcheck -S error "$script_path"; then
-            shellcheck_failed=$((shellcheck_failed + 1))
-        fi
-    done < <(./scripts/list-maintained-shell.sh)
-
-    if [ "$shellcheck_failed" -eq 0 ]; then
+    shellcheck_checked="$(./scripts/list-maintained-shell.sh | grep -c '' || true)"
+    if SHELLCHECK_SEVERITY=error ./scripts/check-maintained-shell.sh; then
         pass "$shellcheck_checked shell scripts pass shellcheck (errors)"
     else
-        fail "$shellcheck_failed of $shellcheck_checked shell scripts fail shellcheck (errors)"
+        fail "the maintained shell surface fails shellcheck (errors)"
     fi
 
     # Reported, not counted: warn() increments the error total and would fail the
@@ -115,8 +124,8 @@ if command -v shellcheck >/dev/null 2>&1; then
     # the substitution absorbs that status.
     # (A comment opening with the tool's own name parses as a directive, so this
     # one deliberately does not.)
-    advisory_output="$( { ./scripts/list-maintained-shell.sh -0 \
-        | xargs -0 --no-run-if-empty shellcheck -S warning -f gcc 2>/dev/null || true; } )"
+    advisory_output="$( { SHELLCHECK_SEVERITY=warning \
+        ./scripts/check-maintained-shell.sh -f gcc 2>/dev/null || true; } )"
     if [ -n "$advisory_output" ]; then
         shellcheck_advisory=$(printf '%s\n' "$advisory_output" | wc -l)
         echo "[INFO] $shellcheck_advisory findings at warning level (advisory, not enforced):"

@@ -47,8 +47,9 @@ jobs:
           sudo apt-get install -y shellcheck
           shellcheck --version
 
-      # `make lint` reads its file set from scripts/list-maintained-shell.sh, the
-      # one enumerator every gate in the repository shares.  Scanning `find . -name
+      # `make lint` runs scripts/check-maintained-shell.sh, the one enforcement
+      # mechanism every gate in the repository shares, over the file set
+      # scripts/list-maintained-shell.sh defines.  Scanning `find . -name
       # '*.sh'` here instead swept archived scripts that are kept for history and
       # are not maintained against current standards, which made this job disagree
       # with scripts/validate-config.sh about what the shell surface even is.

@@ -9,8 +9,13 @@
 # in the same gate as scripts/.  Archived scripts are kept for history and are
 # not maintained against current standards, so they stay out.
 #
-# -0 emits NUL separators for `xargs -0`, which survives paths containing
-# whitespace.
+# -0 emits NUL separators for `xargs -0`.  The conversion happens after the
+# newline-delimited sort, so it is correct exactly while no maintained path
+# contains a newline.  That is an invariant of this tree, and the script
+# asserts it rather than assuming it: a path with an embedded newline aborts
+# the enumeration instead of silently producing two wrong entries.  Sorting the
+# NUL stream directly would need `sort -z`, which is as GNU-specific as the
+# `xargs` extensions this design set out to avoid.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,8 +31,32 @@ cd "$REPO_ROOT"
 
 # find prunes archive directories rather than filtering them afterwards, so a
 # deep archive tree costs nothing to walk.
-find entrypoint.sh scripts share \
-        \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
-        \( -type f -name '*.sh' -print \) \
-    | LC_ALL=C sort \
-    | if [ "$separator" = nul ]; then tr '\n' '\0'; else cat; fi
+listing="$(
+    find entrypoint.sh scripts share \
+            \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
+            \( -type f -name '*.sh' -print \) \
+        | LC_ALL=C sort
+)"
+
+# A NUL-delimited walk counts the same files a newline-delimited walk did, so a
+# mismatch means a path carries an embedded newline and every downstream gate
+# would receive a fabricated file set.
+newline_count="$(printf '%s\n' "$listing" | grep -c '' || true)"
+nul_count="$(
+    find entrypoint.sh scripts share \
+            \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
+            \( -type f -name '*.sh' -print0 \) \
+        | tr -dc '\0' | wc -c
+)"
+if [ "$newline_count" -ne "$nul_count" ]; then
+    echo "${0##*/}: a maintained shell path contains a newline" \
+         "($newline_count lines from $nul_count files); the gates cannot" \
+         "enumerate this tree" >&2
+    exit 2
+fi
+
+if [ "$separator" = nul ]; then
+    printf '%s\n' "$listing" | tr '\n' '\0'
+else
+    printf '%s\n' "$listing"
+fi
