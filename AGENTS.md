@@ -12,7 +12,14 @@ conflict, the narrower file controls only inside its subtree.
 
 ## Hard Rules
 
-- Keep checked-in text ASCII unless a file already requires another encoding.
+- Checked-in text is emoji-free. An emoji carries no information its word does
+  not, and it breaks greps, widens diffs, and renders as a box or a double-width
+  cell wherever the glyph is missing. Typographic substitutes stay out on the
+  same grounds: straight quotes over curly ones, `--` over an em dash, `...` over
+  an ellipsis glyph. Symbols that carry meaning stay in -- mathematical
+  operators, Greek letters, arrows in state transitions, box-drawing in diagrams,
+  the degree and micro signs -- and a name keeps the spelling its owner uses, so
+  accented characters in author and copyright lines are preserved verbatim.
 - Use `docker compose` (v2). The legacy `docker-compose` v1 entry point stays
   out of scripts, docs, and Makefile targets.
 - Treat warnings as defects. Touched shell passes ShellCheck at the enforced
