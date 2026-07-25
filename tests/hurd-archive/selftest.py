@@ -1,0 +1,437 @@
+"""Offline fixture suite for the Hurd package-closure resolver.
+
+The resolver's verdicts are produced by apt over a synthetic architecture, so a
+green source-level gate says nothing about whether a verdict is right. This
+drives the same functions against hand-written indices whose correct answer is
+known, and against a real signed Release whose signature can be broken on
+purpose.
+
+Everything here is local. The resolver reaches its archives through urllib,
+which serves file:// as well as https://, so a fixture directory substitutes
+for a mirror without a network and without a signature-bypassing shortcut in
+the code under test. The authentication functions are called directly with good
+and tampered bytes, because standing up a locally signed apt repository would
+need key generation and would still be read through [trusted=yes], which is the
+one thing that must not be trusted here.
+
+This suite never compares against the committed live reports: sid, unreleased,
+and the LMDE suite move daily, so a comparison would turn someone else's upload
+into a red gate.
+"""
+
+import gzip
+import hashlib
+import json
+import os
+import shutil
+import tempfile
+
+FIXTURES = os.path.dirname(os.path.abspath(__file__))
+# From a checkout the key sits at the repository path; the resolver image places
+# it where LMDE_KEYRING names, so one invocation runs in both.
+KEYRING = os.environ.get(
+    "LMDE_KEYRING",
+    os.path.join(FIXTURES, "..", "..", "config", "keys",
+                 "linuxmint-archive-keyring.asc"))
+MINT_FINGERPRINT = "302F0738F465C1535761F965A6616109451BBBF2"
+
+
+class Args(object):
+    """The attribute surface resolve() reads off an argparse namespace."""
+
+    def __init__(self, **fields):
+        self.architecture = "hurd-amd64"
+        self.set = "mate-bootstrap"
+        self.no_lmde = True
+        self.ports_mirror = ""
+        self.lmde_mirror = ""
+        self.lmde_suite = "gigi"
+        self.keyring = KEYRING
+        self.packages = []
+        for key, value in fields.items():
+            setattr(self, key, value)
+
+
+def stanza(name, version, architecture, **fields):
+    lines = ["Package: %s" % name, "Version: %s" % version,
+             "Architecture: %s" % architecture]
+    for key, value in fields.items():
+        lines.append("%s: %s" % (key.replace("_", "-").title(), value))
+    body = "payload for %s %s" % (name, version)
+    lines += ["Filename: pool/main/%s_%s.deb" % (name, version),
+              "Size: %d" % len(body),
+              "SHA256: %s" % hashlib.sha256(body.encode()).hexdigest(),
+              "Maintainer: fixture <root@localhost>",
+              "Description: fixture package %s" % name]
+    return "\n".join(lines)
+
+
+def write_repo(root, suite, stanzas):
+    """Publish one fixture suite as a file:// apt repository."""
+    component = os.path.join(root, "dists", suite, "main", "binary-hurd-amd64")
+    os.makedirs(component, exist_ok=True)
+    body = ("\n\n".join(stanzas) + "\n").encode("utf-8")
+    with open(os.path.join(component, "Packages"), "wb") as handle:
+        handle.write(body)
+    release = ("Origin: fixture\nLabel: fixture\nSuite: %s\nCodename: %s\n"
+               "Architectures: hurd-amd64\nComponents: main\nSHA256:\n"
+               " %s %d main/binary-hurd-amd64/Packages\n"
+               % (suite, suite, hashlib.sha256(body).hexdigest(), len(body)))
+    with open(os.path.join(root, "dists", suite, "Release"), "w",
+              encoding="utf-8") as handle:
+        handle.write(release)
+
+
+def ports_fixture(root, sid, unreleased=()):
+    write_repo(root, "sid", sid)
+    write_repo(root, "unreleased", list(unreleased) or [
+        stanza("fixture-unreleased-marker", "1", "hurd-amd64")])
+    return "file://%s" % root
+
+
+def lmde_fixture(root, suite, component, stanzas):
+    """Publish one component index plus a Release naming its digest."""
+    directory = os.path.join(root, "dists", suite, component, "binary-amd64")
+    os.makedirs(directory, exist_ok=True)
+    body = gzip.compress(("\n\n".join(stanzas) + "\n").encode("utf-8"), mtime=0)
+    with open(os.path.join(directory, "Packages.gz"), "wb") as handle:
+        handle.write(body)
+    return hashlib.sha256(body).hexdigest()
+
+
+class Suite(object):
+    def __init__(self):
+        self.failures = []
+        self.passes = 0
+
+    def check(self, name, condition, detail=""):
+        if condition:
+            self.passes += 1
+            print("ok    %s" % name)
+        else:
+            self.failures.append("%s: %s" % (name, detail))
+            print("FAIL  %s: %s" % (name, detail))
+
+    def raises(self, name, exception, call):
+        try:
+            call()
+        except exception as exc:
+            self.passes += 1
+            print("ok    %s (%s)" % (name, str(exc)[:80]))
+            return
+        except Exception as exc:  # noqa: BLE001 - the wrong exception is a failure
+            self.check(name, False, "raised %r instead" % exc)
+            return
+        self.check(name, False, "returned without raising")
+
+
+def verdicts(report):
+    return {item["package"]: item["class"] for item in report["packages"]}
+
+
+def test_classification(module, suite, workspace):
+    root = os.path.join(workspace, "ports-classification")
+    mirror = ports_fixture(root, [
+        stanza("fixture-native", "1.0", "hurd-amd64"),
+        stanza("fixture-all", "2.0", "all"),
+        stanza("fixture-foreign", "3.0", "amd64"),
+        stanza("fixture-uninstallable", "4.0", "hurd-amd64",
+               depends="fixture-absent-dependency"),
+        # A version skew between two packages the port does carry, which is
+        # different work from a package the port lacks.
+        stanza("fixture-skewed", "5.0", "hurd-amd64",
+               depends="fixture-skew-partner (= 2.0)"),
+        stanza("fixture-skew-partner", "1.0", "hurd-amd64"),
+    ])
+    state = os.path.join(workspace, "state-classification")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror,
+             packages=["fixture-native", "fixture-all", "fixture-foreign",
+                       "fixture-uninstallable", "fixture-never-published",
+                       "fixture-skewed"]),
+        state)
+    seen = verdicts(report)
+    evidence = {item["package"]: item.get("evidence", "")
+                for item in report["packages"]}
+    suite.check("a version skew is reported by the dependency, not the summary",
+                seen.get("fixture-skewed") == "uninstallable"
+                and "fixture-skew-partner" in evidence.get("fixture-skewed", ""),
+                evidence.get("fixture-skewed", ""))
+    suite.check("native binary classifies native",
+                seen.get("fixture-native") == "native", str(seen))
+    suite.check("one binary for every architecture classifies architecture-all",
+                seen.get("fixture-all") == "architecture-all", str(seen))
+    suite.check("a record for another architecture classifies missing",
+                seen.get("fixture-foreign") == "missing", str(seen))
+    suite.check("an unmet dependency classifies uninstallable",
+                seen.get("fixture-uninstallable") == "uninstallable", str(seen))
+    suite.check("an unpublished name classifies missing",
+                seen.get("fixture-never-published") == "missing", str(seen))
+    suite.check("the blocking dependency is named for rebuild",
+                "fixture-absent-dependency"
+                in report["must_be_built_or_substituted"],
+                str(report["must_be_built_or_substituted"]))
+    suite.check("the recursive transaction is recorded, not just counted",
+                report["recursive_transaction_size"] == len(
+                    report["recursive_transaction"])
+                and report["recursive_transaction_size"] >= 2,
+                str(report["recursive_transaction"]))
+    suite.check("provenance records the apt and dpkg versions",
+                bool(report["provenance"]["tools"]["apt"])
+                and bool(report["provenance"]["tools"]["dpkg"]),
+                str(report["provenance"]["tools"]))
+
+
+def test_version_selection(module, suite, workspace):
+    root = os.path.join(workspace, "ports-versions")
+    mirror = ports_fixture(
+        root,
+        [stanza("fixture-multi", "1.0", "hurd-amd64"),
+         stanza("fixture-multi", "3.0", "hurd-amd64"),
+         stanza("fixture-multi", "2.0", "hurd-amd64"),
+         stanza("fixture-across", "1.0", "hurd-amd64")],
+        [stanza("fixture-across", "9.0", "hurd-amd64")])
+    state = os.path.join(workspace, "state-versions")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror,
+             packages=["fixture-multi", "fixture-across"]), state)
+    chosen = {item["package"]: item.get("version") for item in report["packages"]}
+    suite.check("the highest of several versions is the candidate",
+                chosen.get("fixture-multi") == "3.0", str(chosen))
+    suite.check("version decides across suites, not read order",
+                chosen.get("fixture-across") == "9.0", str(chosen))
+    suite.check("the candidate origin is recorded",
+                all(item.get("candidate_origin")
+                    for item in report["packages"]),
+                str([item.get("candidate_origin")
+                     for item in report["packages"]]))
+    # The apt state is per-invocation, so its path is machine-only state that
+    # would differ on every rerun and make two reports of one archive read as
+    # two results.
+    serialized = json.dumps(report)
+    suite.check("no per-invocation path reaches the report",
+                state not in serialized and "/tmp/hurd-apt-" not in serialized,
+                "a workspace path was serialized")
+
+
+def test_conflict(module, suite, workspace):
+    root = os.path.join(workspace, "ports-conflict")
+    mirror = ports_fixture(root, [
+        stanza("fixture-left", "1.0", "hurd-amd64", conflicts="fixture-right"),
+        stanza("fixture-right", "1.0", "hurd-amd64", conflicts="fixture-left"),
+    ])
+    state = os.path.join(workspace, "state-conflict")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror,
+             packages=["fixture-left", "fixture-right"]), state)
+    seen = verdicts(report)
+    suite.check("each conflicting package resolves on its own",
+                seen.get("fixture-left") == "native"
+                and seen.get("fixture-right") == "native", str(seen))
+    suite.check("the set as a whole reports the conflict",
+                not report["resolvable_subset_resolves"]
+                and bool(report["resolvable_subset_blocker"]),
+                report["resolvable_subset_blocker"])
+
+
+def test_wildcards(module, suite, workspace):
+    root = os.path.join(workspace, "ports-wildcard")
+    mirror = ports_fixture(root, [
+        stanza("fixture-family-one", "1.0", "all"),
+        stanza("fixture-family-two", "1.0", "all"),
+    ])
+    state = os.path.join(workspace, "state-wildcard")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror,
+             packages=["fixture-family-*", "fixture-nothing-*"]), state)
+    seen = sorted(verdicts(report))
+    suite.check("a wildcard expands to what the archive publishes",
+                seen == ["fixture-family-one", "fixture-family-two"], str(seen))
+    suite.check("a pattern matching nothing is reported rather than dropped",
+                report["unmatched_patterns"] == ["fixture-nothing-*"],
+                str(report["unmatched_patterns"]))
+
+    state = os.path.join(workspace, "state-wildcard-empty")
+    os.makedirs(state)
+    empty = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-nothing-*"]), state)
+    suite.check("an entirely unmatched set returns an empty result set",
+                empty["packages"] == [], str(empty["packages"]))
+    try:
+        module.print_report(empty)
+        suite.check("formatting an empty result set is guarded", False,
+                    "print_report accepted an empty set")
+    except ValueError:
+        suite.check("formatting an empty result set is guarded", True)
+
+
+def test_key_pin(module, suite, workspace):
+    packets = module.dearmor(open(KEYRING, encoding="utf-8").read())
+    suite.check("the vendored key carries the pinned primary fingerprint",
+                module.primary_key_fingerprint(packets) == MINT_FINGERPRINT,
+                module.primary_key_fingerprint(packets))
+    suite.raises("a keyring failing the pin is rejected",
+                 module.ArchiveTrustError,
+                 lambda: module.trusted_keyring(
+                     KEYRING, "0" * 40, workspace))
+
+
+def test_signature(module, suite, workspace):
+    release = os.path.join(FIXTURES, "lmde-gigi-Release")
+    signature = os.path.join(FIXTURES, "lmde-gigi-Release.gpg")
+    keyring, _ = module.trusted_keyring(KEYRING, MINT_FINGERPRINT, workspace)
+    suite.check("the recorded Release verifies against the pinned key",
+                "Good signature" in module.verify_detached(
+                    keyring, signature, release))
+
+    tampered = os.path.join(workspace, "tampered-Release")
+    with open(release, "rb") as handle:
+        body = handle.read()
+    with open(tampered, "wb") as handle:
+        handle.write(body.replace(b"Origin:", b"origin:", 1))
+    suite.raises("a modified Release fails verification",
+                 module.ArchiveTrustError,
+                 lambda: module.verify_detached(keyring, signature, tampered))
+
+    truncated = os.path.join(workspace, "truncated-Release.gpg")
+    with open(signature, "rb") as handle:
+        raw = handle.read()
+    with open(truncated, "wb") as handle:
+        handle.write(raw[:len(raw) // 2])
+    suite.raises("a malformed signature fails verification",
+                 module.ArchiveTrustError,
+                 lambda: module.verify_detached(keyring, truncated, release))
+
+
+def test_index_integrity(module, suite, workspace):
+    root = os.path.join(workspace, "lmde-fixture")
+    digest = lmde_fixture(root, "gigi", "main",
+                          [stanza("fixture-mint-theme", "1.0", "all"),
+                           stanza("fixture-mint-binary", "1.0", "amd64")])
+    mirror = "file://%s" % root
+    good = {"digests": {"main/binary-amd64/Packages.gz": (digest, 0)}}
+    index, seen = module.verified_index(mirror, "gigi", "main", good)
+    suite.check("a matching index is accepted and its digest reported",
+                seen == digest and "fixture-mint-theme" in index, seen)
+    suite.check("only the Architecture: all stanzas cross into the overlay",
+                [line for line in module.arch_all_stanzas(index, mirror)
+                 if "fixture-mint-binary" in line] == [],
+                "an amd64 binary reached the overlay")
+    suite.check("the overlay rewrites pool paths to the Mint mirror",
+                all("Filename: %s/pool" % mirror in text
+                    for text in module.arch_all_stanzas(index, mirror)))
+
+    mismatched = {"digests": {"main/binary-amd64/Packages.gz": ("0" * 64, 0)}}
+    suite.raises("an index the Release contradicts is rejected",
+                 module.ArchiveTrustError,
+                 lambda: module.verified_index(mirror, "gigi", "main",
+                                               mismatched))
+    suite.raises("an index the Release does not name is rejected",
+                 module.ArchiveTrustError,
+                 lambda: module.verified_index(mirror, "gigi", "upstream",
+                                               good))
+
+    # A malformed index that still hashes correctly passes the integrity gate,
+    # so decompression is where it must fail, and it must fail as a trust error
+    # rather than as a traceback from the parser.
+    corrupt = os.path.join(root, "dists", "gigi", "main", "binary-amd64",
+                           "Packages.gz")
+    body = b"this is not a gzip member"
+    with open(corrupt, "wb") as handle:
+        handle.write(body)
+    named = {"digests": {"main/binary-amd64/Packages.gz":
+                         (hashlib.sha256(body).hexdigest(), len(body))}}
+    suite.raises("a malformed index does not reach the parser",
+                 module.ArchiveTrustError,
+                 lambda: module.verified_index(mirror, "gigi", "main", named))
+
+
+def test_overlay_preserves_versions(module, suite, workspace):
+    """Deduplicating the overlay by package name would let whichever component
+    is read first decide the candidate, which is not the selection apt makes."""
+    root = os.path.join(workspace, "lmde-overlay")
+    digests = {}
+    for component, stanzas in (
+            ("main", [stanza("fixture-mint-dup", "1.0", "all"),
+                      stanza("fixture-mint-dup", "3.0", "all")]),
+            ("upstream", [stanza("fixture-mint-dup", "2.0", "all"),
+                          stanza("fixture-mint-only-upstream", "1.0", "all")]),
+            ("import", [stanza("fixture-mint-import", "1.0", "all")]),
+            ("backport", [stanza("fixture-mint-backport", "1.0", "all")])):
+        digest = lmde_fixture(root, "gigi", component, stanzas)
+        digests["%s/binary-amd64/Packages.gz" % component] = (digest, 0)
+
+    target = os.path.join(workspace, "overlay-tree")
+    os.makedirs(target)
+    summary = module.write_overlay(target, "hurd-amd64", "file://%s" % root,
+                                   "gigi", {"digests": digests})
+    suite.check("every component contributing payloads is published",
+                summary["components"] == list(module.LMDE_COMPONENTS),
+                str(summary["components"]))
+    suite.check("every version survives into the overlay",
+                summary["architecture_all_packages"] == 6,
+                str(summary["architecture_all_packages"]))
+
+    main = os.path.join(target, "lmde", "dists", "gigi", "main",
+                        "binary-hurd-amd64", "Packages")
+    with open(main, encoding="utf-8") as handle:
+        text = handle.read()
+    suite.check("two versions of one name both reach the index",
+                text.count("Package: fixture-mint-dup") == 2, text[:120])
+
+    upstream = os.path.join(target, "lmde", "dists", "gigi", "upstream",
+                            "binary-hurd-amd64", "Packages")
+    suite.check("a name carried by two components keeps both provenances",
+                "fixture-mint-dup" in open(upstream, encoding="utf-8").read())
+    suite.check("each source index digest is reported",
+                sorted(summary["source_index_sha256"]) == sorted(digests),
+                str(sorted(summary["source_index_sha256"])))
+    suite.check("the generated overlay carries its own digest",
+                len(summary["overlay_release_sha256"]) == 64)
+
+
+def test_release_parsing(module, suite):
+    release = os.path.join(FIXTURES, "lmde-gigi-Release")
+    with open(release, encoding="utf-8") as handle:
+        text = handle.read()
+    digests = module.release_digests(text)
+    suite.check("every read component is named in the verified Release",
+                all("%s/binary-amd64/Packages.gz" % component in digests
+                    for component in module.LMDE_COMPONENTS),
+                str(sorted(k for k in digests if k.endswith("Packages.gz"))[:6]))
+    suite.check("only the SHA-256 section is read",
+                all(len(value[0]) == 64 for value in digests.values()),
+                "a shorter digest was read as SHA-256")
+    suite.check("the Release codename is recorded",
+                module.release_field(text, "Codename") == "gigi")
+
+
+def run(module):
+    suite = Suite()
+    workspace = tempfile.mkdtemp(prefix="hurd-closure-selftest-")
+    try:
+        test_key_pin(module, suite, workspace)
+        test_signature(module, suite, workspace)
+        test_release_parsing(module, suite)
+        test_index_integrity(module, suite, workspace)
+        test_overlay_preserves_versions(module, suite, workspace)
+        test_classification(module, suite, workspace)
+        test_version_selection(module, suite, workspace)
+        test_conflict(module, suite, workspace)
+        test_wildcards(module, suite, workspace)
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+    print("\n%d checks passed, %d failed" % (suite.passes, len(suite.failures)))
+    for failure in suite.failures:
+        print("  %s" % failure)
+    return 1 if suite.failures else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(json.dumps(
+        {"error": "run through report-hurd-package-closure.py --self-test"}))

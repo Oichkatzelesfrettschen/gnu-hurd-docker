@@ -5,7 +5,7 @@ exists, and Hurd running on Docker directly, which does not. This records the
 probe that separates them, the layer that is buildable in place of the second,
 and what that layer says about putting MATE on each Hurd port.
 
-## Hurd userland cannot execute on a Linux host
+## Hurd userland does not execute in an ordinary Linux container
 
 A container shares the host kernel. Debian GNU/Hurd userland needs GNU Mach and
 the Hurd servers, so the question is whether a Hurd binary can run against a
@@ -32,14 +32,18 @@ package, which separates the loader from the kernel interface:
     $ ./ld-x86-64.so.1 --library-path . hurd/ext2fs         # rc=139
 
 Status 139 is 128+11: SIGSEGV. The Hurd dynamic loader crashes on this kernel
-before it loads any program, because its own startup issues Mach traps Linux
-does not implement. The barrier is the kernel interface; installing files does
-not move it.
+before it loads any program. What that establishes is bounded: supplying files
+does not move the barrier, so the barrier is the kernel interface. The signal
+alone does not name the first Mach trap that failed, which would take a debugger
+attached to the loader or an instruction trace, and neither was run.
 
-Emulation does not close it either. `qemu-user` translates Linux system calls
-for a foreign architecture; here the architecture already matches and the
-missing element is Mach, which `qemu-user` does not provide. Full-system QEMU
-does provide it, and that is the layer this repository already runs.
+Emulation as configured here does not close it either. `qemu-user` translates
+Linux system calls for a foreign architecture; here the architecture already
+matches and the missing element is Mach, which `qemu-user` does not provide.
+Running a Hurd userland on a Linux kernel would take a Mach ABI compatibility
+layer in the shape of Wine, which nothing in this repository supplies. Full
+system QEMU supplies GNU Mach itself, and that is the layer this repository
+already runs.
 
 The falsifier is explicit: a Hurd binary that completes useful work in a
 container with no `qemu-system-*` process refutes this. None did.
@@ -63,115 +67,180 @@ which is architecture-independent and serves both ports.
 `apt` and `dpkg` are ordinary Linux programs. `Dockerfile.hurd-archive` sets
 `APT::Architecture` to the target port over a private apt state tree, so
 dependency resolution runs against the real index without executing anything.
+The tree is built under a temporary directory per invocation and removed
+afterwards, because a retained index decides a later verdict silently.
 
-    make hurd-closure                                   # hurd-amd64, MATE core
-    make hurd-closure HURD_ARCH=hurd-i386 HURD_SET=mate-full
-    make hurd-closure HURD_SET=mint-visual
+    make hurd-closure-selftest
+    make hurd-closure HURD_SET=mate-bootstrap
+    make hurd-closure HURD_ARCH=hurd-i386 HURD_SET=mate-privileged-integration
+    make hurd-closure-report HURD_SET=mint-visual
+
+What this layer settles is availability, candidate version, declared
+dependencies, and whether apt's solver closes the graph. What it leaves open is
+everything the guest decides: maintainer scripts that call Linux-only commands,
+runtime startup, D-Bus and GSettings behavior, and whether a session survives
+logout. A resolved set is a prediction about installation rather than a
+measurement of it, so the verdicts below say `resolves` and the sets are named
+for the question each answers rather than for a product.
 
 Mint supplies no Hurd binaries. LMDE 7 `gigi` advertises `i386` and `amd64` and
 publishes no `binary-all` directory, so its `Architecture: all` payloads sit
 inside the per-architecture indices. Taking a Mint index wholesale would offer
 amd64 binaries to a Hurd architecture. The overlay keeps only the
-`Architecture: all` stanzas and republishes them under the target architecture,
-and a pin keeps Debian Ports authoritative for any name both carry. The overlay
+`Architecture: all` stanzas and republishes them per source component under the
+target architecture, and a pin on the overlay's own origin keeps Debian Ports
+authoritative for any name both carry. Every version and every component copy
+is kept, so apt performs the selection rather than the import order. The overlay
 contributes 152 architecture-independent Mint packages.
+
+Mint metadata is authenticated before any of it is read. The suite `Release` is
+fetched over HTTPS and verified with `gpgv` against the Linux Mint repository
+signing key vendored at `config/keys/linuxmint-archive-keyring.asc`, pinned to
+primary fingerprint `302F0738F465C1535761F965A6616109451BBBF2`; each component
+index is accepted only when its SHA-256 matches the entry in that verified
+`Release`. A signature failure, an index the `Release` does not name, and a hash
+mismatch each abort the run, because an overlay that silently shrinks reports a
+smaller closure as though the archive were smaller. Debian Ports is verified by
+apt itself against `debian-ports-archive-keyring`.
+
+`evidence/hurd-archive/` holds the generated reports. Each carries its
+collection time, the resolver base image digest, the apt and dpkg versions that
+produced the verdicts, the verified `Release` digest and date, every source
+index digest, the generated overlay digest, the signing key fingerprint, the
+candidate origin per package, and the full recursive transaction rather than
+only its size.
 
 ## What the archive says
 
-### MATE session core
+Counts below are read from the committed reports and move with the archive.
 
-| Class | hurd-amd64 | hurd-i386 |
+### The first session, before authorization
+
+`mate-bootstrap` asks whether a MATE session can start at all. It excludes the
+metapackages and the privileged-session layer, whose failure answers a different
+question and would otherwise mask this one.
+
+| | hurd-amd64 | hurd-i386 |
 |---|---|---|
 | native | 4 | 4 |
 | architecture-all | 3 | 3 |
-| uninstallable | 4 | 6 |
-| missing | 2 | 0 |
+| uninstallable | 2 | 3 |
+| missing | 1 | 0 |
 
-`mate-session-manager`, `marco`, `mate-terminal`, and `mate-notification-daemon`
-are native on both. The difference is the finding:
+`marco`, `mate-terminal`, `mate-notification-daemon`, and `dconf` are native on
+both, and `mate-menus`, `mate-icon-theme`, and `mate-themes` are
+architecture-independent.
 
-**`mate-settings-daemon` and `mate-control-center` have no hurd-amd64 binary at
+**`mate-settings-daemon` and `mate-control-center` have no hurd-amd64 record at
 all, and both exist for hurd-i386** at 1.26.1-1.2 and 1.26.0-2. Both are named
-in the MATE acceptance gate, and `mate-desktop-environment-core` depends on
-`mate-control-center (>= 1.26)`, so the metapackage is uninstallable for that
-reason alone. A session without a settings daemon has no mechanism to apply the
-theme, icon, and cursor selections the product is defined by.
+in the MATE acceptance gate, and a session without a settings daemon has no
+mechanism to apply the theme, icon, and cursor selections the product is defined
+by.
 
 The main archive carries `mate-settings-daemon` source at **1.26.1-1.2**, the
-same version the hurd-i386 binary was built from. The hurd-amd64 gap is
-therefore a build gap, not a porting gap: the source already builds on the Hurd,
-and 64-bit simply has no upload.
+same version the hurd-i386 binary was built from. That makes both packages
+high-confidence native-rebuild candidates rather than greenfield ports: the
+source is known to build for one Hurd port at that version. It does not
+establish that the source builds for `hurd-amd64`, where 64-bit assumptions,
+dependency skew, or new compiler diagnostics can still block it. An actual
+`hurd-amd64` build is the acceptance test, and it has not run.
 
-On hurd-i386 the whole cascade reduces to one root cause. Every uninstallable
-package there reports the same blocker:
+Two blockers are distinct and are often conflated:
 
-    mate-polkit : Depends: polkitd but it is not installable
+    hurd-amd64  mate-panel  mate-polkit : Depends: accountsservice but it is not installable
+    hurd-i386   mate-panel  mate-polkit : Depends: polkitd but it is not installable
 
-`polkitd` is absent for both ports, and so is the layer around it:
+`mate-panel` pulls `mate-polkit`, so the authorization layer reaches into the
+first session rather than staying in the administrative one. `accountsservice`
+is native on hurd-i386 at 0.6.55-3 and absent for hurd-amd64, so the 64-bit port
+carries one blocker the 32-bit port does not.
 
-    accountsservice  libaccountsservice0  systemd  libsystemd0
-    libelogind0      policykit-1          polkitd
+`caja` fails on both ports for a different reason:
 
-This confirms by archive evidence what the architecture notes predicted: the
-difficult boundary is session integration, not Caja or Marco, which are present
-and native on both ports.
+    caja  gvfs : Depends: gvfs-common (= 1.58.0-2) but it is not going to be installed
 
-### Mint visual family
+That is a version skew inside `sid` between `gvfs` and its own split-out
+packages, not a port gap. Both ports carry `caja` natively, and the skew clears
+itself when the archive catches up. Naming it separately matters: a rebuild
+closes a port gap and does nothing for a skew.
 
-37 of 38 packages are `architecture-all` and install on hurd-amd64, pulling 105
-packages recursively. The strategy works: Mint artwork reaches a Hurd desktop
-unmodified.
+### Authorization
 
-`mintmenu` is the exception; it needs `python3-setproctitle`, which no Hurd port
-builds. `mint-backgrounds` is published per release codename rather than per
-suite, so the tool discovers those names from the archive rather than guessing
-one, which is why an earlier hardcoded `mint-backgrounds-gigi` read as missing
-when it never existed.
+`polkitd` has no record for either port, and neither does the layer around it:
+
+    accountsservice (hurd-amd64 only)  libaccountsservice0  systemd
+    libsystemd0                        libelogind0          policykit-1
+
+This is the boundary the architecture notes predicted, and it is session and
+seat integration rather than the file manager or the window manager.
+
+A stub that `Provides: polkitd` while supplying no daemon persuades apt and
+authorizes nothing. Even on a single-user VM the system still distinguishes the
+unprivileged desktop account, root, system daemons, operations that require
+authentication, and operations that should always be denied; `mate-polkit` and
+every other client then fails over D-Bus at run time, later and less legibly
+than a refused install, and any unrelated package accepts the same false
+provider. A stub may demonstrate what lies past the blocker in an experiment. It
+counts toward no acceptance profile, and porting polkit stays the work.
+
+The clean bootstrap route keeps the package manager truthful: install the
+explicit MATE components, leave `mate-polkit` and the metapackages out, use
+`sudo` for privileged operations, and record the administrative GUI actions as
+unavailable until polkit is ported.
+
+### Metapackages
+
+`mate-desktop-environment-core` and `mate-desktop-environment` are
+uninstallable on both ports. On hurd-amd64 they stop at `caja`, and on hurd-i386
+they stop at the same `gvfs` skew. The metapackages are `Architecture: all`, so
+they state a component list and nothing about native dependency closure; they
+are asked here as their own question rather than used as a readiness signal.
+
+### Mint presentation assets
+
+35 of 35 packages in `mint-visual` are `architecture-all` and **dependency
+resolve** for both ports, pulling 60 packages recursively. That is a resolver
+verdict, not an installation: an `Architecture: all` package can still carry a
+maintainer script that calls a Linux-only command, Python that reads `/proc`, or
+systemd activation. Whether the Mint visual set installs is settled by a
+disposable guest installation that ends with `dpkg -C` clean, which has not run.
+
+`mint-backgrounds` is published per release codename rather than per suite, so
+the tool discovers those names from the archive rather than guessing one, which
+is why an earlier hardcoded `mint-backgrounds-gigi` read as missing when it
+never existed.
+
+`mint-mate-integration` is code rather than artwork and fails on its own terms.
+`xapps-common` and `xapp-symbolic-icons` resolve on both ports; `mintmenu` stops
+at `python3-setproctitle`, which neither port publishes. Source availability
+alone does not say whether that is a buildd omission or a porting problem, and
+the rebuild attempt is what distinguishes them.
 
 ## Closing the gaps
 
-Three tiers, in order of preference.
+Two tiers, in order of preference, and both are separate work from this layer.
 
-**Rebuild from source, when the source already builds for the other port.**
-`scripts/build-hurd-package-in-guest.sh` adds a `deb-src` line for the main
-archive, installs build dependencies, and runs `dpkg-buildpackage` on the guest.
-This is the honest fix for `mate-settings-daemon`, `mate-control-center`, and
-`python3-setproctitle`, whose sources are all present. It requires a snapshot
-name and refuses to run without one, because the guest writes straight through
-to the qcow2 and a failed build is exactly what a rollback is for.
+**Rebuild from source.** `mate-settings-daemon`, `mate-control-center`, and
+`python3-setproctitle` have source in the main Debian archive, and the first two
+have a hurd-i386 binary at the same source version. A builder that produces
+those binaries belongs in a disposable overlay rather than in the product image:
+an immutable Hurd builder base, a fresh external qcow2 overlay per build,
+build-dependency installation and an unprivileged source build inside it, export
+of the `.deb`, `.changes`, `.buildinfo`, and logs, and then installation of the
+tested binaries into a separate product overlay. That removes any need to trust
+an internal snapshot as the routine rollback, and it keeps a failed build from
+touching the image the product boots.
 
-    scripts/build-hurd-package-in-guest.sh \
-        --snapshot pre-mate-rebuild-20260725 \
-        mate-settings-daemon mate-control-center
-
-**Stub the dependency, when it is genuinely unavailable and the VM does not need
-it.** `scripts/make-hurd-dependency-stub.sh` builds an equivs package that
-provides a name and none of its behavior. `polkitd` is the case: upstream polkit
-tracks sessions through logind, the Hurd has no logind and no elogind build, and
-on a single-user VM the authority polkit would arbitrate has one answer. The
-stub records its reason in the package description, so `dpkg -s` on the guest
-reports why it is there and what is missing.
-
-    scripts/make-hurd-dependency-stub.sh --provides polkitd \
-        --reason "polkit tracks sessions through logind; the Hurd has neither"
-
-A stub supplies no behavior, and anything that calls the service fails at run
-time -- later and less legibly than an install that refused. It is a claim about
-the system, not a fix, and the roadmap entry stays the real work.
-
-**Port it.** `accountsservice` and polkit proper are real work, and nothing above
-substitutes for them if a multi-user session is wanted.
-
-The repeatable order for a desktop in a pinch: rebuild the two MATE components
-from source, stub `polkitd`, install the 37 Mint packages that already resolve,
-and leave `mintmenu` behind the `python3-setproctitle` rebuild.
+**Port.** `polkitd` and `accountsservice` are real work, and nothing above
+substitutes for them.
 
 ## What this changes
 
 Roadmap 55 assumed the package closure had to be read from a live guest. It does
-not: availability and dependency facts are archive facts. What still requires the
-guest is runtime behavior -- whether a component starts, whether GSettings
-persists, whether the session survives logout -- and whether a rebuild succeeds.
+not: availability and dependency facts are archive facts. What still requires
+the guest is runtime behavior -- whether a component starts, whether GSettings
+persists, whether the session survives logout -- whether a package installs at
+all, and whether a rebuild succeeds.
 
-These are index facts read on one date against an unpinned archive. The report
-names its suites, mirror, and source so a rerun is comparable.
+These are index facts read on one date against an unpinned archive. The reports
+name their suites, mirrors, digests, and resolver so a rerun is comparable.
