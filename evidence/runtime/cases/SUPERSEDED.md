@@ -45,6 +45,14 @@ was added, and `git show` on this file's first commit carries the transcript:
   differences, so no revision reconstructs the source state that generated these
   documents.
 
+A fifth defect was found after the first four. A global `core.excludesFile`
+ignoring `*.out` kept every retained stdout out of these commits while the
+`.err` counterparts committed normally, so a clone received `capture.json` with
+digests for streams it did not have. On this working tree the files were
+present, which is why a filesystem listing showed them and `git ls-files` did
+not. `.gitignore` now overrides that rule for `evidence/runtime/cases`, and the
+36 stdout streams are tracked.
+
 The `/dev/kvm` finding in the TCG arm also overreaches. `test -e/-r/-w` shows the
 device node is visible and the mode bits permit an open; it does not show that
 `KVM_CREATE_VM` succeeds. `container_kvm_usable` in the current instrument runs a
