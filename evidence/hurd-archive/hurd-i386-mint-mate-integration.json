@@ -1,0 +1,158 @@
+{
+  "architecture": "hurd-i386",
+  "lmde_overlay": {
+    "architecture_all_packages": 152,
+    "components": [
+      "main",
+      "upstream",
+      "import",
+      "backport"
+    ],
+    "mirror": "https://mirrors.edge.kernel.org/linuxmint-packages",
+    "overlay_release_sha256": "cb52458d47139fee3f7db2efabd58ee4bc7d911968733163f48145365ee6dba8",
+    "release_date": "Fri, 24 Jul 2026 08:20:07 UTC",
+    "release_sha256": "afbe33a9d2538774e147be3ede942c314c95f48b96ec4e3d19f0169b5ddfd02c",
+    "signing_key_fingerprint": "302F0738F465C1535761F965A6616109451BBBF2",
+    "source_index_sha256": {
+      "backport/binary-amd64/Packages.gz": "441146771d1d02ce8cf7594841d520bc5090bff806344ceb5e4d9183a3eaa2f2",
+      "import/binary-amd64/Packages.gz": "08a3961bf20489c459d1df61a89a2f44b838d3c06a9057351c6538110099b5d0",
+      "main/binary-amd64/Packages.gz": "f3c350b9eca103da5788521d8039a0293094576b76b29d3573deb3b66d3867dc",
+      "upstream/binary-amd64/Packages.gz": "899074717455cdea7bd476d35668758edb0afc9fd6b356a6f9d016b2df72f985"
+    },
+    "suite": "gigi"
+  },
+  "must_be_built_or_substituted": [
+    "mintmenu"
+  ],
+  "packages": [
+    {
+      "architecture_class": "architecture-all",
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "but none of the choices are installable:",
+      "package": "mintmenu",
+      "version": "6.2.3"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/backport hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "xapps-common",
+      "version": "3.2.2+gigi"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "xapp-symbolic-icons",
+      "version": "1.1.0-1"
+    }
+  ],
+  "provenance": {
+    "collected_at": "2026-07-25T22:52:41+00:00",
+    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [
+    "gcc-16-base (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgcc-s1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libc-gconv-modules-extra (2.42-17 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libc0.3 (2.42-17 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libexpat1 (2.8.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libzstd1 (1.5.7+dfsg-3+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "zlib1g (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "openssl-provider-legacy (3.6.3-1 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libssl3t64 (3.6.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3.14-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3.14-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "media-types (14.0.0 ftp.ports.debian.org:unstable [all])",
+    "netbase (6.5 ftp.ports.debian.org:unstable [all])",
+    "debconf (1.5.92 ftp.ports.debian.org:unstable [all])",
+    "tzdata (2026c-1 ftp.ports.debian.org:unstable [all])",
+    "libbz2-1.0 (1.0.8-6+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdb5.3t64 (5.3.28+dfsg2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libffi8 (3.5.2-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "liblzma5 (5.8.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtinfo6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libncursesw6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "readline-common (8.3-4 ftp.ports.debian.org:unstable [all])",
+    "libreadline8t64 (8.3-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsqlite3-0 (3.53.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libuuid1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3.14-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3.14 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libproc2-1 (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "procps (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdbus-1-3 (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dbus-bin (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dbus-session-bus-common (1.16.2-5 ftp.ports.debian.org:unstable [all])",
+    "dbus-daemon (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxau6 (1:1.0.11-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxdmcp6 (1:1.1.5-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxcb1 (1.15-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libx11-data (2:1.8.13-1 ftp.ports.debian.org:unstable [all])",
+    "libx11-6 (2:1.8.13-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dbus-x11 (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libatomic1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpcre2-8-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libglib2.0-0t64 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdconf1 (0.49.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dconf-service (0.49.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dconf-gsettings-backend (0.49.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gir1.2-glib-2.0 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgirepository-2.0-0 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gir1.2-girepository-3.0 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgdk-pixbuf2.0-common (2.44.7+dfsg-1 ftp.ports.debian.org:unstable [all])",
+    "libstdc++6 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxml2-16 (2.15.3+dfsg-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "shared-mime-info (2.4-5+b3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libjpeg62-turbo (1:3.1.3-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpng16-16t64 (1.6.58-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdeflate0 (1.19-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libjbig0 (2.1-6.1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "liblerc4 (4.1.1+ds-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsharpyuv0 (1.5.0-0.1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libwebp7 (1.5.0-0.1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtiff6 (4.7.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgdk-pixbuf-2.0-0 (2.44.7+dfsg-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gtk-update-icon-cache (4.20.3+ds-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "hicolor-icon-theme (0.18-2 ftp.ports.debian.org:unstable [all])",
+    "python3-gi (3.56.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "xapp-symbolic-icons (1.1.0-1 ftp.ports.debian.org:unstable [all])",
+    "xdg-utils (1.2.1-2 ftp.ports.debian.org:unstable [all])",
+    "xapps-common (3.2.2-2 ftp.ports.debian.org:unstable [all])"
+  ],
+  "recursive_transaction_size": 70,
+  "resolvable_subset": [
+    "xapps-common",
+    "xapp-symbolic-icons"
+  ],
+  "resolvable_subset_blocker": "",
+  "resolvable_subset_resolves": true,
+  "set": "mint-mate-integration",
+  "summary": {
+    "architecture-all": 2,
+    "uninstallable": 1
+  },
+  "unmatched_patterns": []
+}

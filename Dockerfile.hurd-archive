@@ -1,0 +1,57 @@
+# Resolve Hurd package closures on a Linux host, without booting a guest.
+#
+# Hurd userland cannot execute here. A hurd-amd64 binary is x86-64, so the
+# machine matches, but it names /lib/ld-x86-64.so.1 as its interpreter and links
+# libdiskfs, libports, and libpager, whose calls are Mach RPC. Supplying that
+# loader does not help: on a Linux kernel it dies with SIGSEGV before it runs
+# any program, because its first operations are Mach traps Linux does not
+# implement. Crossing that boundary takes a Mach ABI compatibility layer, which
+# neither this repository nor QEMU user-mode emulation supplies.
+# docs/audits/hurd-execution-boundary-and-archive-layer.md records the probe.
+#
+# What crosses the boundary is the archive as data. apt and dpkg are ordinary
+# Linux programs, and APT::Architecture makes the Hurd port the native
+# architecture of a private apt state tree. Availability, candidate version,
+# declared dependencies, and resolver closure therefore come from the real
+# debian-ports index rather than from a guest that takes minutes to boot and
+# holds one mutable qcow2. Whether a package installs stays a guest fact.
+#
+# The base is pinned by digest because "installable" is partly a statement about
+# apt's solver, so the solver has to be identifiable from the report.
+FROM debian:trixie-slim@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ca-certificates carries the TLS roots for the Mint mirror, which is fetched
+# over HTTPS. debian-ports-archive-keyring lets apt verify the Debian Ports
+# index. gpgv verifies the Mint Release against the vendored key and is the whole
+# OpenPGP surface here, because the resolver decodes the armored key itself
+# rather than managing a keyring with gnupg.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      apt-utils \
+      ca-certificates \
+      debian-ports-archive-keyring \
+      gpgv \
+      python3 \
+ && rm -rf /var/lib/apt/lists/*
+
+# The apt state tree is built per invocation under a temporary directory, so the
+# target architecture and the LMDE overlay stay run-time choices and one image
+# answers hurd-i386 and hurd-amd64 without baking either in. Nothing persists
+# between runs, which is what keeps a stale index from deciding a verdict.
+COPY config/keys/linuxmint-archive-keyring.asc \
+     /usr/local/share/gnu-hurd-docker/linuxmint-archive-keyring.asc
+COPY tests/hurd-archive /usr/local/share/gnu-hurd-docker/selftest
+COPY scripts/report-hurd-package-closure.py /usr/local/bin/report-hurd-package-closure
+
+# The report names the image that produced its verdicts, and the only value that
+# cannot disagree with the image is the digest the FROM line pinned. Reading a
+# local tag instead would record whatever debian:trixie-slim happens to point at
+# on the invoking host, which is a digest that did not run.
+ENV HURD_RESOLVER_IMAGE=debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd
+
+ENV LMDE_KEYRING=/usr/local/share/gnu-hurd-docker/linuxmint-archive-keyring.asc
+ENV HURD_SELF_TEST_SUITE=/usr/local/share/gnu-hurd-docker/selftest
+
+ENTRYPOINT ["/usr/local/bin/report-hurd-package-closure"]

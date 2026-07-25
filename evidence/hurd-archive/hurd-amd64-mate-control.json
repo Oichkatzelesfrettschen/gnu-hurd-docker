@@ -1,0 +1,110 @@
+{
+  "architecture": "hurd-amd64",
+  "lmde_overlay": {
+    "architecture_all_packages": 152,
+    "components": [
+      "main",
+      "upstream",
+      "import",
+      "backport"
+    ],
+    "mirror": "https://mirrors.edge.kernel.org/linuxmint-packages",
+    "overlay_release_sha256": "53b60b37d0ed1e2b1ecbd7d562c2f4be9ddf8b142583f8143b2c5d954a674cdc",
+    "release_date": "Fri, 24 Jul 2026 08:20:07 UTC",
+    "release_sha256": "afbe33a9d2538774e147be3ede942c314c95f48b96ec4e3d19f0169b5ddfd02c",
+    "signing_key_fingerprint": "302F0738F465C1535761F965A6616109451BBBF2",
+    "source_index_sha256": {
+      "backport/binary-amd64/Packages.gz": "441146771d1d02ce8cf7594841d520bc5090bff806344ceb5e4d9183a3eaa2f2",
+      "import/binary-amd64/Packages.gz": "08a3961bf20489c459d1df61a89a2f44b838d3c06a9057351c6538110099b5d0",
+      "main/binary-amd64/Packages.gz": "f3c350b9eca103da5788521d8039a0293094576b76b29d3573deb3b66d3867dc",
+      "upstream/binary-amd64/Packages.gz": "899074717455cdea7bd476d35668758edb0afc9fd6b356a6f9d016b2df72f985"
+    },
+    "suite": "gigi"
+  },
+  "must_be_built_or_substituted": [
+    "mate-control-center"
+  ],
+  "packages": [
+    {
+      "class": "missing",
+      "evidence": "no record in any configured suite",
+      "package": "mate-control-center"
+    },
+    {
+      "architectures": [
+        "hurd-amd64"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "dconf-gsettings-backend",
+      "version": "0.49.0-4+b1"
+    },
+    {
+      "architectures": [
+        "hurd-amd64"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "dconf-cli",
+      "version": "0.49.0-4+b1"
+    }
+  ],
+  "provenance": {
+    "collected_at": "2026-07-25T22:50:54+00:00",
+    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [
+    "gcc-16-base (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libgcc-s1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64]) []",
+    "libc-gconv-modules-extra (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64]) []",
+    "libc0.3 (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libexpat1 (2.8.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libtinfo6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libncursesw6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libproc2-1 (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "procps (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libdbus-1-3 (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dbus-bin (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dbus-session-bus-common (1.16.2-5 ftp.ports.debian.org:unstable [all])",
+    "dbus-daemon (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libxau6 (1:1.0.11-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libxdmcp6 (1:1.1.5-2+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libxcb1 (1.15-1+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libx11-data (2:1.8.13-1 ftp.ports.debian.org:unstable [all])",
+    "libx11-6 (2:1.8.13-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dbus-x11 (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libatomic1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libffi8 (3.7.1-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libpcre2-8-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "zlib1g (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libglib2.0-0t64 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libdconf1 (0.49.0-4+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dconf-cli (0.49.0-4+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dconf-service (0.49.0-4+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "dconf-gsettings-backend (0.49.0-4+b1 ftp.ports.debian.org:unstable [hurd-amd64])"
+  ],
+  "recursive_transaction_size": 28,
+  "resolvable_subset": [
+    "dconf-gsettings-backend",
+    "dconf-cli"
+  ],
+  "resolvable_subset_blocker": "",
+  "resolvable_subset_resolves": true,
+  "set": "mate-control",
+  "summary": {
+    "missing": 1,
+    "native": 2
+  },
+  "unmatched_patterns": []
+}

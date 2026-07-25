@@ -28,8 +28,8 @@ permissions:
 jobs:
   static-gates:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    name: Shell, config, security, and link gates
+    timeout-minutes: 25
+    name: Shell, config, security, resolver, and link gates
 
     steps:
       - name: Checkout repository
@@ -70,6 +70,17 @@ jobs:
       # how a sanitized capture came to fail its own integrity record.
       - name: Validate the runtime evidence contract
         run: make evidence-check
+
+      # The resolver's verdicts are produced by apt over a synthetic
+      # architecture, so a source-level pass says nothing about whether a
+      # verdict is right.  The image build proves the resolver's dependencies
+      # are declared, and the fixture suite drives the classifier and the
+      # metadata authentication against archives whose correct answer is known.
+      # It runs entirely offline and never compares against the committed
+      # reports, because sid, unreleased, and the LMDE suite move daily and such
+      # a comparison would turn someone else's upload into a red gate.
+      - name: Build the archive resolver and run its offline fixture suite
+        run: make hurd-closure-selftest
 
       - name: Scan documentation links
         run: |
