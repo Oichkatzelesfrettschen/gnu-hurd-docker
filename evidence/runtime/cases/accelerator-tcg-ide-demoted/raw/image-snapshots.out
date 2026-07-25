@@ -1,0 +1,6 @@
+Snapshot list:
+ID      TAG               VM_SIZE                DATE        VM_CLOCK     ICOUNT
+1       pre-fullupgrade-20260716      0 B 2026-07-16 17:48:46  0000:00:00.000          0
+2       pre-fullupgrade-20260724      0 B 2026-07-24 21:39:30  0000:00:00.000          0
+3       post-fsck-clean-20260724      0 B 2026-07-24 21:54:07  0000:00:00.000          0
+4       post-upgrade-20260724      0 B 2026-07-24 22:23:06  0000:00:00.000          0

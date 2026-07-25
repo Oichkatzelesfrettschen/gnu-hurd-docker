@@ -36,13 +36,62 @@ DERIVED = "derived"
 DECLARED = "declared"
 ABSENT = "not-captured"
 
+REDACTED = "<redacted>"
+
 # Environment keys whose values are redacted wholesale.  Matching on shape
 # rather than on an enumerated list keeps a newly introduced credential from
 # reaching a published capture merely because nobody added it here.
-SECRET_KEY = re.compile(
-    r"(PASSWORD|PASSWD|PASS|TOKEN|SECRET|CREDENTIAL|AUTH|COOKIE|_KEY|APIKEY)",
-    re.IGNORECASE,
-)
+#
+# Each term is anchored to a token boundary -- start, end, or an underscore --
+# because a bare substring makes BYPASS_MODE and COMPASS_CONFIG credentials and
+# destroys the values of ordinary settings.
+_SECRET_TERMS = ("PASSWORD", "PASSWD", "PASS", "TOKEN", "SECRET", "CREDENTIAL",
+                 "CREDENTIALS", "AUTH", "COOKIE", "KEY", "APIKEY")
+_SECRET_NAME = r"(?:^|_)(?:%s)(?:_|$)" % "|".join(_SECRET_TERMS)
+SECRET_KEY = re.compile(_SECRET_NAME, re.IGNORECASE)
+
+# A credential reaches a raw stream as a KEY=value element of .Config.Env or as
+# a YAML mapping in a resolved Compose document.  JSON is redacted structurally
+# instead: a regex that consumes a quoted value and writes back an unquoted
+# token produces invalid JSON, which destroys the document the instrument
+# exists to capture.
+# The key is captured whole and tested with SECRET_KEY, so the token boundary
+# applies to the identifier rather than to the surrounding text.  Embedding the
+# boundary in the value pattern makes the trailing "=" or ":" defeat it.
+ENV_SECRET = re.compile(r"\b([A-Za-z0-9_]+)=([^\"'\s,\]}]+)")
+YAML_SECRET = re.compile(r"^([ \t]*-?[ \t]*)([A-Za-z0-9_]+):([ \t]+)(\S.*)$",
+                         re.MULTILINE)
+
+
+def _env_sub(match):
+    key, value = match.group(1), match.group(2)
+    return "%s=%s" % (key, REDACTED) if SECRET_KEY.search(key) else match.group(0)
+
+
+def _yaml_sub(match):
+    indent, key, space = match.group(1), match.group(2), match.group(3)
+    if SECRET_KEY.search(key):
+        return "%s%s:%s%s" % (indent, key, space, REDACTED)
+    return match.group(0)
+
+
+def redact_structure(value):
+    """Replace credential-shaped members throughout a decoded JSON value.
+
+    Redacting the serialized text cannot preserve JSON structure, so the
+    document is decoded, walked, and re-serialized.  An environment array
+    carries its credentials as KEY=value strings, which the element rule below
+    covers.
+    """
+    if isinstance(value, dict):
+        return {k: (REDACTED if isinstance(k, str) and SECRET_KEY.search(k)
+                    else redact_structure(v))
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_structure(item) for item in value]
+    if isinstance(value, str):
+        return ENV_SECRET.sub(_env_sub, value)
+    return value
 
 
 def field(value, evidence_class, source, reason=""):
@@ -58,11 +107,14 @@ def field(value, evidence_class, source, reason=""):
 
 
 class Capture:
-    def __init__(self, capture_dir, runtime):
+    def __init__(self, capture_dir, runtime, replacements=None):
         self.dir = capture_dir
         self.raw = os.path.join(capture_dir, "raw")
         os.makedirs(self.raw, exist_ok=True)
         self.runtime = runtime
+        # An empty replacement list leaves streams verbatim, so an unredacted
+        # capture and a redacted one travel the same write-then-hash path.
+        self.replacements = replacements or []
         self.probes = {}
 
     def run(self, name, argv, stdin_text=None, timeout=60):
@@ -84,6 +136,13 @@ class Capture:
             status, out, err = None, "", "%s: %s" % (type(exc).__name__, exc)
         completed = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
+        # Sanitize before writing and before hashing, so the retained bytes and
+        # the digest that certifies them are the same bytes.  The parse below
+        # continues on the sanitized text: a value the capture refuses to
+        # publish is a value it refuses to assert.
+        out = redact_stream(out, self.replacements)
+        err = redact_stream(err, self.replacements)
+
         out_file = "raw/%s.out" % name
         err_file = "raw/%s.err" % name
         for rel, text in ((out_file, out), (err_file, err)):
@@ -91,13 +150,14 @@ class Capture:
                 fh.write(text)
 
         self.probes[name] = {
-            "argv": argv,
+            "argv": [redact_stream(a, self.replacements) for a in argv],
             "started_at_utc": started,
             "completed_at_utc": completed,
             "exit_status": status,
             "stdout_file": out_file,
             "stderr_file": err_file,
             "stdout_sha256": hashlib.sha256(out.encode("utf-8")).hexdigest(),
+            "stderr_sha256": hashlib.sha256(err.encode("utf-8")).hexdigest(),
         }
         return status, out, err
 
@@ -162,21 +222,44 @@ def select_container(capture, runtime, wanted_container, wanted_service):
                       "candidates were %s" % ", ".join(n for n, _ in candidates))
     if len(with_qemu) > 1:
         names = ", ".join(n for n, _ in with_qemu)
-        raise SystemExit(
-            "capture-runtime-evidence: %d containers run QEMU (%s); "
-            "name one with --container or --service" % (len(with_qemu), names))
+        # SystemExit carrying a string prints it and exits 1.  Ambiguity exits 2
+        # so a caller distinguishes "name one instance" from an ordinary failure,
+        # which means the diagnostic goes to stderr on its own.
+        print("capture-runtime-evidence: %d containers run QEMU (%s); "
+              "name one with --container or --service" % (len(with_qemu), names),
+              file=sys.stderr)
+        raise SystemExit(2)
     return with_qemu[0], ""
 
 
-def qemu_argv_from_proc(capture, runtime, container):
+def qemu_argv_from_proc(capture, runtime, container, wanted_pid=""):
     """Read the QEMU command line from /proc, which is NUL-delimited and keeps
-    argument boundaries that splitting formatted ps output on spaces loses."""
+    argument boundaries that splitting formatted ps output on spaces loses.
+
+    One container may host several QEMU processes.  Taking the first silently
+    binds the argv, accelerator, machine, and image of an arbitrary one of them
+    to a document that claims to describe a single instance, so several PIDs
+    without --qemu-pid is ambiguity and exits 2.
+    """
     rc, pids, _ = capture.run(
         "qemu-pid", [runtime, "exec", container, "sh", "-c",
                      "ps -eo pid,args | grep '[q]emu-system-x86_64' | awk '{print $1}'"])
     if rc != 0 or not pids.strip():
         return None, None
-    pid = pids.split()[0]
+    found = pids.split()
+    if wanted_pid:
+        if wanted_pid not in found:
+            print("capture-runtime-evidence: no QEMU process %s in %s; found %s"
+                  % (wanted_pid, container, ", ".join(found)), file=sys.stderr)
+            raise SystemExit(2)
+        pid = wanted_pid
+    elif len(found) > 1:
+        print("capture-runtime-evidence: %d QEMU processes in %s (%s); "
+              "name one with --qemu-pid" % (len(found), container, ", ".join(found)),
+              file=sys.stderr)
+        raise SystemExit(2)
+    else:
+        pid = found[0]
     rc, raw, _ = capture.run(
         "qemu-cmdline", [runtime, "exec", container, "sh", "-c",
                          "tr '\\0' '\\n' < /proc/%s/cmdline" % pid])
@@ -239,6 +322,41 @@ def container_device_access(capture, runtime, container, path):
     return parsed or None
 
 
+def container_kvm_usable(capture, runtime, container):
+    """Report whether QEMU can initialize KVM in this container, and why not.
+
+    test -e/-r/-w establishes that the device node is visible and that the mode
+    bits permit an open; it does not establish that KVM_CREATE_VM succeeds.  A
+    one-shot QEMU with -accel kvm and no disk exercises the same initialization
+    path the VM under study uses, so a TCG arm can state device usability as an
+    observation rather than inheriting it from the KVM arm.
+    """
+    rc, out, err = capture.run(
+        "container-kvm-usable",
+        [runtime, "exec", container,
+         # -S starts the machine paused, so a QEMU that initialized KVM stays
+         # alive until timeout(1) kills it.  timeout's 124 is therefore the
+         # success signal, and it comes from the process rather than from a
+         # shell sentinel a wrapper would have masked.
+         "timeout", "3", "qemu-system-x86_64", "-accel", "kvm", "-machine", "pc",
+         "-nodefaults", "-no-user-config", "-display", "none", "-S"],
+        timeout=30)
+    text = " ".join(((out or "") + (err or "")).split())
+    lowered = text.lower()
+    for marker in ("failed to initialize kvm", "could not access kvm kernel module",
+                   "kvm not supported", "invalid accelerator", "no accelerator found",
+                   "permission denied"):
+        if marker in lowered:
+            return False, "QEMU reported: %s" % text[:200]
+    if rc == 124:
+        return True, ""
+    # Every other outcome is an unknown failure, not a demonstration.  Returning
+    # True for any transcript that misses the known strings classifies a missing
+    # binary or an unrelated machine-init error as observed usability.
+    return None, ("the KVM probe exited %s without a known accelerator "
+                  "diagnostic: %s" % (rc, text[:200] or "no output"))
+
+
 def resolve_image_host_path(inspect, guest_path):
     """Map the guest-visible image path to a host path through the container's
     own mount table.  A named volume has no ./images counterpart, so assuming
@@ -266,6 +384,31 @@ def redact_text(text, replacements):
     return text
 
 
+def redact_stream(text, replacements):
+    """Sanitize one retained stream: machine-local strings become tokens and
+    secret-shaped assignments lose their values.
+
+    This runs inside Capture.run, before the stream is written and before its
+    digest is taken.  A pass that rewrites the file afterwards leaves the digest
+    describing the unsanitized bytes, so every redacted stream then fails the
+    integrity record the capture publishes for it.
+    """
+    text = redact_text(text, replacements)
+    stripped = text.strip()
+    if stripped[:1] in ("{", "["):
+        try:
+            decoded = json.loads(stripped)
+        except ValueError:
+            pass
+        else:
+            # Re-serialized rather than patched in place, so a redacted stream
+            # stays a document json_probe can decode.
+            return json.dumps(redact_structure(decoded), indent=2) + "\n"
+    text = ENV_SECRET.sub(_env_sub, text)
+    text = YAML_SECRET.sub(_yaml_sub, text)
+    return text
+
+
 def redact_env(env):
     """Replace secret-shaped values, so a capture advertised as publishable does
     not carry a credential the resolved configuration happened to include."""
@@ -280,12 +423,21 @@ def main():
         description="Capture one identified QEMU instance as evidence.")
     parser.add_argument("--container", default="", help="inspect this container")
     parser.add_argument("--service", default="", help="inspect this Compose service")
+    parser.add_argument("--qemu-pid", default="",
+                        help="bind to this QEMU pid when the container hosts several")
     parser.add_argument("--image-digest", action="store_true",
                         help="hash the guest image; requires the VM stopped")
+    parser.add_argument("--image", default="",
+                        help="hash this qcow2 path directly, without selecting a "
+                             "running instance")
     parser.add_argument("--output-dir", default="", help="capture root directory")
     parser.add_argument("--redact", action="store_true",
                         help="replace paths, host name, and secret-shaped values")
     args = parser.parse_args()
+    if args.image and (args.container or args.service or args.qemu_pid):
+        parser.error("--image names a file to hash offline and selects no running "
+                     "instance, so it cannot be combined with --container, "
+                     "--service, or --qemu-pid")
 
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(repo_root)
@@ -297,7 +449,11 @@ def main():
     captured_at = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     root = args.output_dir or os.environ.get(
         "RUNTIME_EVIDENCE_ROOT", os.path.join(repo_root, "evidence", "runtime"))
-    capture = Capture(os.path.join(root, "%s-%s" % (short, captured_at)), runtime)
+    replacements = [(repo_root, "<repo>"),
+                    (os.path.expanduser("~"), "<home>"),
+                    (os.uname().nodename, "<host>")] if args.redact else []
+    capture = Capture(os.path.join(root, "%s-%s" % (short, captured_at)),
+                      runtime, replacements)
 
     # ---- repository ------------------------------------------------------
     _, dirty_out, _ = capture.run("git-status", ["git", "status", "--porcelain"])
@@ -320,8 +476,16 @@ def main():
         "runtime-version", [runtime, "version", "--format", "{{.Server.Version}}"])
 
     # ---- selection -------------------------------------------------------
-    selected, select_reason = select_container(
-        capture, runtime, args.container, args.service)
+    # An offline image capture skips selection entirely.  Selecting first would
+    # let an unrelated running QEMU abort the run, or refuse the digest because
+    # some other container is writing some other file.
+    offline_image = os.path.realpath(args.image) if args.image else ""
+    if offline_image:
+        selected, select_reason = None, (
+            "offline image capture: no running instance is selected")
+    else:
+        selected, select_reason = select_container(
+            capture, runtime, args.container, args.service)
     container = selected[0] if selected else ""
     service = selected[1] if selected else ""
 
@@ -371,14 +535,20 @@ def main():
     qemu_pid, qemu_argv = (None, None)
     qemu_version = ""
     container_kvm = None
+    kvm_usable, kvm_usable_reason = None, "no container selected"
     if container:
-        qemu_pid, qemu_argv = qemu_argv_from_proc(capture, runtime, container)
+        qemu_pid, qemu_argv = qemu_argv_from_proc(
+            capture, runtime, container, args.qemu_pid)
         _, version_out, _ = capture.run(
             "qemu-version",
             [runtime, "exec", container, "qemu-system-x86_64", "--version"])
         qemu_version = version_out.splitlines()[0] if version_out.strip() else ""
         container_kvm = container_device_access(capture, runtime, container, "/dev/kvm")
+        kvm_usable, kvm_usable_reason = container_kvm_usable(
+            capture, runtime, container)
 
+    runtime_reason = ("offline image capture: no QEMU process is selected"
+                      if offline_image else "")
     accel = argv_option(qemu_argv, "-accel")
     machine = argv_option(qemu_argv, "-machine")
     smp = argv_option(qemu_argv, "-smp")
@@ -397,6 +567,7 @@ def main():
             monitor_port = match.group(1)
     monitor_kvm = None
     vcpu_threads = None
+    monitor_reason = ""
     if container and monitor_port:
         # The stream omits "quit": in the QEMU monitor that terminates QEMU
         # rather than closing the session, and the reboot-loop mode restarts the
@@ -415,10 +586,22 @@ def main():
                 monitor_kvm = True
             elif "kvm support:" in monitor_out:
                 monitor_kvm = False
-            vcpu_threads = monitor_out.count("CPU #")
+            # A running QEMU presents at least one CPU, so a zero count means
+            # the transcript ended before "info cpus" answered rather than that
+            # the machine has no vCPU.  Counting unconditionally would publish
+            # that truncation as an observation of zero.
+            counted = monitor_out.count("CPU #")
+            if counted:
+                vcpu_threads = counted
+            else:
+                monitor_reason = ("the monitor transcript carries no 'CPU #' line, "
+                                  "so the info cpus response is incomplete")
 
     # ---- image -----------------------------------------------------------
-    host_image, image_reason = resolve_image_host_path(inspect, guest_image)
+    if offline_image:
+        host_image, image_reason = offline_image, ""
+    else:
+        host_image, image_reason = resolve_image_host_path(inspect, guest_image)
     image_info = None
     if host_image and os.path.exists(host_image) and shutil.which("qemu-img"):
         # A running VM holds the qcow2 write lock, so metadata reads pass -U.
@@ -442,17 +625,29 @@ def main():
 
     digest = ""
     digest_reason = "hashing a running writable qcow2 yields no stable digest; " \
-                    "stop the VM and rerun with --image-digest"
-    if args.image_digest:
-        if container:
-            digest_reason = ("refusing to hash %s while its VM runs; the file is "
-                             "writable and the digest would not be stable" % guest_image)
-        elif host_image and os.path.exists(host_image):
-            hasher = hashlib.sha256()
-            with open(host_image, "rb") as fh:
-                for chunk in iter(lambda: fh.read(1024 * 1024), b""):
-                    hasher.update(chunk)
-            digest, digest_reason = hasher.hexdigest(), ""
+                    "stop the VM and rerun with --image PATH"
+    # Image identity is otherwise discovered from a running QEMU process, while
+    # a stable digest requires the VM stopped.  Those conditions never hold at
+    # once, so --image names the file directly and makes offline image evidence
+    # independent of runtime selection.
+    digest_target = offline_image or (host_image if not container else "")
+    if (args.image_digest or offline_image) and digest_target:
+        if os.path.isfile(digest_target):
+            # Hashed through a recorded probe rather than in-process, so the
+            # capture names the command a reader re-runs.  Computing it in
+            # Python while the field cites sha256sum states a provenance the
+            # capture never had.
+            rc, sum_out, _ = capture.run("image-sha256",
+                                         ["sha256sum", digest_target], timeout=600)
+            if rc == 0 and sum_out.split():
+                digest, digest_reason = sum_out.split()[0], ""
+            else:
+                digest_reason = "sha256sum exited %s for %s" % (rc, digest_target)
+        else:
+            digest_reason = "no file at %s" % digest_target
+    elif args.image_digest and container:
+        digest_reason = ("refusing to hash %s while its VM runs; the file is "
+                         "writable and the digest would not be stable" % guest_image)
 
     # ---- guest -----------------------------------------------------------
     ssh_port = published_ssh or os.environ.get("RUNTIME_EVIDENCE_SSH_PORT", "")
@@ -461,7 +656,10 @@ def main():
     ssh_user = os.environ.get("RUNTIME_EVIDENCE_SSH_USER", "root")
     guest = {}
     guest_reason = ""
-    if not container:
+    if offline_image:
+        guest_reason = ("offline image capture: no guest runs, so no guest "
+                        "probe is possible")
+    elif not container:
         guest_reason = "no container selected"
     elif not ssh_port:
         guest_reason = "the selected container publishes no host port for guest 22"
@@ -495,6 +693,8 @@ def main():
             "command": [os.path.relpath(os.path.abspath(__file__), repo_root)]
                        + (["--container", args.container] if args.container else [])
                        + (["--service", args.service] if args.service else [])
+                       + (["--qemu-pid", args.qemu_pid] if args.qemu_pid else [])
+                       + (["--image", args.image] if args.image else [])
                        + (["--image-digest"] if args.image_digest else [])
                        + (["--redact"] if args.redact else []),
             "environment": {k: v for k, v in os.environ.items()
@@ -549,16 +749,21 @@ def main():
         },
         "observed_runtime": {
             "qemu_version": field(qemu_version, OBSERVED,
-                                  "qemu-system-x86_64 --version inside the container"),
-            "qemu_argv": field(qemu_argv, OBSERVED, "/proc/<pid>/cmdline, NUL-delimited"),
-            "accelerator": field(accel, OBSERVED, "QEMU argv -accel"),
-            "machine": field(machine, OBSERVED, "QEMU argv -machine"),
-            "smp": field(smp, OBSERVED, "QEMU argv -smp"),
+                                  "qemu-system-x86_64 --version inside the container",
+                                  runtime_reason),
+            "qemu_argv": field(qemu_argv, OBSERVED, "/proc/<pid>/cmdline, NUL-delimited",
+                               runtime_reason),
+            "accelerator": field(accel, OBSERVED, "QEMU argv -accel", runtime_reason),
+            "machine": field(machine, OBSERVED, "QEMU argv -machine", runtime_reason),
+            "smp": field(smp, OBSERVED, "QEMU argv -smp", runtime_reason),
             "container_kvm_device": field(container_kvm, OBSERVED,
                                           "test -e/-r/-w /dev/kvm inside the container"),
             "monitor_kvm_enabled": field(monitor_kvm, OBSERVED, "QEMU monitor: info kvm"),
             "monitor_vcpu_threads": field(vcpu_threads, OBSERVED,
-                                          "QEMU monitor: info cpus"),
+                                          "QEMU monitor: info cpus", monitor_reason),
+            "container_kvm_usable": field(kvm_usable, OBSERVED,
+                                          "one-shot qemu-system-x86_64 -accel kvm "
+                                          "inside the container", kvm_usable_reason),
         },
         "observed_guest": {
             "uname": field(guest.get("uname"), OBSERVED, "guest uname -a", guest_reason),
@@ -570,9 +775,15 @@ def main():
                                         guest_reason),
         },
         "image": {
-            "guest_path": field(guest_image, OBSERVED, "QEMU argv -drive file="),
-            "host_path": field(host_image, DERIVED,
-                               "guest path resolved through container mounts",
+            "guest_path": field(guest_image, OBSERVED, "QEMU argv -drive file=",
+                                image_reason if offline_image else ""),
+            "supplied_path": field(args.image, DECLARED, "--image",
+                                   "" if offline_image
+                                   else "no image named on the command line"),
+            "host_path": field(host_image,
+                               DERIVED if not offline_image else OBSERVED,
+                               "--image resolved with realpath" if offline_image
+                               else "guest path resolved through container mounts",
                                image_reason),
             "virtual_size_bytes": field(
                 (image_info or {}).get("virtual-size"), OBSERVED, "qemu-img info --output=json"),
@@ -592,25 +803,15 @@ def main():
         "probes": capture.probes,
     }
 
+    # The retained streams are already sanitized and hashed.  capture.json is
+    # assembled from those sanitized values, so it takes one scrub of its own
+    # serialization and no stream is rewritten after its digest is taken.
     out_path = os.path.join(capture.dir, "capture.json")
-    with open(out_path, "w", encoding="utf-8") as fh:
-        json.dump(document, fh, indent=2)
-        fh.write("\n")
-
+    serialized = json.dumps(document, indent=2) + "\n"
     if args.redact:
-        replacements = [(repo_root, "<repo>"),
-                        (os.path.expanduser("~"), "<home>"),
-                        (os.uname().nodename, "<host>")]
-        for base, _dirs, names in os.walk(capture.dir):
-            for name in names:
-                path = os.path.join(base, name)
-                try:
-                    with open(path, encoding="utf-8") as fh:
-                        text = fh.read()
-                except (OSError, UnicodeDecodeError):
-                    continue
-                with open(path, "w", encoding="utf-8") as fh:
-                    fh.write(redact_text(text, replacements))
+        serialized = redact_stream(serialized, replacements)
+    with open(out_path, "w", encoding="utf-8") as fh:
+        fh.write(serialized)
 
     print(out_path)
     return 0

@@ -7,7 +7,7 @@
       "--redact"
     ],
     "environment": {
-      "COMPOSE_FILE": "compose.yaml:compose.minty.yaml:/tmp/claude-1000/-home-eirikr-Github-gnu-hurd-docker/507433d9-7e3b-4a12-87d5-d8bb584a99f2/scratchpad/compose.noforce.yaml"
+      "COMPOSE_FILE": "compose.yaml:compose.minty.yaml:<scratch-override>"
     }
   },
   "evidence_classes": {

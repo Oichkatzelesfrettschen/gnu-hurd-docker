@@ -50,6 +50,24 @@ The guest is Debian GNU/Hurd `hurd-amd64` from debian-ports, tracking `sid` plus
 this tree describe LMDE 7 `gigi`'s Debian base, which is the theme source's
 suite rather than the guest's.
 
+MATE is the canonical Minty Hurd desktop. The product is Debian GNU/Hurd sid on
+GNU Mach under QEMU, with Xorg as the display server, MATE as the default
+session, Debian Ports supplying native `hurd-amd64` executables, and LMDE 7
+`gigi` supplying architecture-independent Mint themes, icons, cursors, artwork,
+backgrounds, and translations. The separately named Minty Emerald MATE theme
+derives from those unmodified Mint assets.
+
+The tree installs XFCE and boots `minty-hurd-xfce`, so the installer and the
+autostart wrapper are migration targets rather than the product. XFCE stays as
+an explicitly selected rescue session while MATE is ported, and XFCE reaching a
+desktop satisfies no MATE gate.
+
+An `Architecture: all` metapackage states nothing about `hurd-amd64` native
+dependency closure. MATE readiness is settled by `apt-cache policy` and a
+simulated install against the live guest, and the difficult boundary is session
+integration -- D-Bus authentication, GSettings, polkit, seat substitutes,
+logout and shutdown -- rather than Caja or Marco.
+
 The installed kernel is the uniprocessor Mach build: `uname -a` reports
 `GNU-Mach 1.8+git20260224-up-amd64` and `nproc` returns 1 while QEMU presents
 two vCPUs. Guest parallelism is one processor whatever `QEMU_SMP` sets, so an

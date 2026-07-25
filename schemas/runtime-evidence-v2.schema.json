@@ -59,7 +59,11 @@
         },
         "class": { "enum": ["observed", "derived", "declared", "not-captured"] },
         "source": { "type": "string", "minLength": 1 },
-        "reason": { "type": "string" }
+        "reason": {
+          "description": "Why the value is absent, in the terms the probe reported. An empty string states an absence without stating its cause, which is the preselected-explanation failure in another form.",
+          "type": "string",
+          "minLength": 1
+        }
       },
       "allOf": [
         {
@@ -76,6 +80,17 @@
           "then": {
             "properties": { "class": { "enum": ["observed", "derived", "declared"] } }
           }
+        },
+        {
+          "description": "A null value is an absence: it states not-captured and the reason the probe reported. Without this branch a null value passes while claiming to be observed, which publishes an absence as a measurement.",
+          "if": {
+            "properties": { "value": { "type": "null" } },
+            "required": ["value"]
+          },
+          "then": {
+            "properties": { "class": { "const": "not-captured" } },
+            "required": ["reason"]
+          }
         }
       ]
     },
@@ -89,7 +104,8 @@
         "exit_status",
         "stdout_file",
         "stderr_file",
-        "stdout_sha256"
+        "stdout_sha256",
+        "stderr_sha256"
       ],
       "properties": {
         "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
@@ -101,7 +117,12 @@
         },
         "stdout_file": { "type": "string" },
         "stderr_file": { "type": "string" },
-        "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "stderr_sha256": {
+          "description": "Both streams are hashed after redaction, so a reader recomputes either digest against the retained file and a redaction that ran after hashing shows up as a mismatch.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     }
   }

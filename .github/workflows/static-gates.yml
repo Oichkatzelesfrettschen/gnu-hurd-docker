@@ -41,7 +41,7 @@ jobs:
           # PyYAML and ShellCheck both come from apt: a system-level pip install
           # is refused on the runner image under PEP 668, which would abort setup
           # before any gate runs.
-          sudo apt-get install -y shellcheck python3 python3-yaml
+          sudo apt-get install -y shellcheck python3 python3-yaml python3-jsonschema
           # ShellCheck findings move between releases, so the runner's version is
           # part of what a passing run means.
           shellcheck --version
@@ -63,6 +63,13 @@ jobs:
 
       - name: Validate security configuration
         run: make security
+
+      # The negative fixtures assert what the evidence contract rejects, and the
+      # capture check recomputes each retained stream's digest.  A digest
+      # mismatch is the signature of redaction that ran after hashing, which is
+      # how a sanitized capture came to fail its own integrity record.
+      - name: Validate the runtime evidence contract
+        run: make evidence-check
 
       - name: Scan documentation links
         run: |

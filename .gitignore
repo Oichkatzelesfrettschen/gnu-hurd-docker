@@ -86,3 +86,10 @@ link-scan.json
 # argued artifacts and are tracked.
 evidence/runtime/*
 !evidence/runtime/cases/
+
+# A capture's stdout is its primary evidence, and a global core.excludesFile
+# commonly ignores *.out as build output. That rule silently kept every .out
+# from the tracked cases while their .err counterparts committed, so a clone
+# received hashes for streams it did not have. A repository rule overrides the
+# global file, so the retained stdout travels with the capture that cites it.
+!evidence/runtime/cases/**/*.out

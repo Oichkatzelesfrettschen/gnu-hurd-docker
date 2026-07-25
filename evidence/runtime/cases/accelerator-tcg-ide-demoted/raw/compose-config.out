@@ -1,0 +1,250 @@
+{
+  "name": "gnu-hurd-docker",
+  "networks": {
+    "default": {
+      "name": "gnu-hurd-docker_default",
+      "ipam": {}
+    },
+    "hurd-net": {
+      "name": "gnu-hurd-docker_hurd-net",
+      "driver": "bridge",
+      "ipam": {}
+    }
+  },
+  "services": {
+    "gnu-hurd-dev": {
+      "cap_add": [
+        "CHOWN",
+        "SETUID",
+        "SETGID",
+        "DAC_OVERRIDE"
+      ],
+      "cap_drop": [
+        "ALL"
+      ],
+      "cpus": 4,
+      "command": null,
+      "container_name": "gnu-hurd-dev",
+      "entrypoint": null,
+      "environment": {
+        "AUTO_DISABLE_KVM_FOR_IDE": "1",
+        "ENABLE_9P": "0",
+        "ENABLE_NATIVE_AIO": "0",
+        "ENABLE_VNC": "0",
+        "FORCE_KVM": "0",
+        "HOST_HTTP_PORT": "8080",
+        "HOST_MONITOR_PORT": "9999",
+        "HOST_SERIAL_PORT": "5555",
+        "HOST_SSH_PORT": "2222",
+        "MONITOR_PORT": "9999",
+        "PRINT_QEMU_CMD": "0",
+        "QEMU_AHCI_BOUNCE_SIZE": "",
+        "QEMU_BOOT_ORDER": "",
+        "QEMU_CDROM": "",
+        "QEMU_DISK_BUS": "ide",
+        "QEMU_DRIVE": "/opt/hurd-image/debian-hurd-amd64.qcow2",
+        "QEMU_IDE_CONTROLLER": "piix",
+        "QEMU_IDE_RERROR": "auto",
+        "QEMU_IDE_WERROR": "auto",
+        "QEMU_IDE_WRITE_CACHE": "auto",
+        "QEMU_MACHINE": "pc",
+        "QEMU_NET_MODEL": "",
+        "QEMU_NO_REBOOT": "0",
+        "QEMU_PIIX_IDE_BOUNCE_SIZE": "",
+        "QEMU_RAM": "4096",
+        "QEMU_SMP": "2",
+        "QEMU_VGA_DEVICE": "",
+        "SERIAL_PORT": "5555",
+        "UNSAFE_CACHE": "0"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/opt/scripts/health-check.sh"
+        ],
+        "timeout": "10s",
+        "interval": "30s",
+        "retries": 3,
+        "start_period": "3m0s"
+      },
+      "image": "ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest",
+      "labels": {
+        "com.docker.compose.project": "gnu-hurd",
+        "com.docker.compose.service": "gnu-hurd-dev",
+        "com.gnu-hurd.guest.arch": "x86_64",
+        "org.opencontainers.image.description": "Pure x86_64 GNU/Hurd QEMU environment"
+      },
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "mem_limit": "6442450944",
+      "mem_reservation": "2147483648",
+      "networks": {
+        "hurd-net": null
+      },
+      "pids_limit": 200,
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 2222,
+          "published": "2222",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 8080,
+          "published": "8080",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 5555,
+          "published": "5555",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 9999,
+          "published": "9999",
+          "protocol": "tcp"
+        }
+      ],
+      "restart": "unless-stopped",
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "volumes": [
+        {
+          "type": "volume",
+          "source": "hurd-disk",
+          "target": "/opt/hurd-image",
+          "volume": {}
+        },
+        {
+          "type": "bind",
+          "source": "<repo>/infrastructure/cache/images/installers",
+          "target": "/opt/hurd-installer",
+          "read_only": true,
+          "bind": {}
+        },
+        {
+          "type": "bind",
+          "source": "<repo>/share",
+          "target": "/share",
+          "bind": {}
+        }
+      ]
+    },
+    "hurd": {
+      "cap_add": [
+        "SYS_PTRACE"
+      ],
+      "command": null,
+      "container_name": "hurd-minty",
+      "devices": [
+        {
+          "source": "/dev/kvm",
+          "target": "/dev/kvm",
+          "permissions": "rwm"
+        }
+      ],
+      "entrypoint": null,
+      "environment": {
+        "ENABLE_VNC": "1",
+        "FORCE_KVM": "0",
+        "QEMU_DISK_CACHE": "writeback",
+        "QEMU_DRIVE": "/opt/hurd-image/hurd-working.qcow2",
+        "QEMU_HOSTFWDS": "tcp::2222-:22,tcp::8080-:80,tcp::5901-:5901,udp::60000-:60000,udp::60001-:60001,udp::60002-:60002",
+        "QEMU_IDE_WRITE_CACHE": "auto",
+        "QEMU_RAM": "2048",
+        "QEMU_SMP": "2"
+      },
+      "image": "localhost/gnu-hurd-docker:latest",
+      "networks": {
+        "default": null
+      },
+      "ports": [
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 2222,
+          "published": "2222",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 5900,
+          "published": "5900",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 6080,
+          "published": "6080",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 5901,
+          "published": "5901",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 9999,
+          "published": "9999",
+          "protocol": "tcp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 60000,
+          "published": "60000",
+          "protocol": "udp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 60001,
+          "published": "60001",
+          "protocol": "udp"
+        },
+        {
+          "mode": "ingress",
+          "host_ip": "127.0.0.1",
+          "target": 60002,
+          "published": "60002",
+          "protocol": "udp"
+        }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "<repo>/images",
+          "target": "/opt/hurd-image",
+          "bind": {
+            "selinux": "Z"
+          }
+        }
+      ]
+    }
+  },
+  "volumes": {
+    "hurd-disk": {
+      "name": "gnu-hurd-docker_hurd-disk"
+    }
+  }
+}

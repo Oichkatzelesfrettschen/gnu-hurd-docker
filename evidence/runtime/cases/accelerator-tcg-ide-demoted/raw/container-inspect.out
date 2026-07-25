@@ -1,0 +1,379 @@
+[
+    {
+        "Id": "3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362",
+        "Created": "2026-07-25T15:42:29.962957488Z",
+        "Path": "/entrypoint.sh",
+        "Args": [],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 3881986,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-07-25T15:42:30.534657232Z",
+            "FinishedAt": "0001-01-01T00:00:00Z",
+            "Health": {
+                "Status": "healthy",
+                "FailingStreak": 0,
+                "Log": [
+                    {
+                        "Start": "2026-07-25T08:42:35.678925344-07:00",
+                        "End": "2026-07-25T08:42:35.707732576-07:00",
+                        "ExitCode": 0,
+                        "Output": "\u001b[0;32m[SUCCESS]\u001b[0m QEMU x86_64 process is running\n\u001b[0;32m[SUCCESS]\u001b[0m SSH port 2222 is accessible\n\u001b[0;32m[SUCCESS]\u001b[0m HTTP port 8080 is accessible\n\u001b[0;32m[SUCCESS]\u001b[0m Container is healthy\n"
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:d3adb4cdef38e306014732ee37e33735471e57fc2c5458cbad9a82e2c50e87b8",
+        "ResolvConfPath": "/var/lib/docker/containers/3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362/hostname",
+        "HostsPath": "/var/lib/docker/containers/3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362/hosts",
+        "LogPath": "/var/lib/docker/containers/3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362/3beffd556dceb96e46351ddbbaf2effc184f34570f59fe252c87de2c16a71362-json.log",
+        "Name": "/hurd-minty",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": [
+                "<repo>/images:/opt/hurd-image:rw,Z"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "gnu-hurd-docker_default",
+            "PortBindings": {
+                "2222/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "2222"
+                    }
+                ],
+                "5900/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "5900"
+                    }
+                ],
+                "5901/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "5901"
+                    }
+                ],
+                "60000/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60000"
+                    }
+                ],
+                "60001/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60001"
+                    }
+                ],
+                "60002/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60002"
+                    }
+                ],
+                "6080/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "6080"
+                    }
+                ],
+                "9999/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "9999"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "unless-stopped",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": [
+                "CAP_SYS_PTRACE"
+            ],
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": null,
+            "DnsSearch": null,
+            "ExtraHosts": [],
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [
+                {
+                    "PathOnHost": "/dev/kvm",
+                    "PathInContainer": "/dev/kvm",
+                    "CgroupPermissions": "rwm"
+                }
+            ],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "<repo>/images",
+                "Destination": "/opt/hurd-image",
+                "Mode": "rw,Z",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "3beffd556dce",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": true,
+            "AttachStderr": true,
+            "ExposedPorts": {
+                "2222/tcp": {},
+                "5900/tcp": {},
+                "5901/tcp": {},
+                "60000/udp": {},
+                "60001/udp": {},
+                "60002/udp": {},
+                "6080/tcp": {},
+                "8080/tcp": {},
+                "9999/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "FORCE_KVM=0",
+                "QEMU_SMP=2",
+                "QEMU_HOSTFWDS=tcp::2222-:22,tcp::8080-:80,tcp::5901-:5901,udp::60000-:60000,udp::60001-:60001,udp::60002-:60002",
+                "QEMU_IDE_WRITE_CACHE=auto",
+                "QEMU_DISK_CACHE=writeback",
+                "ENABLE_VNC=1",
+                "QEMU_DRIVE=/opt/hurd-image/hurd-working.qcow2",
+                "QEMU_RAM=2048",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "DEBIAN_FRONTEND=noninteractive"
+            ],
+            "Cmd": null,
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "/opt/scripts/health-check.sh || exit 1"
+                ],
+                "Interval": 30000000000,
+                "Timeout": 10000000000,
+                "StartPeriod": 180000000000,
+                "Retries": 3
+            },
+            "Image": "localhost/gnu-hurd-docker:latest",
+            "Volumes": {
+                "/opt/hurd-image": {}
+            },
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/entrypoint.sh"
+            ],
+            "Labels": {
+                "com.docker.compose.config-hash": "b3247ac1aa6a632a7da64da8b0bcf3c2e4c1e4b3cb5c30eae534482953f1faa2",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "",
+                "com.docker.compose.image": "sha256:d3adb4cdef38e306014732ee37e33735471e57fc2c5458cbad9a82e2c50e87b8",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "gnu-hurd-docker",
+                "com.docker.compose.project.config_files": "<repo>/compose.yaml,<repo>/compose.minty.yaml,<scratch-override>",
+                "com.docker.compose.project.working_dir": "<repo>",
+                "com.docker.compose.replace": "hurd-minty",
+                "com.docker.compose.service": "hurd",
+                "com.docker.compose.version": "5.3.1",
+                "container.platforms": "linux/amd64,linux/arm64",
+                "org.opencontainers.image.authors": "x86_64-hurd-team",
+                "org.opencontainers.image.description": "Multi-platform GNU/Hurd x86_64 QEMU environment (runs on amd64 and arm64 hosts)",
+                "org.opencontainers.image.licenses": "MIT",
+                "org.opencontainers.image.source": "https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker",
+                "org.opencontainers.image.version": "24.04",
+                "qemu.binary": "/usr/bin/qemu-system-x86_64",
+                "qemu.guest.architecture": "x86_64"
+            }
+        },
+        "NetworkSettings": {
+            "SandboxID": "c197611784fa0c51337819d39d4ea5064c9083d3455e536748235c895ec1d6a8",
+            "SandboxKey": "/var/run/docker/netns/c197611784fa",
+            "Ports": {
+                "2222/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "2222"
+                    }
+                ],
+                "5900/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "5900"
+                    }
+                ],
+                "5901/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "5901"
+                    }
+                ],
+                "60000/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60000"
+                    }
+                ],
+                "60001/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60001"
+                    }
+                ],
+                "60002/udp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "60002"
+                    }
+                ],
+                "6080/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "6080"
+                    }
+                ],
+                "8080/tcp": null,
+                "9999/tcp": [
+                    {
+                        "HostIp": "127.0.0.1",
+                        "HostPort": "9999"
+                    }
+                ]
+            },
+            "Networks": {
+                "gnu-hurd-docker_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "hurd-minty",
+                        "hurd"
+                    ],
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "42ad830cf5451f8c2b2312d2890336eaf7693e696022d143d8afce2e70866b3f",
+                    "EndpointID": "a8e411d8305f6d9a651a6ae5cf29e783d1f2ab0c4532bd7a7231f4df01a8f0ac",
+                    "Gateway": "172.21.0.1",
+                    "IPAddress": "172.21.0.2",
+                    "MacAddress": "5a:ed:16:4f:d3:fa",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "hurd-minty",
+                        "hurd",
+                        "3beffd556dce"
+                    ]
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:8c42d6a9652711d0931dddeda62b2ab90b64f595b39fc4b97dd0d78b7a624958",
+            "size": 2369,
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    }
+]
