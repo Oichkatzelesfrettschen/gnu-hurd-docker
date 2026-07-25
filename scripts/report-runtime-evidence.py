@@ -11,18 +11,38 @@ import json
 import sys
 
 ORDER = [
+    ("Instance", "instance",
+     ["container", "compose_service", "compose_project", "container_image_id",
+      "qemu_pid"]),
     ("Repository", "repository", ["commit", "dirty", "maintained_shell_surface"]),
-    ("Host", "host", ["cpu_model", "cpu_count", "kvm_device_present",
-                      "qemu_version", "container_runtime_version"]),
-    ("Declared", "declared", ["compose_files", "machine", "disk_bus", "smp",
-                              "force_kvm", "auto_disable_kvm_for_ide", "drive"]),
+    ("Host", "host", ["cpu_model", "cpu_count", "kvm_device",
+                      "container_runtime_version"]),
+    ("Declared (selected service)", "declared", ["environment"]),
+    ("Live container", "live_container", ["environment", "published_ssh_port"]),
     ("Observed runtime", "observed_runtime",
-     ["container", "container_state", "qemu_accelerator", "qemu_machine",
-      "qemu_smp", "monitor_kvm_enabled", "monitor_vcpu_threads"]),
+     ["qemu_version", "accelerator", "machine", "smp", "container_kvm_device",
+      "monitor_kvm_enabled", "monitor_vcpu_threads"]),
     ("Observed guest", "observed_guest",
      ["uname", "nproc", "installed_packages", "dpkg_status_sha256"]),
-    ("Image", "image", ["host_path", "virtual_size", "snapshot_tags", "sha256"]),
+    ("Image", "image",
+     ["guest_path", "host_path", "virtual_size_bytes", "format", "snapshot_tags",
+      "sha256"]),
 ]
+
+# Environment maps carry many keys; the summary shows the ones that steer the
+# accelerator decision and defers the rest to the document.
+ENV_KEYS = ("FORCE_KVM", "AUTO_DISABLE_KVM_FOR_IDE", "QEMU_MACHINE",
+            "QEMU_DISK_BUS", "QEMU_SMP", "QEMU_DRIVE")
+
+
+def render(value):
+    if isinstance(value, dict) and any(k in value for k in ENV_KEYS):
+        return " ".join("%s=%s" % (k, value[k]) for k in ENV_KEYS if k in value)
+    if isinstance(value, dict):
+        return " ".join("%s=%s" % (k, v) for k, v in sorted(value.items()))
+    if isinstance(value, list):
+        return "[]" if not value else " ".join(str(v) for v in value)
+    return str(value)
 
 
 def main(argv):
@@ -44,7 +64,7 @@ def main(argv):
             if entry is None:
                 continue
             value = entry["value"]
-            shown = "--" if value is None else str(value)
+            shown = "--" if value is None else render(value)
             print("  %-26s %-13s %s" % (key, entry["class"], shown))
             reason = entry.get("reason")
             if reason and value is not None:

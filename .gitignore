@@ -81,7 +81,8 @@ mint-sources/
 *.db
 link-scan.json
 
-# Runtime evidence captures are per-run instances; one exemplar is committed
-# so the schema stays reviewable in-tree.
+# Generated runtime captures are dated instances and stay untracked.
+# evidence/runtime/cases/ holds deliberate, sanitized captures that are
+# argued artifacts and are tracked.
 evidence/runtime/*
-!evidence/runtime/639a047-20260725T101658Z/
+!evidence/runtime/cases/

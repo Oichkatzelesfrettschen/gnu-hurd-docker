@@ -113,10 +113,11 @@ links:
 
 # The accelerator QEMU selected reaches an operator only from the argv and the
 # monitor: /dev/kvm being present, FORCE_KVM being set, and a target named
-# up-kvm each state a request.  capture-runtime-evidence.sh records both the
-# request and the outcome, and labels which is which.
+# up-kvm each state a request.  capture-runtime-evidence.py binds every field to
+# one QEMU instance it selected by finding the process, and labels the request
+# and the outcome separately.
 runtime-info:
-	@capture=$$(./scripts/capture-runtime-evidence.sh) && \
+	@capture=$$(python3 scripts/capture-runtime-evidence.py) && \
 		python3 scripts/report-runtime-evidence.py "$$capture" && \
 		echo "Capture: $$capture"
 
