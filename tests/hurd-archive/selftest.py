@@ -181,6 +181,13 @@ def test_classification(module, suite, workspace):
                 bool(report["provenance"]["tools"]["apt"])
                 and bool(report["provenance"]["tools"]["dpkg"]),
                 str(report["provenance"]["tools"]))
+    # The image is named by the digest its own Dockerfile pinned. A value read
+    # from a local tag would record whatever that tag points at rather than the
+    # image that produced the verdicts.
+    suite.check("provenance names the resolver image by digest",
+                report["provenance"]["resolver_image"].startswith(
+                    "debian@sha256:"),
+                report["provenance"]["resolver_image"] or "empty")
 
 
 def test_version_selection(module, suite, workspace):

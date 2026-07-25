@@ -103,6 +103,13 @@ mismatch each abort the run, because an overlay that silently shrinks reports a
 smaller closure as though the archive were smaller. Debian Ports is verified by
 apt itself against `debian-ports-archive-keyring`.
 
+The resolver's solver is not the guest's. The image is `debian:trixie-slim`
+pinned by digest, and the guest runs `sid`, so `uninstallable` is a verdict from
+`apt 3.0.3` rather than from the apt the guest would run. Availability and
+candidate version are independent of solver version; whether a graph closes is
+partly a statement about the solver, so the apt and dpkg versions are recorded
+with every report and a sid-matched resolver stays open work.
+
 `evidence/hurd-archive/` holds the generated reports. Each carries its
 collection time, the resolver base image digest, the apt and dpkg versions that
 produced the verdicts, the verified `Release` digest and date, every source

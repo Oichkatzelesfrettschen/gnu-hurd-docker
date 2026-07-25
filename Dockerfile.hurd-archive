@@ -45,6 +45,12 @@ COPY config/keys/linuxmint-archive-keyring.asc \
 COPY tests/hurd-archive /usr/local/share/gnu-hurd-docker/selftest
 COPY scripts/report-hurd-package-closure.py /usr/local/bin/report-hurd-package-closure
 
+# The report names the image that produced its verdicts, and the only value that
+# cannot disagree with the image is the digest the FROM line pinned. Reading a
+# local tag instead would record whatever debian:trixie-slim happens to point at
+# on the invoking host, which is a digest that did not run.
+ENV HURD_RESOLVER_IMAGE=debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd
+
 ENV LMDE_KEYRING=/usr/local/share/gnu-hurd-docker/linuxmint-archive-keyring.asc
 ENV HURD_SELF_TEST_SUITE=/usr/local/share/gnu-hurd-docker/selftest
 

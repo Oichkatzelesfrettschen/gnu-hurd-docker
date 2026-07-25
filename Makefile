@@ -171,7 +171,6 @@ hurd-closure-report: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm \
 		--user "$$(id -u):$$(id -g)" \
 		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
-		-e HURD_RESOLVER_IMAGE="$$($(CONTAINER_RUNTIME) image inspect --format '{{index .RepoDigests 0}}' debian:trixie-slim 2>/dev/null)" \
 		gnu-hurd-archive:local \
 		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
 		--json "/out/$(HURD_ARCH)-$(HURD_SET).json"

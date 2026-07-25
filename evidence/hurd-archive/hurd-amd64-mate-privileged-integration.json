@@ -50,7 +50,7 @@
     }
   ],
   "provenance": {
-    "collected_at": "2026-07-25T22:45:34+00:00",
+    "collected_at": "2026-07-25T22:51:02+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
     "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
     "suites": [
