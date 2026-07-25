@@ -49,13 +49,12 @@ services:
       # ----- QEMU user-mode networking port forwards ----------------------
       # Bind everything to 127.0.0.1 in the container; the docker-compose
       # ports: section below maps each to host loopback.
-      QEMU_HOSTFWDS: >-
-        tcp::2222-:22,
-        tcp::8080-:80,
-        tcp::5901-:5901,
-        udp::60000-:60000,
-        udp::60001-:60001,
-        udp::60002-:60002
+      # One unbroken line.  A YAML folded scalar (>-) turns each newline into a
+      # space, so the folded form yields "tcp::8080-:80, tcp::5901-:5901" and
+      # QEMU rejects the leading space with "Invalid host forwarding rule ...
+      # (Bad protocol name)".  The entrypoint splits this value on commas and
+      # appends each element to hostfwd=, so no element may carry whitespace.
+      QEMU_HOSTFWDS: "tcp::2222-:22,tcp::8080-:80,tcp::5901-:5901,udp::60000-:60000,udp::60001-:60001,udp::60002-:60002"
 
     ports:
       # SSH (openssh-server 10.3p1-2 on guest:22)
