@@ -393,8 +393,12 @@ def write_overlay(root, architecture, mirror, suite, release):
     }
 
 
-def build_tree(root, architecture, ports, lmde):
-    """Create a private apt state tree whose native architecture is the target."""
+def build_tree(root, architecture, ports, lmde, foreign=""):
+    """Create a private apt state tree whose native architecture is the target.
+
+    A foreign architecture is enabled the way `dpkg --add-architecture` enables
+    one, so a request qualified with it resolves against both indices at once.
+    """
     layout = ["etc/apt/apt.conf.d", "etc/apt/preferences.d",
               "etc/apt/trusted.gpg.d", "var/lib/apt/lists/partial",
               "var/lib/dpkg", "var/cache/apt/archives/partial"]
@@ -431,7 +435,7 @@ def build_tree(root, architecture, ports, lmde):
     with open(config, "w", encoding="utf-8") as handle:
         handle.write(
             'APT::Architecture "%(a)s";\n'
-            'APT::Architectures { "%(a)s"; };\n'
+            'APT::Architectures { "%(a)s"; %(f)s};\n'
             'Dir::Etc "%(r)s/etc/apt";\n'
             'Dir::Etc::SourceList "%(r)s/etc/apt/sources.list";\n'
             'Dir::Etc::Parts "%(r)s/etc/apt/apt.conf.d";\n'
@@ -440,7 +444,8 @@ def build_tree(root, architecture, ports, lmde):
             'Dir::State "%(r)s/var/lib/apt";\n'
             'Dir::State::status "%(r)s/var/lib/dpkg/status";\n'
             'Dir::Cache "%(r)s/var/cache/apt";\n'
-            % {"a": architecture, "r": root})
+            % {"a": architecture, "r": root,
+               "f": '"%s"; ' % foreign if foreign else ""})
     return config
 
 
@@ -516,6 +521,9 @@ def classify(env, package, architecture, workspace):
                        "evidence": first_blocker(sim_out + sim_err)})
         return record
     record.update({"class": klass, "evidence": "dependencies resolve"})
+    gone = removals(sim_out)
+    if gone:
+        record["removes"] = gone
     return record
 
 
@@ -539,6 +547,17 @@ def first_blocker(text):
         if not fallback and stripped.startswith("E: "):
             fallback = stripped[:300]
     return fallback or " ".join(text.split())[:300] or "no resolver output"
+
+
+def removals(text):
+    """Name what a transaction would remove.
+
+    A foreign-architecture request that removes native packages is not a
+    coinstallation; it is a replacement, and the two read identically in a
+    success line.
+    """
+    return sorted({line.split()[1] for line in text.splitlines()
+                   if line.startswith("Remv ") and len(line.split()) > 1})
 
 
 def missing_dependencies(results):
@@ -599,7 +618,12 @@ def resolve(args, workspace):
             "release_date": release["date"],
         })
 
-    config = build_tree(workspace, args.architecture, args.ports_mirror, lmde)
+    foreign = args.foreign_architecture
+    if foreign == args.architecture:
+        raise ArchiveTrustError(
+            "the foreign architecture is the native one, which tests nothing")
+    config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
+                        foreign)
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 
@@ -609,8 +633,13 @@ def resolve(args, workspace):
                                 % " ".join(err.split())[:400])
 
     packages, unmatched = expand(env, args.packages or SETS[args.set])
-    results = [classify(env, name, args.architecture, workspace)
-               for name in packages]
+    # Under a foreign architecture the question is whether the foreign build of
+    # each name installs into a native tree, so every request is qualified and
+    # classified against the foreign architecture rather than the native one.
+    target = foreign or args.architecture
+    if foreign:
+        packages = ["%s:%s" % (name, foreign) for name in packages]
+    results = [classify(env, name, target, workspace) for name in packages]
     unmet, resolvable = missing_dependencies(results)
 
     if resolvable:
@@ -625,6 +654,16 @@ def resolve(args, workspace):
     report = {
         "architecture": args.architecture,
         "set": args.set,
+        "foreign_architecture": {
+            "enabled": bool(foreign),
+            "name": foreign,
+            # Coinstallation and replacement read the same in a success line, so
+            # what the transaction removes is reported beside what it installs.
+            "native_packages_removed": removals(final_out),
+            "foreign_qualified_in_transaction": len(
+                [name for name in transaction if ":%s " % foreign in name])
+            if foreign else 0,
+        },
         "provenance": provenance,
         "lmde_overlay": lmde or {"enabled": False},
         "packages": results,
@@ -672,6 +711,15 @@ def print_report(report):
     if report["unmatched_patterns"]:
         print("patterns matching nothing: %s"
               % ", ".join(report["unmatched_patterns"]))
+    foreign = report["foreign_architecture"]
+    if foreign["enabled"]:
+        print("\nforeign architecture %s: %d of %d transaction members carry "
+              "the foreign qualifier"
+              % (foreign["name"], foreign["foreign_qualified_in_transaction"],
+                 report["recursive_transaction_size"]))
+        if foreign["native_packages_removed"]:
+            print("the transaction replaces rather than coinstalls, removing: "
+                  "%s" % ", ".join(foreign["native_packages_removed"]))
 
 
 def self_test(suite):
@@ -694,6 +742,12 @@ def main():
                         help="which package set to resolve")
     parser.add_argument("--no-lmde", action="store_true",
                         help="omit the LMDE Architecture: all overlay")
+    parser.add_argument("--foreign-architecture", default="",
+                        choices=["", "hurd-amd64", "hurd-i386"],
+                        help="enable a second architecture and qualify every "
+                             "request to it, the way dpkg --add-architecture "
+                             "does, to ask whether a foreign build installs "
+                             "into a native tree")
     parser.add_argument("--ports-mirror", default=PORTS)
     parser.add_argument("--lmde-mirror", default=LMDE_MIRROR)
     parser.add_argument("--lmde-suite", default=LMDE_SUITE)

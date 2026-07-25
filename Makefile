@@ -28,7 +28,7 @@ help:
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
 	@echo "  make hurd-closure                 - classify a package set against the real hurd-amd64 or hurd-i386 archive (HURD_ARCH, HURD_SET)"
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
-	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/"
+	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/ (HURD_FOREIGN asks whether a foreign build coinstalls)"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -150,6 +150,10 @@ evidence-check:
 HURD_ARCH ?= hurd-amd64
 HURD_SET ?= mate-bootstrap
 HURD_CLOSURE_DIR ?= evidence/hurd-archive
+# Setting this asks whether a foreign build installs into a native tree, the way
+# dpkg --add-architecture would. It answers a packaging question and says
+# nothing about whether a foreign process runs, which is a guest fact.
+HURD_FOREIGN ?=
 
 hurd-archive-image:
 	$(CONTAINER_RUNTIME) build -f Dockerfile.hurd-archive -t gnu-hurd-archive:local .
@@ -162,7 +166,8 @@ hurd-closure-selftest: hurd-archive-image
 
 hurd-closure: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)"
+		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
+		--foreign-architecture "$(HURD_FOREIGN)"
 
 # The report is written through a bind mount, because a report that stays inside
 # a --rm container is a number in a terminal rather than an artifact.
@@ -173,7 +178,8 @@ hurd-closure-report: hurd-archive-image
 		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
 		gnu-hurd-archive:local \
 		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
-		--json "/out/$(HURD_ARCH)-$(HURD_SET).json"
+		--foreign-architecture "$(HURD_FOREIGN)" \
+		--json "/out/$(HURD_ARCH)$(if $(HURD_FOREIGN),-foreign-$(HURD_FOREIGN),)-$(HURD_SET).json"
 
 smoke-host:
 	./scripts/smoke-host.sh

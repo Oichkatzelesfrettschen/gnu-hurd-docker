@@ -1,0 +1,165 @@
+{
+  "architecture": "hurd-amd64",
+  "foreign_architecture": {
+    "enabled": true,
+    "foreign_qualified_in_transaction": 0,
+    "name": "hurd-i386",
+    "native_packages_removed": []
+  },
+  "lmde_overlay": {
+    "architecture_all_packages": 152,
+    "components": [
+      "main",
+      "upstream",
+      "import",
+      "backport"
+    ],
+    "mirror": "https://mirrors.edge.kernel.org/linuxmint-packages",
+    "overlay_release_sha256": "53b60b37d0ed1e2b1ecbd7d562c2f4be9ddf8b142583f8143b2c5d954a674cdc",
+    "release_date": "Fri, 24 Jul 2026 08:20:07 UTC",
+    "release_sha256": "afbe33a9d2538774e147be3ede942c314c95f48b96ec4e3d19f0169b5ddfd02c",
+    "signing_key_fingerprint": "302F0738F465C1535761F965A6616109451BBBF2",
+    "source_index_sha256": {
+      "backport/binary-amd64/Packages.gz": "441146771d1d02ce8cf7594841d520bc5090bff806344ceb5e4d9183a3eaa2f2",
+      "import/binary-amd64/Packages.gz": "08a3961bf20489c459d1df61a89a2f44b838d3c06a9057351c6538110099b5d0",
+      "main/binary-amd64/Packages.gz": "f3c350b9eca103da5788521d8039a0293094576b76b29d3573deb3b66d3867dc",
+      "upstream/binary-amd64/Packages.gz": "899074717455cdea7bd476d35668758edb0afc9fd6b356a6f9d016b2df72f985"
+    },
+    "suite": "gigi"
+  },
+  "must_be_built_or_substituted": [
+    "caja:hurd-i386",
+    "dconf-gsettings-backend",
+    "libmarco-private2:hurd-i386",
+    "libmate-panel-applet-4-1:hurd-i386",
+    "marco:hurd-i386",
+    "mate-desktop-common:hurd-i386",
+    "mate-icon-theme:hurd-i386",
+    "mate-menus:hurd-i386",
+    "mate-notification-daemon-common:hurd-i386",
+    "mate-notification-daemon:hurd-i386",
+    "mate-panel:hurd-i386",
+    "mate-session-manager:hurd-i386",
+    "mate-settings-daemon:hurd-i386",
+    "mate-terminal:hurd-i386",
+    "mate-themes:hurd-i386"
+  ],
+  "packages": [
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "mate-session-manager:hurd-i386 : Depends: mate-desktop-common:hurd-i386 (>= 1.24) but it is not installable",
+      "package": "mate-session-manager:hurd-i386",
+      "version": "1.26.1-3"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "mate-settings-daemon:hurd-i386 : Depends: mate-desktop-common:hurd-i386 (>= 1.24) but it is not installable",
+      "package": "mate-settings-daemon:hurd-i386",
+      "version": "1.26.1-1.2"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "mate-panel:hurd-i386 : Depends: libmate-panel-applet-4-1:hurd-i386 (= 1.27.1-4.1+b2) but it is not going to be installed",
+      "package": "mate-panel:hurd-i386",
+      "version": "1.27.1-4.1+b2"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "marco:hurd-i386 : Depends: libmarco-private2:hurd-i386 (= 1.26.2-4.1+b2) but it is not going to be installed",
+      "package": "marco:hurd-i386",
+      "version": "1.26.2-4.1+b2"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "caja-common : Depends: dconf-gsettings-backend but it is not going to be installed or",
+      "package": "caja:hurd-i386",
+      "version": "1.26.4-3"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "Depends: mate-desktop-common:hurd-i386 but it is not installable",
+      "package": "mate-terminal:hurd-i386",
+      "version": "1.26.1-1+b1"
+    },
+    {
+      "architecture_class": "native",
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "uninstallable",
+      "evidence": "mate-notification-daemon:hurd-i386 : Depends: mate-notification-daemon-common:hurd-i386 (= 1.26.1-1) but it is not installable",
+      "package": "mate-notification-daemon:hurd-i386",
+      "version": "1.26.1-1+b3"
+    },
+    {
+      "class": "missing",
+      "evidence": "no record in any configured suite",
+      "package": "mate-menus:hurd-i386"
+    },
+    {
+      "class": "missing",
+      "evidence": "no record in any configured suite",
+      "package": "mate-icon-theme:hurd-i386"
+    },
+    {
+      "class": "missing",
+      "evidence": "no record in any configured suite",
+      "package": "mate-themes:hurd-i386"
+    }
+  ],
+  "provenance": {
+    "collected_at": "2026-07-25T23:40:21+00:00",
+    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [],
+  "recursive_transaction_size": 0,
+  "resolvable_subset": [],
+  "resolvable_subset_blocker": "no member of the set resolves",
+  "resolvable_subset_resolves": false,
+  "set": "mate-bootstrap",
+  "summary": {
+    "missing": 3,
+    "uninstallable": 7
+  },
+  "unmatched_patterns": []
+}

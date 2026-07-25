@@ -47,6 +47,7 @@ class Args(object):
         self.lmde_mirror = ""
         self.lmde_suite = "gigi"
         self.keyring = KEYRING
+        self.foreign_architecture = ""
         self.packages = []
         for key, value in fields.items():
             setattr(self, key, value)
@@ -66,24 +67,37 @@ def stanza(name, version, architecture, **fields):
     return "\n".join(lines)
 
 
-def write_repo(root, suite, stanzas):
-    """Publish one fixture suite as a file:// apt repository."""
-    component = os.path.join(root, "dists", suite, "main", "binary-hurd-amd64")
-    os.makedirs(component, exist_ok=True)
-    body = ("\n\n".join(stanzas) + "\n").encode("utf-8")
-    with open(os.path.join(component, "Packages"), "wb") as handle:
-        handle.write(body)
+def write_repo(root, suite, stanzas, foreign_stanzas=()):
+    """Publish one fixture suite as a file:// apt repository.
+
+    A second architecture index is published when asked for, so a foreign
+    architecture can be enabled against the same fixture.
+    """
+    entries, architectures = [], []
+    for architecture, members in (("hurd-amd64", stanzas),
+                                  ("hurd-i386", list(foreign_stanzas))):
+        if not members:
+            continue
+        component = os.path.join(root, "dists", suite, "main",
+                                 "binary-%s" % architecture)
+        os.makedirs(component, exist_ok=True)
+        body = ("\n\n".join(members) + "\n").encode("utf-8")
+        with open(os.path.join(component, "Packages"), "wb") as handle:
+            handle.write(body)
+        entries.append(" %s %d main/binary-%s/Packages"
+                       % (hashlib.sha256(body).hexdigest(), len(body),
+                          architecture))
+        architectures.append(architecture)
     release = ("Origin: fixture\nLabel: fixture\nSuite: %s\nCodename: %s\n"
-               "Architectures: hurd-amd64\nComponents: main\nSHA256:\n"
-               " %s %d main/binary-hurd-amd64/Packages\n"
-               % (suite, suite, hashlib.sha256(body).hexdigest(), len(body)))
+               "Architectures: %s\nComponents: main\nSHA256:\n%s\n"
+               % (suite, suite, " ".join(architectures), "\n".join(entries)))
     with open(os.path.join(root, "dists", suite, "Release"), "w",
               encoding="utf-8") as handle:
         handle.write(release)
 
 
-def ports_fixture(root, sid, unreleased=()):
-    write_repo(root, "sid", sid)
+def ports_fixture(root, sid, unreleased=(), foreign=()):
+    write_repo(root, "sid", sid, foreign)
     write_repo(root, "unreleased", list(unreleased) or [
         stanza("fixture-unreleased-marker", "1", "hurd-amd64")])
     return "file://%s" % root
@@ -276,6 +290,61 @@ def test_wildcards(module, suite, workspace):
         suite.check("formatting an empty result set is guarded", True)
 
 
+def test_foreign_architecture(module, suite, workspace):
+    """A foreign build installs into a native tree only when nothing it needs is
+    Architecture: all.
+
+    An Architecture: all package is realized under the native architecture, so
+    an architecture-qualified dependency on one does not resolve. That is the
+    barrier a foreign MATE component meets in the real archive, and it sits in
+    the packaging layer rather than in any ABI question.
+    """
+    root = os.path.join(workspace, "ports-foreign")
+    mirror = ports_fixture(
+        root,
+        [stanza("fixture-shared-data", "1.0", "all"),
+         stanza("fixture-simple", "1.0", "hurd-amd64"),
+         stanza("fixture-split", "1.0", "hurd-amd64",
+                depends="fixture-shared-data")],
+        foreign=[stanza("fixture-simple", "1.0", "hurd-i386",
+                        multi_arch="same"),
+                 stanza("fixture-split", "1.0", "hurd-i386",
+                        depends="fixture-shared-data")])
+
+    state = os.path.join(workspace, "state-foreign")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror, foreign_architecture="hurd-i386",
+             packages=["fixture-simple", "fixture-split"]), state)
+    seen = verdicts(report)
+    suite.check("a foreign request is qualified to its architecture",
+                sorted(seen) == ["fixture-simple:hurd-i386",
+                                 "fixture-split:hurd-i386"], str(sorted(seen)))
+    suite.check("a self-contained foreign build resolves",
+                seen.get("fixture-simple:hurd-i386") == "native", str(seen))
+    suite.check("a foreign build needing an Architecture: all companion does not",
+                seen.get("fixture-split:hurd-i386") == "uninstallable",
+                str(seen) + " " + str([p.get("evidence")
+                                       for p in report["packages"]]))
+    foreign = report["foreign_architecture"]
+    suite.check("the transaction reports its foreign-qualified members",
+                foreign["enabled"] and foreign["name"] == "hurd-i386"
+                and foreign["foreign_qualified_in_transaction"] >= 1,
+                str(foreign))
+    suite.check("a transaction that replaces nothing reports no removal",
+                foreign["native_packages_removed"] == [],
+                str(foreign["native_packages_removed"]))
+
+    state = os.path.join(workspace, "state-foreign-native")
+    os.makedirs(state)
+    suite.raises("naming the native architecture as foreign is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror,
+                          foreign_architecture="hurd-amd64",
+                          packages=["fixture-simple"]), state))
+
+
 def test_key_pin(module, suite, workspace):
     packets = module.dearmor(open(KEYRING, encoding="utf-8").read())
     suite.check("the vendored key carries the pinned primary fingerprint",
@@ -430,6 +499,7 @@ def run(module):
         test_version_selection(module, suite, workspace)
         test_conflict(module, suite, workspace)
         test_wildcards(module, suite, workspace)
+        test_foreign_architecture(module, suite, workspace)
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 
