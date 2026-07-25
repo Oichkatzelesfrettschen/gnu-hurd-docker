@@ -38,7 +38,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 ## Milestone 4 -- CI confidence (without pretending)
 
-23. [x] CI: validate YAML + shell scripts + internal invariants (fast, no VM boot)
+23. [ ] CI: validate YAML + shell scripts + internal invariants (fast, no VM boot) -- the workflow definitions exist and `Docs Build Check` runs on pull requests; `validate.yml`, `validate-config.yml`, and `quality-and-security.yml` stay manually disabled until item 43 converges their gates
 24. [ ] CI: optional, scheduled "boot smoke" job (best-effort; clearly marked flaky/slow if needed)
 25. [ ] CI: publish artifacts for troubleshooting (logs, config dumps)
 
@@ -57,7 +57,9 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 ## Milestone 5b -- Bootable image integrity
 
 35. [ ] Repair the guest root filesystem in `images/debian-hurd-amd64.qcow2` (`/dev/wd0s5` reports `UNEXPECTED INCONSISTENCY`, `fsck` exits 4, guest stops at a maintenance shell)
-36. [ ] Add an offline guest-filesystem gate (`e2fsck -fn` via guestfish) -- `qemu-img check` reports no errors on the same image that fails to boot
+36. [ ] Add an offline guest-filesystem gate (`e2fsck -fn` via guestfish) -- `qemu-img check` reports no errors on the same image that fails to boot. `scripts/guestfish-check-guest-filesystem.sh` implements the check with a three-state exit contract (0 clean or repaired, 1 dirty, 2 uncheckable); wiring it into a gate splits by whether an image is present:
+    - 36a. [ ] Call the checker from host preflight before QEMU starts, skipping with a recorded reason when the image or guestfish is absent
+    - 36b. [ ] Treat exit 1 and exit 2 as failures in any workflow that builds, downloads, repairs, or publishes a qcow2, and install guestfish there. A source-only checkout carries no qcow2, so a green generic run establishes nothing about image integrity
 37. [ ] Record SHA256 and upstream provenance for every file in `images/`
 38. [ ] Re-run the two-arm KVM/TCG capture past `fsck` once items 35-37 land, and settle items 33 and 34 against evidence
 
@@ -69,16 +71,18 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 ## Milestone 7 -- Gate coverage and reference integrity
 
-42. [ ] Glob the shellcheck targets in `scripts/validate-config.sh` (29 enumerated paths cover 102 live scripts)
-43. [ ] Reconcile the shellcheck severity threshold across `validate-config.sh`, `validate-config.yml`, and `quality-and-security.yml` (`-S error` vs `-S warning`)
-44. [ ] Repair the `release-artifacts.yml` required-script gate, which fires `exit 1` on every `v*` tag: `docker-orchestration.sh` is deleted and `entrypoint.sh` is never copied into the checked directory
-45. [ ] Replace the tab at `.github/workflows/release.yml:83` (sole yamllint error)
+42. [x] Discover the maintained shell surface dynamically in `scripts/validate-config.sh` -- `entrypoint.sh`, `scripts/**`, and `share/**`, excluding archives, which replaces 29 enumerated paths with the whole maintained tree. Item 43 names the enumerator that now defines that set and carries its current size
+43. [ ] Establish one maintained shell-file set and one severity policy across `scripts/validate-config.sh`, the `Makefile` `lint` target, `validate.yml`, `validate-config.yml`, and `quality-and-security.yml`; clear the 15 warning-level findings before enabling warning-as-error CI. The five surfaces disagree today: `validate-config.sh` globs the maintained tree at `-S error`, `make lint` uses fixed globs that omit `share/**` at `-S warning`, `validate-config.yml` hardcodes three scripts, and `quality-and-security.yml` scans every `.sh` including archives at `-S warning`
+44. [x] Remove the stale required-script gate from `release-artifacts.yml` and move release acceptance onto the extracted archive rather than repository-source paths, so the gate reads the product it publishes
+45. [x] Replace the tab in `.github/workflows/release.yml` (sole yamllint error)
 46. [ ] Count recipe blocks, not target lines, in any Makefile duplicate-target check (the five `up-podman*` pairs are the GNU make target-specific variable idiom and are correct)
 47. [ ] Reconnect `scripts/test-hurd-system.sh` (and the seven `test-phases/` scripts it reaches) to a Makefile target
 48. [ ] Classify the 36 live host-side orphan scripts (41 raw zero-inbound graph nodes, five of which fall outside the live-shell denominator) as operator-tool, guest-scoped, or unreachable-automation in `scripts/INVENTORY.md`
-49. [ ] Correct the 14 dead `make` targets and 41 phantom `QEMU_*` env vars cited in live docs
-50. [ ] Rebuild the `mkdocs.yml` nav against the `01-08` tree -- all 26 entries name pre-consolidation paths that no longer exist, and `deploy-pages.yml` runs `mkdocs build --strict`
-51. [ ] Include or explicitly exclude the 260-plus documents absent from the mkdocs nav
+49. [ ] Correct the phantom `QEMU_*` env vars cited in live docs -- the dead `make` targets are corrected and `docs/03-CONFIGURATION/environment-variables.md` names the variables the entrypoint ignores; classifying the remaining live references needs a schema-backed variable inventory rather than a grep
+50. [x] Rebuild the `mkdocs.yml` nav against the `01-08` tree, so `mkdocs build --strict` produces `site/index.html`
+51. [x] Classify every document as nav, `not_in_nav`, or `exclude_docs`, so adding a report or an audit cannot break the strict build
+
+52. [ ] Make the runtime self-identifying, so operators read the accelerator QEMU selected rather than infer it from a target name. `compose.kvm.yaml` exposes `/dev/kvm`, and the entrypoint then chooses between `-accel kvm` and `-accel tcg` -- under the default `QEMU_MACHINE=pc` plus `QEMU_DISK_BUS=ide` with `AUTO_DISABLE_KVM_FOR_IDE=1` it chooses TCG. A `make runtime-info` target should report the observed container runtime, QEMU binary, accelerator (from the monitor, not from `/dev/kvm`), machine, disk bus, image path, and image SHA256, and the `up-kvm` target name should say that it exposes KVM rather than that it uses it
 
 ## Definition of done (per change)
 

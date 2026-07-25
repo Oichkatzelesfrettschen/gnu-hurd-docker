@@ -47,7 +47,10 @@ the result to `debian-hurd-amd64.qcow2`, and place it in the repo's
 **2. Start it:**
 
 ```bash
-# Linux (KVM acceleration if /dev/kvm exists):
+# Linux (exposes /dev/kvm to QEMU; the entrypoint still selects the
+# accelerator, and with KVM available the default pc + IDE path selects TCG
+# unless FORCE_KVM=1 bypasses that safety fallback -- read the startup log
+# to see which one it picked):
 docker compose -f compose.yaml -f compose.kvm.yaml up -d
 
 # macOS / Windows (no KVM inside Docker Desktop's VM -- QEMU falls
