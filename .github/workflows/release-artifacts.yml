@@ -48,6 +48,13 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_clean=${VERSION#v}" >> $GITHUB_OUTPUT
+          # scripts/build-release-archive.sh accepts a prerelease suffix, so the
+          # release state is derived from the validated version rather than
+          # hardcoded; otherwise a v1.2.3-rc.1 tag publishes as a full release.
+          case "$VERSION" in
+            *-*) echo "prerelease=true" >> $GITHUB_OUTPUT ;;
+            *)   echo "prerelease=false" >> $GITHUB_OUTPUT ;;
+          esac
           echo "Release version: $VERSION at $GITHUB_SHA"
 
       - name: Install archive gate dependencies
@@ -70,18 +77,26 @@ jobs:
             --commit "$GITHUB_SHA" \
             --output-dir "$PWD"
 
-      # An annotated tag has to name the commit the archive was cut from,
-      # otherwise the release advertises contents no tag resolves to.
+      # The tag has to name the commit the archive was cut from, otherwise the
+      # release advertises contents no tag resolves to.  This runs on
+      # workflow_dispatch too: an operator can dispatch any version string from
+      # any branch, and action-gh-release updates an existing release rather
+      # than refusing one, so a version whose tag already points elsewhere is
+      # rejected here rather than silently rewritten.  A version with no tag yet
+      # is created at GITHUB_SHA by the release step's target_commitish.
       - name: Verify the tag resolves to the archived commit
-        if: github.event_name == 'push'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          tagged="$(git rev-parse --verify "refs/tags/$VERSION^{commit}")"
-          if [ "$tagged" != "$GITHUB_SHA" ]; then
-            echo "ERROR: tag $VERSION resolves to $tagged, not the archived $GITHUB_SHA" >&2
-            exit 1
+          if git rev-parse --verify -q "refs/tags/$VERSION^{commit}" >/dev/null; then
+            tagged="$(git rev-parse "refs/tags/$VERSION^{commit}")"
+            if [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "ERROR: $VERSION already points to $tagged, not the archived $GITHUB_SHA" >&2
+              exit 1
+            fi
+            echo "[OK] existing tag $VERSION resolves to $GITHUB_SHA"
+          else
+            echo "[OK] $VERSION has no tag yet; it will be created at $GITHUB_SHA"
           fi
-          echo "[OK] $VERSION resolves to $GITHUB_SHA"
 
       - name: Generate release notes
         id: release_notes
@@ -205,10 +220,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
+          # target_commitish defaults to the repository's default branch, so a
+          # dispatch from another branch would create the tag at a commit the
+          # archive was not cut from and publish one tree under another's name.
+          target_commitish: ${{ github.sha }}
           name: Release ${{ steps.version.outputs.version }}
           body_path: release-notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          fail_on_unmatched_files: true
           files: |
             gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
             gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
