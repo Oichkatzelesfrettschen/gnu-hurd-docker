@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "20260725T101658Z",
+  "reproduce": "scripts/capture-runtime-evidence.sh",
+  "evidence_classes": {
+    "observed": "read from the live QEMU process, its monitor, or the guest",
+    "derived": "computed from an observed value",
+    "declared": "read from repository configuration, stating intent",
+    "not-captured": "unavailable, with the reason recorded"
+  },
+  "repository": {
+    "commit": {
+      "value": "639a04748d2623bca87c6628a3339441a017100f",
+      "class": "observed",
+      "source": "git rev-parse HEAD"
+    },
+    "dirty": {
+      "value": true,
+      "class": "observed",
+      "source": "git status --porcelain"
+    },
+    "maintained_shell_surface": {
+      "value": 111,
+      "class": "observed",
+      "source": "scripts/list-maintained-shell.sh"
+    }
+  },
+  "host": {
+    "uname": {
+      "value": "Linux <host> 7.1.4-1-cachyos #1 SMP PREEMPT_DYNAMIC Sun, 19 Jul 2026 18:57:38 +0000 x86_64 GNU/Linux",
+      "class": "observed",
+      "source": "uname -a",
+      "reason": "see raw/host-uname.txt"
+    },
+    "cpu_model": {
+      "value": "AMD Ryzen 5 5600X3D 6-Core Processor",
+      "class": "observed",
+      "source": "/proc/cpuinfo"
+    },
+    "cpu_count": {
+      "value": 12,
+      "class": "observed",
+      "source": "nproc"
+    },
+    "kvm_device_present": {
+      "value": true,
+      "class": "observed",
+      "source": "test -e /dev/kvm"
+    },
+    "qemu_version": {
+      "value": "QEMU emulator version 11.0.2",
+      "class": "observed",
+      "source": "qemu-system-x86_64 --version"
+    },
+    "container_runtime": {
+      "value": "docker",
+      "class": "declared",
+      "source": "CONTAINER_RUNTIME"
+    },
+    "container_runtime_version": {
+      "value": "29.6.2",
+      "class": "observed",
+      "source": "container runtime version"
+    }
+  },
+  "declared": {
+    "compose_files": {
+      "value": "compose.yaml:compose.minty.yaml",
+      "class": "declared",
+      "source": "COMPOSE_FILE"
+    },
+    "machine": {
+      "value": "pc",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "disk_bus": {
+      "value": "ide",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "smp": {
+      "value": "2",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "force_kvm": {
+      "value": "0",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "auto_disable_kvm_for_ide": {
+      "value": "1",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "drive": {
+      "value": "/opt/hurd-image/debian-hurd-amd64.qcow2",
+      "class": "declared",
+      "source": "compose config"
+    }
+  },
+  "observed_runtime": {
+    "container": {
+      "value": "hurd-minty",
+      "class": "observed",
+      "source": "container ps"
+    },
+    "container_state": {
+      "value": "running",
+      "class": "observed",
+      "source": "container inspect"
+    },
+    "qemu_accelerator": {
+      "value": "tcg,thread=multi",
+      "class": "observed",
+      "source": "qemu-system-x86_64 argv (-accel)",
+      "reason": "KVM is available on the host and QEMU runs TCG: the AUTO_DISABLE_KVM_FOR_IDE branch demotes kvm to tcg for this machine and disk bus unless FORCE_KVM=1"
+    },
+    "qemu_machine": {
+      "value": "pc",
+      "class": "observed",
+      "source": "qemu argv (-machine)"
+    },
+    "qemu_smp": {
+      "value": "2",
+      "class": "observed",
+      "source": "qemu argv (-smp)"
+    },
+    "monitor_kvm_enabled": {
+      "value": false,
+      "class": "observed",
+      "source": "QEMU monitor: info kvm"
+    },
+    "monitor_vcpu_threads": {
+      "value": 2,
+      "class": "observed",
+      "source": "QEMU monitor: info cpus"
+    }
+  },
+  "observed_guest": {
+    "uname": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest uname -a",
+      "reason": "ssh probe failed; the OOBE password-change gate refuses non-interactive sessions until it is lifted"
+    },
+    "nproc": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest nproc",
+      "reason": "ssh probe failed; the OOBE password-change gate refuses non-interactive sessions until it is lifted"
+    },
+    "installed_packages": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest dpkg-query -W",
+      "reason": "ssh probe failed; the OOBE password-change gate refuses non-interactive sessions until it is lifted"
+    },
+    "dpkg_status_sha256": {
+      "value": null,
+      "class": "not-captured",
+      "source": "guest sha256sum /var/lib/dpkg/status",
+      "reason": "ssh probe failed; the OOBE password-change gate refuses non-interactive sessions until it is lifted"
+    }
+  },
+  "image": {
+    "guest_path": {
+      "value": "/opt/hurd-image/debian-hurd-amd64.qcow2",
+      "class": "declared",
+      "source": "compose config"
+    },
+    "host_path": {
+      "value": "<repo>/images/debian-hurd-amd64.qcow2",
+      "class": "derived",
+      "source": "guest path mapped through ./images"
+    },
+    "virtual_size": {
+      "value": "virtual size: 3.91 GiB (4195352576 bytes)",
+      "class": "observed",
+      "source": "qemu-img info"
+    },
+    "snapshot_tags": {
+      "value": null,
+      "class": "not-captured",
+      "source": "qemu-img snapshot -l",
+      "reason": "probe returned no value"
+    },
+    "sha256": {
+      "value": null,
+      "class": "not-captured",
+      "source": "sha256sum",
+      "reason": "hashing a multi-gigabyte qcow2 is expensive; rerun with --image-digest"
+    }
+  },
+  "raw_captures": {
+    "compose-config.err": 0,
+    "compose-config.yaml": 4570,
+    "container-ps.txt": 633,
+    "git-status.txt": 204,
+    "guest-probe.err": 90,
+    "guest-probe.txt": 0,
+    "host-qemu-version.txt": 101,
+    "host-runtime-version.txt": 7,
+    "host-uname.txt": 107,
+    "image-info.txt": 531,
+    "image-snapshots.txt": 0,
+    "maintained-shell.txt": 3568,
+    "monitor-info.txt": 782,
+    "qemu-argv.txt": 595
+  }
+}

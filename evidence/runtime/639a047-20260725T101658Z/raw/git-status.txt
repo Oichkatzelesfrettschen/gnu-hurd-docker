@@ -1,0 +1,7 @@
+ M .gitignore
+ M Makefile
+?? docs/audits/runtime-evidence-capture-protocol.md
+?? evidence/
+?? scripts/capture-runtime-evidence.sh
+?? scripts/emit-runtime-evidence.py
+?? scripts/report-runtime-evidence.py
