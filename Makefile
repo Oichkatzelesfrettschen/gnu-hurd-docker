@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links runtime-info evidence-check smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -26,6 +26,7 @@ help:
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
+	@echo "  make hurd-closure                 - classify a package set against the real hurd-amd64 or hurd-i386 archive (HURD_ARCH, HURD_SET)"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -139,6 +140,20 @@ evidence-check:
 	else \
 		echo "evidence-check: no committed captures to validate"; \
 	fi
+
+# Availability and dependency facts are archive facts, so they are read on the
+# host in seconds rather than from a guest that takes minutes to boot and holds
+# one mutable qcow2. Hurd binaries cannot execute here; the boundary probe is in
+# docs/audits/hurd-execution-boundary-and-archive-layer.md.
+HURD_ARCH ?= hurd-amd64
+HURD_SET ?= mate-core
+
+hurd-archive-image:
+	$(CONTAINER_RUNTIME) build -f Dockerfile.hurd-archive -t gnu-hurd-archive:local .
+
+hurd-closure: hurd-archive-image
+	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
+		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)"
 
 smoke-host:
 	./scripts/smoke-host.sh
