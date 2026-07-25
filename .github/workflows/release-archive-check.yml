@@ -1,0 +1,55 @@
+---
+# Build and accept the release archive without publishing anything.
+#
+# Create Release with Artifacts only runs on a tag, so its archive gate first
+# executes at the moment a release is being cut, when a failure is most
+# expensive.  This runs the same scripts/build-release-archive.sh on pull
+# requests under a placeholder version, so a change that breaks the packaged
+# product is caught before a tag exists.  It uploads nothing and writes no
+# release.
+name: Release Archive Check
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  archive-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    name: Build and accept the source archive
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install archive gate dependencies
+        run: |
+          # The packaged validator runs ShellCheck and parses the Compose files
+          # with PyYAML, exiting 1 if either is unavailable.  Both come from apt:
+          # a system-level `pip install` is refused on the runner image under
+          # PEP 668, which would abort this step before the gate runs at all.
+          sudo apt-get update
+          sudo apt-get install -y shellcheck python3-yaml
+          shellcheck --version
+
+      # v0.0.0 is a placeholder: the version only names the archive and its
+      # prefix directory here, and nothing is published under it.
+      - name: Build and accept the archive from this commit
+        run: |
+          ./scripts/build-release-archive.sh \
+            --version v0.0.0 \
+            --commit "$GITHUB_SHA" \
+            --output-dir "$RUNNER_TEMP/release-archive"
