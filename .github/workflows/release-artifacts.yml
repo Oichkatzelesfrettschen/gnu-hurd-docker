@@ -33,6 +33,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # A workflow_dispatch version is arbitrary operator input that reaches
+      # file names and the release tag, so scripts/build-release-archive.sh
+      # checks it against the supported grammar and refuses anything else.  The
+      # archive is always cut from GITHUB_SHA, so a dispatch cannot publish one
+      # commit's tree under a version that names another.
       - name: Determine version
         id: version
         run: |
@@ -43,288 +48,55 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_clean=${VERSION#v}" >> $GITHUB_OUTPUT
-          echo "Release version: $VERSION"
+          # scripts/build-release-archive.sh accepts a prerelease suffix, so the
+          # release state is derived from the validated version rather than
+          # hardcoded; otherwise a v1.2.3-rc.1 tag publishes as a full release.
+          case "$VERSION" in
+            *-*) echo "prerelease=true" >> $GITHUB_OUTPUT ;;
+            *)   echo "prerelease=false" >> $GITHUB_OUTPUT ;;
+          esac
+          echo "Release version: $VERSION at $GITHUB_SHA"
 
-      - name: Create release artifacts directory
+      - name: Install archive gate dependencies
         run: |
-          mkdir -p release-artifacts
-          mkdir -p release-artifacts/scripts
-          mkdir -p release-artifacts/docs
-          mkdir -p release-artifacts/.github/workflows
+          # The packaged validator runs ShellCheck and parses the Compose files
+          # with PyYAML, exiting 1 if either is unavailable.  Both come from apt:
+          # a system-level `pip install` is refused on the runner image under
+          # PEP 668, which would abort this step before the gate runs at all.
+          sudo apt-get update
+          sudo apt-get install -y shellcheck python3-yaml
+          shellcheck --version
 
-      - name: Package scripts
+      # One script builds and accepts the archive, and the Release Archive Check
+      # workflow runs the same script on pull requests, so the artifact that gets
+      # published is the artifact that got tested.
+      - name: Build and accept the release archive
         run: |
-          echo "=== Packaging scripts ==="
-          cp -v scripts/*.sh release-artifacts/scripts/
-          cp -v scripts/*.py release-artifacts/scripts/
-          chmod +x release-artifacts/scripts/*.sh
-          chmod +x release-artifacts/scripts/*.py
+          ./scripts/build-release-archive.sh \
+            --version "${{ steps.version.outputs.version }}" \
+            --commit "$GITHUB_SHA" \
+            --output-dir "$PWD"
 
-          # Verify the sources a release must ship, named at their repository paths.
-          # Checking sources rather than staged copies keeps this gate independent of
-          # which packaging step has run and of where each file lands in the artifact
-          # tree: entrypoint.sh is packaged to the artifact root by a later step, while
-          # the scripts below are packaged to scripts/ by the copy above.
-          REQUIRED_SOURCES="entrypoint.sh scripts/validate-config.sh scripts/setup-hurd-amd64.sh"
-          for source_path in $REQUIRED_SOURCES; do
-            if [ ! -f "$source_path" ]; then
-              echo "ERROR: Required source missing: $source_path"
+      # The tag has to name the commit the archive was cut from, otherwise the
+      # release advertises contents no tag resolves to.  This runs on
+      # workflow_dispatch too: an operator can dispatch any version string from
+      # any branch, and action-gh-release updates an existing release rather
+      # than refusing one, so a version whose tag already points elsewhere is
+      # rejected here rather than silently rewritten.  A version with no tag yet
+      # is created at GITHUB_SHA by the release step's target_commitish.
+      - name: Verify the tag resolves to the archived commit
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse --verify -q "refs/tags/$VERSION^{commit}" >/dev/null; then
+            tagged="$(git rev-parse "refs/tags/$VERSION^{commit}")"
+            if [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "ERROR: $VERSION already points to $tagged, not the archived $GITHUB_SHA" >&2
               exit 1
             fi
-          done
-          echo "[OK] All required sources present"
-
-          # Create scripts README
-          cat > release-artifacts/scripts/README.md << 'EOF'
-          # GNU/Hurd Docker - Scripts
-
-          This directory contains utility scripts for managing the GNU/Hurd Docker environment.
-
-          ## Available Scripts
-
-          ### Standalone QEMU Launcher
-          - `run-hurd-qemu.sh` - **NEW!** Standalone QEMU launcher (no Docker required)
-            - Automatic KVM detection with TCG fallback
-            - Simple configuration via CLI arguments or environment variables
-            - Usage: `./run-hurd-qemu.sh --help`
-
-          ### Setup and Configuration
-          - `download-image.sh` - Download Debian GNU/Hurd QCOW2 image
-          - `configure-users.sh` - Configure users in the guest system
-          - `configure-shell.sh` - Configure shell environment
-          - `setup-hurd-dev.sh` - Setup development environment
-          - `install-hurd-packages.sh` - Install recommended packages in guest
-
-          ### Management
-          - `monitor-qemu.sh` - Monitor QEMU process and resources
-          - `manage-snapshots.sh` - Manage QCOW2 snapshots
-          - `connect-console.sh` - Connect to serial console
-
-          ### Testing
-          - `test-docker.sh` - Test Docker configuration
-          - `test-hurd-system.sh` - Comprehensive system testing
-          - `test-run-hurd-qemu.sh` - Test standalone QEMU launcher
-          - `validate-config.sh` - Validate configuration
-
-          ### Automation
-          - `qmp-helper.py` - QEMU Machine Protocol automation
-          - `full-automated-setup.sh` - Complete automated setup
-
-          ## Usage
-
-          ### Standalone QEMU (No Docker)
-          ```bash
-          # Download QCOW2 image first
-          ./scripts/download-image.sh
-
-          # Launch Hurd VM directly
-          ./scripts/run-hurd-qemu.sh
-
-          # Custom configuration
-          ./scripts/run-hurd-qemu.sh --memory 8192 --cpus 4
-
-          # Connect via SSH
-          ssh -p 2222 root@localhost
-          ```
-
-          ### Docker-based (Recommended for most users)
-          ```bash
-          ./scripts/setup-hurd-amd64.sh
-          make up
-          ssh -p 2222 root@localhost
-          ```
-
-          ### Guest System Scripts
-          For scripts that run inside the GNU/Hurd VM:
-          ```bash
-          # Copy to guest via 9p mount
-          mount -t 9p -o trans=virtio scripts /mnt
-          /mnt/install-hurd-packages.sh
-          ```
-          EOF
-
-      - name: Package documentation
-        run: |
-          echo "=== Packaging documentation ==="
-          cp -v README.md release-artifacts/
-          cp -v docs/index.md release-artifacts/
-          cp -v docs/01-GETTING-STARTED/INSTALLATION.md release-artifacts/
-          cp -v docs/01-GETTING-STARTED/REQUIREMENTS.md release-artifacts/
-          cp -v LICENSE release-artifacts/ 2>/dev/null || echo "No LICENSE file"
-          cp -rv docs/ release-artifacts/
-
-          # Create documentation index
-          cat > release-artifacts/DOCUMENTATION-INDEX.md << 'EOF'
-          # GNU/Hurd Docker - Documentation Index
-
-          ## Quick Start
-          - [README.md](README.md) - Project overview and quick start
-          - [INSTALLATION.md](INSTALLATION.md) - Installation guide for all platforms
-          - [REQUIREMENTS.md](REQUIREMENTS.md) - System requirements
-
-          ## Comprehensive Guides
-          - [docs/QEMU-OPTIMIZATION-2025.md](docs/QEMU-OPTIMIZATION-2025.md) - QEMU optimization guide
-          - [docs/CI-CD-GUIDE.md](docs/CI-CD-GUIDE.md) - CI/CD automation guide
-          - [docs/HURD-TESTING-REPORT.md](docs/HURD-TESTING-REPORT.md) - Testing procedures
-          - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Architecture and design
-          - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) - Deployment procedures
-
-          ## Reference
-          - [docs/index.md](docs/index.md) - Complete documentation index
-          - [docs/CREDENTIALS.md](docs/CREDENTIALS.md) - Default credentials
-          - [docs/USER-SETUP.md](docs/USER-SETUP.md) - User management
-
-          For the most up-to-date documentation, visit:
-          https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker
-          EOF
-
-      - name: Package configuration files
-        run: |
-          echo "=== Packaging configuration files ==="
-          cp -v Dockerfile release-artifacts/
-          cp -v compose.yaml release-artifacts/
-          cp -v entrypoint.sh release-artifacts/
-          cp -v PKGBUILD release-artifacts/
-          cp -v gnu-hurd-docker.install release-artifacts/
-          cp -v mkdocs.yml release-artifacts/ 2>/dev/null || true
-
-          # The quick start in these release notes runs `make up`, whose default
-          # development composition layers compose.bind.yaml over compose.yaml.
-          # Both, and the Makefile itself, have to be in the archive for that
-          # instruction to work.
-          cp -v Makefile release-artifacts/
-          cp -v compose.bind.yaml release-artifacts/
-          cp -v compose.kvm.yaml release-artifacts/
-          cp -v compose.vnc.yaml release-artifacts/
-          cp -v compose.podman.yaml release-artifacts/
-          cp -v compose.override.yaml release-artifacts/ 2>/dev/null || true
-
-      - name: Package workflows
-        run: |
-          echo "=== Packaging CI/CD workflows ==="
-          cp -v .github/workflows/*.yml release-artifacts/.github/workflows/
-
-          cat > release-artifacts/.github/workflows/README.md << 'EOF'
-          # GitHub Actions Workflows
-
-          This directory contains CI/CD workflows for the GNU/Hurd Docker project.
-
-          ## Available Workflows
-
-          ### Build and Publish
-          - `push-ghcr.yml` - Build and push Docker image to GitHub Container Registry
-          - `build.yml` - Build and test Docker image
-          - `build-docker.yml` - Additional build validation
-
-          ### Testing
-          - `qemu-ci-tcg.yml` - QEMU CI with TCG emulation (GitHub-hosted)
-          - `qemu-ci-kvm.yml` - QEMU CI with KVM acceleration (self-hosted)
-          - `integration-test.yml` - Integration testing
-          - `quality-and-security.yml` - Code quality and security scanning
-
-          ### Deployment
-          - `deploy-pages.yml` - Deploy documentation to GitHub Pages
-          - `release-artifacts.yml` - Create release with artifacts
-
-          ### Validation
-          - `validate.yml` - Configuration validation
-          - `validate-config.yml` - Additional validation checks
-
-          ## Usage
-
-          Copy the workflows directory to your forked repository:
-          ```bash
-          cp -r .github/workflows /path/to/your/repo/.github/
-          ```
-
-          Workflows will run automatically on push/PR events as configured.
-          EOF
-
-      - name: Create comprehensive archive
-        run: |
-          echo "=== Creating release archive ==="
-          VER="${{ steps.version.outputs.version_clean }}"
-          # Archive with a named top-level directory.  The release notes extract
-          # this tarball and then `cd gnu-hurd-docker-$VER`, which only works if
-          # the archive carries that prefix rather than unpacking into the cwd.
-          tar -czf gnu-hurd-docker-$VER.tar.gz \
-            --transform "s,^release-artifacts,gnu-hurd-docker-$VER," \
-            release-artifacts
-
-          # Create checksums
-          sha256sum gnu-hurd-docker-$VER.tar.gz > gnu-hurd-docker-$VER.tar.gz.sha256
-
-          # List contents
-          echo "Archive contents:"
-          tar -tzf gnu-hurd-docker-$VER.tar.gz | head -20
-
-      - name: Verify the extracted archive
-        run: |
-          echo "=== Verifying the archive a user actually downloads ==="
-          VER="${{ steps.version.outputs.version_clean }}"
-          # Checking repository sources proves the inputs exist; it cannot catch a
-          # packaging step that drops a file. This checks the output, from a clean
-          # directory, the way a user consumes it.
-          workdir="$(mktemp -d)"
-          tar -xzf "gnu-hurd-docker-$VER.tar.gz" -C "$workdir"
-
-          root="$workdir/gnu-hurd-docker-$VER"
-          if [ ! -d "$root" ]; then
-            echo "ERROR: archive has no gnu-hurd-docker-$VER/ top-level directory"
-            ls -la "$workdir"
-            exit 1
-          fi
-
-          # Every file the quick start in these release notes depends on.
-          REQUIRED="entrypoint.sh Dockerfile compose.yaml compose.bind.yaml Makefile
-                    scripts/validate-config.sh scripts/setup-hurd-amd64.sh
-                    README.md INSTALLATION.md REQUIREMENTS.md"
-          missing=0
-          for required_path in $REQUIRED; do
-            if [ ! -f "$root/$required_path" ]; then
-              echo "ERROR: archive is missing $required_path"
-              missing=$((missing + 1))
-            fi
-          done
-          [ "$missing" -eq 0 ] || exit 1
-
-          # The documented entry point has to parse against the packaged Makefile.
-          ( cd "$root" && make -n up >/dev/null ) || {
-            echo "ERROR: 'make -n up' fails inside the extracted archive"
-            exit 1
-          }
-
-          # The default development composition has to resolve from the archive.
-          if command -v docker >/dev/null 2>&1; then
-            ( cd "$root" && docker compose -f compose.yaml -f compose.bind.yaml config -q ) || {
-              echo "ERROR: packaged compose files do not validate"
-              exit 1
-            }
+            echo "[OK] existing tag $VERSION resolves to $GITHUB_SHA"
           else
-            echo "[SKIP] docker unavailable; compose validation not run"
+            echo "[OK] $VERSION has no tag yet; it will be created at $GITHUB_SHA"
           fi
-
-          echo "[OK] extracted archive satisfies the documented quick start"
-          rm -rf "$workdir"
-
-      - name: Create standalone scripts package
-        run: |
-          echo "=== Creating standalone scripts package ==="
-          VER="${{ steps.version.outputs.version_clean }}"
-          cd release-artifacts/scripts
-          tar -czf ../../gnu-hurd-docker-scripts-$VER.tar.gz .
-          cd ../..
-          sha256sum gnu-hurd-docker-scripts-$VER.tar.gz > gnu-hurd-docker-scripts-$VER.tar.gz.sha256
-
-      - name: Create documentation package
-        run: |
-          echo "=== Creating documentation package ==="
-          VER="${{ steps.version.outputs.version_clean }}"
-          cd release-artifacts
-          tar -czf ../gnu-hurd-docker-docs-$VER.tar.gz \
-            README.md INSTALLATION.md REQUIREMENTS.md DOCUMENTATION-INDEX.md docs/
-          cd ..
-          sha256sum gnu-hurd-docker-docs-$VER.tar.gz > gnu-hurd-docker-docs-$VER.tar.gz.sha256
 
       - name: Generate release notes
         id: release_notes
@@ -334,68 +106,56 @@ jobs:
 
           ## 🎉 What's New
 
-          This release includes a complete GNU/Hurd Docker environment with production-grade features:
-
-          ### 🐳 Docker Image
-          The Docker image is available on GitHub Container Registry:
-          ```bash
-          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:${{ steps.version.outputs.version }}
-          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
-          ```
+          This release publishes the repository source tree at this tag, verified
+          against its own documented contract. It publishes no container image:
+          building and pushing to GitHub Container Registry is a separate workflow,
+          and this job neither runs it nor reads its result. Check that workflow's
+          runs for this tag before pulling a tag from GHCR.
 
           ### 📦 Release Artifacts
 
           Three packages are available for download:
 
-          1. **Complete Package** (`gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz`)
-             - All scripts, documentation, and configuration files
-             - Ready to use with Docker or as standalone
+          1. **Source tree** (`gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - The repository tree at this tag, produced by `git archive`
+             - Excludes `ARCHIVE/`, `docs/reports/`, and test SSH keys per `.gitattributes`
+             - Carries no disk image; run `./scripts/setup-hurd-amd64.sh` to fetch one
              - Recommended for most users
 
-          2. **Scripts Only** (`gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz`)
-             - Utility scripts for setup and management
-             - Lightweight package for automation
+          2. **Scripts and share** (`gnu-hurd-docker-scripts-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - `scripts/` and `share/` cut from the verified source tree
+             - Depends on the Compose and Makefile in the source tree for `make` targets
 
-          3. **Documentation Only** (`gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz`)
-             - Complete documentation set
-             - Optimization guides and references
+          3. **Documentation** (`gnu-hurd-docker-docs-${{ steps.version.outputs.version_clean }}.tar.gz`)
+             - `README.md`, `ROADMAP.md`, and the full `docs/` tree
 
           All packages include SHA256 checksums for verification.
 
-          ### ✨ Features
+          The source tree is verified before publication: it extracts into a clean
+          directory, `make -n up` and `make -n build` parse, `./scripts/validate-config.sh`
+          passes against the archive's own contents, the documentation link scanner
+          reports no broken internal links, and the default Compose overlay resolves.
 
-          - **Debian GNU/Hurd 2025** (x86_64/amd64) with full microkernel support
-          - **QEMU Optimization** - VirtIO devices, KVM acceleration, multiple display modes
-          - **Graphics Support** - VNC, SDL/GTK with OpenGL, framebuffer acceleration
-          - **Development Ready** - Pre-configured with build tools and packages
-          - **CI/CD Workflows** - Complete automation for testing and deployment
-          - **Comprehensive Documentation** - 30+ markdown files with guides
+          ### ✨ What this tree provides
+
+          These are the paths the source tree configures. The archive gate is a
+          static check and boots no guest, so it establishes that the
+          configuration parses and validates, not that any of it runs.
+
+          - Debian GNU/Hurd (x86_64 guest) under `qemu-system-x86_64`, inside a
+            Docker or Podman container
+          - Accelerator selected at startup: KVM when `compose.kvm.yaml` maps
+            `/dev/kvm` and the entrypoint chooses it, TCG otherwise -- under the
+            default `pc` machine with an IDE disk it chooses TCG unless
+            `FORCE_KVM=1`
+          - Disk bus paths for `ide`, `ahci`, and `scsi` via `QEMU_DISK_BUS`
+          - Optional VNC and noVNC console access through `compose.vnc.yaml`
+          - The maintained shell surface passing ShellCheck at error severity
+          - The full `docs/01-08` tree with no broken internal links
 
           ### 🚀 Quick Start
 
-          **Option 1: Using Docker Image**
-          ```bash
-          # Pull the image
-          docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest
-
-          # Clone repo for Compose + scripts (recommended)
-          git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
-          cd gnu-hurd-docker
-
-          # Prepare disk image (bind mode)
-          ./scripts/setup-hurd-amd64.sh
-
-          # Pull latest container image
-          docker compose pull
-
-          # Run (no privileged container required; KVM uses /dev/kvm device mapping when enabled)
-          make up
-
-          # Access
-          ssh -p 2222 root@localhost  # Password: root
-          ```
-
-          **Option 2: Using Release Archive**
+          **Option 1: Using Release Archive**
           ```bash
           # Download and extract
           REPO="https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker"
@@ -412,7 +172,7 @@ jobs:
           make up
           ```
 
-          **Option 3: Clone Repository**
+          **Option 2: Clone Repository**
           ```bash
           git clone https://github.com/Oichkatzelesfrettschen/gnu-hurd-docker.git
           cd gnu-hurd-docker
@@ -425,14 +185,27 @@ jobs:
           - [Documentation Index](docs/index.md)
           - [Installation Guide](docs/01-GETTING-STARTED/INSTALLATION.md)
           - [System Requirements](docs/01-GETTING-STARTED/REQUIREMENTS.md)
-          - [CI/CD Guide](docs/CI-CD-GUIDE.md)
+          - [CI/CD Guide](docs/05-CI-CD/GUIDE.md)
+          - [Roadmap](ROADMAP.md)
 
-          ### 🔒 Security
+          ### 🔒 Verification
 
-          - All scripts validated with ShellCheck (warnings as errors)
-          - Docker image scanned with Trivy
-          - Dependency auditing enabled
-          - Supply chain attestation included
+          What this release job checked, by running `scripts/build-release-archive.sh`
+          against the archive it publishes:
+
+          - the tarball extracts and contains every file the quick start above uses
+          - `make -n up` and `make -n build` parse inside the extracted tree
+          - the packaged `./scripts/validate-config.sh` passes against the packaged
+            contents, which runs ShellCheck at error severity over the maintained
+            shell surface
+          - the packaged documentation link scan reports no broken internal links
+          - the default Compose overlay resolves
+          - SHA256 checksums accompany every artifact
+
+          What it did not check: no guest boots, no filesystem integrity check runs
+          against any qcow2, and no container image is built, scanned, or published.
+          Trivy image scanning, dependency auditing, and supply-chain attestation are
+          not performed by this job.
 
           ### 🐛 Bug Reports
 
@@ -447,10 +220,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
+          # target_commitish defaults to the repository's default branch, so a
+          # dispatch from another branch would create the tag at a commit the
+          # archive was not cut from and publish one tree under another's name.
+          target_commitish: ${{ github.sha }}
           name: Release ${{ steps.version.outputs.version }}
           body_path: release-notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          fail_on_unmatched_files: true
           files: |
             gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz
             gnu-hurd-docker-${{ steps.version.outputs.version_clean }}.tar.gz.sha256
@@ -468,7 +246,7 @@ jobs:
           echo "**Version:** $VER" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- Complete package: \`gnu-hurd-docker-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Source tree: \`gnu-hurd-docker-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
           echo "- Scripts only: \`gnu-hurd-docker-scripts-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
           echo "- Documentation: \`gnu-hurd-docker-docs-$VCLEAN.tar.gz\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -479,7 +257,5 @@ jobs:
           cat gnu-hurd-docker-docs-$VCLEAN.tar.gz.sha256 >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Docker Image" >> $GITHUB_STEP_SUMMARY
-          echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:$VER" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Not published here" >> $GITHUB_STEP_SUMMARY
+          echo "No container image was built or pushed by this job." >> $GITHUB_STEP_SUMMARY
