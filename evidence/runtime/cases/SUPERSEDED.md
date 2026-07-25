@@ -21,8 +21,10 @@ observation.
 
 ## Why the pair is not citable
 
-Four defects, each reproducible by running
-`scripts/check-runtime-evidence.py --require-redacted` against either directory:
+Four defects. The checker skips schema and digest validation for a superseded
+capture and still enforces its privacy checks, so re-running it here reports the
+skip rather than the four findings below; they were measured before the marker
+was added, and `git show` on this file's first commit carries the transcript:
 
 - Four recorded stdout digests per arm describe the unsanitized bytes.
   `host-uname`, `container-inspect`, `compose-config`, and `image-info` are
@@ -31,11 +33,13 @@ Four defects, each reproducible by running
   integrity record.
 - No probe records a stderr digest, so half of each retained stream is
   uncertified.
-- The TCG arm names
-  `/tmp/claude-1000/.../scratchpad/compose.noforce.yaml` in `capture.json` and in
-  `raw/container-inspect.out`. That path discloses a machine-local location and
-  names the only input that produced `FORCE_KVM=0`, which is absent from this
-  repository. The arm cannot be reproduced from the tree.
+- The TCG arm named a session scratchpad override in `capture.json` and in
+  `raw/container-inspect.out`. That path disclosed a machine-local location and
+  named the only input that produced `FORCE_KVM=0`, which is absent from this
+  repository, so the arm cannot be reproduced from the tree. Both occurrences
+  now read `<scratch-override>`: the disclosure is removed while the defect it
+  records stands. Scrubbing those bytes moves the file further from its recorded
+  digest, which already failed for the reason above.
 - Both arms were captured from `b5db85a` with `repository.dirty=true`. That
   commit predates the instrument that produced them, and the dirty bit names no
   differences, so no revision reconstructs the source state that generated these

@@ -36,27 +36,62 @@ DERIVED = "derived"
 DECLARED = "declared"
 ABSENT = "not-captured"
 
+REDACTED = "<redacted>"
+
 # Environment keys whose values are redacted wholesale.  Matching on shape
 # rather than on an enumerated list keeps a newly introduced credential from
 # reaching a published capture merely because nobody added it here.
-SECRET_KEY = re.compile(
-    r"(PASSWORD|PASSWD|PASS|TOKEN|SECRET|CREDENTIAL|AUTH|COOKIE|_KEY|APIKEY)",
-    re.IGNORECASE,
-)
+#
+# Each term is anchored to a token boundary -- start, end, or an underscore --
+# because a bare substring makes BYPASS_MODE and COMPASS_CONFIG credentials and
+# destroys the values of ordinary settings.
+_SECRET_TERMS = ("PASSWORD", "PASSWD", "PASS", "TOKEN", "SECRET", "CREDENTIAL",
+                 "CREDENTIALS", "AUTH", "COOKIE", "KEY", "APIKEY")
+_SECRET_NAME = r"(?:^|_)(?:%s)(?:_|$)" % "|".join(_SECRET_TERMS)
+SECRET_KEY = re.compile(_SECRET_NAME, re.IGNORECASE)
 
-_SECRET_NAME = SECRET_KEY.pattern
+# A credential reaches a raw stream as a KEY=value element of .Config.Env or as
+# a YAML mapping in a resolved Compose document.  JSON is redacted structurally
+# instead: a regex that consumes a quoted value and writes back an unquoted
+# token produces invalid JSON, which destroys the document the instrument
+# exists to capture.
+# The key is captured whole and tested with SECRET_KEY, so the token boundary
+# applies to the identifier rather than to the surrounding text.  Embedding the
+# boundary in the value pattern makes the trailing "=" or ":" defeat it.
+ENV_SECRET = re.compile(r"\b([A-Za-z0-9_]+)=([^\"'\s,\]}]+)")
+YAML_SECRET = re.compile(r"^([ \t]*-?[ \t]*)([A-Za-z0-9_]+):([ \t]+)(\S.*)$",
+                         re.MULTILINE)
 
-# A credential reaches a raw stream in three spellings: the KEY=value element of
-# docker inspect .Config.Env, the JSON member docker inspect and compose config
-# emit, and the YAML mapping a resolved Compose document carries.  Redacting the
-# parsed environment objects alone leaves all three verbatim in the retained
-# streams, so the scrub runs over the stream text itself.
-SECRET_PATTERNS = (
-    re.compile(r'("[^"]*%s[^"]*"\s*:\s*)"(?:[^"\\]|\\.)*"' % _SECRET_NAME, re.IGNORECASE),
-    re.compile(r'(\b[A-Za-z0-9_]*%s[A-Za-z0-9_]*=)[^"\s,\]}]+' % _SECRET_NAME, re.IGNORECASE),
-    re.compile(r'(^[ \t-]*[A-Za-z0-9_]*%s[A-Za-z0-9_]*:[ \t]+)\S.*$' % _SECRET_NAME,
-               re.IGNORECASE | re.MULTILINE),
-)
+
+def _env_sub(match):
+    key, value = match.group(1), match.group(2)
+    return "%s=%s" % (key, REDACTED) if SECRET_KEY.search(key) else match.group(0)
+
+
+def _yaml_sub(match):
+    indent, key, space = match.group(1), match.group(2), match.group(3)
+    if SECRET_KEY.search(key):
+        return "%s%s:%s%s" % (indent, key, space, REDACTED)
+    return match.group(0)
+
+
+def redact_structure(value):
+    """Replace credential-shaped members throughout a decoded JSON value.
+
+    Redacting the serialized text cannot preserve JSON structure, so the
+    document is decoded, walked, and re-serialized.  An environment array
+    carries its credentials as KEY=value strings, which the element rule below
+    covers.
+    """
+    if isinstance(value, dict):
+        return {k: (REDACTED if isinstance(k, str) and SECRET_KEY.search(k)
+                    else redact_structure(v))
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_structure(item) for item in value]
+    if isinstance(value, str):
+        return ENV_SECRET.sub(_env_sub, value)
+    return value
 
 
 def field(value, evidence_class, source, reason=""):
@@ -298,24 +333,28 @@ def container_kvm_usable(capture, runtime, container):
     """
     rc, out, err = capture.run(
         "container-kvm-usable",
-        [runtime, "exec", container, "sh", "-c",
-         # -no-user-config and -nodefaults keep the probe off the studied VM's
-         # configuration; the QEMU exits on its own once the machine is created.
-         "qemu-system-x86_64 -accel kvm -machine pc -nodefaults -no-user-config "
-         "-display none -no-reboot -kernel /dev/null 2>&1; echo rc=$?"],
+        [runtime, "exec", container,
+         # -S starts the machine paused, so a QEMU that initialized KVM stays
+         # alive until timeout(1) kills it.  timeout's 124 is therefore the
+         # success signal, and it comes from the process rather than from a
+         # shell sentinel a wrapper would have masked.
+         "timeout", "3", "qemu-system-x86_64", "-accel", "kvm", "-machine", "pc",
+         "-nodefaults", "-no-user-config", "-display", "none", "-S"],
         timeout=30)
-    text = (out or "") + (err or "")
-    if rc != 0 and not text.strip():
-        return None, "the KVM initialization probe produced no output"
+    text = " ".join(((out or "") + (err or "")).split())
     lowered = text.lower()
-    # QEMU reports an unusable accelerator before it reaches the missing kernel
-    # image, so an accelerator complaint is the failing signal and a kernel-load
-    # complaint means KVM initialized.
     for marker in ("failed to initialize kvm", "could not access kvm kernel module",
-                   "kvm not supported", "invalid accelerator", "no accelerator found"):
+                   "kvm not supported", "invalid accelerator", "no accelerator found",
+                   "permission denied"):
         if marker in lowered:
-            return False, "QEMU reported: %s" % " ".join(text.split())[:200]
-    return True, ""
+            return False, "QEMU reported: %s" % text[:200]
+    if rc == 124:
+        return True, ""
+    # Every other outcome is an unknown failure, not a demonstration.  Returning
+    # True for any transcript that misses the known strings classifies a missing
+    # binary or an unrelated machine-init error as observed usability.
+    return None, ("the KVM probe exited %s without a known accelerator "
+                  "diagnostic: %s" % (rc, text[:200] or "no output"))
 
 
 def resolve_image_host_path(inspect, guest_path):
@@ -355,8 +394,18 @@ def redact_stream(text, replacements):
     integrity record the capture publishes for it.
     """
     text = redact_text(text, replacements)
-    for pattern in SECRET_PATTERNS:
-        text = pattern.sub(lambda m: m.group(1) + "<redacted>", text)
+    stripped = text.strip()
+    if stripped[:1] in ("{", "["):
+        try:
+            decoded = json.loads(stripped)
+        except ValueError:
+            pass
+        else:
+            # Re-serialized rather than patched in place, so a redacted stream
+            # stays a document json_probe can decode.
+            return json.dumps(redact_structure(decoded), indent=2) + "\n"
+    text = ENV_SECRET.sub(_env_sub, text)
+    text = YAML_SECRET.sub(_yaml_sub, text)
     return text
 
 
@@ -385,6 +434,10 @@ def main():
     parser.add_argument("--redact", action="store_true",
                         help="replace paths, host name, and secret-shaped values")
     args = parser.parse_args()
+    if args.image and (args.container or args.service or args.qemu_pid):
+        parser.error("--image names a file to hash offline and selects no running "
+                     "instance, so it cannot be combined with --container, "
+                     "--service, or --qemu-pid")
 
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(repo_root)
@@ -423,8 +476,16 @@ def main():
         "runtime-version", [runtime, "version", "--format", "{{.Server.Version}}"])
 
     # ---- selection -------------------------------------------------------
-    selected, select_reason = select_container(
-        capture, runtime, args.container, args.service)
+    # An offline image capture skips selection entirely.  Selecting first would
+    # let an unrelated running QEMU abort the run, or refuse the digest because
+    # some other container is writing some other file.
+    offline_image = os.path.realpath(args.image) if args.image else ""
+    if offline_image:
+        selected, select_reason = None, (
+            "offline image capture: no running instance is selected")
+    else:
+        selected, select_reason = select_container(
+            capture, runtime, args.container, args.service)
     container = selected[0] if selected else ""
     service = selected[1] if selected else ""
 
@@ -486,6 +547,8 @@ def main():
         kvm_usable, kvm_usable_reason = container_kvm_usable(
             capture, runtime, container)
 
+    runtime_reason = ("offline image capture: no QEMU process is selected"
+                      if offline_image else "")
     accel = argv_option(qemu_argv, "-accel")
     machine = argv_option(qemu_argv, "-machine")
     smp = argv_option(qemu_argv, "-smp")
@@ -535,7 +598,10 @@ def main():
                                   "so the info cpus response is incomplete")
 
     # ---- image -----------------------------------------------------------
-    host_image, image_reason = resolve_image_host_path(inspect, guest_image)
+    if offline_image:
+        host_image, image_reason = offline_image, ""
+    else:
+        host_image, image_reason = resolve_image_host_path(inspect, guest_image)
     image_info = None
     if host_image and os.path.exists(host_image) and shutil.which("qemu-img"):
         # A running VM holds the qcow2 write lock, so metadata reads pass -U.
@@ -564,18 +630,19 @@ def main():
     # a stable digest requires the VM stopped.  Those conditions never hold at
     # once, so --image names the file directly and makes offline image evidence
     # independent of runtime selection.
-    digest_target = args.image or (host_image if not container else "")
-    if args.image and container:
-        digest_reason = ("refusing to hash %s while a VM runs; the file may be "
-                         "the one it is writing" % args.image)
-        digest_target = ""
-    if (args.image_digest or args.image) and digest_target:
-        if os.path.exists(digest_target):
-            hasher = hashlib.sha256()
-            with open(digest_target, "rb") as fh:
-                for chunk in iter(lambda: fh.read(1024 * 1024), b""):
-                    hasher.update(chunk)
-            digest, digest_reason = hasher.hexdigest(), ""
+    digest_target = offline_image or (host_image if not container else "")
+    if (args.image_digest or offline_image) and digest_target:
+        if os.path.isfile(digest_target):
+            # Hashed through a recorded probe rather than in-process, so the
+            # capture names the command a reader re-runs.  Computing it in
+            # Python while the field cites sha256sum states a provenance the
+            # capture never had.
+            rc, sum_out, _ = capture.run("image-sha256",
+                                         ["sha256sum", digest_target], timeout=600)
+            if rc == 0 and sum_out.split():
+                digest, digest_reason = sum_out.split()[0], ""
+            else:
+                digest_reason = "sha256sum exited %s for %s" % (rc, digest_target)
         else:
             digest_reason = "no file at %s" % digest_target
     elif args.image_digest and container:
@@ -589,7 +656,10 @@ def main():
     ssh_user = os.environ.get("RUNTIME_EVIDENCE_SSH_USER", "root")
     guest = {}
     guest_reason = ""
-    if not container:
+    if offline_image:
+        guest_reason = ("offline image capture: no guest runs, so no guest "
+                        "probe is possible")
+    elif not container:
         guest_reason = "no container selected"
     elif not ssh_port:
         guest_reason = "the selected container publishes no host port for guest 22"
@@ -623,6 +693,8 @@ def main():
             "command": [os.path.relpath(os.path.abspath(__file__), repo_root)]
                        + (["--container", args.container] if args.container else [])
                        + (["--service", args.service] if args.service else [])
+                       + (["--qemu-pid", args.qemu_pid] if args.qemu_pid else [])
+                       + (["--image", args.image] if args.image else [])
                        + (["--image-digest"] if args.image_digest else [])
                        + (["--redact"] if args.redact else []),
             "environment": {k: v for k, v in os.environ.items()
@@ -677,11 +749,13 @@ def main():
         },
         "observed_runtime": {
             "qemu_version": field(qemu_version, OBSERVED,
-                                  "qemu-system-x86_64 --version inside the container"),
-            "qemu_argv": field(qemu_argv, OBSERVED, "/proc/<pid>/cmdline, NUL-delimited"),
-            "accelerator": field(accel, OBSERVED, "QEMU argv -accel"),
-            "machine": field(machine, OBSERVED, "QEMU argv -machine"),
-            "smp": field(smp, OBSERVED, "QEMU argv -smp"),
+                                  "qemu-system-x86_64 --version inside the container",
+                                  runtime_reason),
+            "qemu_argv": field(qemu_argv, OBSERVED, "/proc/<pid>/cmdline, NUL-delimited",
+                               runtime_reason),
+            "accelerator": field(accel, OBSERVED, "QEMU argv -accel", runtime_reason),
+            "machine": field(machine, OBSERVED, "QEMU argv -machine", runtime_reason),
+            "smp": field(smp, OBSERVED, "QEMU argv -smp", runtime_reason),
             "container_kvm_device": field(container_kvm, OBSERVED,
                                           "test -e/-r/-w /dev/kvm inside the container"),
             "monitor_kvm_enabled": field(monitor_kvm, OBSERVED, "QEMU monitor: info kvm"),
@@ -701,9 +775,15 @@ def main():
                                         guest_reason),
         },
         "image": {
-            "guest_path": field(guest_image, OBSERVED, "QEMU argv -drive file="),
-            "host_path": field(host_image, DERIVED,
-                               "guest path resolved through container mounts",
+            "guest_path": field(guest_image, OBSERVED, "QEMU argv -drive file=",
+                                image_reason if offline_image else ""),
+            "supplied_path": field(args.image, DECLARED, "--image",
+                                   "" if offline_image
+                                   else "no image named on the command line"),
+            "host_path": field(host_image,
+                               DERIVED if not offline_image else OBSERVED,
+                               "--image resolved with realpath" if offline_image
+                               else "guest path resolved through container mounts",
                                image_reason),
             "virtual_size_bytes": field(
                 (image_info or {}).get("virtual-size"), OBSERVED, "qemu-img info --output=json"),

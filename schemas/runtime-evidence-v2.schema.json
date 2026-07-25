@@ -59,7 +59,11 @@
         },
         "class": { "enum": ["observed", "derived", "declared", "not-captured"] },
         "source": { "type": "string", "minLength": 1 },
-        "reason": { "type": "string" }
+        "reason": {
+          "description": "Why the value is absent, in the terms the probe reported. An empty string states an absence without stating its cause, which is the preselected-explanation failure in another form.",
+          "type": "string",
+          "minLength": 1
+        }
       },
       "allOf": [
         {

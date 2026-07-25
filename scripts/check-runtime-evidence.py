@@ -29,6 +29,25 @@ SCHEMA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 # driven by a temporary override names that file in reproduce.command.
 LOCAL_PATH = re.compile(r"/home/[^/\"\s]+|/tmp/claude-[0-9]+|/root/[^/\"\s]+")
 
+# A credential-shaped key, anchored to a token boundary so BYPASS_MODE and
+# COMPASS_CONFIG stay settings rather than secrets.  The key is matched on its
+# own and tested separately, because embedding the boundary in an assignment
+# pattern lets the trailing "=" defeat the end anchor.
+SECRET_KEY = re.compile(
+    r"(?:^|_)(?:PASSWORD|PASSWD|PASS|TOKEN|SECRET|CREDENTIAL|CREDENTIALS|"
+    r"AUTH|COOKIE|KEY|APIKEY)(?:_|$)", re.IGNORECASE)
+ASSIGNMENT = re.compile(r"\b([A-Za-z0-9_]+)=([^\s\"',\]}]+)")
+
+
+def live_secret(text):
+    """Return the key of the first credential-shaped assignment whose value is
+    neither the redaction token nor a placeholder, or None."""
+    for match in ASSIGNMENT.finditer(text):
+        key, value = match.group(1), match.group(2)
+        if SECRET_KEY.search(key) and not value.startswith(("<", '"<')):
+            return key
+    return None
+
 
 def load_schema():
     try:
@@ -41,16 +60,44 @@ def load_schema():
         return jsonschema, json.load(fh)
 
 
+def check_privacy(path):
+    """Reject machine-local paths and surviving credentials anywhere under a
+    capture.  This runs for every capture, superseded ones included: a
+    superseded document is still published on the default branch, so marking it
+    historical excuses its digests and its schema, never its disclosures."""
+    failures = []
+    for base, _dirs, names in os.walk(path):
+        for name in names:
+            target = os.path.join(base, name)
+            try:
+                with open(target, encoding="utf-8") as fh:
+                    text = fh.read()
+            except (OSError, UnicodeDecodeError):
+                continue
+            rel = os.path.relpath(target, path)
+            found = LOCAL_PATH.search(text)
+            if found:
+                failures.append("%s: %s carries a machine-local path (%s)"
+                                % (path, rel, found.group(0)))
+            secret = live_secret(text)
+            if secret:
+                failures.append("%s: %s carries an unredacted credential-shaped "
+                                "value (%s=...)" % (path, rel, secret))
+    return failures
+
+
 def check_capture(path, jsonschema, schema, require_redacted):
-    """Return a list of failure strings for one capture directory."""
+    """Return a list of failure strings for one capture directory, or None when
+    the capture is superseded and only its privacy checks apply."""
     failures = []
     # A superseded capture is retained as history and is not a citable claim, so
-    # it is reported and skipped rather than repaired.  Recomputing its digests
-    # would make a capture taken from a dirty tree with an untracked input look
+    # its schema and digests are not repaired.  Recomputing its digests would
+    # make a capture taken from a dirty tree with an untracked input look
     # self-consistent without making it reproducible.
     if os.path.exists(os.path.join(path, "SUPERSEDED.md")):
-        print("%s: superseded, retained as history and not validated" % path)
-        return None
+        print("%s: superseded; schema and digests not validated" % path)
+        privacy = check_privacy(path) if require_redacted else []
+        return privacy or None
     doc_path = os.path.join(path, "capture.json")
     if not os.path.exists(doc_path):
         return ["%s: no capture.json" % path]
@@ -73,33 +120,40 @@ def check_capture(path, jsonschema, schema, require_redacted):
             if not rel:
                 failures.append("%s: probe %s names no %s file" % (path, name, stream))
                 continue
-            target = os.path.join(path, rel)
+            # The path comes from the document under test, so it is confined
+            # before it is opened.  An absolute path, a traversal, or a symlink
+            # out of the capture would make this gate read arbitrary files, and
+            # a directory or a device would make it crash or block.
+            capture_root = os.path.realpath(path)
+            joined = os.path.join(capture_root, rel)
+            target = os.path.realpath(joined)
+            if os.path.isabs(rel) or os.path.commonpath([capture_root, target]) != capture_root:
+                failures.append("%s: probe %s names %s, which escapes the capture"
+                                % (path, name, rel))
+                continue
+            if os.path.islink(joined):
+                failures.append("%s: probe %s names %s, which is a symlink"
+                                % (path, name, rel))
+                continue
             if not os.path.exists(target):
                 failures.append("%s: probe %s advertises %s, which is absent"
                                 % (path, name, rel))
                 continue
+            if not os.path.isfile(target):
+                failures.append("%s: probe %s names %s, which is not a regular file"
+                                % (path, name, rel))
+                continue
             if not recorded:
                 continue
-            actual = hashlib.sha256(open(target, "rb").read()).hexdigest()
+            with open(target, "rb") as fh:
+                actual = hashlib.sha256(fh.read()).hexdigest()
             if actual != recorded:
                 failures.append(
                     "%s: probe %s %s digest mismatch: records %s, file is %s"
                     % (path, name, stream, recorded[:16], actual[:16]))
 
     if require_redacted:
-        for base, _dirs, names in os.walk(path):
-            for name in names:
-                target = os.path.join(base, name)
-                try:
-                    with open(target, encoding="utf-8") as fh:
-                        text = fh.read()
-                except (OSError, UnicodeDecodeError):
-                    continue
-                found = LOCAL_PATH.search(text)
-                if found:
-                    failures.append("%s: %s carries a machine-local path (%s)"
-                                    % (path, os.path.relpath(target, path),
-                                       found.group(0)))
+        failures.extend(check_privacy(path))
     return failures
 
 

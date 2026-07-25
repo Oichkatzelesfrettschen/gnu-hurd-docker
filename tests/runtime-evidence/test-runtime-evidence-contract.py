@@ -157,6 +157,63 @@ def unredacted_scratch_path(directory):
     return 1
 
 
+@case("a not-captured field with an empty reason is rejected")
+def empty_reason(directory):
+    doc = base_document()
+    doc["observed_guest"]["uname"] = {
+        "value": None, "class": "not-captured", "source": "guest uname -a",
+        "reason": ""}
+    write_capture(directory, doc, {"host-uname": ("Linux <host>\n", "")})
+    return 1
+
+
+@case("a stream path escaping the capture by traversal is rejected")
+def traversal_path(directory):
+    doc = base_document()
+    doc["probes"]["host-uname"]["stdout_file"] = "raw/../../../etc/hostname"
+    write_capture(directory, doc, {"host-uname": ("Linux <host>\n", "")})
+    return 1
+
+
+@case("an absolute stream path is rejected")
+def absolute_path(directory):
+    doc = base_document()
+    doc["probes"]["host-uname"]["stdout_file"] = "/etc/hostname"
+    write_capture(directory, doc, {"host-uname": ("Linux <host>\n", "")})
+    return 1
+
+
+@case("a stream path that is a symlink out of the capture is rejected")
+def symlink_escape(directory):
+    doc = base_document()
+    write_capture(directory, doc, {"host-uname": ("Linux <host>\n", "")})
+    link = os.path.join(directory, "raw", "escape.out")
+    os.symlink("/etc/hostname", link)
+    doc["probes"]["escape"] = probe("escape", "")
+    with open(os.path.join(directory, "raw", "escape.err"), "w") as fh:
+        fh.write("")
+    with open(os.path.join(directory, "capture.json"), "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, indent=2)
+    return 1
+
+
+@case("a stream path naming a directory is rejected")
+def directory_path(directory):
+    doc = base_document()
+    doc["probes"]["host-uname"]["stdout_file"] = "raw"
+    write_capture(directory, doc, {"host-uname": ("Linux <host>\n", "")})
+    return 1
+
+
+@case("an unredacted credential in a published capture is rejected")
+def live_credential(directory):
+    doc = base_document()
+    stream = "VNC_PASSWORD=hunter2\n"
+    doc["probes"]["host-uname"] = probe("host-uname", stream)
+    write_capture(directory, doc, {"host-uname": (stream, "")})
+    return 1
+
+
 @case("a wrong schema version is rejected")
 def wrong_schema_version(directory):
     doc = base_document()

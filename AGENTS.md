@@ -54,8 +54,8 @@ MATE is the canonical Minty Hurd desktop. The product is Debian GNU/Hurd sid on
 GNU Mach under QEMU, with Xorg as the display server, MATE as the default
 session, Debian Ports supplying native `hurd-amd64` executables, and LMDE 7
 `gigi` supplying architecture-independent Mint themes, icons, cursors, artwork,
-backgrounds, and translations. Those unmodified Mint assets are later the
-reference set a separately named Minty Emerald MATE theme derives from.
+backgrounds, and translations. The separately named Minty Emerald MATE theme
+derives from those unmodified Mint assets.
 
 The tree installs XFCE and boots `minty-hurd-xfce`, so the installer and the
 autostart wrapper are migration targets rather than the product. XFCE stays as

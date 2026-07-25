@@ -125,7 +125,12 @@ runtime-info:
 # probe advertises exist or whether their digests describe the bytes on disk.
 # The negative fixtures assert what the contract rejects, because a schema
 # exercised only by documents it accepts states nothing about its exclusions.
+#
+# The producer suite runs first and calls the instrument itself.  Fixtures that
+# hand-build documents exercise the checker alone, so a redaction pass that
+# corrupts the JSON a probe returns passes them while destroying every capture.
 evidence-check:
+	python3 tests/runtime-evidence/test-capture-producer.py
 	python3 tests/runtime-evidence/test-runtime-evidence-contract.py
 	@set -e; captures=$$(git ls-files 'evidence/runtime/*/capture.json' \
 		'evidence/runtime/*/*/capture.json' | xargs -r -n1 dirname | sort -u); \
