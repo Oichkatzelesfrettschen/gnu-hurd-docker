@@ -8,8 +8,13 @@ name: Validate Configuration
       - 'Dockerfile'
       - 'entrypoint.sh'
       - 'compose*.yaml'
+      - 'docker-bake.hcl'
       - 'Makefile'
+      - 'PKGBUILD'
       - 'scripts/**'
+      - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
       - 'docs/**'
       - '.github/workflows/validate.yml'
   pull_request:
@@ -18,8 +23,13 @@ name: Validate Configuration
       - 'Dockerfile'
       - 'entrypoint.sh'
       - 'compose*.yaml'
+      - 'docker-bake.hcl'
       - 'Makefile'
+      - 'PKGBUILD'
       - 'scripts/**'
+      - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
       - 'docs/**'
       - '.github/workflows/validate.yml'
 
@@ -40,18 +50,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
+      # No actions/setup-python here: it puts a toolcache interpreter ahead of
+      # the system python3 on PATH, while apt installs PyYAML for the system
+      # interpreter, so `make validate` would run a Python that cannot import
+      # yaml.  The gates run against the system interpreter apt provisions.
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck python3-pip
-          pip install pyyaml
+          # PyYAML and ShellCheck both come from apt: a system-level pip install
+          # is refused on the runner image under PEP 668, which would abort setup
+          # before any gate runs.
+          sudo apt-get install -y shellcheck python3-yaml
+          shellcheck --version
 
-      - name: Repo validation (treat warnings as errors)
+      - name: Repo validation (shell errors enforced, warnings reported)
         run: |
           make lint
           make validate
@@ -69,13 +81,15 @@ jobs:
           **Run ID:** ${{ github.run_id }}
 
           ### Checks Performed
-          - ✓ ShellCheck (warnings as errors)
+          - ✓ ShellCheck over the maintained surface at error severity, with
+            warning-level findings reported and not enforced (roadmap item 43)
           - ✓ Repo invariants (scripts/validate-config.sh)
           - ✓ Compose security posture (scripts/validate-security-config.sh)
-          - ✓ Docs internal link scan (scripts/utils/link-scanner.py)
+          - ✓ Docs internal link scan, broken-link count asserted
+            (scripts/utils/link-scanner.py + scripts/check-link-scan-result.py)
 
           ### Files Validated
-          - **Shell scripts:** ShellCheck clean
+          - **Shell scripts:** no ShellCheck errors
           - **Compose:** Base + overlays parse and agree
           - **Docs:** Internal links consistent
 

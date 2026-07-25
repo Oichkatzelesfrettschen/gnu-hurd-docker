@@ -4,25 +4,36 @@ name: Configuration Validation
 "on":
   push:
     paths:
+      # Every file the validator reads belongs to its trigger set: it loads all
+      # five compose overlays, docker-bake.hcl, and the unattended and
+      # VirtualBox configuration, so watching compose.yaml alone let a change to
+      # compose.kvm.yaml alter an asserted invariant without running the gate.
       - Dockerfile
       - entrypoint.sh
-      - compose.yaml
+      - Makefile
+      - 'compose*.yaml'
+      - docker-bake.hcl
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'scripts/fix-script.sh'
-      - 'scripts/health-check.sh'
-      - 'scripts/lib/**'
+      - 'scripts/**'
+      - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
       - '.github/workflows/validate-config.yml'
   pull_request:
     paths:
       - Dockerfile
       - entrypoint.sh
-      - compose.yaml
+      - Makefile
+      - 'compose*.yaml'
+      - docker-bake.hcl
       - PKGBUILD
       - 'gnu-hurd-docker-kernel-fix.install'
-      - 'scripts/fix-script.sh'
-      - 'scripts/health-check.sh'
-      - 'scripts/lib/**'
+      - 'scripts/**'
+      - 'share/**'
+      - 'config/**'
+      - 'infrastructure/unattended/**'
+      - '.github/workflows/validate-config.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,8 +55,11 @@ jobs:
       - name: Setup environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck python3 python3-pip
-          pip install pyyaml
+          # PyYAML and ShellCheck both come from apt: a system-level pip install
+          # is refused on the runner image under PEP 668, which would abort setup
+          # before any gate runs.
+          sudo apt-get install -y shellcheck python3 python3-yaml
+          shellcheck --version
 
       - name: Validate Dockerfile
         run: |
@@ -55,23 +69,15 @@ jobs:
           fi
           echo "[OK] Dockerfile structure valid"
 
-      - name: Validate entrypoint.sh
+      # Naming three scripts here left the rest of the maintained surface
+      # unchecked by this workflow while scripts/validate-config.sh checked all of
+      # it, so the two gates reported different answers about the same tree.
+      # `make lint` reads scripts/list-maintained-shell.sh, the shared enumerator.
+      - name: Validate the maintained shell surface
         run: |
-          echo "[*] Running shellcheck on entrypoint.sh..."
-          shellcheck -S error entrypoint.sh
-          echo "[OK] entrypoint.sh has no critical errors"
-
-      - name: Validate fix-script.sh
-        run: |
-          echo "[*] Running shellcheck on scripts/fix-script.sh..."
-          shellcheck -S error scripts/fix-script.sh
-          echo "[OK] scripts/fix-script.sh is executable"
-
-      - name: Validate health-check.sh
-        run: |
-          echo "[*] Running shellcheck on scripts/health-check.sh..."
-          shellcheck -S error scripts/health-check.sh
-          echo "[OK] scripts/health-check.sh is executable"
+          echo "[*] Running shellcheck over the maintained shell surface..."
+          make lint
+          echo "[OK] maintained shell scripts have no errors"
 
       - name: Validate compose.yaml
         run: |
@@ -109,9 +115,7 @@ jobs:
           **Run ID:** ${{ github.run_id }}
 
           ### Checks Performed
-          - ✓ ShellCheck on entrypoint.sh (errors only)
-          - ✓ ShellCheck on fix-script.sh
-          - ✓ ShellCheck on health-check.sh
+          - ✓ ShellCheck over the maintained shell surface (errors only)
           - ✓ YAML syntax validation
           - ✓ File structure verification
 

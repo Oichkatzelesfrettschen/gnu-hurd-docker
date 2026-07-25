@@ -79,3 +79,4 @@ secrets/*.txt
 ssh-test-keys/hurd_test_key
 mint-sources/
 *.db
+link-scan.json

@@ -1,0 +1,72 @@
+---
+# The canonical static gate, run on every pull request and every push to main.
+#
+# validate.yml, validate-config.yml, and quality-and-security.yml carry the
+# same checks but are disabled at the repository level, so they produce no
+# evidence about any commit.  This workflow runs the Makefile targets that are
+# the gates themselves -- `make lint` over the maintained shell surface,
+# `make validate` over the Compose and script invariants, `make security`
+# against SECURITY.md, and a documentation link scan whose broken-link count is
+# asserted rather than printed.  It boots nothing and needs no qcow2, so it says
+# nothing about guest image integrity; roadmap item 36b covers that.
+name: Static Gates
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: Shell, config, security, and link gates
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install gate dependencies
+        run: |
+          sudo apt-get update
+          # PyYAML and ShellCheck both come from apt: a system-level pip install
+          # is refused on the runner image under PEP 668, which would abort setup
+          # before any gate runs.
+          sudo apt-get install -y shellcheck python3 python3-yaml
+          # ShellCheck findings move between releases, so the runner's version is
+          # part of what a passing run means.
+          shellcheck --version
+
+      - name: Report the maintained shell surface
+        run: |
+          ./scripts/list-maintained-shell.sh
+          echo "surface size: $(./scripts/list-maintained-shell.sh | wc -l)"
+
+      - name: ShellCheck the maintained surface at the enforced severity
+        run: make lint
+
+      - name: Report warning-level ShellCheck findings
+        continue-on-error: true
+        run: make lint SHELLCHECK_SEVERITY=warning
+
+      - name: Validate configuration invariants
+        run: make validate
+
+      - name: Validate security configuration
+        run: make security
+
+      - name: Scan documentation links
+        run: |
+          python3 scripts/utils/link-scanner.py \
+            --docs-root docs \
+            --json "$RUNNER_TEMP/link-scan.json"
+          python3 scripts/check-link-scan-result.py "$RUNNER_TEMP/link-scan.json"

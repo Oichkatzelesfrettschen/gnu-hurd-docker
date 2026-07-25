@@ -92,11 +92,23 @@ validate:
 security:
 	./scripts/validate-security-config.sh
 
+# error is the enforced level: every maintained script passes it. Warning-level
+# findings are real work that is tracked as roadmap item 43, so raising the
+# default here without clearing them first would make `make lint` fail on a
+# clean tree. Run `make lint SHELLCHECK_SEVERITY=warning` to see them.
+SHELLCHECK_SEVERITY ?= error
+
 lint:
-	shellcheck -S warning entrypoint.sh scripts/*.sh scripts/lib/*.sh scripts/test-phases/*.sh
+	SHELLCHECK_SEVERITY="$(SHELLCHECK_SEVERITY)" ./scripts/check-maintained-shell.sh
+
+# link-scanner.py reports its findings and exits 0 whatever it finds, so every
+# caller of this target got a pass regardless. check-link-scan-result.py reads
+# the broken-link count out of the JSON report and supplies the exit status.
+LINK_SCAN_JSON ?= $(CURDIR)/link-scan.json
 
 links:
-	python3 scripts/utils/link-scanner.py --docs-root docs
+	python3 scripts/utils/link-scanner.py --docs-root docs --json "$(LINK_SCAN_JSON)"
+	python3 scripts/check-link-scan-result.py "$(LINK_SCAN_JSON)"
 
 smoke-host:
 	./scripts/smoke-host.sh
