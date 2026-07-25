@@ -71,9 +71,9 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 ## Milestone 7 -- Gate coverage and reference integrity
 
-42. [x] Discover the maintained shell surface dynamically in `scripts/validate-config.sh` -- `entrypoint.sh`, `scripts/**`, and `share/**`, excluding archives, which raises enforced coverage from 29 enumerated paths to 107 scripts
+42. [x] Discover the maintained shell surface dynamically in `scripts/validate-config.sh` -- `entrypoint.sh`, `scripts/**`, and `share/**`, excluding archives, which replaces 29 enumerated paths with the whole maintained tree. Item 43 names the enumerator that now defines that set and carries its current size
 43. [ ] Establish one maintained shell-file set and one severity policy across `scripts/validate-config.sh`, the `Makefile` `lint` target, `validate.yml`, `validate-config.yml`, and `quality-and-security.yml`; clear the 15 warning-level findings before enabling warning-as-error CI. The five surfaces disagree today: `validate-config.sh` globs the maintained tree at `-S error`, `make lint` uses fixed globs that omit `share/**` at `-S warning`, `validate-config.yml` hardcodes three scripts, and `quality-and-security.yml` scans every `.sh` including archives at `-S warning`
-44. [x] Verify repository sources rather than staged copies in the `release-artifacts.yml` gate, and assert the extracted archive satisfies the documented quick start
+44. [x] Remove the stale required-script gate from `release-artifacts.yml` and move release acceptance onto the extracted archive rather than repository-source paths, so the gate reads the product it publishes
 45. [x] Replace the tab in `.github/workflows/release.yml` (sole yamllint error)
 46. [ ] Count recipe blocks, not target lines, in any Makefile duplicate-target check (the five `up-podman*` pairs are the GNU make target-specific variable idiom and are correct)
 47. [ ] Reconnect `scripts/test-hurd-system.sh` (and the seven `test-phases/` scripts it reaches) to a Makefile target
@@ -81,6 +81,8 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 49. [ ] Correct the phantom `QEMU_*` env vars cited in live docs -- the dead `make` targets are corrected and `docs/03-CONFIGURATION/environment-variables.md` names the variables the entrypoint ignores; classifying the remaining live references needs a schema-backed variable inventory rather than a grep
 50. [x] Rebuild the `mkdocs.yml` nav against the `01-08` tree, so `mkdocs build --strict` produces `site/index.html`
 51. [x] Classify every document as nav, `not_in_nav`, or `exclude_docs`, so adding a report or an audit cannot break the strict build
+
+52. [ ] Make the runtime self-identifying, so operators read the accelerator QEMU selected rather than infer it from a target name. `compose.kvm.yaml` exposes `/dev/kvm`, and the entrypoint then chooses between `-accel kvm` and `-accel tcg` -- under the default `QEMU_MACHINE=pc` plus `QEMU_DISK_BUS=ide` with `AUTO_DISABLE_KVM_FOR_IDE=1` it chooses TCG. A `make runtime-info` target should report the observed container runtime, QEMU binary, accelerator (from the monitor, not from `/dev/kvm`), machine, disk bus, image path, and image SHA256, and the `up-kvm` target name should say that it exposes KVM rather than that it uses it
 
 ## Definition of done (per change)
 
