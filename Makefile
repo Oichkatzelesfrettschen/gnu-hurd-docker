@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links runtime-info smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links runtime-info evidence-check smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -120,6 +120,20 @@ runtime-info:
 	@capture=$$(python3 scripts/capture-runtime-evidence.py) && \
 		python3 scripts/report-runtime-evidence.py "$$capture" && \
 		echo "Capture: $$capture"
+
+# The schema constrains a capture document; it cannot see whether the streams a
+# probe advertises exist or whether their digests describe the bytes on disk.
+# The negative fixtures assert what the contract rejects, because a schema
+# exercised only by documents it accepts states nothing about its exclusions.
+evidence-check:
+	python3 tests/runtime-evidence/test-runtime-evidence-contract.py
+	@set -e; captures=$$(git ls-files 'evidence/runtime/*/capture.json' \
+		'evidence/runtime/*/*/capture.json' | xargs -r -n1 dirname | sort -u); \
+	if [ -n "$$captures" ]; then \
+		python3 scripts/check-runtime-evidence.py --require-redacted $$captures; \
+	else \
+		echo "evidence-check: no committed captures to validate"; \
+	fi
 
 smoke-host:
 	./scripts/smoke-host.sh
