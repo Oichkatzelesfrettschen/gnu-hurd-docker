@@ -107,14 +107,18 @@ if command -v shellcheck >/dev/null 2>&1; then
     # here rather than reimplementing the loop is what keeps this validator from
     # passing over an empty file set when the enumerator breaks.
     #
-    # error is the enforced level and every maintained script passes it.
-    # Findings at warning and below are reported without failing, because
-    # clearing them is separate work tracked as roadmap item 43.
+    # SHELLCHECK_SEVERITY selects the enforced level here exactly as it does for
+    # `make lint`, so one variable moves every gate together.  Pinning error here
+    # would leave `SHELLCHECK_SEVERITY=warning make validate` silently enforcing
+    # error, and would split this check from `make lint` the moment roadmap item
+    # 43 raises the default.  error is that default, and every maintained script
+    # passes it.  Findings at warning and below are reported without failing.
+    shellcheck_severity="${SHELLCHECK_SEVERITY:-error}"
     shellcheck_checked="$(./scripts/list-maintained-shell.sh | grep -c '' || true)"
-    if SHELLCHECK_SEVERITY=error ./scripts/check-maintained-shell.sh; then
-        pass "$shellcheck_checked shell scripts pass shellcheck (errors)"
+    if ./scripts/check-maintained-shell.sh; then
+        pass "$shellcheck_checked shell scripts pass shellcheck ($shellcheck_severity)"
     else
-        fail "the maintained shell surface fails shellcheck (errors)"
+        fail "the maintained shell surface fails shellcheck ($shellcheck_severity)"
     fi
 
     # Reported, not counted: warn() increments the error total and would fail the

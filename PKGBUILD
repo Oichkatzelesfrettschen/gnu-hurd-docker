@@ -13,6 +13,8 @@ depends=(
 makedepends=(
     'git'
     'shellcheck'
+    # build() parses compose.yaml and mkdocs.yml with PyYAML.
+    'python-yaml'
 )
 optdepends=(
     'qemu-base>=7.0: For running QEMU outside Docker (standalone mode)'
@@ -42,17 +44,17 @@ build() {
     
     echo "=== Building GNU/Hurd Docker Package ==="
     
-    # Validate shell scripts
+    # scripts/check-maintained-shell.sh is the repository's single ShellCheck
+    # enforcement mechanism, so the package build gates on exactly the file set
+    # and severity every other gate uses.  Globbing scripts/ here instead missed
+    # share/, swept archived scripts that are not maintained against current
+    # standards, and enforced warning severity, which fails makepkg against the
+    # findings roadmap item 43 tracks as open work.
     echo "Validating shell scripts..."
-    for script in entrypoint.sh $(find scripts -type f -name "*.sh" | sort); do
-        if [ -f "$script" ]; then
-            echo "  Checking $script..."
-            shellcheck -S warning "$script" || {
-                echo "ERROR: ShellCheck failed for $script"
-                return 1
-            }
-        fi
-    done
+    SHELLCHECK_SEVERITY=error ./scripts/check-maintained-shell.sh || {
+        echo "ERROR: ShellCheck failed for the maintained shell surface"
+        return 1
+    }
     
     # Validate YAML files
     echo "Validating YAML files..."

@@ -31,17 +31,20 @@ cd "$REPO_ROOT"
 
 # find prunes archive directories rather than filtering them afterwards, so a
 # deep archive tree costs nothing to walk.
-listing="$(
-    find entrypoint.sh scripts share \
-            \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
-            \( -type f -name '*.sh' -print \) \
-        | LC_ALL=C sort
-)"
+listing="$(mktemp)"
+trap 'rm -f "$listing"' EXIT
+
+find entrypoint.sh scripts share \
+        \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
+        \( -type f -name '*.sh' -print \) \
+    | LC_ALL=C sort >"$listing"
 
 # A NUL-delimited walk counts the same files a newline-delimited walk did, so a
 # mismatch means a path carries an embedded newline and every downstream gate
-# would receive a fabricated file set.
-newline_count="$(printf '%s\n' "$listing" | grep -c '' || true)"
+# would receive a fabricated file set.  The newline count comes from the file
+# rather than from a variable, because command substitution strips trailing
+# newlines and would hide a path whose last character is one.
+newline_count="$(grep -c '' <"$listing" || true)"
 nul_count="$(
     find entrypoint.sh scripts share \
             \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
@@ -56,7 +59,7 @@ if [ "$newline_count" -ne "$nul_count" ]; then
 fi
 
 if [ "$separator" = nul ]; then
-    printf '%s\n' "$listing" | tr '\n' '\0'
+    tr '\n' '\0' <"$listing"
 else
-    printf '%s\n' "$listing"
+    cat "$listing"
 fi
