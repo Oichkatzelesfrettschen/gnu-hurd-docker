@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links runtime-info smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -25,6 +25,7 @@ help:
 	@echo "  make security                     - validate compose security posture"
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
+	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -42,7 +43,7 @@ help:
 	@echo ""
 	@echo "Operation (Docker defaults):"
 	@echo "  make up                           - start bind-mode stack"
-	@echo "  make up-kvm                       - start bind-mode + KVM overlay"
+	@echo "  make up-kvm                       - start bind-mode + overlay exposing /dev/kvm (the entrypoint still selects the accelerator; run 'make runtime-info' to read which)"
 	@echo "  make up-vnc                       - start bind-mode + VNC/noVNC overlay"
 	@echo "  make up-kvm-vnc                   - start bind-mode + KVM + VNC/noVNC"
 	@echo "  make up-volume                    - start volume mode (AUTO_DOWNLOAD_IMAGE=1)"
@@ -109,6 +110,15 @@ LINK_SCAN_JSON ?= $(CURDIR)/link-scan.json
 links:
 	python3 scripts/utils/link-scanner.py --docs-root docs --json "$(LINK_SCAN_JSON)"
 	python3 scripts/check-link-scan-result.py "$(LINK_SCAN_JSON)"
+
+# The accelerator QEMU selected reaches an operator only from the argv and the
+# monitor: /dev/kvm being present, FORCE_KVM being set, and a target named
+# up-kvm each state a request.  capture-runtime-evidence.sh records both the
+# request and the outcome, and labels which is which.
+runtime-info:
+	@capture=$$(./scripts/capture-runtime-evidence.sh) && \
+		python3 scripts/report-runtime-evidence.py "$$capture" && \
+		echo "Capture: $$capture"
 
 smoke-host:
 	./scripts/smoke-host.sh

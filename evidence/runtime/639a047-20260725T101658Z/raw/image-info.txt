@@ -1,0 +1,17 @@
+image: <repo>/images/debian-hurd-amd64.qcow2
+file format: qcow2
+virtual size: 3.91 GiB (4195352576 bytes)
+disk size: 1.93 GiB
+cluster_size: 65536
+Format specific information:
+    compat: 1.1
+    compression type: zlib
+    lazy refcounts: false
+    refcount bits: 16
+    corrupt: false
+    extended l2: false
+Child node '/file':
+    filename: <repo>/images/debian-hurd-amd64.qcow2
+    protocol type: file
+    file length: 1.93 GiB (2067726336 bytes)
+    disk size: 1.93 GiB

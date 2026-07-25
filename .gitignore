@@ -80,3 +80,8 @@ ssh-test-keys/hurd_test_key
 mint-sources/
 *.db
 link-scan.json
+
+# Runtime evidence captures are per-run instances; one exemplar is committed
+# so the schema stays reviewable in-tree.
+evidence/runtime/*
+!evidence/runtime/639a047-20260725T101658Z/
