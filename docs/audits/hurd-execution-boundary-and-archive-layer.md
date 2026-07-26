@@ -284,6 +284,66 @@ buildd state rather than generic Linux-only code. They do not prove the source
 builds unchanged for `hurd-amd64`, and the native build stays the acceptance
 test.
 
+## Whether a rebuild can start is its own archive question
+
+A missing binary is a rebuild candidate only if a build can begin, and that is
+not settled by the binary index. `--build-dependencies` adds a `deb-src` line
+for the main archive and resolves each source package's build closure against
+the target port's binaries:
+
+    make hurd-build-closure
+    make hurd-build-closure HURD_ARCH=hurd-i386
+
+The answer reorders the work. From
+`evidence/hurd-archive/hurd-amd64-build-closure-rebuild-candidates.json`:
+
+    libmatemixer          buildable   206 build dependencies resolve
+    python3-setproctitle  buildable   156 build dependencies resolve
+    mate-settings-daemon  blocked     Depends: libmatemixer-dev (>= 1.24)
+    mate-control-center   blocked     Depends: libaccountsservice-dev (>= 0.6.21)
+    accountsservice       blocked     Depends: polkitd
+    polkitd               blocked     Depends: libselinux-dev
+
+Two of the four packages named as rebuild candidates cannot be built today, and
+the chain has a single root. `mate-control-center` needs
+`libaccountsservice-dev` and `mate-settings-daemon-dev`; `accountsservice` needs
+`polkitd` at build time, not only at run time; and polkit's own build stops at
+`libselinux-dev`. SELinux is a Linux kernel interface, so that build dependency
+cannot be satisfied on the Hurd at all. The remedy there is a packaging change
+that qualifies the build dependency to Linux architectures and builds without
+it, which is a patch to Debian's polkit packaging rather than a port of polkit's
+logic.
+
+The order that follows, for hurd-amd64:
+
+    libmatemixer, python3-setproctitle    buildable now, independently
+        |
+    mate-settings-daemon                  after libmatemixer
+        |
+    polkitd                               after the libselinux-dev qualification
+        |
+    accountsservice                       after polkitd
+        |
+    mate-control-center                   after accountsservice and mate-settings-daemon
+
+So polkit is not only the run-time blocker of `mate-polkit`; it is a build-time
+blocker of `accountsservice` and therefore of `mate-control-center`. Bringing up
+a session without polkit-dependent integration is still the right first step,
+and polkit still has to come before the settings-administration layer can be
+built at all.
+
+The 32-bit port is further along here too, which is what makes it a useful
+reference system: `mate-settings-daemon` is already buildable there because
+`libmatemixer-dev` exists, and `python3-setproctitle` is blocked by a version
+constraint rather than a missing dependency. `polkitd` stops at `libselinux-dev`
+on both.
+
+One claim above needs narrowing with this evidence. The main archive carries
+`mate-control-center` source at 1.26.1-1.1 while the hurd-i386 binary is
+1.26.0-2, so the same-source-version argument holds for `mate-settings-daemon`
+alone. For `mate-control-center` the i386 binary was built from an older source
+than the one a rebuild would use.
+
 ## Closing the gaps
 
 Three kinds of failure appear above, and each takes a different mechanism.

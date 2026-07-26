@@ -48,6 +48,8 @@ class Args(object):
         self.lmde_suite = "gigi"
         self.keyring = KEYRING
         self.foreign_architecture = ""
+        self.build_dependencies = False
+        self.main_archive = ""
         self.packages = []
         for key, value in fields.items():
             setattr(self, key, value)
@@ -345,6 +347,94 @@ def test_foreign_architecture(module, suite, workspace):
                           packages=["fixture-simple"]), state))
 
 
+def source_stanza(name, version, build_depends, binaries=""):
+    body = "source for %s %s" % (name, version)
+    return "\n".join([
+        "Package: %s" % name,
+        "Binary: %s" % (binaries or name),
+        "Version: %s" % version,
+        "Architecture: any",
+        "Build-Depends: %s" % build_depends,
+        "Directory: pool/main/%s" % name[0],
+        "Files:",
+        " %s %d %s_%s.dsc" % (hashlib.md5(body.encode()).hexdigest(),
+                              len(body), name, version),
+        "Checksums-Sha256:",
+        " %s %d %s_%s.dsc" % (hashlib.sha256(body.encode()).hexdigest(),
+                              len(body), name, version),
+    ])
+
+
+def sources_fixture(root, suite, stanzas):
+    """Publish a Sources index, which is what a build closure resolves against."""
+    component = os.path.join(root, "dists", suite, "main", "source")
+    os.makedirs(component, exist_ok=True)
+    body = ("\n\n".join(stanzas) + "\n").encode("utf-8")
+    with open(os.path.join(component, "Sources"), "wb") as handle:
+        handle.write(body)
+    return (" %s %d main/source/Sources"
+            % (hashlib.sha256(body).hexdigest(), len(body)))
+
+
+def test_build_dependencies(module, suite, workspace):
+    """A missing binary is a rebuild candidate only if its build can start.
+
+    Whether a binary exists and whether it can be produced are different archive
+    questions, and a chain of build dependencies makes a rebuild an ordered
+    sequence rather than one command.
+    """
+    root = os.path.join(workspace, "ports-buildable")
+    # The binary index supplies what a build dependency resolves against.
+    # apt-get build-dep adds build-essential to every request, so the fixture
+    # archive publishes it the way the real one does.
+    mirror = ports_fixture(root, [
+        stanza("build-essential", "12.12", "hurd-amd64"),
+        stanza("fixture-toolchain", "1.0", "hurd-amd64"),
+        stanza("fixture-lib-dev", "1.0", "hurd-amd64"),
+    ])
+    entry = sources_fixture(root, "sid", [
+        source_stanza("fixture-buildable", "1.0", "fixture-toolchain"),
+        source_stanza("fixture-chained", "2.0",
+                      "fixture-toolchain, fixture-absent-dev"),
+        source_stanza("fixture-linux-only", "3.0",
+                      "fixture-toolchain, fixture-selinux-dev"),
+    ])
+    # The Release must name the Sources index for apt to accept it.
+    release = os.path.join(root, "dists", "sid", "Release")
+    with open(release, "a", encoding="utf-8") as handle:
+        handle.write(entry + "\n")
+
+    state = os.path.join(workspace, "state-buildable")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror, main_archive=mirror,
+             build_dependencies=True,
+             packages=["fixture-buildable", "fixture-chained",
+                       "fixture-linux-only", "fixture-never-packaged"]),
+        state)
+    seen = verdicts(report)
+    suite.check("a source whose build dependencies resolve is buildable",
+                seen.get("fixture-buildable") == "buildable", str(seen))
+    suite.check("a source blocked by a missing build dependency is blocked",
+                seen.get("fixture-chained") == "blocked"
+                and seen.get("fixture-linux-only") == "blocked", str(seen))
+    suite.check("a name the source archive does not publish reports no-source",
+                seen.get("fixture-never-packaged") == "no-source", str(seen))
+    evidence = {item["package"]: item.get("evidence", "")
+                for item in report["packages"]}
+    suite.check("the blocking build dependency is named",
+                "fixture-absent-dev" in evidence.get("fixture-chained", ""),
+                evidence.get("fixture-chained", ""))
+    suite.check("the report distinguishes a build closure from a binary one",
+                report["mode"] == "build-dependencies"
+                and report["recursive_transaction"] == [], report.get("mode"))
+    suite.check("a buildable source records how many build dependencies it pulls",
+                any(item.get("build_dependency_count", 0) > 0
+                    for item in report["packages"]),
+                str([item.get("build_dependency_count")
+                     for item in report["packages"]]))
+
+
 def test_key_pin(module, suite, workspace):
     packets = module.dearmor(open(KEYRING, encoding="utf-8").read())
     suite.check("the vendored key carries the pinned primary fingerprint",
@@ -500,6 +590,7 @@ def run(module):
         test_conflict(module, suite, workspace)
         test_wildcards(module, suite, workspace)
         test_foreign_architecture(module, suite, workspace)
+        test_build_dependencies(module, suite, workspace)
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 

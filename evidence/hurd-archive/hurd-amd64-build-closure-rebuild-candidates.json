@@ -1,0 +1,126 @@
+{
+  "architecture": "hurd-amd64",
+  "foreign_architecture": {
+    "enabled": false,
+    "foreign_qualified_in_transaction": 0,
+    "name": "",
+    "native_packages_removed": []
+  },
+  "lmde_overlay": {
+    "enabled": false
+  },
+  "main_archive": "http://deb.debian.org/debian",
+  "mode": "build-dependencies",
+  "must_be_built_or_substituted": [
+    "libaccountsservice-dev",
+    "libmatemixer-dev",
+    "libselinux-dev",
+    "polkitd"
+  ],
+  "packages": [
+    {
+      "binaries": [
+        "libmatemixer0",
+        "libmatemixer-common",
+        "libmatemixer-doc",
+        "libmatemixer-dev"
+      ],
+      "build_dependency_count": 206,
+      "class": "buildable",
+      "evidence": "build dependencies resolve",
+      "package": "libmatemixer",
+      "version": "1.26.1-1"
+    },
+    {
+      "binaries": [
+        "python3-setproctitle"
+      ],
+      "build_dependency_count": 156,
+      "class": "buildable",
+      "evidence": "build dependencies resolve",
+      "package": "python3-setproctitle",
+      "version": "1.3.7-2"
+    },
+    {
+      "binaries": [
+        "mate-settings-daemon",
+        "mate-settings-daemon-common",
+        "mate-settings-daemon-dev"
+      ],
+      "class": "blocked",
+      "evidence": "builddeps:mate-settings-daemon : Depends: libmatemixer-dev (>= 1.24) but it is not installable",
+      "package": "mate-settings-daemon",
+      "version": "1.26.1-1.2"
+    },
+    {
+      "binaries": [
+        "mate-control-center",
+        "mate-control-center-common",
+        "libmate-window-settings1t64",
+        "libmate-window-settings-dev",
+        "libmate-slab0t64",
+        "libmate-slab-dev"
+      ],
+      "class": "blocked",
+      "evidence": "builddeps:mate-control-center : Depends: libaccountsservice-dev (>= 0.6.21) but it is not installable",
+      "package": "mate-control-center",
+      "version": "1.26.1-1.1"
+    },
+    {
+      "binaries": [
+        "accountsservice",
+        "libaccountsservice0",
+        "libaccountsservice-dev",
+        "gir1.2-accountsservice-1.0",
+        "libaccountsservice-doc"
+      ],
+      "class": "blocked",
+      "evidence": "builddeps:accountsservice : Depends: polkitd but it is not installable",
+      "package": "accountsservice",
+      "version": "23.13.9-8"
+    },
+    {
+      "binaries": [
+        "polkitd",
+        "pkexec",
+        "policykit-1-doc",
+        "libpolkit-gobject-1-0",
+        "libpolkit-gobject-1-dev",
+        "libpolkit-agent-1-0",
+        "libpolkit-agent-1-dev",
+        "gir1.2-polkit-1.0"
+      ],
+      "class": "blocked",
+      "evidence": "builddeps:polkitd : Depends: libselinux-dev but it is not installable",
+      "package": "polkitd",
+      "version": "127-3"
+    }
+  ],
+  "provenance": {
+    "collected_at": "2026-07-26T01:05:39+00:00",
+    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [],
+  "recursive_transaction_size": 0,
+  "resolvable_subset": [
+    "libmatemixer",
+    "python3-setproctitle"
+  ],
+  "resolvable_subset_blocker": "",
+  "resolvable_subset_resolves": false,
+  "set": "rebuild-candidates",
+  "summary": {
+    "blocked": 4,
+    "buildable": 2
+  },
+  "unmatched_patterns": []
+}

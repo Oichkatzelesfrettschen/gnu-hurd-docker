@@ -62,6 +62,10 @@ import urllib.request
 
 PORTS = os.environ.get("HURD_PORTS_MIRROR",
                        "http://ftp.ports.debian.org/debian-ports")
+# debian-ports publishes binaries only. Source lives in the main Debian archive,
+# which is architecture-independent and serves both Hurd ports, so a build
+# closure is resolved against ports binaries plus main-archive source.
+MAIN_ARCHIVE = os.environ.get("HURD_MAIN_ARCHIVE", "http://deb.debian.org/debian")
 LMDE_MIRROR = os.environ.get(
     "LMDE_MIRROR", "https://mirrors.edge.kernel.org/linuxmint-packages")
 LMDE_SUITE = os.environ.get("LMDE_SUITE", "gigi")
@@ -167,7 +171,20 @@ MINT_INTEGRATION = [
     "xapp-symbolic-icons",
 ]
 
+# The source packages a missing native binary would be rebuilt from. Asked with
+# --build-dependencies, which answers whether a build can start rather than
+# whether a binary exists.
+REBUILD_CANDIDATES = [
+    "libmatemixer",
+    "python3-setproctitle",
+    "mate-settings-daemon",
+    "mate-control-center",
+    "accountsservice",
+    "polkitd",
+]
+
 SETS = {
+    "rebuild-candidates": REBUILD_CANDIDATES,
     "mate-bootstrap": MATE_BOOTSTRAP,
     "mate-control": MATE_CONTROL,
     "mate-privileged-integration": MATE_PRIVILEGED,
@@ -393,7 +410,7 @@ def write_overlay(root, architecture, mirror, suite, release):
     }
 
 
-def build_tree(root, architecture, ports, lmde, foreign=""):
+def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
     """Create a private apt state tree whose native architecture is the target.
 
     A foreign architecture is enabled the way `dpkg --add-architecture` enables
@@ -406,19 +423,30 @@ def build_tree(root, architecture, ports, lmde, foreign=""):
         os.makedirs(os.path.join(root, part), exist_ok=True)
     open(os.path.join(root, "var/lib/dpkg/status"), "w").close()
 
-    keyring = "/usr/share/keyrings/debian-ports-archive-keyring.gpg"
-    if os.path.exists(keyring):
-        shutil.copy(keyring, os.path.join(root, "etc/apt/trusted.gpg.d"))
+    # debian-ports signs the binary indices; the main archive signs the source
+    # index, and its key is a separate keyring, so a build closure that omits it
+    # fails verification rather than resolving.
+    for keyring in ("debian-ports-archive-keyring.gpg",
+                    "debian-archive-keyring.gpg"):
+        path = os.path.join("/usr/share/keyrings", keyring)
+        if os.path.exists(path):
+            shutil.copy(path, os.path.join(root, "etc/apt/trusted.gpg.d"))
 
     # A file:// ports mirror is a fixture, which carries no signature; the
     # network mirror is verified by apt against the debian-ports keyring above.
     local = "[trusted=yes] " if ports.startswith("file:") else ""
-    sources = ["deb %s%s sid main" % (local, ports),
-               "deb %s%s unreleased main" % (local, ports)]
+    lines = ["deb %s%s sid main" % (local, ports),
+             "deb %s%s unreleased main" % (local, ports)]
+    if sources:
+        # Source is architecture-independent, so one deb-src line serves either
+        # Hurd port; the binaries it resolves against stay the port's own.
+        lines.append("deb-src %s%s sid main"
+                     % ("[trusted=yes] " if sources.startswith("file:") else "",
+                        sources))
 
     if lmde:
-        sources.append("deb [trusted=yes] file://%s/lmde %s %s"
-                       % (root, LMDE_SUITE, " ".join(lmde["components"])))
+        lines.append("deb [trusted=yes] file://%s/lmde %s %s"
+                     % (root, LMDE_SUITE, " ".join(lmde["components"])))
         # The overlay is authenticated upstream and republished locally, so its
         # own signature would prove nothing; the pin is what keeps it from
         # supplying a name Debian Ports builds natively.
@@ -429,7 +457,7 @@ def build_tree(root, architecture, ports, lmde, foreign=""):
 
     with open(os.path.join(root, "etc/apt/sources.list"), "w",
               encoding="utf-8") as handle:
-        handle.write("\n".join(sources) + "\n")
+        handle.write("\n".join(lines) + "\n")
 
     config = os.path.join(root, "apt.conf")
     with open(config, "w", encoding="utf-8") as handle:
@@ -524,6 +552,44 @@ def classify(env, package, architecture, workspace):
     gone = removals(sim_out)
     if gone:
         record["removes"] = gone
+    return record
+
+
+def classify_source(env, source):
+    """Say whether a source package's build can start on this architecture.
+
+    A missing binary is a rebuild candidate only if a build can begin, and that
+    is a separate archive question from whether the binary exists. A build
+    dependency that is itself missing for the port makes the rebuild an ordered
+    chain rather than one command, and a build dependency that exists only on
+    Linux makes it a packaging patch rather than a build.
+
+    Classes:
+
+      buildable   every build dependency resolves for the target architecture
+      blocked     a build dependency does not resolve, and it is named
+      no-source   the main archive publishes no source under this name
+    """
+    status, out, _ = run(["apt-cache", "showsrc", source], env=env)
+    if status != 0 or not out.strip():
+        return {"package": source, "class": "no-source",
+                "evidence": "the main archive publishes no source under this name"}
+    versions = re.findall(r"^Version:\s*(\S+)", out, re.MULTILINE)
+    binaries = re.search(r"^Binary:\s*(.+)$", out, re.MULTILINE)
+    record = {"package": source, "version": versions[0] if versions else "",
+              "binaries": [name.strip() for name in
+                           binaries.group(1).split(",")] if binaries else []}
+    rc, sim_out, sim_err = run(
+        ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends", source],
+        env=env)
+    if rc != 0:
+        record.update({"class": "blocked",
+                       "evidence": first_blocker(sim_out + sim_err)})
+        return record
+    record.update({"class": "buildable", "evidence": "build dependencies resolve",
+                   "build_dependency_count": len(
+                       [line for line in sim_out.splitlines()
+                        if line.startswith("Inst ")])})
     return record
 
 
@@ -623,7 +689,8 @@ def resolve(args, workspace):
         raise ArchiveTrustError(
             "the foreign architecture is the native one, which tests nothing")
     config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
-                        foreign)
+                        foreign,
+                        args.main_archive if args.build_dependencies else "")
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 
@@ -632,7 +699,43 @@ def resolve(args, workspace):
         raise ArchiveTrustError("apt-get update failed: %s"
                                 % " ".join(err.split())[:400])
 
-    packages, unmatched = expand(env, args.packages or SETS[args.set])
+    requested = args.packages or SETS[args.set]
+    if args.build_dependencies:
+        # A source name is not a binary name, so wildcard expansion over the
+        # binary index does not apply and there is no transaction to simulate:
+        # the question is whether each build can start.
+        results = [classify_source(env, name) for name in requested]
+        report = {
+            "architecture": args.architecture,
+            "set": args.set,
+            "mode": "build-dependencies",
+            "main_archive": args.main_archive,
+            "foreign_architecture": {"enabled": False, "name": "",
+                                     "native_packages_removed": [],
+                                     "foreign_qualified_in_transaction": 0},
+            "provenance": provenance,
+            "lmde_overlay": lmde or {"enabled": False},
+            "packages": results,
+            "unmatched_patterns": [],
+            "resolvable_subset": [item["package"] for item in results
+                                  if item["class"] == "buildable"],
+            "resolvable_subset_resolves": all(item["class"] == "buildable"
+                                              for item in results),
+            "resolvable_subset_blocker": "",
+            "recursive_transaction": [],
+            "recursive_transaction_size": 0,
+            "must_be_built_or_substituted": sorted(
+                {name for item in results if item["class"] == "blocked"
+                 for name in re.findall(r"Depends: (\S+)",
+                                        item.get("evidence", ""))}),
+            "summary": {},
+        }
+        for item in results:
+            report["summary"][item["class"]] = report["summary"].get(
+                item["class"], 0) + 1
+        return report
+
+    packages, unmatched = expand(env, requested)
     # Under a foreign architecture the question is whether the foreign build of
     # each name installs into a native tree, so every request is qualified and
     # classified against the foreign architecture rather than the native one.
@@ -654,6 +757,7 @@ def resolve(args, workspace):
     report = {
         "architecture": args.architecture,
         "set": args.set,
+        "mode": "binary",
         "foreign_architecture": {
             "enabled": bool(foreign),
             "name": foreign,
@@ -698,6 +802,13 @@ def print_report(report):
     print()
     for key in sorted(report["summary"]):
         print("%-18s %d" % (key, report["summary"][key]))
+    if report.get("mode") == "build-dependencies":
+        print("\nbuildable now: %s"
+              % (", ".join(report["resolvable_subset"]) or "none"))
+        for item in results:
+            if item["class"] == "blocked":
+                print("blocked  %-24s %s" % (item["package"], item["evidence"]))
+        return
     print("\nresolvable subset: %d of %d, %s"
           % (len(report["resolvable_subset"]), len(results),
              "pulling %d packages recursively"
@@ -748,7 +859,13 @@ def main():
                              "request to it, the way dpkg --add-architecture "
                              "does, to ask whether a foreign build installs "
                              "into a native tree")
+    parser.add_argument("--build-dependencies", action="store_true",
+                        help="resolve whether each named source package's build "
+                             "can start on the target architecture, rather than "
+                             "whether its binary exists")
     parser.add_argument("--ports-mirror", default=PORTS)
+    parser.add_argument("--main-archive", default=MAIN_ARCHIVE,
+                        help="source archive, which is architecture-independent")
     parser.add_argument("--lmde-mirror", default=LMDE_MIRROR)
     parser.add_argument("--lmde-suite", default=LMDE_SUITE)
     parser.add_argument("--keyring", default=MINT_KEYRING,
