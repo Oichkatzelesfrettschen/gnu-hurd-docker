@@ -500,6 +500,26 @@ archive, so the lock is a timestamp rather than a local cache of every fetched
 artifact. Timestamp 20260726T003219Z reproduces the committed hurd-amd64 build
 closure exactly, including the 240-package shared builder tree.
 
+A timestamp alone does not make the lock durable, and two mechanisms bound it.
+
+The first is expiry. A snapshot Release carries the `Valid-Until` it was
+published with, so the archive state a timestamp pins stops being acceptable to
+apt some weeks later while the bytes and the signature stay exactly what they
+were. Against a January 2026 snapshot apt reports `Release file ... is expired
+(invalid since 200d 2h 55min 3s)`. Expiry checking is therefore disabled for
+snapshot sources and left enabled for live mirrors, where a stale Release is a
+genuine freshness failure rather than the point; disabling it everywhere would
+trade the lock for the freshness check.
+
+The second is the keyring, and it is the harder bound. That same January 2026
+debian-ports snapshot also fails verification with `Missing key
+519759FBC670BF...`, because debian-ports rotates its archive signing key and the
+keyring shipped in the resolver image carries the current one. Expiry is
+configuration; a key the verifier does not hold is not. A timestamp is therefore
+usable only together with a keyring vintage that can verify it, and pinning far
+into the past means vendoring the historical keyring as well. The build lock
+records the timestamp beside the resolver image that verified it.
+
 **Wait or pin, for an archive inconsistency.** The `caja` failure is a skew
 between `gvfs` and its own split-out packages inside `sid`, and both ports carry
 `caja` natively. Rebuilding `caja` addresses no mechanism; it manufactures a

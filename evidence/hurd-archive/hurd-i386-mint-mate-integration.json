@@ -66,9 +66,9 @@
   ],
   "provenance": {
     "archive_snapshot": "",
-    "collected_at": "2026-07-26T05:37:27+00:00",
+    "collected_at": "2026-07-26T23:27:09+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
-    "generator_sha256": "bf6f21b00250247aa18ba536b201e0b5938973835cc304a0f48082c63ab413f0",
+    "generator_sha256": "5cdc247abee622a87b356a68c5e815fc86a15ffe36d336d67cf14b81212063d5",
     "installed_baseline": "empty",
     "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
     "schema_version": 2,

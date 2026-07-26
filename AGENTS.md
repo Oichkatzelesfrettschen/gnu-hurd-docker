@@ -195,6 +195,23 @@ image on purpose and wants the change kept, so it snapshots first. A build
 mutates a filesystem on purpose and must leave nothing behind, so it runs on an
 overlay and the canonical image is never opened for writing.
 
+The host owns the overlay's lifecycle, not the entrypoint. The entrypoint
+replaces itself with QEMU through `exec`, so no trap of its own survives to run
+afterwards, and disposal has to happen after QEMU exits anyway because the
+artifacts, the filesystem check, and the manifest are all read out of the
+overlay. `scripts/run-hurd-build.sh` creates the run directory, starts
+`compose.builder.yaml` under a unique project name, waits, collects, and then
+deletes the overlay on success or retains it for diagnosis on failure. A
+creation primitive with no owner leaves an overlay behind on every exit, and
+under a restart policy the next start meets its own leftover and refuses, which
+reads as a boot loop.
+
+A builder composition therefore carries `restart: "no"` and no fixed
+`container_name`: a build is one process that ends, and two runs must not
+collide. `tests/overlay-lifecycle/run.sh` drives the mechanism in a real
+container and reads the filesystem afterwards, because a shell gate proves the
+overlay code parses rather than that it behaves.
+
 - Snapshot before any mutation, with the guest powered off:
   `qemu-img snapshot -c <mechanism>-<date> images/<image>.qcow2`.
 - Halt the guest (`halt`) and then stop the container. Killing the container

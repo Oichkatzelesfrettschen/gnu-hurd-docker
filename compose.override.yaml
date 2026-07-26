@@ -1,11 +1,24 @@
+# Local development override, loaded automatically by a bare `docker compose`.
+#
+# This carries the local image build and nothing else. A file Compose discovers
+# without being named must not decide runtime posture: exposing /dev/kvm here
+# hands the device to every bare invocation, including on hosts that cannot
+# provide it, and binding one specific qcow2 here overrides whichever image the
+# named composition selected. Both belong to overlays a command asks for by
+# name.
+#
+#   compose.bind.yaml    ./images bind mount
+#   compose.kvm.yaml     /dev/kvm exposure
+#   compose.vnc.yaml     VNC display and the noVNC sidecar
+#   compose.minty.yaml   the Minty guest and its desktop forwards
+#
+# `make topology` renders the bare composition alongside the named ones, so a
+# device or a guest image reintroduced here fails the gate.
+
+---
 services:
   gnu-hurd-dev:
     build:
       context: .
       dockerfile: Dockerfile
     image: gnu-hurd-docker:latest
-    devices:
-      - /dev/kvm:/dev/kvm
-    volumes:
-      - ./images/debian-hurd-amd64.qcow2:/opt/hurd-image/debian-hurd-amd64.qcow2:rw
-      - ./share:/share:rw

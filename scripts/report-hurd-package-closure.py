@@ -462,7 +462,8 @@ def write_overlay(root, architecture, mirror, suite, release):
     }
 
 
-def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
+def build_tree(root, architecture, ports, lmde, foreign="", sources="",
+               snapshot=""):
     """Create a private apt state tree whose native architecture is the target.
 
     A foreign architecture is enabled the way `dpkg --add-architecture` enables
@@ -486,15 +487,30 @@ def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
 
     # A file:// ports mirror is a fixture, which carries no signature; the
     # network mirror is verified by apt against the debian-ports keyring above.
-    local = "[trusted=yes] " if ports.startswith("file:") else ""
+    # A snapshot Release carries the Valid-Until it was published with, so the
+    # archive state a timestamp pins stops being acceptable to apt some weeks
+    # later while the bytes and the signature stay exactly what they were. A
+    # reproducibility lock that expires is not one, so expiry checking is
+    # disabled for snapshot sources and left enabled for live mirrors, where a
+    # stale Release is a real freshness failure rather than the point.
+    expiry = "check-valid-until=no" if snapshot else ""
+
+    def source_options(mirror):
+        options = []
+        if mirror.startswith("file:"):
+            options.append("trusted=yes")
+        if expiry:
+            options.append(expiry)
+        return "[%s] " % " ".join(options) if options else ""
+
+    local = source_options(ports)
     lines = ["deb %s%s sid main" % (local, ports),
              "deb %s%s unreleased main" % (local, ports)]
     if sources:
         # Source is architecture-independent, so one deb-src line serves either
         # Hurd port; the binaries it resolves against stay the port's own.
         lines.append("deb-src %s%s sid main"
-                     % ("[trusted=yes] " if sources.startswith("file:") else "",
-                        sources))
+                     % (source_options(sources), sources))
 
     if lmde:
         lines.append("deb [trusted=yes] file://%s/lmde %s %s"
@@ -966,7 +982,8 @@ def resolve(args, workspace):
             "the foreign architecture is the native one, which tests nothing")
     config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
                         foreign,
-                        args.main_archive if args.build_dependencies else "")
+                        args.main_archive if args.build_dependencies else "",
+                        getattr(args, "archive_snapshot", ""))
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 

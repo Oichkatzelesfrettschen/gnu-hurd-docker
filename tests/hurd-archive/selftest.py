@@ -98,6 +98,23 @@ def write_repo(root, suite, stanzas, foreign_stanzas=()):
         handle.write(release)
 
 
+def expire_release(root, suite):
+    """Backdate a fixture suite's Release so apt treats it as expired.
+
+    A snapshot Release carries the Valid-Until it was published with, so the
+    bytes a timestamp pins stay identical while apt stops accepting them. That
+    is the failure a pinned archive meets weeks after it is pinned, and it is
+    invisible to a check that only reads the timestamp grammar.
+    """
+    path = os.path.join(root, "dists", suite, "Release")
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read()
+    stamped = ("Date: Mon, 01 Jan 2024 00:00:00 UTC\n"
+               "Valid-Until: Tue, 02 Jan 2024 00:00:00 UTC\n")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(stamped + text)
+
+
 def ports_fixture(root, sid, unreleased=(), foreign=()):
     write_repo(root, "sid", sid, foreign)
     write_repo(root, "unreleased", list(unreleased) or [
@@ -605,6 +622,42 @@ def test_build_dependencies(module, suite, workspace):
                     "a : Depends: one (>= 2) but it is not installable")))
 
 
+def test_snapshot_expiry(module, suite, workspace):
+    """A pinned archive stays usable after its Release expires.
+
+    snapshot.debian.org serves the exact bytes a timestamp named, Valid-Until
+    included, so apt refuses the pinned state some weeks after it was pinned
+    while the signature and the payload are unchanged. Expiry checking is
+    therefore disabled for a snapshot-pinned run and left enabled for a live
+    mirror, where a stale Release is a genuine freshness failure. Disabling it
+    everywhere would trade the lock for the freshness check.
+    """
+    root = os.path.join(workspace, "ports-expired")
+    mirror = ports_fixture(root, [stanza("fixture-pinned", "1.0", "hurd-amd64")])
+    expire_release(root, "sid")
+    expire_release(root, "unreleased")
+
+    state = os.path.join(workspace, "state-expired-live")
+    os.makedirs(state)
+    suite.raises("an expired Release is refused for a live mirror",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-pinned"]),
+                     state))
+
+    state = os.path.join(workspace, "state-expired-pinned")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-pinned"],
+             archive_snapshot="20260726T003219Z"), state)
+    suite.check("the same expired Release is accepted when the run is pinned",
+                verdicts(report).get("fixture-pinned") == "native",
+                str(verdicts(report)))
+    suite.check("a pinned report records the timestamp it answered against",
+                report["provenance"]["archive_snapshot"] == "20260726T003219Z",
+                str(report["provenance"]["archive_snapshot"]))
+
+
 def test_key_pin(module, suite, workspace):
     packets = module.dearmor(open(KEYRING, encoding="utf-8").read())
     suite.check("the vendored key carries the pinned primary fingerprint",
@@ -761,6 +814,7 @@ def run(module):
         test_wildcards(module, suite, workspace)
         test_foreign_architecture(module, suite, workspace)
         test_build_dependencies(module, suite, workspace)
+        test_snapshot_expiry(module, suite, workspace)
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 

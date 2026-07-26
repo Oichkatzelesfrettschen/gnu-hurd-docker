@@ -170,9 +170,42 @@ prepare_disposable_overlay() {
     fi
     log_info "Disposable overlay ${QCOW2_IMAGE} created over ${BACKING_IMAGE}"
 
-    # The backing file is opened read-only for the run, so a guest that corrupts
-    # its filesystem corrupts the overlay and the next run starts clean.
-    printf '%s\n' "$found" > "${QCOW2_IMAGE}.backing-sha256" 2>/dev/null || true
+    # What QEMU will open is the chain the overlay records, not the arguments
+    # that created it. Reading it back catches a create that silently resolved
+    # a relative path elsewhere, and it is the same fact the host runner
+    # asserts, so a disagreement between them is visible.
+    local chain
+    chain="$(qemu-img info --output=json "$QCOW2_IMAGE" 2>/dev/null \
+        | sed -n 's/.*"backing-filename": "\([^"]*\)".*/\1/p' | head -1)"
+    if [ "$chain" != "$BACKING_IMAGE" ]; then
+        log_error "Overlay backing file resolves to '${chain}', not ${BACKING_IMAGE}"
+        rm -f "$QCOW2_IMAGE"
+        exit 1
+    fi
+    log_info "Overlay backing chain resolves to ${chain}"
+}
+
+# Every option that can abort the run is checked before the overlay exists, so a
+# rejected configuration leaves nothing behind for the next start to refuse.
+validate_disk_configuration() {
+    case "${QEMU_DISK_BUS:-ide}" in
+        ide|scsi|ahci) : ;;
+        *)
+            log_error "Unsupported QEMU_DISK_BUS='${QEMU_DISK_BUS}' (supported: ide, scsi, ahci)"
+            exit 1
+            ;;
+    esac
+    case "${QEMU_IDE_CONTROLLER:-piix}" in
+        piix|isa) : ;;
+        *)
+            log_error "Unsupported QEMU_IDE_CONTROLLER='${QEMU_IDE_CONTROLLER}' (supported: piix, isa)"
+            exit 1
+            ;;
+    esac
+    if [ -n "$BACKING_IMAGE" ] && [ -n "$QEMU_CDROM" ] && [ ! -f "$QEMU_CDROM" ]; then
+        log_error "Installer ISO not found: ${QEMU_CDROM}"
+        exit 1
+    fi
 }
 
 # =============================================================================
@@ -455,6 +488,7 @@ build_qemu_command() {
 
     # Disk configuration - IDE for Hurd compatibility with optimized I/O
     # WHY: Hurd doesn't have good virtio-blk support
+    validate_disk_configuration
     prepare_disposable_overlay
 
     if [ ! -f "$QCOW2_IMAGE" ] && [ "${AUTO_DOWNLOAD_IMAGE:-0}" = "1" ]; then

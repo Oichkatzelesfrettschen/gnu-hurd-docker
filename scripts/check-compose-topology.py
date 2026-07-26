@@ -31,6 +31,11 @@ MINTY = "compose.yaml:compose.bind.yaml:compose.minty.yaml"
 # Every composition a Minty target starts, with the services it may render to.
 # A name outside the allowed set is a second container, whatever it is called.
 COMPOSITIONS = (
+    # The bare invocation, which Compose assembles from compose.yaml plus the
+    # automatically discovered compose.override.yaml. A device or a guest image
+    # placed in that override reaches every unnamed invocation, including hosts
+    # that cannot provide the device, so it is rendered here rather than trusted.
+    ("bare", "", {QEMU_SERVICE}, {"kvm": False, "drive": None}),
     ("minty", MINTY, {QEMU_SERVICE}, {"kvm": False}),
     ("minty-kvm", MINTY + ":compose.kvm.yaml", {QEMU_SERVICE}, {"kvm": True}),
     ("minty-vnc", MINTY + ":compose.vnc.yaml",
@@ -54,8 +59,16 @@ class Failure(Exception):
 
 
 def render(files):
-    """Return the merged configuration the engine produces for a file set."""
-    environment = dict(os.environ, COMPOSE_FILE=files)
+    """Return the merged configuration the engine produces for a file set.
+
+    An empty file set renders the bare invocation, which is the one a reader
+    reaches for first and the one no explicit list describes.
+    """
+    environment = dict(os.environ)
+    if files:
+        environment["COMPOSE_FILE"] = files
+    else:
+        environment.pop("COMPOSE_FILE", None)
     process = subprocess.run(
         [RUNTIME, "compose", "--profile", "vnc", "config", "--format", "json"],
         env=environment, capture_output=True, text=True, timeout=180)
@@ -98,15 +111,25 @@ def check(name, files, allowed, expect):
     qemu = services.get(QEMU_SERVICE, {})
     environment = qemu.get("environment", {})
 
+    expected_drive = expect.get("drive", MINTY_DRIVE)
     drive = str(environment.get("QEMU_DRIVE", ""))
-    if drive != MINTY_DRIVE:
+    if expected_drive is None:
+        # The bare composition selects no guest, so a bind that supplies one
+        # decides the image for every unnamed invocation.
+        binds = [str(entry.get("source", "")) for entry in qemu.get("volumes", [])
+                 if str(entry.get("source", "")).endswith(".qcow2")]
+        if binds:
+            problems.append("binds a guest image without being asked: %s"
+                            % ", ".join(binds))
+    elif drive != expected_drive:
         problems.append("boots %r rather than the Minty guest %r"
-                        % (drive, MINTY_DRIVE))
+                        % (drive, expected_drive))
 
-    for key, value in EXPECTED_ENVIRONMENT.items():
-        if str(environment.get(key, "")) != value:
-            problems.append("sets %s to %r rather than %r"
-                            % (key, str(environment.get(key, "")), value))
+    if expected_drive is not None:
+        for key, value in EXPECTED_ENVIRONMENT.items():
+            if str(environment.get(key, "")) != value:
+                problems.append("sets %s to %r rather than %r"
+                                % (key, str(environment.get(key, "")), value))
 
     devices = [str(entry) for entry in qemu.get("devices", [])]
     has_kvm = any("/dev/kvm" in entry for entry in devices)
