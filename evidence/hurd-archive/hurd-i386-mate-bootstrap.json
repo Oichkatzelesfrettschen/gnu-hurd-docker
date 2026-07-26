@@ -27,6 +27,7 @@
     },
     "suite": "gigi"
   },
+  "mode": "binary",
   "must_be_built_or_substituted": [
     "caja",
     "gvfs-common",
@@ -140,9 +141,12 @@
     }
   ],
   "provenance": {
-    "collected_at": "2026-07-25T23:39:11+00:00",
+    "collected_at": "2026-07-26T03:19:26+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "generator_sha256": "42123ac95f8cee061a10f1297f42729738a80b07495c751957b9273266bd0867",
+    "installed_baseline": "empty",
     "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "schema_version": 2,
     "suites": [
       "sid",
       "unreleased"

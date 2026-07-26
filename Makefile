@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -30,6 +30,7 @@ help:
 	@echo "  make hurd-build-closure           - report whether each rebuild candidate's build can start (HURD_ARCH)"
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
 	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/ (HURD_FOREIGN asks whether a foreign build coinstalls)"
+	@echo "  make hurd-build-closure-report    - write the build-closure report to evidence/hurd-archive/ (HURD_ARCH)"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -189,6 +190,18 @@ hurd-closure-report: hurd-archive-image
 		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
 		--foreign-architecture "$(HURD_FOREIGN)" \
 		--json "/out/$(HURD_ARCH)$(if $(HURD_FOREIGN),-foreign-$(HURD_FOREIGN),)-$(HURD_SET).json"
+
+# The build reports are committed evidence, so the command that produced them is
+# a target rather than an invocation someone reconstructs from the report.
+hurd-build-closure-report: hurd-archive-image
+	mkdir -p "$(HURD_CLOSURE_DIR)"
+	$(CONTAINER_RUNTIME) run --rm \
+		--user "$$(id -u):$$(id -g)" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		gnu-hurd-archive:local \
+		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
+		--build-dependencies --no-lmde \
+		--json "/out/$(HURD_ARCH)-build-closure-rebuild-candidates.json"
 
 smoke-host:
 	./scripts/smoke-host.sh

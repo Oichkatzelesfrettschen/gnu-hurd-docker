@@ -317,11 +317,21 @@ def test_foreign_architecture(module, suite, workspace):
     os.makedirs(state)
     report = module.resolve(
         Args(ports_mirror=mirror, foreign_architecture="hurd-i386",
-             packages=["fixture-simple", "fixture-split"]), state)
+             packages=["fixture-simple", "fixture-split",
+                       "fixture-shared-data"]), state)
     seen = verdicts(report)
     suite.check("a foreign request is qualified to its architecture",
-                sorted(seen) == ["fixture-simple:hurd-i386",
+                sorted(seen) == ["fixture-shared-data",
+                                 "fixture-simple:hurd-i386",
                                  "fixture-split:hurd-i386"], str(sorted(seen)))
+    # Qualifying an Architecture: all name asks for a binary the archive never
+    # publishes, and the resulting "missing" reads as a multiarch limitation
+    # rather than as an artifact of the question.
+    suite.check("an Architecture: all request is not qualified to the foreign "
+                "architecture",
+                "fixture-shared-data:hurd-i386" not in seen, str(sorted(seen)))
+    suite.check("an unqualified Architecture: all package still resolves",
+                seen.get("fixture-shared-data") == "architecture-all", str(seen))
     suite.check("a self-contained foreign build resolves",
                 seen.get("fixture-simple:hurd-i386") == "native", str(seen))
     suite.check("a foreign build needing an Architecture: all companion does not",
@@ -333,8 +343,12 @@ def test_foreign_architecture(module, suite, workspace):
                 foreign["enabled"] and foreign["name"] == "hurd-i386"
                 and foreign["foreign_qualified_in_transaction"] >= 1,
                 str(foreign))
-    suite.check("a transaction that replaces nothing reports no removal",
-                foreign["native_packages_removed"] == [],
+    # The tree's dpkg status file is empty, so this measures that the removal
+    # list is wired up rather than that a foreign build preserves an installed
+    # userland. That question needs a tree seeded from the image's own status.
+    suite.check("removals are reported against the tree's installed baseline",
+                foreign["native_packages_removed"] == []
+                and report["provenance"]["installed_baseline"] == "empty",
                 str(foreign["native_packages_removed"]))
 
     state = os.path.join(workspace, "state-foreign-native")
@@ -387,10 +401,16 @@ def test_build_dependencies(module, suite, workspace):
     # The binary index supplies what a build dependency resolves against.
     # apt-get build-dep adds build-essential to every request, so the fixture
     # archive publishes it the way the real one does.
+    #
+    # fixture-stale is published at an older version than its source, which is
+    # the shape that made hurd-i386 report python3-setproctitle blocked: given a
+    # bare name apt binds the source to the port binary's version and then finds
+    # no source at that version.
     mirror = ports_fixture(root, [
         stanza("build-essential", "12.12", "hurd-amd64"),
         stanza("fixture-toolchain", "1.0", "hurd-amd64"),
         stanza("fixture-lib-dev", "1.0", "hurd-amd64"),
+        stanza("fixture-stale", "1.0", "hurd-amd64"),
     ])
     entry = sources_fixture(root, "sid", [
         source_stanza("fixture-buildable", "1.0", "fixture-toolchain"),
@@ -398,6 +418,15 @@ def test_build_dependencies(module, suite, workspace):
                       "fixture-toolchain, fixture-absent-dev"),
         source_stanza("fixture-linux-only", "3.0",
                       "fixture-toolchain, fixture-selinux-dev"),
+        source_stanza("fixture-stale", "2.0", "fixture-toolchain"),
+        # The source name and the binary name are different namespaces, the way
+        # policykit-1 builds polkitd.
+        source_stanza("fixture-source-name", "1.0", "fixture-toolchain",
+                      binaries="fixture-binary-name"),
+        # The older paragraph is published first, so output order and version
+        # order disagree and only a version comparison picks the right one.
+        source_stanza("fixture-two-versions", "1.0", "fixture-absent-dev"),
+        source_stanza("fixture-two-versions", "2.0", "fixture-toolchain"),
     ])
     # The Release must name the Sources index for apt to accept it.
     release = os.path.join(root, "dists", "sid", "Release")
@@ -410,9 +439,12 @@ def test_build_dependencies(module, suite, workspace):
         Args(ports_mirror=mirror, main_archive=mirror,
              build_dependencies=True,
              packages=["fixture-buildable", "fixture-chained",
-                       "fixture-linux-only", "fixture-never-packaged"]),
+                       "fixture-linux-only", "fixture-never-packaged",
+                       "fixture-stale", "fixture-binary-name",
+                       "fixture-two-versions"]),
         state)
     seen = verdicts(report)
+    records = {item["package"]: item for item in report["packages"]}
     suite.check("a source whose build dependencies resolve is buildable",
                 seen.get("fixture-buildable") == "buildable", str(seen))
     suite.check("a source blocked by a missing build dependency is blocked",
@@ -426,13 +458,57 @@ def test_build_dependencies(module, suite, workspace):
                 "fixture-absent-dev" in evidence.get("fixture-chained", ""),
                 evidence.get("fixture-chained", ""))
     suite.check("the report distinguishes a build closure from a binary one",
-                report["mode"] == "build-dependencies"
-                and report["recursive_transaction"] == [], report.get("mode"))
+                report["mode"] == "build-dependencies", report.get("mode"))
     suite.check("a buildable source records how many build dependencies it pulls",
                 any(item.get("build_dependency_count", 0) > 0
                     for item in report["packages"]),
                 str([item.get("build_dependency_count")
                      for item in report["packages"]]))
+    suite.check("a stale port binary does not decide which source is simulated",
+                seen.get("fixture-stale") == "buildable", str(seen))
+    suite.check("the simulated source version is the one the report names",
+                records.get("fixture-stale", {}).get("version") == "2.0",
+                str(records.get("fixture-stale")))
+    suite.check("a binary name resolves to the source that builds it",
+                records.get("fixture-binary-name", {}).get("source_package")
+                == "fixture-source-name",
+                str(records.get("fixture-binary-name")))
+    suite.check("the highest source version wins over index order",
+                seen.get("fixture-two-versions") == "buildable"
+                and records.get("fixture-two-versions", {}).get("version")
+                == "2.0", str(records.get("fixture-two-versions")))
+    suite.check("a blocked source carries its build dependency as structured data",
+                [entry["name"] for entry in
+                 records.get("fixture-chained", {}).get(
+                     "unsatisfied_build_dependencies", [])]
+                == ["fixture-absent-dev"],
+                str(records.get("fixture-chained", {}).get(
+                    "unsatisfied_build_dependencies")))
+    suite.check("a buildable source retains the versions its build would pull",
+                all(item.get("build_dependency_transaction")
+                    for item in report["packages"]
+                    if item["class"] == "buildable"),
+                str([item.get("build_dependency_transaction")
+                     for item in report["packages"]]))
+    suite.check("the buildable sources are checked against one builder tree",
+                report["resolvable_subset_resolves"] is True
+                and report["recursive_transaction_size"] > 0,
+                str(report["resolvable_subset_blocker"]))
+    suite.check("every unsatisfied build dependency is named, not only the first",
+                [entry["name"] for entry in module.unsatisfied_dependencies(
+                    "a : Depends: one (>= 2) but it is not installable\n"
+                    "a : Depends: two but it is not going to be installed\n"
+                    "a : Depends: one (>= 2) but it is not installable\n")]
+                == ["one", "two"],
+                str(module.unsatisfied_dependencies(
+                    "a : Depends: one (>= 2) but it is not installable\n"
+                    "a : Depends: two but it is not going to be installed\n")))
+    suite.check("a build dependency's version constraint is retained",
+                module.unsatisfied_dependencies(
+                    "a : Depends: one (>= 2) but it is not installable"
+                )[0]["constraint"] == ">= 2",
+                str(module.unsatisfied_dependencies(
+                    "a : Depends: one (>= 2) but it is not installable")))
 
 
 def test_key_pin(module, suite, workspace):

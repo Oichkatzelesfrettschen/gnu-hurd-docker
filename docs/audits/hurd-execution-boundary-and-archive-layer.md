@@ -190,10 +190,21 @@ than a refused install, and any unrelated package accepts the same false
 provider. A stub may demonstrate what lies past the blocker in an experiment. It
 counts toward no acceptance profile, and porting polkit stays the work.
 
-The clean bootstrap route keeps the package manager truthful: install the
-explicit MATE components, leave `mate-polkit` and the metapackages out, use
-`sudo` for privileged operations, and record the administrative GUI actions as
-unavailable until polkit is ported.
+Omitting `mate-polkit` from a request does not keep it out of the transaction.
+`mate-panel` declares it as a hard `Depends`, so the authorization branch gates
+the panel, and an install list that simply leaves the name out is an intent
+rather than a transaction apt would accept.
+
+What the archive does accept today is the resolvable subset of `mate-bootstrap`,
+which is a panel-less session: `mate-session-manager`, `marco`, `mate-terminal`,
+`mate-notification-daemon`, `mate-menus`, `mate-icon-theme`, and `mate-themes`
+resolve together on hurd-amd64. That keeps the package manager truthful --
+`sudo` for privileged operations, administrative GUI actions recorded as
+unavailable -- and it names the panel as a second thing the polkit branch gates,
+alongside the settings-administration layer. Adding the panel before polkit
+takes a packaging change that makes the authorization agent optional, a
+substitute panel recorded as a deviation, or a genuine alternative polkit
+service; a `Provides: polkitd` stub is none of those.
 
 ### Metapackages
 
@@ -240,41 +251,63 @@ says nothing about mixed Hurd processes and servers.
 
 The packaging layer refuses first, before any ABI question is reached.
 `--foreign-architecture` enables a second architecture the way
-`dpkg --add-architecture` does and qualifies every request to it, so the
-question is asked against the real index:
+`dpkg --add-architecture` does and qualifies each architecture-specific request
+to it, so the question is asked against the real index:
 
     make hurd-closure-report HURD_ARCH=hurd-amd64 HURD_FOREIGN=hurd-i386 \
         HURD_SET=mate-bootstrap
+
+An `Architecture: all` request stays unqualified. Such a package is realized
+once, under the native architecture, so `pkg:hurd-i386` names a binary the
+archive never publishes; qualifying one manufactures an impossible request and
+reports it as a missing foreign variant, which reads as a multiarch limitation
+and is an artifact of the question.
 
 What the archive answers, from
 `evidence/hurd-archive/hurd-amd64-foreign-hurd-i386-*.json`:
 
 | set, foreign hurd-i386 into hurd-amd64 | resolvable | foreign-qualified members |
 |---|---|---|
-| mate-bootstrap | 0 of 10 | 0 |
+| mate-bootstrap | 3 of 10, all Architecture: all | 0 |
 | mate-control | 2 of 3 | 13 of 32 |
 | mate-meta-validation | 0 of 2 | 0 |
-| mint-mate-integration | 0 of 3 | 0 |
+| mint-mate-integration | 2 of 3, both Architecture: all | 0 |
 
 `dconf-gsettings-backend` and `dconf-cli` coinstall as `:hurd-i386` and pull 13
 foreign-qualified packages, so the mechanism works where the packaging is
-multiarch-aware. Every MATE component fails, and the two failure shapes are the
-whole finding:
+multiarch-aware. Every architecture-specific MATE component fails, seven of
+seven in the bootstrap set, and one failure shape carries the finding:
 
     mate-session-manager:hurd-i386 : Depends: mate-desktop-common:hurd-i386 (>= 1.24)
+    mate-notification-daemon:hurd-i386 : Depends: mate-notification-daemon-common:hurd-i386
     marco:hurd-i386 : Depends: libmarco-private2:hurd-i386 (= 1.26.2-4.1+b2)
 
-`mate-menus`, `mate-icon-theme`, `mate-themes`, `xapps-common`, and the
-metapackages classify `missing` under the qualifier for the same reason: an
-`Architecture: all` package is realized under the native architecture only, so
-an architecture-qualified name for one does not exist. MATE splits nearly every
-component's data into an `Architecture: all` companion, so the foreign build of
-each component depends on a name that cannot be architecture-qualified.
-`mate-settings-daemon` carries no `Multi-Arch` field at all, which places its
-executables in shared paths where two architectures cannot coexist.
+MATE splits nearly every component's data into an `Architecture: all` companion,
+and an `Architecture: all` package without `Multi-Arch: foreign` cannot satisfy a
+foreign package's dependency, so the foreign build of each component depends on a
+name that cannot be architecture-qualified. The metapackages resolve to the same
+place through `marco`. `mate-settings-daemon` carries no `Multi-Arch` field at
+all, which places its executables in shared paths where two architectures cannot
+coexist. The barrier is in the packaging layer, ahead of any ABI question.
 
-No transaction removed a native package, so this is not a replacement that
-happened to look like coinstallation; the requests simply do not resolve.
+Whether such a transaction would displace an installed native userland is **not
+measured**. The resolver's tree carries an empty dpkg status file, recorded as
+`provenance.installed_baseline`, so `native_packages_removed` is empty by
+construction rather than by observation. What the reports establish is that the
+architecture-qualified requests do not resolve; settling replacement against
+coinstallation needs a tree seeded from the published image's own status file.
+
+The guest half of the experiment stays in a disposable clone, and its outcomes
+are graded before it runs so a partial success is not read as a route:
+
+| outcome | what it establishes |
+|---|---|
+| foreign architecture rejected | no dpkg-level route; the question closes here |
+| packages conflict before installation | the packaging layer refuses, matching the archive |
+| loader fails | the foreign libc does not load under 64-bit GNU Mach |
+| a simple process runs, IPC fails | 32-bit computation works and Mach-mediated services do not |
+| the full probe ladder succeeds | mixed processes are technically possible, and nothing about the desktop |
+| a MATE process later succeeds | still short of product acceptance without full closure and session testing |
 
 The i386 binaries stay valuable as evidence: they prove the source has one
 working Hurd port, they identify the source version and Debian patch set to
@@ -291,40 +324,59 @@ not settled by the binary index. `--build-dependencies` adds a `deb-src` line
 for the main archive and resolves each source package's build closure against
 the target port's binaries:
 
-    make hurd-build-closure
-    make hurd-build-closure HURD_ARCH=hurd-i386
+    make hurd-build-closure-report
+    make hurd-build-closure-report HURD_ARCH=hurd-i386
+
+The simulation names `source=version`. Given a bare name apt resolves the source
+through the binary of that name in the port index and then demands the source at
+that binary's version, so a port carrying a stale binary sends apt looking for a
+source version the main archive stopped publishing. That is what made hurd-i386
+report `python3-setproctitle` blocked against a version constraint: the port
+holds the 1.1.8-1 binary while the archive publishes 1.3.7-2 source, and pinning
+the reported version resolves 156 build dependencies. A source package is also
+its own namespace, so the report names the source that runs the build beside the
+requested name: `polkitd` is built by `policykit-1` and `python3-setproctitle` by
+`python-setproctitle`.
 
 The answer reorders the work. From
-`evidence/hurd-archive/hurd-amd64-build-closure-rebuild-candidates.json`:
+`evidence/hurd-archive/hurd-amd64-build-closure-rebuild-candidates.json`, six
+sources tested, two buildable and four blocked:
 
     libmatemixer          buildable   206 build dependencies resolve
     python3-setproctitle  buildable   156 build dependencies resolve
-    mate-settings-daemon  blocked     Depends: libmatemixer-dev (>= 1.24)
-    mate-control-center   blocked     Depends: libaccountsservice-dev (>= 0.6.21)
-    accountsservice       blocked     Depends: polkitd
-    polkitd               blocked     Depends: libselinux-dev
+    mate-settings-daemon  blocked     libmatemixer-dev (>= 1.24)
+    mate-control-center   blocked     libaccountsservice-dev (>= 0.6.21),
+                                      mate-settings-daemon-dev (>= 1.24)
+    accountsservice       blocked     polkitd
+    polkitd               blocked     libselinux-dev
 
-Two of the four packages named as rebuild candidates cannot be built today, and
-the chain has a single root. `mate-control-center` needs
-`libaccountsservice-dev` and `mate-settings-daemon-dev`; `accountsservice` needs
-`polkitd` at build time, not only at run time; and polkit's own build stops at
-`libselinux-dev`. SELinux is a Linux kernel interface, so that build dependency
-cannot be satisfied on the Hurd at all. The remedy there is a packaging change
-that qualifies the build dependency to Linux architectures and builds without
-it, which is a patch to Debian's polkit packaging rather than a port of polkit's
-logic.
+Every unsatisfied build dependency is recorded, not only the first apt names, so
+`mate-control-center` shows both of its prerequisites. A scheduler reading one
+blocker per source would start that build after supplying `libaccountsservice-dev`
+alone.
 
-The order that follows, for hurd-amd64:
+`accountsservice` needs `polkitd` at build time, not only at run time, and
+polkit's own build stops at `libselinux-dev`. SELinux is a Linux kernel
+interface, so that build dependency cannot be satisfied on the Hurd at all. The
+remedy there is a packaging change that qualifies the build dependency to Linux
+architectures and builds without it, which is a patch to Debian's polkit
+packaging rather than a port of polkit's logic.
 
-    libmatemixer, python3-setproctitle    buildable now, independently
-        |
-    mate-settings-daemon                  after libmatemixer
-        |
-    polkitd                               after the libselinux-dev qualification
-        |
-    accountsservice                       after polkitd
-        |
-    mate-control-center                   after accountsservice and mate-settings-daemon
+The work is three partly independent branches rather than one chain:
+
+    libmatemixer ------------------> mate-settings-daemon ----+
+                                                              |
+    python3-setproctitle ----------> Mint Menu                |
+                                                              |
+    libselinux-dev qualification --> polkitd                  |
+                                        |                     |
+                                        v                     v
+                                   accountsservice ----> mate-control-center
+
+The settings branch and the authorization branch both have to close before the
+control center can build. Both buildable sources resolve together in one
+simulation, pulling 240 packages, so one builder tree serves the batch rather
+than two.
 
 So polkit is not only the run-time blocker of `mate-polkit`; it is a build-time
 blocker of `accountsservice` and therefore of `mate-control-center`. Bringing up
@@ -332,11 +384,21 @@ a session without polkit-dependent integration is still the right first step,
 and polkit still has to come before the settings-administration layer can be
 built at all.
 
+`libselinux-dev` is the first barrier polkit presents, and clearing it is not
+the same as establishing that polkit needs no portability work. Linux-specific
+headers elsewhere in the source, process-credential introspection, session
+tracking, and local-socket peer credentials are all unmeasured until the build
+runs, and a produced `.deb` still says nothing about `polkitd` answering on the
+Hurd system bus. The qualification, the build, and the runtime contract are
+three separate results.
+
 The 32-bit port is further along here too, which is what makes it a useful
-reference system: `mate-settings-daemon` is already buildable there because
-`libmatemixer-dev` exists, and `python3-setproctitle` is blocked by a version
-constraint rather than a missing dependency. `polkitd` stops at `libselinux-dev`
-on both.
+reference system: `mate-settings-daemon` is already buildable there, pulling 450
+build dependencies, because `libmatemixer-dev` exists. `python3-setproctitle` is
+buildable on both ports. `polkitd` stops at `libselinux-dev` on both, and
+`mate-control-center` is blocked on both -- on hurd-i386 through `mate-polkit`,
+which its build dependencies pull, so the authorization branch gates the control
+center on the 32-bit port as well.
 
 One claim above needs narrowing with this evidence. The main archive carries
 `mate-control-center` source at 1.26.1-1.1 while the hurd-i386 binary is
