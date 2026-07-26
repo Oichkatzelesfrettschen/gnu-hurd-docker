@@ -25,9 +25,11 @@ sudo e2fsck -fy /dev/nbd0p5
 sudo resize2fs /dev/nbd0p5
 sudo qemu-nbd --disconnect /dev/nbd0
 
-# 3. boot with the Minty profile
-docker compose -f compose.yaml -f compose.minty.yaml up -d
-# or:  make minty-up
+# 3. boot with the Minty profile (one QEMU service; the Make target composes
+#    compose.yaml, compose.bind.yaml, and compose.minty.yaml)
+make minty-up
+# with the browser console:      make minty-up-vnc
+# reading the accelerator back:  make minty-accel
 
 # 4. wait ~60 sec for KVM boot, then SSH in.  Default credentials are
 #    root:root and user:user (set offline in the baseline image -- see

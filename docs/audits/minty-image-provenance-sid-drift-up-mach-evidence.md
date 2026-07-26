@@ -185,7 +185,14 @@ first, so the documented `docker compose -f compose.yaml -f compose.minty.yaml u
 and `make minty-up` (`Makefile:314`) both start two containers.  The extra one pulls
 `ghcr.io/oichkatzelesfrettschen/gnu-hurd-docker:latest`, which no workflow publishes,
 and would otherwise boot `debian-hurd-amd64.qcow2` with `FORCE_KVM: "0"`.  Booting
-only the intended guest requires naming it: `up -d hurd`.
+only the intended guest required naming it: `up -d hurd`.
+
+That is the observation this audit was written against.  The overlay now carries no
+service of its own and extends `gnu-hurd-dev`, so `make minty-up` starts one
+container, and `make topology` renders each composition and asserts it.  The finding
+is retained because the failure shape recurs: an overlay declaring a service name the
+base file does not reads as a complete, correct definition in review, and only the
+rendered configuration shows the second container.
 
 The root filesystem was dirty.  On first boot `fsck` reported deleted inodes with
 zero dtime, exited status 3, and the boot script asked for a restart that failed, so

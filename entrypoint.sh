@@ -281,6 +281,43 @@ detect_acceleration() {
     fi
 }
 
+# The accelerator that ran is reconstructed from log prose and a QEMU argv
+# otherwise, and reconstruction cannot distinguish a candidate that was never
+# available from one that was demoted. The selecting code writes what it
+# decided, with the inputs that decided it, before it execs.
+ACCELERATOR_DECISION_PATH="${ACCELERATOR_DECISION_PATH:-/run/hurd/accelerator-decision.json}"
+
+write_accelerator_decision() {
+    local candidate="$1" selected="$2" reason="$3" disk_bus="$4"
+    local host_arch kvm_exists kvm_readable kvm_writable
+    host_arch="$(uname -m)"
+    kvm_exists=false; kvm_readable=false; kvm_writable=false
+    [ -e /dev/kvm ] && kvm_exists=true
+    [ -r /dev/kvm ] && kvm_readable=true
+    [ -w /dev/kvm ] && kvm_writable=true
+
+    mkdir -p "$(dirname "$ACCELERATOR_DECISION_PATH")" 2>/dev/null || return 0
+    cat > "$ACCELERATOR_DECISION_PATH" <<EOF || return 0
+{
+  "schema_version": 1,
+  "host_arch": "${host_arch}",
+  "disable_kvm": ${DISABLE_KVM:-0},
+  "container_kvm_exists": ${kvm_exists},
+  "container_kvm_readable": ${kvm_readable},
+  "container_kvm_writable": ${kvm_writable},
+  "candidate": "${candidate}",
+  "machine": "${QEMU_MACHINE}",
+  "disk_bus": "${disk_bus}",
+  "auto_disable_kvm_for_ide": ${AUTO_DISABLE_KVM_FOR_IDE:-1},
+  "force_kvm": ${FORCE_KVM:-0},
+  "smp": ${QEMU_SMP},
+  "selected": "${selected}",
+  "reason_code": "${reason}"
+}
+EOF
+    log_info "Accelerator decision: ${selected} (${reason}); record at ${ACCELERATOR_DECISION_PATH}"
+}
+
 # =============================================================================
 # BUILD QEMU COMMAND LINE
 # =============================================================================
@@ -295,16 +332,26 @@ build_qemu_command() {
 	# Prefer reliability over speed by auto-disabling KVM for IDE on pc/i440fx,
 	# unless the user explicitly overrides it.
 	local disk_bus_hint="${QEMU_DISK_BUS:-ide}"
+	local accel_candidate="$accel_mode"
+	local accel_reason="host_detection"
+	[ "${DISABLE_KVM:-0}" = "1" ] && accel_reason="disable_kvm_requested"
+	[ "$accel_mode" = "kvm" ] && accel_reason="kvm_available"
 		if [ "$accel_mode" = "kvm" ] && [ "${AUTO_DISABLE_KVM_FOR_IDE:-1}" = "1" ] && [ "${FORCE_KVM:-0}" != "1" ]; then
 			case "${QEMU_MACHINE}" in
 				pc*)
 					if [ "$disk_bus_hint" = "ide" ]; then
 						accel_mode="tcg"
+						accel_reason="ide_safety_demotion"
 						log_warn "Auto-disabling KVM: detected KVM + IDE on '${QEMU_MACHINE}' (set FORCE_KVM=1 to override)"
 					fi
 					;;
 			esac
 		fi
+	if [ "$accel_mode" = "kvm" ] && [ "${FORCE_KVM:-0}" = "1" ]; then
+		accel_reason="forced_kvm"
+	fi
+	write_accelerator_decision "$accel_candidate" "$accel_mode" "$accel_reason" \
+		"$disk_bus_hint"
 
 	# Start with base command - ALWAYS x86_64 binary
 	local -a cmd=(/usr/bin/qemu-system-x86_64)
