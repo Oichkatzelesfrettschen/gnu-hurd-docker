@@ -179,7 +179,21 @@ The warning tier is reported and not enforced while its findings remain open.
 
 The Compose profiles bind-mount `./images` read-write with no overlay and no
 `-snapshot`, so the guest writes straight through to the qcow2. A qcow2 internal
-snapshot is the only rollback.
+snapshot is the rollback for a guest being provisioned in place.
+
+A build gets a disposable external overlay instead. `QEMU_BACKING_DRIVE` names
+an immutable image and `QEMU_DRIVE` names an overlay path that must not exist;
+the entrypoint records the backing digest, refuses a declared
+`QEMU_BACKING_SHA256` that disagrees, refuses to reuse an overlay because the
+previous run's writes would carry forward, and creates the overlay with the
+backing format stated rather than probed. The backing file is then read-only for
+the run. Discarding a file is a rollback that cannot half-apply, and it holds
+when the guest never shuts down cleanly, which an internal snapshot does not.
+
+Which mechanism applies follows from intent. Provisioning mutates the canonical
+image on purpose and wants the change kept, so it snapshots first. A build
+mutates a filesystem on purpose and must leave nothing behind, so it runs on an
+overlay and the canonical image is never opened for writing.
 
 - Snapshot before any mutation, with the guest powered off:
   `qemu-img snapshot -c <mechanism>-<date> images/<image>.qcow2`.

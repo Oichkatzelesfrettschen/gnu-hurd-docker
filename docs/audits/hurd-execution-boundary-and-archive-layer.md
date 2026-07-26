@@ -473,6 +473,33 @@ tested binaries install into a separate product overlay. That removes any need
 to trust an internal snapshot as the routine rollback, and it keeps a failed
 build away from the image the product boots.
 
+The overlay half of that is in place and measured. `QEMU_BACKING_DRIVE` names an
+immutable image and `QEMU_DRIVE` an overlay path that must not already exist;
+the entrypoint records the backing digest, refuses a declared
+`QEMU_BACKING_SHA256` that disagrees, refuses to reuse an overlay because the
+previous run's writes would carry forward, and states the backing format rather
+than letting `qemu-img` probe it, which would read a raw backing file as
+whatever its first bytes resemble. A probe booted QEMU against a fresh overlay
+and compared the backing image's SHA-256 across the run: unchanged. The two
+refusals were exercised, and the refused run created no overlay.
+
+Which rollback applies follows from intent rather than from preference.
+Provisioning mutates the canonical image on purpose and wants the change kept,
+so it snapshots first. A build mutates a filesystem on purpose and must leave
+nothing behind, so it runs on an overlay that is discarded. Discarding a file
+cannot half-apply, and it holds when the guest never shuts down cleanly, which
+is exactly the case an internal snapshot handles worst.
+
+**Pin the archive, so the closure and the build answer the same question.** sid
+and unreleased move, so a closure resolved one day and the build it schedules
+the next can resolve against different archives, and the report then carries a
+verdict the build cannot reproduce. `--archive-snapshot` points both the ports
+mirror and the source archive at one `snapshot.debian.org` timestamp;
+snapshot.debian.org carries dated dists for debian-ports as well as the main
+archive, so the lock is a timestamp rather than a local cache of every fetched
+artifact. Timestamp 20260726T003219Z reproduces the committed hurd-amd64 build
+closure exactly, including the 240-package shared builder tree.
+
 **Wait or pin, for an archive inconsistency.** The `caja` failure is a skew
 between `gvfs` and its own split-out packages inside `sid`, and both ports carry
 `caja` natively. Rebuilding `caja` addresses no mechanism; it manufactures a

@@ -122,6 +122,59 @@ drop_privileges_and_exec() {
     exec "${QEMU_CMD[@]}" "$@"
 }
 
+
+# A disposable external overlay makes the backing image read-only for the run.
+# The profiles otherwise bind ./images read-write with no overlay and no
+# -snapshot, so the guest writes straight through and a qcow2 internal snapshot
+# is the only rollback. That is the right discipline for a guest being
+# provisioned and the wrong one for a package build, which mutates a filesystem
+# on purpose and must leave nothing behind: discarding a file is a rollback that
+# cannot half-apply, and it holds when the guest never shuts down cleanly.
+#
+# QEMU_BACKING_DRIVE names the immutable image. The overlay is created fresh at
+# the path QEMU_DRIVE names, which must not already exist, because reusing one
+# silently carries the previous build's writes into this one.
+
+prepare_disposable_overlay() {
+    [ -n "$BACKING_IMAGE" ] || return 0
+
+    if [ ! -f "$BACKING_IMAGE" ]; then
+        log_error "Backing image not found: ${BACKING_IMAGE}"
+        exit 1
+    fi
+
+    # The digest is what says a build ran against the image its manifest names.
+    # Recording it after the run would report whatever the file became.
+    local found
+    found="$(sha256sum "$BACKING_IMAGE" | cut -d' ' -f1)"
+    if [ -n "${QEMU_BACKING_SHA256:-}" ] && [ "$found" != "$QEMU_BACKING_SHA256" ]; then
+        log_error "Backing image ${BACKING_IMAGE} hashes to ${found}"
+        log_error "and the run declares ${QEMU_BACKING_SHA256}"
+        exit 1
+    fi
+    log_info "Backing image ${BACKING_IMAGE} sha256 ${found}"
+
+    if [ -e "$QCOW2_IMAGE" ]; then
+        log_error "Overlay ${QCOW2_IMAGE} already exists; a disposable overlay is"
+        log_error "created per run, and reusing one carries prior writes forward"
+        exit 1
+    fi
+
+    mkdir -p "$(dirname "$QCOW2_IMAGE")"
+    # The backing format is stated rather than probed, because a probing qemu-img
+    # will read a raw backing file as whatever its first bytes resemble.
+    if ! qemu-img create -q -f qcow2 -F qcow2 \
+            -b "$BACKING_IMAGE" "$QCOW2_IMAGE" >/dev/null; then
+        log_error "Could not create overlay ${QCOW2_IMAGE} over ${BACKING_IMAGE}"
+        exit 1
+    fi
+    log_info "Disposable overlay ${QCOW2_IMAGE} created over ${BACKING_IMAGE}"
+
+    # The backing file is opened read-only for the run, so a guest that corrupts
+    # its filesystem corrupts the overlay and the next run starts clean.
+    printf '%s\n' "$found" > "${QCOW2_IMAGE}.backing-sha256" 2>/dev/null || true
+}
+
 # =============================================================================
 # RESOURCE DETECTION AND SMART DEFAULTS
 # =============================================================================
@@ -198,6 +251,7 @@ detect_host_resources
 
 # All configuration via environment variables for Docker flexibility
 QCOW2_IMAGE="${QEMU_DRIVE:-/opt/hurd-image/debian-hurd-amd64.qcow2}"
+BACKING_IMAGE="${QEMU_BACKING_DRIVE:-}"
 QEMU_CDROM="${QEMU_CDROM:-}"
 QEMU_BOOT_ORDER="${QEMU_BOOT_ORDER:-}"
 SERIAL_PORT="${SERIAL_PORT:-5555}"
@@ -401,6 +455,8 @@ build_qemu_command() {
 
     # Disk configuration - IDE for Hurd compatibility with optimized I/O
     # WHY: Hurd doesn't have good virtio-blk support
+    prepare_disposable_overlay
+
     if [ ! -f "$QCOW2_IMAGE" ] && [ "${AUTO_DOWNLOAD_IMAGE:-0}" = "1" ]; then
         log_warn "Disk image missing; AUTO_DOWNLOAD_IMAGE=1 set, attempting download into /opt/hurd-image"
         if [ -x /opt/scripts/download-image.sh ]; then

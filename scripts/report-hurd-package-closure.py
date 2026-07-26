@@ -87,6 +87,27 @@ OVERLAY_ORIGIN = "lmde-arch-all-overlay"
 SCHEMA_VERSION = 2
 
 
+SNAPSHOT_HOST = os.environ.get("DEBIAN_SNAPSHOT_HOST",
+                               "https://snapshot.debian.org/archive")
+
+
+def snapshot_mirrors(timestamp):
+    """Point both archives at one snapshot.debian.org state.
+
+    sid and unreleased move, so a closure resolved today and the build it
+    schedules tomorrow can answer against different archives, and the report
+    would carry a verdict the build cannot reproduce. snapshot.debian.org
+    carries dated dists for debian-ports as well as the main archive, so pinning
+    is a timestamp rather than a local cache of every fetched artifact.
+    """
+    if not re.match(r"^\d{8}T\d{6}Z$", timestamp):
+        raise ArchiveTrustError(
+            "%r is not a snapshot timestamp such as 20260726T003219Z"
+            % timestamp)
+    return ("%s/debian-ports/%s" % (SNAPSHOT_HOST, timestamp),
+            "%s/debian/%s" % (SNAPSHOT_HOST, timestamp))
+
+
 def generator_digest():
     try:
         with open(os.path.realpath(__file__), "rb") as handle:
@@ -906,6 +927,10 @@ def resolve(args, workspace):
             datetime.timezone.utc).replace(microsecond=0).isoformat(),
         "resolver_image": os.environ.get("HURD_RESOLVER_IMAGE", ""),
         "debian_ports_mirror": args.ports_mirror,
+        # A pinned run answers against one archive state, so the report and
+        # the build it schedules can be compared. An empty value means the
+        # verdicts were read from a moving suite.
+        "archive_snapshot": getattr(args, "archive_snapshot", ""),
         "suites": ["sid", "unreleased"],
         # The tree carries no installed packages, so every verdict is about what
         # the archive permits on an empty system rather than about what the
@@ -1171,6 +1196,13 @@ def main():
     parser.add_argument("--lmde-suite", default=LMDE_SUITE)
     parser.add_argument("--keyring", default=MINT_KEYRING,
                         help="armored Linux Mint archive key, pinned by fingerprint")
+    parser.add_argument("--archive-snapshot", default="",
+                        help="snapshot.debian.org timestamp, such as "
+                             "20260726T003219Z, which pins both the ports "
+                             "mirror and the source archive to one archive "
+                             "state; sid and unreleased move, so an unpinned "
+                             "closure and the build it schedules can resolve "
+                             "against different archives")
     parser.add_argument("--json", default="")
     parser.add_argument("--self-test", action="store_true",
                         help="run the offline fixture suite and exit")
@@ -1181,6 +1213,10 @@ def main():
 
     if args.self_test:
         return self_test(args.self_test_suite)
+
+    if args.archive_snapshot:
+        args.ports_mirror, args.main_archive = snapshot_mirrors(
+            args.archive_snapshot)
 
     workspace = tempfile.mkdtemp(prefix="hurd-apt-")
     try:

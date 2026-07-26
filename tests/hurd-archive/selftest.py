@@ -584,6 +584,19 @@ def test_build_dependencies(module, suite, workspace):
                 and not module.applies_to("!hurd-any", "hurd-amd64"), "")
     suite.check("naming packages explicitly is not labelled with a set default",
                 report["set"] == "explicit", report["set"])
+    # sid and unreleased move, so an unpinned closure and the build it schedules
+    # can answer against different archives.
+    ports, main = module.snapshot_mirrors("20260726T003219Z")
+    suite.check("a snapshot timestamp pins both archives to one state",
+                ports.endswith("/debian-ports/20260726T003219Z")
+                and main.endswith("/debian/20260726T003219Z"),
+                "%s %s" % (ports, main))
+    suite.raises("a value that is not a snapshot timestamp is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.snapshot_mirrors("yesterday"))
+    suite.check("an unpinned report says so rather than omitting the field",
+                report["provenance"]["archive_snapshot"] == "",
+                str(report["provenance"].get("archive_snapshot")))
     suite.check("a build dependency's version constraint is retained",
                 module.unsatisfied_dependencies(
                     "a : Depends: one (>= 2) but it is not installable"

@@ -53,8 +53,11 @@ code, commit messages, findings, documentation, or qcow2 snapshots. For any task
 involving two or more steps, track progress under durable mechanism names and
 rescope as discoveries land.
 
-Snapshot a guest image before mutating it and name the snapshot that is the
-rollback; `AGENTS.md` section `Guest Image Discipline` carries the sequence.
+Snapshot a guest image before mutating it in place and name the snapshot that is
+the rollback. A build runs on a disposable external overlay instead, through
+`QEMU_BACKING_DRIVE`, and leaves the backing image unwritten; `AGENTS.md`
+section `Guest Image Discipline` carries both sequences and which intent selects
+which.
 
 ## Response shape
 
