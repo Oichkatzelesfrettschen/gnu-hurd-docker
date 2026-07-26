@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -23,6 +23,7 @@ help:
 	@echo "Validation & Testing:"
 	@echo "  make validate                     - validate repo invariants"
 	@echo "  make security                     - validate compose security posture"
+	@echo "  make topology                     - assert the service and port topology each Minty composition renders to"
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
@@ -31,6 +32,16 @@ help:
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
 	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/ (HURD_FOREIGN asks whether a foreign build coinstalls)"
 	@echo "  make hurd-build-closure-report    - write the build-closure report to evidence/hurd-archive/ (HURD_ARCH)"
+	@echo ""
+	@echo "Minty Hurd profile (single QEMU service; overlays compose on top):"
+	@echo "  make minty-up                     - start the Minty guest, letting the entrypoint select the accelerator"
+	@echo "  make minty-up-tcg                 - start with DISABLE_KVM=1"
+	@echo "  make minty-up-kvm                 - start with the KVM overlay and FORCE_KVM=1"
+	@echo "  make minty-up-vnc                 - start with the VNC overlay and the noVNC sidecar"
+	@echo "  make minty-up-kvm-vnc             - start with both overlays"
+	@echo "  make minty-accel                  - print the accelerator decision record the entrypoint wrote"
+	@echo "  make minty-export-state           - export the guest installed-package manifest to evidence/guest-state/"
+	@echo "  make minty-down / minty-status / minty-logs / minty-ssh"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -97,6 +108,12 @@ validate:
 
 security:
 	./scripts/validate-security-config.sh
+
+# An overlay declaring a service the base file does not adds a service
+# rather than overriding one, and its own text reads as correct. The
+# rendered configuration is where a second QEMU container becomes visible.
+topology:
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" python3 scripts/check-compose-topology.py
 
 # error is the enforced level: every maintained script passes it. Warning-level
 # findings are real work that is tracked as roadmap item 43, so raising the
@@ -390,7 +407,9 @@ shell:
 	fi
 
 # ===== Minty Hurd targets =====
-.PHONY: minty-up minty-down minty-status minty-shell minty-vnc oobe
+.PHONY: minty-up minty-up-tcg minty-up-kvm minty-up-vnc minty-up-kvm-vnc \
+	minty-down minty-status minty-logs minty-container-shell minty-accel \
+	minty-ssh minty-shell minty-export-state oobe
 
 # Stage the out-of-box experience on the RUNNING guest: sets the documented
 # generic passwords (user/user, root/root) and expires them so the first
@@ -404,21 +423,63 @@ oobe:
 		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
 		root@127.0.0.1 'sh -s' < scripts/oobe-first-login.sh
 
+# compose.minty.yaml overlays the canonical gnu-hurd-dev service, so the image
+# bind, the KVM device, and the VNC surface come from the overlays that own
+# them. Each target names the composition it wants rather than restating the
+# service, and `up`, `down`, `ps`, and `logs` share one file set so a target
+# cannot address a different stack than the one it started.
+MINTY_FILES ?= compose.yaml:compose.bind.yaml:compose.minty.yaml
+MINTY_KVM_FILES ?= $(MINTY_FILES):compose.kvm.yaml
+MINTY_VNC_FILES ?= $(MINTY_FILES):compose.vnc.yaml
+MINTY_KVM_VNC_FILES ?= $(MINTY_FILES):compose.kvm.yaml:compose.vnc.yaml
+
+MINTY_SSH_KEY ?= ssh-test-keys/hurd_test_key
+MINTY_SSH_PORT ?= $(SSH_PORT)
+SSH_PORT ?= 2222
+
+# The accelerator is the entrypoint's decision, so a target selects the inputs
+# and reads the outcome back from the decision record rather than claiming one.
 minty-up:
-	docker compose -f compose.yaml -f compose.minty.yaml up -d
+	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
+
+minty-up-tcg:
+	DISABLE_KVM=1 COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
+
+minty-up-kvm:
+	FORCE_KVM=1 COMPOSE_FILE="$(MINTY_KVM_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
+
+# The noVNC sidecar sits behind a Compose profile, so it is named explicitly.
+minty-up-vnc:
+	COMPOSE_FILE="$(MINTY_VNC_FILES)" $(COMPOSE) --profile vnc up -d
+
+minty-up-kvm-vnc:
+	FORCE_KVM=1 COMPOSE_FILE="$(MINTY_KVM_VNC_FILES)" $(COMPOSE) --profile vnc up -d
 
 minty-down:
-	docker compose -f compose.yaml -f compose.minty.yaml down
+	COMPOSE_FILE="$(MINTY_KVM_VNC_FILES)" $(COMPOSE) --profile vnc down --remove-orphans
 
 minty-status:
-	docker compose -f compose.yaml -f compose.minty.yaml ps
+	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) ps
 
-minty-shell:
-	@ssh -i ssh-test-keys/hurd_test_key -p 2222 \
-		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-		user@127.0.0.1
+minty-logs:
+	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) logs -f $(SERVICE_NAME)
 
-minty-vnc:
-	@ssh -i ssh-test-keys/hurd_test_key -p 2222 \
-		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-		user@127.0.0.1 'tightvncserver :1 -geometry 1440x900 -depth 24'
+minty-container-shell:
+	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) exec $(SERVICE_NAME) bash
+
+# The accelerator the entrypoint selected, read from the record it wrote.
+minty-accel:
+	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) exec -T $(SERVICE_NAME) \
+		cat /run/hurd/accelerator-decision.json
+
+# Every closure verdict is resolved against an empty dpkg status file, so a
+# transaction has no installed package to displace. This is what seeds a
+# resolver run with the real guest, and it reports itself not run when the
+# guest does not answer.
+minty-export-state:
+	./scripts/export-guest-package-state.sh
+
+minty-ssh:
+	@ssh -i $(MINTY_SSH_KEY) -p $(MINTY_SSH_PORT) user@127.0.0.1
+
+minty-shell: minty-ssh

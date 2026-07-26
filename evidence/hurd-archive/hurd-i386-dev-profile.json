@@ -1,0 +1,644 @@
+{
+  "architecture": "hurd-i386",
+  "foreign_architecture": {
+    "enabled": false,
+    "foreign_qualified_in_transaction": 0,
+    "name": "",
+    "native_packages_removed": []
+  },
+  "lmde_overlay": {
+    "enabled": false
+  },
+  "mode": "binary",
+  "must_be_built_or_substituted": [
+    "mig-x86-64-gnu"
+  ],
+  "packages": [
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "build-essential",
+      "version": "12.12"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "gcc",
+      "version": "4:15.2.0-5+b1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "g++",
+      "version": "4:15.2.0-5+b1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "cpp",
+      "version": "4:15.2.0-5+b1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "binutils",
+      "version": "2.46.90.20260712-1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "make",
+      "version": "4.4.1-3"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "gdb",
+      "version": "17.2-1+b1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "autoconf",
+      "version": "2.73-2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "automake",
+      "version": "1:1.18.1-4"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "libtool",
+      "version": "2.5.4-11"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "pkgconf",
+      "version": "2.5.1-4"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "cmake",
+      "version": "4.3.1-1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "meson",
+      "version": "1.11.1-3"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "ninja-build",
+      "version": "1.13.2-1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "flex",
+      "version": "2.6.4-8.2+b4"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "bison",
+      "version": "2:3.8.2+dfsg-1+b3"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "gettext",
+      "version": "0.23.2-1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "texinfo",
+      "version": "7.3-2"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "patch",
+      "version": "2.8-2"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "diffutils",
+      "version": "1:3.7-5"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "file",
+      "version": "1:5.47-4"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports unreleased/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "git",
+      "version": "1:2.53.0-1+hurd.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "dpkg-dev",
+      "version": "1.23.7"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "debhelper",
+      "version": "14.3"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "devscripts",
+      "version": "2.26.10"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports unreleased/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "fakeroot",
+      "version": "1.30-1+hurd.1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "python3-dev",
+      "version": "3.14.6-1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "hurd-dev",
+      "version": "1:0.9.git20260527-3+b1"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "gnumach-dev",
+      "version": "2:1.8+git20260224-11"
+    },
+    {
+      "architectures": [
+        "hurd-i386"
+      ],
+      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-i386 Packages",
+      "class": "native",
+      "evidence": "dependencies resolve",
+      "package": "mig",
+      "version": "1.8+git20231217-11"
+    },
+    {
+      "class": "missing",
+      "evidence": "no record in any configured suite",
+      "package": "mig-x86-64-gnu"
+    }
+  ],
+  "provenance": {
+    "collected_at": "2026-07-26T04:52:41+00:00",
+    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
+    "generator_sha256": "f0d41b2fcd0e90d1f8969aa61481b8d598eb8abc274e7dac4f6d005fcb762bfd",
+    "installed_baseline": "empty",
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "schema_version": 2,
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [
+    "gcc-16-base (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libc-gconv-modules-extra (2.42-17 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libc0.3 (2.42-17 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libgcc-s1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "debianutils (5.23.2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "diffutils (1:3.7-5 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libbz2-1.0 (1.0.8-6+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcrypt1 (1:4.5.1-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libuuid1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "zlib1g (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "hurd-libs0.3 (1:0.9.git20260527-3+b1 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libparted2t64 (3.7-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "liblzma5 (5.8.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libmd0 (1.2.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libzstd1 (1.5.7+dfsg-3+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libacl1 (2.3.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "tar (1.34+dfsg-1.4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dpkg (1.23.7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "perl-base (5.42.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "debconf (1.5.92 ftp.ports.debian.org:unstable [all])",
+    "m4 (1.4.20-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "flex (2.6.4-8.2+b4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libexpat1 (2.8.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "openssl-provider-legacy (3.6.3-1 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "libssl3t64 (3.6.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3.14-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3.14-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "media-types (14.0.0 ftp.ports.debian.org:unstable [all])",
+    "netbase (6.5 ftp.ports.debian.org:unstable [all])",
+    "tzdata (2026c-1 ftp.ports.debian.org:unstable [all])",
+    "libdb5.3t64 (5.3.28+dfsg2-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libffi8 (3.5.2-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtinfo6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libncursesw6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "readline-common (8.3-4 ftp.ports.debian.org:unstable [all])",
+    "libreadline8t64 (8.3-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsqlite3-0 (3.53.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3.14-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3.14 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libproc2-1 (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "procps (2:4.0.6-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "sensible-utils (0.0.26 ftp.ports.debian.org:unstable [all])",
+    "bzip2 (1.0.8-6+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "openssl (3.6.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "ca-certificates (20260601 ftp.ports.debian.org:unstable [all])",
+    "libmagic-mgc (1:5.47-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libmagic1t64 (1:5.47-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "file (1:5.47-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gettext-base (0.23.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libstdc++6 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libuchardet0 (0.0.8-2+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "groff-base (1.24.1-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "perl-modules-5.42 (5.42.2-3 ftp.ports.debian.org:unstable [all])",
+    "libgdbm6t64 (1.26-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgdbm-compat4t64 (1.26-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libperl5.42 (5.42.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "perl (5.42.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libc-dev-bin (2.42-17 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gnumach-dev (2:1.8+git20260224-11 ftp.ports.debian.org:unstable [hurd-i386])",
+    "rpcsvc-proto (1.4.4-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libc0.3-dev (2.42-17 ftp.ports.debian.org:unstable [hurd-i386]) []",
+    "hurd-dev (1:0.9.git20260527-3+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsmartcols1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "bsdextrautils (2.42.2-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpipeline1 (1.5.8-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "man-db (2.13.1-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtext-charwidth-perl (0.04-12+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtext-wrapi18n-perl (0.06-11 ftp.ports.debian.org:unstable [all])",
+    "ucf (3.0056 ftp.ports.debian.org:unstable [all])",
+    "xz-utils (5.8.3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "autoconf (2.73-2 ftp.ports.debian.org:unstable [all])",
+    "autotools-dev (20240727.1+nmu1 ftp.ports.debian.org:unstable [all])",
+    "automake (1:1.18.1-4 ftp.ports.debian.org:unstable [all])",
+    "autopoint (1.0-3 ftp.ports.debian.org:unstable [all])",
+    "binutils-common (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsframe3 (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libbinutils (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libctf-nobfd0 (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libctf0 (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libjansson4 (2.15.1-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "binutils-i686-gnu (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "binutils (2.46.90.20260712-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "bison (2:3.8.2+dfsg-1+b3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gcc-15-base (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgmp10 (2:6.3.0+dfsg-5+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libisl23 (0.28-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libmpfr6 (4.2.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libmpc3 (1.3.1-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "cpp-15-i686-gnu (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "cpp-15 (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "cpp-i686-gnu (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "cpp (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcc1-0 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgomp1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libatomic1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libquadmath0 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgcc-15-dev (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gcc-15-i686-gnu (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gcc-15 (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gcc-i686-gnu (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gcc (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libstdc++-15-dev (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "g++-15-i686-gnu (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "g++-15 (15.3.0-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "g++-i686-gnu (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "g++ (4:15.2.0-5+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "make (4.4.1-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdpkg-perl (1.23.7 ftp.ports.debian.org:unstable [all])",
+    "patch (2.8-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dpkg-dev (1.23.7 ftp.ports.debian.org:unstable [all])",
+    "build-essential (12.12 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxxhash0 (0.8.3-2+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "liblz4-1 (1.10.0-10 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libnettle8t64 (3.10.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libxml2-16 (2.15.3+dfsg-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libarchive13t64 (3.7.4-4+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libnghttp3-9 (1.17.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libngtcp2-16 (1.24.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libbrotli1 (1.2.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libkrb5support0 (1.20.1-5.1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcom-err2 (1.47.4-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libk5crypto3 (1.20.1-5.1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libkrb5-3 (1.20.1-5.1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgssapi-krb5-2 (1.20.1-5.1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libunistring5 (1.3-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libidn2-0 (2.3.8-5 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsasl2-modules-db (2.1.28+dfsg1-11 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsasl2-2 (2.1.28+dfsg1-11 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libldap2 (2.6.13+dfsg-1+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libnghttp2-14 (1.69.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libngtcp2-crypto-ossl0 (1.24.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpsl5t64 (0.23.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libssh2-1t64 (1.11.1-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcurl4t64 (8.21.0~rc3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libjsoncpp26 (1.9.8-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "librhash1 (1.4.6-1.1+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libuv1t64 (1.52.1-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "cmake (4.3.1-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdebhelper-perl (14.3 ftp.ports.debian.org:unstable [all])",
+    "libtool (2.5.4-11 ftp.ports.debian.org:unstable [all])",
+    "dh-autoreconf (22 ftp.ports.debian.org:unstable [all])",
+    "libarchive-zip-perl (1.68-1 ftp.ports.debian.org:unstable [all])",
+    "libfile-stripnondeterminism-perl (1.15.1-1 ftp.ports.debian.org:unstable [all])",
+    "dh-strip-nondeterminism (1.15.1-1 ftp.ports.debian.org:unstable [all])",
+    "libelf1t64 (0.195-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "dwz (0.17-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libattr1 (1:2.5.2-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gettext (0.23.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "intltool-debian (0.35.0+20060710.6 ftp.ports.debian.org:unstable [all])",
+    "po-debconf (1.0.22 ftp.ports.debian.org:unstable [all])",
+    "debhelper (14.3 ftp.ports.debian.org:unstable [all])",
+    "libgpg-error0 (1.61-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libassuan9 (3.0.2-2+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgcrypt20 (1.12.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gpgconf (2.4.9-7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libksba8 (1.8.0-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libnpth0t64 (1.8-3+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gpg (2.4.9-7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "pinentry-curses (1.3.3-2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gpg-agent (2.4.9-7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libconfig-inifiles-perl (3.000003-5 ftp.ports.debian.org:unstable [all])",
+    "libfile-dirlist-perl (0.05-3 ftp.ports.debian.org:unstable [all])",
+    "libfile-which-perl (1.27-2 ftp.ports.debian.org:unstable [all])",
+    "libfile-homedir-perl (1.006-2 ftp.ports.debian.org:unstable [all])",
+    "libfile-touch-perl (0.12-2 ftp.ports.debian.org:unstable [all])",
+    "libio-string-perl (1.08-4 ftp.ports.debian.org:unstable [all])",
+    "libclass-method-modifiers-perl (2.15-1 ftp.ports.debian.org:unstable [all])",
+    "libclass-xsaccessor-perl (1.19-4+b6 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libb-hooks-op-check-perl (0.22-3+b5 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libdynaloader-functions-perl (0.004-2 ftp.ports.debian.org:unstable [all])",
+    "libdevel-callchecker-perl (0.009-3+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libparams-classify-perl (0.015-2+b7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libmodule-runtime-perl (0.018-1 ftp.ports.debian.org:unstable [all])",
+    "libimport-into-perl (1.002005-2 ftp.ports.debian.org:unstable [all])",
+    "librole-tiny-perl (2.002005-1 ftp.ports.debian.org:unstable [all])",
+    "libsub-quote-perl (2.006009-1 ftp.ports.debian.org:unstable [all])",
+    "libmoo-perl (2.005005-1 ftp.ports.debian.org:unstable [all])",
+    "libencode-locale-perl (1.05-3 ftp.ports.debian.org:unstable [all])",
+    "libtimedate-perl (2.3500-1 ftp.ports.debian.org:unstable [all])",
+    "libhttp-date-perl (6.08-1 ftp.ports.debian.org:unstable [all])",
+    "libfile-listing-perl (6.16-1 ftp.ports.debian.org:unstable [all])",
+    "libhtml-tagset-perl (3.24-1 ftp.ports.debian.org:unstable [all])",
+    "liburi-perl (5.35-1 ftp.ports.debian.org:unstable [all])",
+    "libhtml-parser-perl (3.83-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libhtml-tree-perl (5.07-3 ftp.ports.debian.org:unstable [all])",
+    "libclone-perl (0.50-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libio-html-perl (1.004-3 ftp.ports.debian.org:unstable [all])",
+    "liblwp-mediatypes-perl (6.04-2 ftp.ports.debian.org:unstable [all])",
+    "libhttp-message-perl (7.02-1 ftp.ports.debian.org:unstable [all])",
+    "libhttp-cookies-perl (6.11-1 ftp.ports.debian.org:unstable [all])",
+    "libhttp-negotiate-perl (6.01-2 ftp.ports.debian.org:unstable [all])",
+    "perl-openssl-defaults (7+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libnet-ssleay-perl (1.96-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libio-socket-ssl-perl (2.099-1 ftp.ports.debian.org:unstable [all])",
+    "libnet-http-perl (6.24-1 ftp.ports.debian.org:unstable [all])",
+    "liblwp-protocol-https-perl (6.15-1 ftp.ports.debian.org:unstable [all]) []",
+    "libtry-tiny-perl (0.32-1 ftp.ports.debian.org:unstable [all]) []",
+    "libwww-robotrules-perl (6.03-1 ftp.ports.debian.org:unstable [all]) []",
+    "libwww-perl (6.83-1 ftp.ports.debian.org:unstable [all])",
+    "libyaml-0-2 (0.2.5-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libyaml-libyaml-perl (0.910.0+ds-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "patchutils (0.4.5-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gpgv (2.4.9-7 ftp.ports.debian.org:unstable [hurd-i386])",
+    "sopv-gpgv (0.1.4-1 ftp.ports.debian.org:unstable [all])",
+    "wdiff (1.2.2-9 ftp.ports.debian.org:unstable [hurd-i386])",
+    "devscripts (2.26.10 ftp.ports.debian.org:unstable [all])",
+    "libfakeroot (1.30-1+hurd.1 ftp.ports.debian.org:unreleased [hurd-i386])",
+    "fakeroot (1.30-1+hurd.1 ftp.ports.debian.org:unreleased [hurd-i386])",
+    "libpython3.14 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libsource-highlight-common (3.1.9-4.3 ftp.ports.debian.org:unstable [all])",
+    "libsource-highlight4t64 (3.1.9-4.3+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "gdb (17.2-1+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libhogweed6t64 (3.10.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libbsd0 (0.12.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libp11-kit0 (0.26.4-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtasn1-6 (4.21.0-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libgnutls30t64 (3.8.11-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libngtcp2-crypto-gnutls8 (1.24.0-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcurl4-gnutls (8.21.0~rc3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libcurl3t64-gnutls (8.21.0~rc3-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpcre2-8-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-i386])",
+    "liberror-perl (0.17030-1 ftp.ports.debian.org:unstable [all])",
+    "git-man (1:2.53.0-1+hurd.1 ftp.ports.debian.org:unreleased [all])",
+    "git (1:2.53.0-1+hurd.1 ftp.ports.debian.org:unreleased [hurd-i386])",
+    "libexpat1-dev (2.8.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libintl-perl (1.37-1 ftp.ports.debian.org:unstable [all])",
+    "libjs-sphinxdoc (9.1.0-6 ftp.ports.debian.org:unstable [all])",
+    "libpkgconf7 (2.5.1-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "zlib1g-dev (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3.14-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libpython3-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "libtext-unidecode-perl (1.30-3 ftp.ports.debian.org:unstable [all])",
+    "libxml-namespacesupport-perl (1.12-2 ftp.ports.debian.org:unstable [all])",
+    "libxml-sax-base-perl (1.09-3 ftp.ports.debian.org:unstable [all])",
+    "libxml-sax-perl (1.02+dfsg-5 ftp.ports.debian.org:unstable [all])",
+    "libxml-libxml-perl (2.0207+dfsg+really+2.0134-8+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "ninja-build (1.13.2-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3-autocommand (2.2.2-4 ftp.ports.debian.org:unstable [all])",
+    "python3-more-itertools (11.1.0-1 ftp.ports.debian.org:unstable [all])",
+    "python3-typing-extensions (4.16.0-4 ftp.ports.debian.org:unstable [all])",
+    "python3-typeguard (4.4.4-3 ftp.ports.debian.org:unstable [all])",
+    "python3-inflect (7.5.0-2 ftp.ports.debian.org:unstable [all])",
+    "python3-jaraco.context (6.0.1-2 ftp.ports.debian.org:unstable [all])",
+    "python3-jaraco.functools (4.1.0-1 ftp.ports.debian.org:unstable [all])",
+    "python3-pkg-resources (78.1.1-0.1 ftp.ports.debian.org:unstable [all])",
+    "python3-jaraco.text (4.0.0-1 ftp.ports.debian.org:unstable [all])",
+    "python3-zipp (3.23.0-1 ftp.ports.debian.org:unstable [all])",
+    "python3-setuptools (78.1.1-0.1 ftp.ports.debian.org:unstable [all])",
+    "meson (1.11.1-3 ftp.ports.debian.org:unstable [all])",
+    "mig-i686-gnu (1.8+git20231217-11 ftp.ports.debian.org:unstable [hurd-i386])",
+    "mig (1.8+git20231217-11 ftp.ports.debian.org:unstable [hurd-i386])",
+    "pkgconf-bin (2.5.1-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "pkgconf (2.5.1-4 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3.14-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "python3-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "tex-common (6.20 ftp.ports.debian.org:unstable [all])",
+    "texinfo-lib (7.3-2+b1 ftp.ports.debian.org:unstable [hurd-i386])",
+    "texinfo (7.3-2 ftp.ports.debian.org:unstable [all])"
+  ],
+  "recursive_transaction_size": 261,
+  "resolvable_subset": [
+    "build-essential",
+    "gcc",
+    "g++",
+    "cpp",
+    "binutils",
+    "make",
+    "gdb",
+    "autoconf",
+    "automake",
+    "libtool",
+    "pkgconf",
+    "cmake",
+    "meson",
+    "ninja-build",
+    "flex",
+    "bison",
+    "gettext",
+    "texinfo",
+    "patch",
+    "diffutils",
+    "file",
+    "git",
+    "dpkg-dev",
+    "debhelper",
+    "devscripts",
+    "fakeroot",
+    "python3-dev",
+    "hurd-dev",
+    "gnumach-dev",
+    "mig"
+  ],
+  "resolvable_subset_blocker": "",
+  "resolvable_subset_resolves": true,
+  "set": "dev-profile",
+  "summary": {
+    "architecture-all": 8,
+    "missing": 1,
+    "native": 22
+  },
+  "unmatched_patterns": []
+}

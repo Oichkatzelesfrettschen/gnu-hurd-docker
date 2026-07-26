@@ -201,13 +201,30 @@ recorded step, and the aging field is restored afterwards.
 
 ## Booting the Minty Profile
 
-    docker compose -f compose.yaml -f compose.minty.yaml up -d hurd
+    make minty-up
 
-Naming the `hurd` service is required. `compose.minty.yaml` declares a service
-named `hurd` while `compose.yaml` declares `gnu-hurd-dev`, so the second file
-adds a service rather than overriding the first. The bare invocation and
-`make minty-up` start both, and the extra container pulls a GHCR image that no
-workflow publishes.
+`compose.minty.yaml` overlays the canonical `gnu-hurd-dev` service and declares
+no service of its own, so one QEMU container runs. The image bind, the KVM
+device, and the VNC surface belong to `compose.bind.yaml`, `compose.kvm.yaml`,
+and `compose.vnc.yaml`, and the Make targets compose those files rather than
+restating their content.
+
+An overlay that declares a service name the base file does not adds a service
+instead of overriding one, and the two then run against the same qcow2. The
+overlay's own text reads as a complete and correct service definition, which is
+what makes the failure invisible in review. `make topology` renders each
+composition through the engine and asserts the service set, the guest drive,
+device ownership, and that no host port is published twice.
+
+`QEMU_SMP` defaults to 1 for this profile. The installed kernel is the
+uniprocessor Mach build, so a second vCPU buys no guest parallelism and varies
+host-side QEMU timing instead.
+
+The accelerator stays the entrypoint's decision. It writes that decision, with
+the inputs that produced it and a reason code, to
+`/run/hurd/accelerator-decision.json` before it execs QEMU, and `make
+minty-accel` reads it back. A target selects inputs; it does not claim an
+outcome.
 
 ## Commits and Pull Requests
 

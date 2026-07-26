@@ -32,10 +32,12 @@ rather than observed and are reported that way.
 
 ## Boot entry point
 
-    docker compose -f compose.yaml -f compose.minty.yaml up -d hurd
+    make minty-up
 
-The `hurd` service name is required; `AGENTS.md` section `Booting the Minty
-Profile` carries why the bare form starts a second container.
+`compose.minty.yaml` overlays the canonical `gnu-hurd-dev` service and declares
+none of its own, so one QEMU container runs. `make topology` asserts that from
+the rendered configuration; `AGENTS.md` section `Booting the Minty Profile`
+carries the composition and the accelerator decision record.
 
 ## Claude Code operating notes
 

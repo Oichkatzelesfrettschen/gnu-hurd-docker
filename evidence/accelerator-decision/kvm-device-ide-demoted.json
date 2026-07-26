@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "host_arch": "x86_64",
+  "disable_kvm": 0,
+  "container_kvm_exists": true,
+  "container_kvm_readable": true,
+  "container_kvm_writable": true,
+  "candidate": "kvm",
+  "machine": "pc",
+  "disk_bus": "ide",
+  "auto_disable_kvm_for_ide": 1,
+  "force_kvm": 0,
+  "smp": 1,
+  "selected": "tcg",
+  "reason_code": "ide_safety_demotion"
+}
