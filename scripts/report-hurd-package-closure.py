@@ -195,8 +195,27 @@ REBUILD_CANDIDATES = [
     "polkitd",
 ]
 
+# The native compiler and Hurd development environment the product promises.
+# A package inventory taken from a running image says what happens to be
+# installed; this asks the archive what the port can supply, and it is the
+# closure half of the development-profile question. Whether each compiler
+# compiles, links, and runs on the Hurd is a guest fact and a separate probe.
+DEV_PROFILE = [
+    "build-essential", "gcc", "g++", "cpp", "binutils", "make", "gdb",
+    "autoconf", "automake", "libtool", "pkgconf",
+    "cmake", "meson", "ninja-build",
+    "flex", "bison", "gettext", "texinfo",
+    "patch", "diffutils", "file", "git",
+    "dpkg-dev", "debhelper", "devscripts", "fakeroot",
+    "python3-dev",
+    # The Mach interface generator and the Hurd and Mach headers are what make
+    # this a Hurd development environment rather than a generic Linux one.
+    "hurd-dev", "gnumach-dev", "mig", "mig-x86-64-gnu",
+]
+
 SETS = {
     "rebuild-candidates": REBUILD_CANDIDATES,
+    "dev-profile": DEV_PROFILE,
     "mate-bootstrap": MATE_BOOTSTRAP,
     "mate-control": MATE_CONTROL,
     "mate-privileged-integration": MATE_PRIVILEGED,
@@ -615,7 +634,90 @@ def source_paragraph(env, name):
     return best
 
 
-def classify_source(env, name):
+def declared_build_dependencies(env, name, version, architecture):
+    """Name every declared build dependency the port cannot satisfy.
+
+    apt reports the dependency it stopped at and abandons the transaction, so a
+    source naming one blocker can be hiding others behind it and supplying the
+    reported name would unblock nothing. A build order read from the first
+    blocker alone is a guess about the depth of the chain.
+
+    Each clause is resolved the way a build daemon would read it. An alternative
+    group is satisfied by any member. An architecture restriction that excludes
+    the target removes the clause. A build profile is inert, because the build
+    runs with none set. A virtual name is satisfied by a provider, which is how
+    debhelper supplies debhelper-compat and the hurd package supplies mount.
+    """
+    status, out, _ = run(["apt-cache", "showsrc", name], env=env)
+    if status != 0:
+        return []
+    fields = []
+    for para in out.split("\n\n"):
+        if not re.search(r"^Version:\s*%s\s*$" % re.escape(version), para,
+                         re.MULTILINE):
+            continue
+        for field in ("Build-Depends", "Build-Depends-Arch",
+                      "Build-Depends-Indep"):
+            match = re.search(r"^%s:\s*(.+?)(?=\n\S|\Z)" % field, para,
+                              re.MULTILINE | re.DOTALL)
+            if match:
+                fields.append(match.group(1))
+        break
+
+    absent = []
+    for clause in " ".join(fields).split(","):
+        clause = clause.strip()
+        if not clause:
+            continue
+        restriction = re.search(r"\[([^\]]*)\]", clause)
+        if restriction and not applies_to(restriction.group(1), architecture):
+            continue
+        names = []
+        for alternative in clause.split("|"):
+            head = re.split(r"[\s(\[<]", alternative.strip())[0]
+            if head:
+                names.append(head)
+        if not names or any(resolvable(env, entry) for entry in names):
+            continue
+        constraint = re.search(r"\(([^)]*)\)", clause)
+        absent.append({"name": "|".join(names),
+                       "constraint": constraint.group(1) if constraint else ""})
+    return absent
+
+
+def applies_to(restriction, architecture):
+    """Decide whether an architecture restriction list covers the target.
+
+    A negated list excludes its members and admits everything else; a positive
+    list admits only its members. `linux-any` and `hurd-any` are wildcards over
+    a kernel, which is the form that carries a Linux-only build dependency.
+    """
+    entries = restriction.split()
+    negated = all(entry.startswith("!") for entry in entries)
+    kernel = architecture.split("-")[0]
+    matches = False
+    for entry in entries:
+        bare = entry.lstrip("!")
+        if bare in (architecture, "any", "%s-any" % kernel):
+            matches = True
+    return not matches if negated else matches
+
+
+def resolvable(env, package):
+    """Say whether a name is satisfied, by a real package or by a provider."""
+    status, out, _ = run(["apt-cache", "showpkg", package], env=env)
+    if status != 0 or not out.strip():
+        return False
+    versions = out.split("Reverse Depends:")[0]
+    real = [line for line in versions.splitlines()
+            if line and not line.startswith(" ") and "(" in line]
+    if real:
+        return True
+    return bool(out.split("Reverse Provides:")[-1].strip()) \
+        if "Reverse Provides:" in out else False
+
+
+def classify_source(env, name, architecture):
     """Say whether a source package's build can start on this architecture.
 
     A missing binary is a rebuild candidate only if a build can begin, and that
@@ -644,15 +746,31 @@ def classify_source(env, name):
                 "evidence": "the main archive publishes no source under this name"}
     record = {"package": name}
     record.update(paragraph)
+    # The declared set is read whatever the simulation answers, because a
+    # buildable verdict with a non-empty absent set would mean the two
+    # mechanisms disagree about the same archive.
+    absent = declared_build_dependencies(env, name, paragraph["version"],
+                                         architecture)
+    record["absent_build_dependencies"] = absent
     target = "%s=%s" % (paragraph["source_package"], paragraph["version"])
     rc, sim_out, sim_err = run(
         ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends", target],
         env=env)
     if rc != 0:
+        reported = unsatisfied_dependencies(sim_out + sim_err)
+        # The two views answer different questions and neither contains the
+        # other. The declared scan reads the source's own clauses, so it names a
+        # build dependency the port lacks outright. apt resolves transitively,
+        # so it names a package that exists whose own dependencies do not close.
+        # A name only apt reports means the chain runs deeper than the source
+        # text shows; a name only the scan reports means apt stopped earlier.
+        declared = {entry["name"] for entry in absent}
+        simulated = {entry["name"] for entry in reported}
         record.update({"class": "blocked",
                        "evidence": first_blocker(sim_out + sim_err),
-                       "unsatisfied_build_dependencies":
-                           unsatisfied_dependencies(sim_out + sim_err)})
+                       "unsatisfied_build_dependencies": reported,
+                       "declared_only": sorted(declared - simulated),
+                       "simulated_only": sorted(simulated - declared)})
         return record
     transaction = installations(sim_out)
     record.update({"class": "buildable", "evidence": "build dependencies resolve",
@@ -833,11 +951,16 @@ def resolve(args, workspace):
                                 % " ".join(err.split())[:400])
 
     requested = args.packages or SETS[args.set]
+    # Naming packages explicitly overrides the set, so reporting the set
+    # default beside a different package list labels the report with a
+    # selection it did not resolve.
+    selection = "explicit" if args.packages else args.set
     if args.build_dependencies:
         # A source name is not a binary name, so wildcard expansion over the
         # binary index does not apply and there is no transaction to simulate:
         # the question is whether each build can start.
-        results = [classify_source(env, name) for name in requested]
+        results = [classify_source(env, name, args.architecture)
+                   for name in requested]
         # The subset is the buildable sources, so asking whether every requested
         # source is buildable answers a different question than the field names.
         # What the subset leaves open is whether one builder tree serves all of
@@ -845,7 +968,7 @@ def resolve(args, workspace):
         shared, blocker, transaction = shared_builder(env, results)
         report = {
             "architecture": args.architecture,
-            "set": args.set,
+            "set": selection,
             "mode": "build-dependencies",
             "main_archive": args.main_archive,
             "foreign_architecture": {"enabled": False, "name": "",
@@ -861,9 +984,21 @@ def resolve(args, workspace):
             "resolvable_subset_blocker": blocker,
             "recursive_transaction": transaction,
             "recursive_transaction_size": len(transaction),
+            # A schedule consumes the union: the declared scan and the
+            # simulation each name real work the other does not see.
             "must_be_built_or_substituted": sorted(
                 {entry["name"] for item in results
-                 for entry in item.get("unsatisfied_build_dependencies", [])}),
+                 for key in ("absent_build_dependencies",
+                             "unsatisfied_build_dependencies")
+                 for entry in item.get(key, [])}),
+            # Where the two views disagree, the schedule is reading an
+            # incomplete picture from either one alone.
+            "dependency_view_disagreements": [
+                {"package": item["package"],
+                 "declared_only": item["declared_only"],
+                 "simulated_only": item["simulated_only"]}
+                for item in results
+                if item.get("declared_only") or item.get("simulated_only")],
             "summary": {},
         }
         for item in results:
@@ -899,7 +1034,7 @@ def resolve(args, workspace):
 
     report = {
         "architecture": args.architecture,
-        "set": args.set,
+        "set": selection,
         "mode": "binary",
         "foreign_architecture": {
             "enabled": bool(foreign),

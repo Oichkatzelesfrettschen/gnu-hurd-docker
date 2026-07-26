@@ -411,6 +411,14 @@ def test_build_dependencies(module, suite, workspace):
         stanza("fixture-toolchain", "1.0", "hurd-amd64"),
         stanza("fixture-lib-dev", "1.0", "hurd-amd64"),
         stanza("fixture-stale", "1.0", "hurd-amd64"),
+        # debhelper supplies debhelper-compat and the hurd package supplies
+        # mount the same way: the name a source declares need not be a package.
+        stanza("fixture-provider", "1.0", "hurd-amd64",
+               provides="fixture-virtual-name"),
+        # Present, and its own dependency is not, so the source text names a
+        # build dependency the port has while the transaction still fails.
+        stanza("fixture-broken-dev", "1.0", "hurd-amd64",
+               depends="fixture-absent-deep"),
     ])
     entry = sources_fixture(root, "sid", [
         source_stanza("fixture-buildable", "1.0", "fixture-toolchain"),
@@ -427,6 +435,20 @@ def test_build_dependencies(module, suite, workspace):
         # order disagree and only a version comparison picks the right one.
         source_stanza("fixture-two-versions", "1.0", "fixture-absent-dev"),
         source_stanza("fixture-two-versions", "2.0", "fixture-toolchain"),
+        # A build daemon reads each clause: an alternative group is satisfied by
+        # any member, an architecture restriction that excludes the target
+        # removes the clause, and a virtual name is satisfied by a provider.
+        source_stanza("fixture-alternatives", "1.0",
+                      "fixture-toolchain | fixture-absent-dev"),
+        source_stanza("fixture-restricted", "1.0",
+                      "fixture-toolchain, fixture-selinux-dev [linux-any]"),
+        source_stanza("fixture-virtual", "1.0",
+                      "fixture-toolchain, fixture-virtual-name"),
+        source_stanza("fixture-two-absent", "1.0",
+                      "fixture-toolchain, fixture-absent-one, "
+                      "fixture-absent-two"),
+        source_stanza("fixture-nested", "1.0",
+                      "fixture-toolchain, fixture-broken-dev"),
     ])
     # The Release must name the Sources index for apt to accept it.
     release = os.path.join(root, "dists", "sid", "Release")
@@ -441,7 +463,9 @@ def test_build_dependencies(module, suite, workspace):
              packages=["fixture-buildable", "fixture-chained",
                        "fixture-linux-only", "fixture-never-packaged",
                        "fixture-stale", "fixture-binary-name",
-                       "fixture-two-versions"]),
+                       "fixture-two-versions", "fixture-alternatives",
+                       "fixture-restricted", "fixture-virtual",
+                       "fixture-two-absent", "fixture-nested"]),
         state)
     seen = verdicts(report)
     records = {item["package"]: item for item in report["packages"]}
@@ -503,6 +527,63 @@ def test_build_dependencies(module, suite, workspace):
                 str(module.unsatisfied_dependencies(
                     "a : Depends: one (>= 2) but it is not installable\n"
                     "a : Depends: two but it is not going to be installed\n")))
+    def absent(name):
+        return [entry["name"] for entry in
+                records.get(name, {}).get("absent_build_dependencies", [])]
+
+    suite.check("an alternative satisfied by any member is not absent",
+                seen.get("fixture-alternatives") == "buildable"
+                and absent("fixture-alternatives") == [],
+                str(records.get("fixture-alternatives")))
+    suite.check("an architecture restriction excluding the target removes the "
+                "clause",
+                seen.get("fixture-restricted") == "buildable"
+                and absent("fixture-restricted") == [],
+                str(records.get("fixture-restricted")))
+    suite.check("a virtual name satisfied by a provider is not absent",
+                seen.get("fixture-virtual") == "buildable"
+                and absent("fixture-virtual") == [],
+                str(records.get("fixture-virtual")))
+    suite.check("every absent build dependency is found, past apt's first",
+                absent("fixture-two-absent")
+                == ["fixture-absent-one", "fixture-absent-two"],
+                str(records.get("fixture-two-absent")))
+    # The declared scan reads the source's clauses and the simulation resolves
+    # transitively, so a build dependency the port has whose own dependency is
+    # missing is invisible to the scan and named by apt.
+    suite.check("a transitive blocker the source text does not name is reported",
+                seen.get("fixture-nested") == "blocked"
+                and absent("fixture-nested") == []
+                and records.get("fixture-nested", {}).get("simulated_only"),
+                str(records.get("fixture-nested")))
+    suite.check("the two dependency views are reported where they disagree",
+                any(entry["package"] == "fixture-nested"
+                    for entry in report["dependency_view_disagreements"]),
+                str(report["dependency_view_disagreements"]))
+    suite.check("two independent absent clauses need no disagreement",
+                records.get("fixture-two-absent", {}).get("declared_only") == []
+                and records.get("fixture-two-absent", {}).get(
+                    "simulated_only") == [],
+                str(records.get("fixture-two-absent")))
+    suite.check("a buildable source has an empty absent set",
+                all(not item.get("absent_build_dependencies")
+                    for item in report["packages"]
+                    if item["class"] == "buildable"),
+                str([(item["package"], item.get("absent_build_dependencies"))
+                     for item in report["packages"]
+                     if item["class"] == "buildable"]))
+    suite.check("the schedule reads the declared set rather than apt's report",
+                "fixture-absent-two" in report["must_be_built_or_substituted"],
+                str(report["must_be_built_or_substituted"]))
+    suite.check("a positive architecture restriction admits its member",
+                module.applies_to("hurd-any", "hurd-amd64")
+                and module.applies_to("hurd-amd64", "hurd-amd64")
+                and not module.applies_to("linux-any", "hurd-amd64"), "")
+    suite.check("a negated architecture restriction admits everything else",
+                module.applies_to("!linux-any", "hurd-amd64")
+                and not module.applies_to("!hurd-any", "hurd-amd64"), "")
+    suite.check("naming packages explicitly is not labelled with a set default",
+                report["set"] == "explicit", report["set"])
     suite.check("a build dependency's version constraint is retained",
                 module.unsatisfied_dependencies(
                     "a : Depends: one (>= 2) but it is not installable"

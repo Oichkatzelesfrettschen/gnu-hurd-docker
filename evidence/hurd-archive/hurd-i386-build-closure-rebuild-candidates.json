@@ -1,5 +1,14 @@
 {
   "architecture": "hurd-i386",
+  "dependency_view_disagreements": [
+    {
+      "declared_only": [],
+      "package": "mate-control-center",
+      "simulated_only": [
+        "polkitd"
+      ]
+    }
+  ],
   "foreign_architecture": {
     "enabled": false,
     "foreign_qualified_in_transaction": 0,
@@ -17,6 +26,7 @@
   ],
   "packages": [
     {
+      "absent_build_dependencies": [],
       "binaries": [
         "libmatemixer0",
         "libmatemixer-common",
@@ -237,6 +247,7 @@
       "version": "1.26.1-1"
     },
     {
+      "absent_build_dependencies": [],
       "binaries": [
         "python3-setproctitle"
       ],
@@ -406,6 +417,7 @@
       "version": "1.3.7-2"
     },
     {
+      "absent_build_dependencies": [],
       "binaries": [
         "mate-settings-daemon",
         "mate-settings-daemon-common",
@@ -871,6 +883,7 @@
       "version": "1.26.1-1.2"
     },
     {
+      "absent_build_dependencies": [],
       "binaries": [
         "mate-control-center",
         "mate-control-center-common",
@@ -880,8 +893,12 @@
         "libmate-slab-dev"
       ],
       "class": "blocked",
+      "declared_only": [],
       "evidence": "mate-polkit : Depends: polkitd but it is not installable",
       "package": "mate-control-center",
+      "simulated_only": [
+        "polkitd"
+      ],
       "source_package": "mate-control-center",
       "unsatisfied_build_dependencies": [
         {
@@ -892,6 +909,12 @@
       "version": "1.26.1-1.1"
     },
     {
+      "absent_build_dependencies": [
+        {
+          "constraint": "",
+          "name": "polkitd"
+        }
+      ],
       "binaries": [
         "accountsservice",
         "libaccountsservice0",
@@ -900,8 +923,10 @@
         "libaccountsservice-doc"
       ],
       "class": "blocked",
+      "declared_only": [],
       "evidence": "builddeps:accountsservice : Depends: polkitd but it is not installable",
       "package": "accountsservice",
+      "simulated_only": [],
       "source_package": "accountsservice",
       "unsatisfied_build_dependencies": [
         {
@@ -912,6 +937,12 @@
       "version": "23.13.9-8"
     },
     {
+      "absent_build_dependencies": [
+        {
+          "constraint": "",
+          "name": "libselinux-dev"
+        }
+      ],
       "binaries": [
         "polkitd",
         "pkexec",
@@ -923,8 +954,10 @@
         "gir1.2-polkit-1.0"
       ],
       "class": "blocked",
+      "declared_only": [],
       "evidence": "builddeps:policykit-1 : Depends: libselinux-dev but it is not installable",
       "package": "polkitd",
+      "simulated_only": [],
       "source_package": "policykit-1",
       "unsatisfied_build_dependencies": [
         {
@@ -936,9 +969,9 @@
     }
   ],
   "provenance": {
-    "collected_at": "2026-07-26T03:17:45+00:00",
+    "collected_at": "2026-07-26T04:52:41+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
-    "generator_sha256": "42123ac95f8cee061a10f1297f42729738a80b07495c751957b9273266bd0867",
+    "generator_sha256": "f0d41b2fcd0e90d1f8969aa61481b8d598eb8abc274e7dac4f6d005fcb762bfd",
     "installed_baseline": "empty",
     "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
     "schema_version": 2,

@@ -355,6 +355,31 @@ Every unsatisfied build dependency is recorded, not only the first apt names, so
 blocker per source would start that build after supplying `libaccountsservice-dev`
 alone.
 
+Two dependency views are recorded, because neither contains the other. The
+declared scan reads the selected source paragraph's own clauses and resolves
+each the way a build daemon would: an alternative group is satisfied by any
+member, an architecture restriction that excludes the target removes the clause,
+and a virtual name is satisfied by a provider. It therefore names a build
+dependency the port lacks outright. apt resolves transitively, so it names a
+package that exists whose own dependencies do not close. A name only the scan
+reports means apt stopped earlier; a name only apt reports means the chain runs
+deeper than the source text shows.
+
+The distinction is not hypothetical. On hurd-amd64 the two views agree on every
+candidate, which is what establishes that the build order above is the full set
+rather than apt's first look. On hurd-i386 they disagree once: every build
+dependency `mate-control-center` declares exists on that port, and apt still
+reports `polkitd`, because `mate-polkit` is a build dependency that exists and
+its own dependency does not. Read from the source text alone that build looks
+ready; read from the simulation alone the blocker looks declared. It is neither.
+
+The provider case is equally concrete. `mount` is a build dependency polkit
+declares and the `hurd` package provides, and `debhelper-compat`,
+`dpkg-build-api`, and `dh-sequence-gir` are supplied by `debhelper`, `dpkg-dev`,
+and `gobject-introspection`. A scan that read names rather than resolving them
+would report six extra blockers for polkit and send someone porting packages the
+port already has.
+
 `accountsservice` needs `polkitd` at build time, not only at run time, and
 polkit's own build stops at `libselinux-dev`. SELinux is a Linux kernel
 interface, so that build dependency cannot be satisfied on the Hurd at all. The
@@ -405,6 +430,28 @@ One claim above needs narrowing with this evidence. The main archive carries
 1.26.0-2, so the same-source-version argument holds for `mate-settings-daemon`
 alone. For `mate-control-center` the i386 binary was built from an older source
 than the one a rebuild would use.
+
+## The development profile resolves before any guest boots
+
+The product promises a native compiler and Hurd development environment, and a
+package list taken from a running image reports what happens to be installed
+rather than what the port can supply. That is an archive question:
+
+    make hurd-closure-report HURD_SET=dev-profile
+
+All 31 members resolve for hurd-amd64 -- 23 native, 8 architecture-independent,
+pulling 261 packages recursively. The Hurd-specific members are present:
+`mig-x86-64-gnu` at 1.8+git20231217-11, `gnumach-dev` at 2:1.8+git20260224-11,
+and `hurd-dev` at 1:0.9.git20260527-3+b1. `git` carries a Hurd-specific revision
+at 1:2.53.0-1+hurd.1, which is evidence the port receives downstream patching
+rather than rebuilds alone.
+
+hurd-i386 resolves 30 of 31, missing `mig-x86-64-gnu` alone, which is the
+amd64 cross-generator and correctly absent from a 32-bit port.
+
+This settles availability. Whether each compiler compiles, links, and runs on
+GNU Mach, whether MIG generates stubs that build, and whether a Hurd server
+probe compiles are guest facts that no archive answers.
 
 ## Closing the gaps
 
