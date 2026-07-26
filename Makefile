@@ -1,4 +1,4 @@
-.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -27,8 +27,10 @@ help:
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
 	@echo "  make hurd-closure                 - classify a package set against the real hurd-amd64 or hurd-i386 archive (HURD_ARCH, HURD_SET)"
+	@echo "  make hurd-build-closure           - report whether each rebuild candidate's build can start (HURD_ARCH)"
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
-	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/"
+	@echo "  make hurd-closure-report          - write the closure report to evidence/hurd-archive/ (HURD_FOREIGN asks whether a foreign build coinstalls)"
+	@echo "  make hurd-build-closure-report    - write the build-closure report to evidence/hurd-archive/ (HURD_ARCH)"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
 	@echo "  make smoke-guest                  - guest readiness via SSH/serial (best-effort)"
@@ -150,6 +152,10 @@ evidence-check:
 HURD_ARCH ?= hurd-amd64
 HURD_SET ?= mate-bootstrap
 HURD_CLOSURE_DIR ?= evidence/hurd-archive
+# Setting this asks whether a foreign build installs into a native tree, the way
+# dpkg --add-architecture would. It answers a packaging question and says
+# nothing about whether a foreign process runs, which is a guest fact.
+HURD_FOREIGN ?=
 
 hurd-archive-image:
 	$(CONTAINER_RUNTIME) build -f Dockerfile.hurd-archive -t gnu-hurd-archive:local .
@@ -160,9 +166,18 @@ hurd-archive-image:
 hurd-closure-selftest: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local --self-test
 
+# Whether a binary exists and whether it can be produced are different archive
+# questions. This asks the second: the build closure for each named source
+# package against the target port's binaries plus main-archive source.
+hurd-build-closure: hurd-archive-image
+	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
+		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
+		--build-dependencies --no-lmde
+
 hurd-closure: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)"
+		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
+		--foreign-architecture "$(HURD_FOREIGN)"
 
 # The report is written through a bind mount, because a report that stays inside
 # a --rm container is a number in a terminal rather than an artifact.
@@ -173,7 +188,20 @@ hurd-closure-report: hurd-archive-image
 		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
 		gnu-hurd-archive:local \
 		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
-		--json "/out/$(HURD_ARCH)-$(HURD_SET).json"
+		--foreign-architecture "$(HURD_FOREIGN)" \
+		--json "/out/$(HURD_ARCH)$(if $(HURD_FOREIGN),-foreign-$(HURD_FOREIGN),)-$(HURD_SET).json"
+
+# The build reports are committed evidence, so the command that produced them is
+# a target rather than an invocation someone reconstructs from the report.
+hurd-build-closure-report: hurd-archive-image
+	mkdir -p "$(HURD_CLOSURE_DIR)"
+	$(CONTAINER_RUNTIME) run --rm \
+		--user "$$(id -u):$$(id -g)" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		gnu-hurd-archive:local \
+		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
+		--build-dependencies --no-lmde \
+		--json "/out/$(HURD_ARCH)-build-closure-rebuild-candidates.json"
 
 smoke-host:
 	./scripts/smoke-host.sh

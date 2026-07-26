@@ -1,9 +1,9 @@
 {
   "architecture": "hurd-amd64",
   "foreign_architecture": {
-    "enabled": false,
+    "enabled": true,
     "foreign_qualified_in_transaction": 0,
-    "name": "",
+    "name": "hurd-i386",
     "native_packages_removed": []
   },
   "lmde_overlay": {
@@ -29,7 +29,7 @@
   },
   "mode": "binary",
   "must_be_built_or_substituted": [
-    "caja",
+    "marco",
     "mate-desktop-environment",
     "mate-desktop-environment-core"
   ],
@@ -41,7 +41,7 @@
       ],
       "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
       "class": "uninstallable",
-      "evidence": "mate-desktop-environment-core : Depends: caja (>= 1.26) but it is not going to be installed",
+      "evidence": "Depends: marco (>= 1.26) but it is not going to be installed",
       "package": "mate-desktop-environment-core",
       "version": "1.26.0+3"
     },
@@ -52,13 +52,13 @@
       ],
       "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
       "class": "uninstallable",
-      "evidence": "mate-desktop-environment-core : Depends: caja (>= 1.26) but it is not going to be installed",
+      "evidence": "Depends: marco (>= 1.26) but it is not going to be installed",
       "package": "mate-desktop-environment",
       "version": "1.26.0+3"
     }
   ],
   "provenance": {
-    "collected_at": "2026-07-26T03:18:40+00:00",
+    "collected_at": "2026-07-26T03:22:13+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
     "generator_sha256": "42123ac95f8cee061a10f1297f42729738a80b07495c751957b9273266bd0867",
     "installed_baseline": "empty",

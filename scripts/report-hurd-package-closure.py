@@ -62,6 +62,10 @@ import urllib.request
 
 PORTS = os.environ.get("HURD_PORTS_MIRROR",
                        "http://ftp.ports.debian.org/debian-ports")
+# debian-ports publishes binaries only. Source lives in the main Debian archive,
+# which is architecture-independent and serves both Hurd ports, so a build
+# closure is resolved against ports binaries plus main-archive source.
+MAIN_ARCHIVE = os.environ.get("HURD_MAIN_ARCHIVE", "http://deb.debian.org/debian")
 LMDE_MIRROR = os.environ.get(
     "LMDE_MIRROR", "https://mirrors.edge.kernel.org/linuxmint-packages")
 LMDE_SUITE = os.environ.get("LMDE_SUITE", "gigi")
@@ -77,6 +81,18 @@ MINT_KEYRING = os.environ.get(
     "/usr/local/share/gnu-hurd-docker/linuxmint-archive-keyring.asc")
 
 OVERLAY_ORIGIN = "lmde-arch-all-overlay"
+
+# A consumer reading a committed report needs to know which fields it may rely
+# on. The version rises when a field changes meaning or leaves the report.
+SCHEMA_VERSION = 2
+
+
+def generator_digest():
+    try:
+        with open(os.path.realpath(__file__), "rb") as handle:
+            return hashlib.sha256(handle.read()).hexdigest()
+    except OSError:
+        return ""
 
 # The fixture suite lives beside the resolver in the image and in the tree, so
 # the same --self-test invocation runs from a checkout and from the container.
@@ -167,7 +183,20 @@ MINT_INTEGRATION = [
     "xapp-symbolic-icons",
 ]
 
+# The source packages a missing native binary would be rebuilt from. Asked with
+# --build-dependencies, which answers whether a build can start rather than
+# whether a binary exists.
+REBUILD_CANDIDATES = [
+    "libmatemixer",
+    "python3-setproctitle",
+    "mate-settings-daemon",
+    "mate-control-center",
+    "accountsservice",
+    "polkitd",
+]
+
 SETS = {
+    "rebuild-candidates": REBUILD_CANDIDATES,
     "mate-bootstrap": MATE_BOOTSTRAP,
     "mate-control": MATE_CONTROL,
     "mate-privileged-integration": MATE_PRIVILEGED,
@@ -393,8 +422,12 @@ def write_overlay(root, architecture, mirror, suite, release):
     }
 
 
-def build_tree(root, architecture, ports, lmde):
-    """Create a private apt state tree whose native architecture is the target."""
+def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
+    """Create a private apt state tree whose native architecture is the target.
+
+    A foreign architecture is enabled the way `dpkg --add-architecture` enables
+    one, so a request qualified with it resolves against both indices at once.
+    """
     layout = ["etc/apt/apt.conf.d", "etc/apt/preferences.d",
               "etc/apt/trusted.gpg.d", "var/lib/apt/lists/partial",
               "var/lib/dpkg", "var/cache/apt/archives/partial"]
@@ -402,19 +435,30 @@ def build_tree(root, architecture, ports, lmde):
         os.makedirs(os.path.join(root, part), exist_ok=True)
     open(os.path.join(root, "var/lib/dpkg/status"), "w").close()
 
-    keyring = "/usr/share/keyrings/debian-ports-archive-keyring.gpg"
-    if os.path.exists(keyring):
-        shutil.copy(keyring, os.path.join(root, "etc/apt/trusted.gpg.d"))
+    # debian-ports signs the binary indices; the main archive signs the source
+    # index, and its key is a separate keyring, so a build closure that omits it
+    # fails verification rather than resolving.
+    for keyring in ("debian-ports-archive-keyring.gpg",
+                    "debian-archive-keyring.gpg"):
+        path = os.path.join("/usr/share/keyrings", keyring)
+        if os.path.exists(path):
+            shutil.copy(path, os.path.join(root, "etc/apt/trusted.gpg.d"))
 
     # A file:// ports mirror is a fixture, which carries no signature; the
     # network mirror is verified by apt against the debian-ports keyring above.
     local = "[trusted=yes] " if ports.startswith("file:") else ""
-    sources = ["deb %s%s sid main" % (local, ports),
-               "deb %s%s unreleased main" % (local, ports)]
+    lines = ["deb %s%s sid main" % (local, ports),
+             "deb %s%s unreleased main" % (local, ports)]
+    if sources:
+        # Source is architecture-independent, so one deb-src line serves either
+        # Hurd port; the binaries it resolves against stay the port's own.
+        lines.append("deb-src %s%s sid main"
+                     % ("[trusted=yes] " if sources.startswith("file:") else "",
+                        sources))
 
     if lmde:
-        sources.append("deb [trusted=yes] file://%s/lmde %s %s"
-                       % (root, LMDE_SUITE, " ".join(lmde["components"])))
+        lines.append("deb [trusted=yes] file://%s/lmde %s %s"
+                     % (root, LMDE_SUITE, " ".join(lmde["components"])))
         # The overlay is authenticated upstream and republished locally, so its
         # own signature would prove nothing; the pin is what keeps it from
         # supplying a name Debian Ports builds natively.
@@ -425,13 +469,13 @@ def build_tree(root, architecture, ports, lmde):
 
     with open(os.path.join(root, "etc/apt/sources.list"), "w",
               encoding="utf-8") as handle:
-        handle.write("\n".join(sources) + "\n")
+        handle.write("\n".join(lines) + "\n")
 
     config = os.path.join(root, "apt.conf")
     with open(config, "w", encoding="utf-8") as handle:
         handle.write(
             'APT::Architecture "%(a)s";\n'
-            'APT::Architectures { "%(a)s"; };\n'
+            'APT::Architectures { "%(a)s"; %(f)s};\n'
             'Dir::Etc "%(r)s/etc/apt";\n'
             'Dir::Etc::SourceList "%(r)s/etc/apt/sources.list";\n'
             'Dir::Etc::Parts "%(r)s/etc/apt/apt.conf.d";\n'
@@ -440,7 +484,8 @@ def build_tree(root, architecture, ports, lmde):
             'Dir::State "%(r)s/var/lib/apt";\n'
             'Dir::State::status "%(r)s/var/lib/dpkg/status";\n'
             'Dir::Cache "%(r)s/var/cache/apt";\n'
-            % {"a": architecture, "r": root})
+            % {"a": architecture, "r": root,
+               "f": '"%s"; ' % foreign if foreign else ""})
     return config
 
 
@@ -488,6 +533,15 @@ def candidate_origin(env, package, workspace):
     return ""
 
 
+def architecture_all(env, package):
+    """Say whether every record for this name is architecture-independent."""
+    status, out, _ = run(["apt-cache", "show", package], env=env)
+    if status != 0 or not out.strip():
+        return False
+    architectures = set(re.findall(r"^Architecture:\s*(\S+)", out, re.MULTILINE))
+    return architectures == {"all"}
+
+
 def classify(env, package, architecture, workspace):
     status, out, _ = run(["apt-cache", "show", package], env=env)
     if status != 0 or not out.strip():
@@ -516,7 +570,150 @@ def classify(env, package, architecture, workspace):
                        "evidence": first_blocker(sim_out + sim_err)})
         return record
     record.update({"class": klass, "evidence": "dependencies resolve"})
+    gone = removals(sim_out)
+    if gone:
+        record["removes"] = gone
     return record
+
+
+def source_paragraph(env, name):
+    """Select one source paragraph and return the identity apt will be given.
+
+    apt-cache showsrc matches a binary name as well as a source name, and the
+    two namespaces disagree: python3-setproctitle is built by python-setproctitle
+    and polkitd by policykit-1. The paragraph's own Package field is the source
+    name, so reporting the requested name would label a verdict with a package
+    that was never simulated.
+
+    Highest version wins, decided by dpkg rather than by output order, because
+    showsrc prints every paragraph the configured suites carry and the order is
+    the index's rather than a ranking.
+    """
+    status, out, _ = run(["apt-cache", "showsrc", name], env=env)
+    if status != 0 or not out.strip():
+        return None
+    best = None
+    for para in out.split("\n\n"):
+        if not para.strip():
+            continue
+        package = re.search(r"^Package:\s*(\S+)", para, re.MULTILINE)
+        version = re.search(r"^Version:\s*(\S+)", para, re.MULTILINE)
+        if not package or not version:
+            continue
+        candidate = {"source_package": package.group(1),
+                     "version": version.group(1)}
+        binaries = re.search(r"^Binary:\s*(.+)$", para, re.MULTILINE)
+        candidate["binaries"] = [entry.strip() for entry in
+                                 binaries.group(1).split(",")] if binaries else []
+        if best is None:
+            best = candidate
+            continue
+        newer, _, _ = run(["dpkg", "--compare-versions", candidate["version"],
+                           "gt", best["version"]], env=env, timeout=60)
+        if newer == 0:
+            best = candidate
+    return best
+
+
+def classify_source(env, name):
+    """Say whether a source package's build can start on this architecture.
+
+    A missing binary is a rebuild candidate only if a build can begin, and that
+    is a separate archive question from whether the binary exists. A build
+    dependency that is itself missing for the port makes the rebuild an ordered
+    chain rather than one command, and a build dependency that exists only on
+    Linux makes it a packaging patch rather than a build.
+
+    The simulation names source=version. Given a bare name, apt resolves the
+    source through the binary of that name in the port index and then demands
+    the source at that binary's version: on hurd-i386 the stale
+    python3-setproctitle 1.1.8-1 binary sends apt looking for a source version
+    the main archive stopped publishing, and the build reads as blocked when the
+    version the report names builds. Pinning makes the simulated version and the
+    reported version the same fact.
+
+    Classes:
+
+      buildable   every build dependency resolves for the target architecture
+      blocked     a build dependency does not resolve, and it is named
+      no-source   the main archive publishes no source under this name
+    """
+    paragraph = source_paragraph(env, name)
+    if paragraph is None:
+        return {"package": name, "class": "no-source",
+                "evidence": "the main archive publishes no source under this name"}
+    record = {"package": name}
+    record.update(paragraph)
+    target = "%s=%s" % (paragraph["source_package"], paragraph["version"])
+    rc, sim_out, sim_err = run(
+        ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends", target],
+        env=env)
+    if rc != 0:
+        record.update({"class": "blocked",
+                       "evidence": first_blocker(sim_out + sim_err),
+                       "unsatisfied_build_dependencies":
+                           unsatisfied_dependencies(sim_out + sim_err)})
+        return record
+    transaction = installations(sim_out)
+    record.update({"class": "buildable", "evidence": "build dependencies resolve",
+                   "build_dependency_count": len(transaction),
+                   "build_dependency_transaction": transaction})
+    return record
+
+
+def shared_builder(env, records):
+    """Ask whether the buildable sources' build dependencies co-install.
+
+    Each source is simulated alone, so a set of buildable sources says nothing
+    about whether one builder tree serves them all: two builds can each resolve
+    and still demand incompatible versions of a shared -dev package. Naming them
+    in one simulation answers whether one builder snapshot covers the batch.
+    """
+    targets = ["%s=%s" % (item["source_package"], item["version"])
+               for item in records if item["class"] == "buildable"]
+    if not targets:
+        return False, "no source in the set is buildable", []
+    rc, out, err = run(
+        ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends"] + targets,
+        env=env)
+    if rc != 0:
+        return False, first_blocker(out + err), []
+    return True, "", installations(out)
+
+
+def installations(text):
+    """Name what a transaction would install, with the version apt selected.
+
+    A count reproduces nothing: sid and unreleased move, so a rerun that reports
+    the same number can have resolved different versions. The selected versions
+    are what expose solver drift, foreign-architecture participation, and
+    whether two builds can share one builder tree.
+    """
+    return [line.strip()[5:] for line in text.splitlines()
+            if line.startswith("Inst ")]
+
+
+def unsatisfied_dependencies(text):
+    """Name every build dependency that failed, not only the first.
+
+    A scheduler that sees one blocker per source starts a build after supplying
+    one of several prerequisites. mate-control-center needs both
+    libaccountsservice-dev and mate-settings-daemon-dev, and a report carrying
+    the first alone states an order the archive does not support.
+    """
+    found, seen = [], set()
+    for line in text.splitlines():
+        match = re.search(
+            r"Depends:\s*(\S+)(?:\s*\(([^)]*)\))?\s*but it is not", line)
+        if not match:
+            continue
+        entry = {"name": match.group(1), "constraint": match.group(2) or ""}
+        key = (entry["name"], entry["constraint"])
+        if key in seen:
+            continue
+        seen.add(key)
+        found.append(entry)
+    return found
 
 
 def first_blocker(text):
@@ -539,6 +736,17 @@ def first_blocker(text):
         if not fallback and stripped.startswith("E: "):
             fallback = stripped[:300]
     return fallback or " ".join(text.split())[:300] or "no resolver output"
+
+
+def removals(text):
+    """Name what a transaction would remove.
+
+    A foreign-architecture request that removes native packages is not a
+    coinstallation; it is a replacement, and the two read identically in a
+    success line.
+    """
+    return sorted({line.split()[1] for line in text.splitlines()
+                   if line.startswith("Remv ") and len(line.split()) > 1})
 
 
 def missing_dependencies(results):
@@ -581,6 +789,16 @@ def resolve(args, workspace):
         "resolver_image": os.environ.get("HURD_RESOLVER_IMAGE", ""),
         "debian_ports_mirror": args.ports_mirror,
         "suites": ["sid", "unreleased"],
+        # The tree carries no installed packages, so every verdict is about what
+        # the archive permits on an empty system rather than about what the
+        # published image would accept. A claim that a transaction preserves the
+        # installed userland needs a run seeded from the image's dpkg status.
+        "installed_baseline": "empty",
+        # sid and unreleased move, so the same command reruns to a different
+        # answer. The generator digest says which producer wrote a report when
+        # two reports of the same set disagree.
+        "generator_sha256": generator_digest(),
+        "schema_version": SCHEMA_VERSION,
     }
 
     lmde = None
@@ -599,7 +817,13 @@ def resolve(args, workspace):
             "release_date": release["date"],
         })
 
-    config = build_tree(workspace, args.architecture, args.ports_mirror, lmde)
+    foreign = args.foreign_architecture
+    if foreign == args.architecture:
+        raise ArchiveTrustError(
+            "the foreign architecture is the native one, which tests nothing")
+    config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
+                        foreign,
+                        args.main_archive if args.build_dependencies else "")
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 
@@ -608,9 +832,60 @@ def resolve(args, workspace):
         raise ArchiveTrustError("apt-get update failed: %s"
                                 % " ".join(err.split())[:400])
 
-    packages, unmatched = expand(env, args.packages or SETS[args.set])
-    results = [classify(env, name, args.architecture, workspace)
-               for name in packages]
+    requested = args.packages or SETS[args.set]
+    if args.build_dependencies:
+        # A source name is not a binary name, so wildcard expansion over the
+        # binary index does not apply and there is no transaction to simulate:
+        # the question is whether each build can start.
+        results = [classify_source(env, name) for name in requested]
+        # The subset is the buildable sources, so asking whether every requested
+        # source is buildable answers a different question than the field names.
+        # What the subset leaves open is whether one builder tree serves all of
+        # them at once, and that is what the simulation below decides.
+        shared, blocker, transaction = shared_builder(env, results)
+        report = {
+            "architecture": args.architecture,
+            "set": args.set,
+            "mode": "build-dependencies",
+            "main_archive": args.main_archive,
+            "foreign_architecture": {"enabled": False, "name": "",
+                                     "native_packages_removed": [],
+                                     "foreign_qualified_in_transaction": 0},
+            "provenance": provenance,
+            "lmde_overlay": lmde or {"enabled": False},
+            "packages": results,
+            "unmatched_patterns": [],
+            "resolvable_subset": [item["package"] for item in results
+                                  if item["class"] == "buildable"],
+            "resolvable_subset_resolves": shared,
+            "resolvable_subset_blocker": blocker,
+            "recursive_transaction": transaction,
+            "recursive_transaction_size": len(transaction),
+            "must_be_built_or_substituted": sorted(
+                {entry["name"] for item in results
+                 for entry in item.get("unsatisfied_build_dependencies", [])}),
+            "summary": {},
+        }
+        for item in results:
+            report["summary"][item["class"]] = report["summary"].get(
+                item["class"], 0) + 1
+        return report
+
+    packages, unmatched = expand(env, requested)
+    # Under a foreign architecture the question is whether the foreign build of
+    # each name installs into a native tree, so an architecture-specific request
+    # is qualified and classified against the foreign architecture.
+    #
+    # An Architecture: all package is realized once, under the native
+    # architecture, so pkg:hurd-i386 names a binary the archive never publishes.
+    # Qualifying one manufactures an impossible request and reports it as a
+    # missing foreign variant, which reads as a multiarch limitation and is an
+    # artifact of the question. Those names stay unqualified.
+    target = foreign or args.architecture
+    if foreign:
+        packages = [name if architecture_all(env, name)
+                    else "%s:%s" % (name, foreign) for name in packages]
+    results = [classify(env, name, target, workspace) for name in packages]
     unmet, resolvable = missing_dependencies(results)
 
     if resolvable:
@@ -625,6 +900,23 @@ def resolve(args, workspace):
     report = {
         "architecture": args.architecture,
         "set": args.set,
+        "mode": "binary",
+        "foreign_architecture": {
+            "enabled": bool(foreign),
+            "name": foreign,
+            # Coinstallation and replacement read the same in a success line, so
+            # what the transaction removes is reported beside what it installs.
+            #
+            # The tree's dpkg status file is empty, so there is no installed
+            # native package for a transaction to displace and this list is
+            # empty by construction. Whether a foreign build would replace the
+            # installed guest userland is settled by seeding the tree with the
+            # image's own status file, which the installed_baseline field names.
+            "native_packages_removed": removals(final_out),
+            "foreign_qualified_in_transaction": len(
+                [name for name in transaction if ":%s " % foreign in name])
+            if foreign else 0,
+        },
         "provenance": provenance,
         "lmde_overlay": lmde or {"enabled": False},
         "packages": results,
@@ -654,11 +946,35 @@ def print_report(report):
              lmde.get("architecture_all_packages", "overlay off")))
     width = max(len(item["package"]) for item in results)
     for item in results:
-        print("%-*s  %-18s %s" % (width, item["package"], item["class"],
+        # A requested name and the source that builds it differ often enough to
+        # matter: polkitd is built by policykit-1. The simulated identity is
+        # printed beside the requested one when they disagree.
+        source = item.get("source_package", "")
+        label = item["package"] if source in ("", item["package"]) \
+            else "%s (%s)" % (item["package"], source)
+        print("%-*s  %-18s %s" % (width, label, item["class"],
                                   item.get("version", "")))
     print()
     for key in sorted(report["summary"]):
         print("%-18s %d" % (key, report["summary"][key]))
+    if report.get("mode") == "build-dependencies":
+        print("\nbuildable now: %s"
+              % (", ".join(report["resolvable_subset"]) or "none"))
+        print("one builder tree serves them: %s"
+              % ("yes, pulling %d packages"
+                 % report["recursive_transaction_size"]
+                 if report["resolvable_subset_resolves"]
+                 else "no, %s" % report["resolvable_subset_blocker"]))
+        for item in results:
+            if item["class"] != "blocked":
+                continue
+            unmet = item.get("unsatisfied_build_dependencies", [])
+            print("blocked  %-24s %s"
+                  % (item["package"],
+                     ", ".join(("%s %s" % (entry["name"], entry["constraint"])
+                                ).strip() for entry in unmet)
+                     or item["evidence"]))
+        return
     print("\nresolvable subset: %d of %d, %s"
           % (len(report["resolvable_subset"]), len(results),
              "pulling %d packages recursively"
@@ -672,6 +988,15 @@ def print_report(report):
     if report["unmatched_patterns"]:
         print("patterns matching nothing: %s"
               % ", ".join(report["unmatched_patterns"]))
+    foreign = report["foreign_architecture"]
+    if foreign["enabled"]:
+        print("\nforeign architecture %s: %d of %d transaction members carry "
+              "the foreign qualifier"
+              % (foreign["name"], foreign["foreign_qualified_in_transaction"],
+                 report["recursive_transaction_size"]))
+        if foreign["native_packages_removed"]:
+            print("the transaction replaces rather than coinstalls, removing: "
+                  "%s" % ", ".join(foreign["native_packages_removed"]))
 
 
 def self_test(suite):
@@ -694,7 +1019,19 @@ def main():
                         help="which package set to resolve")
     parser.add_argument("--no-lmde", action="store_true",
                         help="omit the LMDE Architecture: all overlay")
+    parser.add_argument("--foreign-architecture", default="",
+                        choices=["", "hurd-amd64", "hurd-i386"],
+                        help="enable a second architecture and qualify every "
+                             "request to it, the way dpkg --add-architecture "
+                             "does, to ask whether a foreign build installs "
+                             "into a native tree")
+    parser.add_argument("--build-dependencies", action="store_true",
+                        help="resolve whether each named source package's build "
+                             "can start on the target architecture, rather than "
+                             "whether its binary exists")
     parser.add_argument("--ports-mirror", default=PORTS)
+    parser.add_argument("--main-archive", default=MAIN_ARCHIVE,
+                        help="source archive, which is architecture-independent")
     parser.add_argument("--lmde-mirror", default=LMDE_MIRROR)
     parser.add_argument("--lmde-suite", default=LMDE_SUITE)
     parser.add_argument("--keyring", default=MINT_KEYRING,

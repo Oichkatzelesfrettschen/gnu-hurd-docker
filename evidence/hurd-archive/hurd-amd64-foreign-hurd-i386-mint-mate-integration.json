@@ -1,9 +1,9 @@
 {
   "architecture": "hurd-amd64",
   "foreign_architecture": {
-    "enabled": false,
+    "enabled": true,
     "foreign_qualified_in_transaction": 0,
-    "name": "",
+    "name": "hurd-i386",
     "native_packages_removed": []
   },
   "lmde_overlay": {
@@ -29,8 +29,8 @@
   },
   "mode": "binary",
   "must_be_built_or_substituted": [
-    "mintmenu",
-    "python3-setproctitle"
+    "dconf-gsettings-backend",
+    "mintmenu"
   ],
   "packages": [
     {
@@ -40,7 +40,7 @@
       ],
       "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
       "class": "uninstallable",
-      "evidence": "mintmenu : Depends: python3-setproctitle but it is not installable",
+      "evidence": "mintmenu : Depends: dconf-gsettings-backend but it is not going to be installed or",
       "package": "mintmenu",
       "version": "6.2.3"
     },
@@ -66,7 +66,7 @@
     }
   ],
   "provenance": {
-    "collected_at": "2026-07-26T03:19:12+00:00",
+    "collected_at": "2026-07-26T03:22:39+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
     "generator_sha256": "42123ac95f8cee061a10f1297f42729738a80b07495c751957b9273266bd0867",
     "installed_baseline": "empty",
