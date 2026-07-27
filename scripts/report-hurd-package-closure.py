@@ -108,6 +108,40 @@ def snapshot_mirrors(timestamp):
             "%s/debian/%s" % (SNAPSHOT_HOST, timestamp))
 
 
+def installed_baseline(path, architecture):
+    """Describe the installed state the verdicts were resolved against.
+
+    An empty baseline is a real answer and must say so: it means the report
+    describes what the archive permits on an empty system, and that a claim
+    about replacing an installed package is unmeasured rather than negative.
+    """
+    if not path:
+        return {"kind": "empty",
+                "note": "no installed package, so a transaction has nothing to "
+                        "displace and removals are empty by construction"}
+    if not os.path.exists(path):
+        raise ArchiveTrustError("no installed status file at %s" % path)
+    with open(path, "rb") as handle:
+        body = handle.read()
+    digest = hashlib.sha256(body).hexdigest()
+    text = body.decode("utf-8", "replace")
+    packages = len(re.findall(r"^Package:\s", text, re.MULTILINE))
+    if not packages:
+        raise ArchiveTrustError(
+            "%s names no package, so it is not a dpkg status file" % path)
+    # A status file from the other port would make every native verdict wrong
+    # while still parsing, which is the failure that reads as a real result.
+    found = set(re.findall(r"^Architecture:\s*(\S+)", text, re.MULTILINE))
+    native = found - {"all"}
+    if native and architecture not in native:
+        raise ArchiveTrustError(
+            "%s carries architectures %s and the run resolves %s"
+            % (path, ",".join(sorted(native)), architecture))
+    return {"kind": "guest-dpkg-status", "path": os.path.basename(path),
+            "architecture": architecture, "package_count": packages,
+            "sha256": digest}
+
+
 def generator_digest():
     try:
         with open(os.path.realpath(__file__), "rb") as handle:
@@ -463,7 +497,7 @@ def write_overlay(root, architecture, mirror, suite, release):
 
 
 def build_tree(root, architecture, ports, lmde, foreign="", sources="",
-               snapshot=""):
+               snapshot="", installed_status=""):
     """Create a private apt state tree whose native architecture is the target.
 
     A foreign architecture is enabled the way `dpkg --add-architecture` enables
@@ -474,7 +508,16 @@ def build_tree(root, architecture, ports, lmde, foreign="", sources="",
               "var/lib/dpkg", "var/cache/apt/archives/partial"]
     for part in layout:
         os.makedirs(os.path.join(root, part), exist_ok=True)
-    open(os.path.join(root, "var/lib/dpkg/status"), "w").close()
+    # An empty status file makes every verdict a statement about an empty system:
+    # a transaction has no installed package to displace, so a report cannot say
+    # whether an install would replace part of the guest's userland. Seeding the
+    # tree with the guest's own status turns availability into a prediction
+    # about this image.
+    status_path = os.path.join(root, "var/lib/dpkg/status")
+    if installed_status:
+        shutil.copy(installed_status, status_path)
+    else:
+        open(status_path, "w").close()
 
     # debian-ports signs the binary indices; the main archive signs the source
     # index, and its key is a separate keyring, so a build closure that omits it
@@ -948,11 +991,6 @@ def resolve(args, workspace):
         # verdicts were read from a moving suite.
         "archive_snapshot": getattr(args, "archive_snapshot", ""),
         "suites": ["sid", "unreleased"],
-        # The tree carries no installed packages, so every verdict is about what
-        # the archive permits on an empty system rather than about what the
-        # published image would accept. A claim that a transaction preserves the
-        # installed userland needs a run seeded from the image's dpkg status.
-        "installed_baseline": "empty",
         # sid and unreleased move, so the same command reruns to a different
         # answer. The generator digest says which producer wrote a report when
         # two reports of the same set disagree.
@@ -980,10 +1018,14 @@ def resolve(args, workspace):
     if foreign == args.architecture:
         raise ArchiveTrustError(
             "the foreign architecture is the native one, which tests nothing")
+    baseline = installed_baseline(getattr(args, "installed_status", ""),
+                                  args.architecture)
+    provenance["installed_baseline"] = baseline
     config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
                         foreign,
                         args.main_archive if args.build_dependencies else "",
-                        getattr(args, "archive_snapshot", ""))
+                        getattr(args, "archive_snapshot", ""),
+                        getattr(args, "installed_status", ""))
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 
@@ -1220,6 +1262,11 @@ def main():
                              "state; sid and unreleased move, so an unpinned "
                              "closure and the build it schedules can resolve "
                              "against different archives")
+    parser.add_argument("--installed-status", default="",
+                        help="a dpkg status file exported from the guest, used "
+                             "as the installed baseline; without it every "
+                             "verdict describes an empty system and a removal "
+                             "list is empty by construction")
     parser.add_argument("--json", default="")
     parser.add_argument("--self-test", action="store_true",
                         help="run the offline fixture suite and exit")

@@ -325,10 +325,13 @@
   ],
   "provenance": {
     "archive_snapshot": "",
-    "collected_at": "2026-07-26T23:26:23+00:00",
+    "collected_at": "2026-07-27T02:21:23+00:00",
     "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
-    "generator_sha256": "5cdc247abee622a87b356a68c5e815fc86a15ffe36d336d67cf14b81212063d5",
-    "installed_baseline": "empty",
+    "generator_sha256": "15e9697f10307414f0147f7a9b3009a8489a131bd816d9e4640349bc493bfd7f",
+    "installed_baseline": {
+      "kind": "empty",
+      "note": "no installed package, so a transaction has nothing to displace and removals are empty by construction"
+    },
     "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
     "schema_version": 2,
     "suites": [
@@ -378,7 +381,7 @@
     "libncursesw6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
     "readline-common (8.3-4 ftp.ports.debian.org:unstable [all])",
     "libreadline8t64 (8.3-4 ftp.ports.debian.org:unstable [hurd-amd64])",
-    "libsqlite3-0 (3.53.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+    "libsqlite3-0 (3.53.4-1 ftp.ports.debian.org:unstable [hurd-amd64])",
     "libpython3.14-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
     "python3.14 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
     "libpython3-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",

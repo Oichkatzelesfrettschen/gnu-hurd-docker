@@ -92,6 +92,11 @@ grep -q "backing chain resolves to /opt/hurd-image/base/base.qcow2" \
     "$WORK/create.log" 2>/dev/null && chain=0 || chain=1
 check "the overlay backing chain names the declared base" "$chain" \
     "$(grep -i backing "$WORK/create.log" 2>/dev/null | tail -1)"
+# A raw backing file recorded as qcow2 would be read as whatever its first
+# bytes resemble, so the recorded format is asserted rather than assumed.
+grep -q "format qcow2" "$WORK/create.log" 2>/dev/null && fmt=0 || fmt=1
+check "the overlay records the backing format it was created with" "$fmt" \
+    "$(grep -i "backing chain" "$WORK/create.log" 2>/dev/null | tail -1)"
 
 # A declared digest that disagrees is refused, and nothing is created.
 rc="$(boot wrongsha -e QEMU_DRIVE=/opt/hurd-run/b/overlay.qcow2 \

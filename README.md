@@ -9,7 +9,7 @@
 
 **Modern Docker-based development environment for Debian GNU/Hurd x86_64**
 
-**Release**: Debian GNU/Hurd (Debian 13 "Trixie", ports/13.0)
+**Release**: Debian GNU/Hurd `hurd-amd64` from debian-ports, tracking `sid` plus `unreleased`; `/etc/debian_version` reads `forky/sid`
 
 **Guest Architecture**: x86_64 (via QEMU)
 
@@ -279,7 +279,7 @@ forensic artifacts under `logs/runs/<run-id>/fsm/stall-probe/` before final abor
 - [FSCK Errors](docs/06-TROUBLESHOOTING/FSCK-ERRORS.md) - Filesystem recovery
 
 **Reference**:
-- [Scripts](docs/08-REFERENCE/SCRIPTS.md) - All 21 automation scripts
+- [Scripts](docs/08-REFERENCE/SCRIPTS.md) - automation scripts; `scripts/list-maintained-shell.sh` enumerates the maintained surface
 - [Credentials](docs/08-REFERENCE/CREDENTIALS.md) - Access and security
 
 ---
@@ -295,7 +295,7 @@ forensic artifacts under `logs/runs/<run-id>/fsm/stall-probe/` before final abor
 | Component | Configuration |
 |-----------|---------------|
 | **QEMU Binary** | `qemu-system-x86_64` (underscore!) |
-| **Release** | Debian GNU/Hurd (Debian 13 "Trixie", ports/13.0) |
+| **Release** | Debian GNU/Hurd `hurd-amd64`, debian-ports `sid` + `unreleased` |
 | **Release Track (reproducible)** | `https://cdimage.debian.org/cdimage/ports/13.0/hurd-amd64/` |
 | **Latest Track (rolling)** | `https://cdimage.debian.org/cdimage/ports/latest/hurd-amd64/` |
 | **Latest Resolver** | `./scripts/resolve-latest-hurd-amd64.sh` |
@@ -320,12 +320,15 @@ forensic artifacts under `logs/runs/<run-id>/fsm/stall-probe/` before final abor
 
 ```bash
 ssh -p 2222 root@localhost
-# Password: root
+# Password: root, which the guest then requires you to change
 ```
 
-**Default accounts**:
-- `root` / `root` - System administrator (UID 0)
-- `agents` / `agents` - Development user (sudo NOPASSWD)
+**Default accounts** on the published image are `root` / `root` and
+`user` / `user`, both at `chage -d 0`: key-based SSH authenticates and is then
+refused pending a password change, so the first login is interactive and sets a
+new password. An `agents` account with passwordless sudo is created by the
+host-side provisioning script rather than shipped, and it is not a default of
+the released artifact.
 
 ### Serial Console (Emergency)
 
@@ -349,7 +352,7 @@ telnet localhost 5555
 ## Features
 
 ### Core Features
-- Debian 13 "Trixie" ports/13.0 GNU/Hurd guest (x86_64)
+- Debian GNU/Hurd `hurd-amd64` guest from debian-ports `sid` (x86_64)
 - Multi-platform container: runs on `linux/amd64` and `linux/arm64` (guest still x86_64 via QEMU)
 - Optional KVM acceleration on Linux x86_64 hosts (otherwise TCG emulation). Note: some Debian GNU/Hurd images hit IDE DMA I/O errors under KVM; this repo auto-disables KVM for IDE on `pc` unless `FORCE_KVM=1`.
 - Official Debian Ports images and checksums (`SHA256SUMS`) from cdimage
@@ -436,7 +439,7 @@ docker compose restart
 
 ```
 .
-├── docs/                          # Complete documentation (26 files)
+├── docs/                          # documentation tree
 │   ├── index.md                   # Master documentation index
 │   ├── 01-GETTING-STARTED/        # Installation and quickstart
 │   ├── 02-ARCHITECTURE/           # System design and QEMU config
@@ -444,9 +447,9 @@ docker compose restart
 │   ├── 04-OPERATION/              # Daily operations and monitoring
 │   ├── 05-CI-CD/                  # GitHub Actions and automation
 │   ├── 06-TROUBLESHOOTING/        # Common issues and fixes
-│   ├── 07-RESEARCH/               # Deep dives and migration docs
+│   ├── 07-RESEARCH-AND-LESSONS/   # Deep dives and migration docs
 │   └── 08-REFERENCE/              # Scripts and credentials reference
-├── scripts/                       # 21 automation scripts
+├── scripts/                       # automation scripts (see list-maintained-shell.sh)
 │   ├── setup-hurd-amd64.sh       # x86_64 image setup
 │   ├── install-ssh-hurd.sh       # SSH installation
 │   ├── manage-snapshots.sh       # Snapshot management
@@ -522,9 +525,8 @@ MIT License - See [LICENSE](LICENSE) file
 
 ## Quick Reference
 
-**Default Credentials**:
-- Root: `root` / `root`
-- Agents: `agents` / `agents`
+**Default Credentials**: `root` / `root` and `user` / `user`, both expired at
+first login.
 
 **Access Ports**:
 - SSH: `2222`

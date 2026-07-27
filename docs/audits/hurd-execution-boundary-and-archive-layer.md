@@ -291,11 +291,22 @@ all, which places its executables in shared paths where two architectures cannot
 coexist. The barrier is in the packaging layer, ahead of any ABI question.
 
 Whether such a transaction would displace an installed native userland is **not
-measured**. The resolver's tree carries an empty dpkg status file, recorded as
-`provenance.installed_baseline`, so `native_packages_removed` is empty by
-construction rather than by observation. What the reports establish is that the
-architecture-qualified requests do not resolve; settling replacement against
-coinstallation needs a tree seeded from the published image's own status file.
+measured** in the committed reports. The resolver's tree carries an empty dpkg
+status file, recorded as `provenance.installed_baseline`, so
+`native_packages_removed` is empty by construction rather than by observation.
+What the reports establish is that the architecture-qualified requests do not
+resolve.
+
+The mechanism that settles it now exists and has not been run against a guest.
+apt reads installed state as RFC822 paragraphs, so the export renders paragraphs
+through `dpkg-query` rather than a table, and spells `Status` from its three
+parts because apt parses `install ok installed` and not the abbreviated `ii`.
+`--installed-status` copies that file into `Dir::State::status`, refuses a file
+naming no package, and refuses one carrying the other port's architecture, which
+would otherwise make every native verdict wrong while still parsing. A fixture
+shows what the seed changes: one transaction reports removing an installed
+package against a seeded baseline and reports nothing against an empty one. The
+remaining step is the boot that produces the file.
 
 The guest half of the experiment stays in a disposable clone, and its outcomes
 are graded before it runs so a partial success is not read as a route:

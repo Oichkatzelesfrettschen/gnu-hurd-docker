@@ -51,6 +51,7 @@ class Args(object):
         self.build_dependencies = False
         self.main_archive = ""
         self.packages = []
+        self.installed_status = ""
         for key, value in fields.items():
             setattr(self, key, value)
 
@@ -365,7 +366,7 @@ def test_foreign_architecture(module, suite, workspace):
     # userland. That question needs a tree seeded from the image's own status.
     suite.check("removals are reported against the tree's installed baseline",
                 foreign["native_packages_removed"] == []
-                and report["provenance"]["installed_baseline"] == "empty",
+                and report["provenance"]["installed_baseline"]["kind"] == "empty",
                 str(foreign["native_packages_removed"]))
 
     state = os.path.join(workspace, "state-foreign-native")
@@ -658,6 +659,82 @@ def test_snapshot_expiry(module, suite, workspace):
                 str(report["provenance"]["archive_snapshot"]))
 
 
+def test_installed_baseline(module, suite, workspace):
+    """A seeded baseline turns availability into a claim about this image.
+
+    Resolved against an empty status file a transaction has no installed
+    package to displace, so a removal list is empty by construction and a
+    report cannot say whether an install would replace part of the guest's
+    userland. The status file is what makes that question answerable, and a
+    status file from the wrong port would answer it wrongly while parsing.
+    """
+    root = os.path.join(workspace, "ports-baseline")
+    mirror = ports_fixture(root, [
+        stanza("fixture-installed", "2.0", "hurd-amd64"),
+        stanza("fixture-replacing", "1.0", "hurd-amd64",
+               conflicts="fixture-installed", replaces="fixture-installed"),
+    ])
+
+    status = os.path.join(workspace, "guest-status")
+    with open(status, "w", encoding="utf-8") as handle:
+        handle.write("Package: fixture-installed\n"
+                     "Status: install ok installed\n"
+                     "Priority: optional\n"
+                     "Architecture: hurd-amd64\n"
+                     "Version: 1.0\n\n")
+
+    state = os.path.join(workspace, "state-baseline-empty")
+    os.makedirs(state)
+    empty = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-replacing"]), state)
+    suite.check("an unseeded run names its baseline empty rather than omitting it",
+                empty["provenance"]["installed_baseline"]["kind"] == "empty",
+                str(empty["provenance"]["installed_baseline"]))
+
+    state = os.path.join(workspace, "state-baseline-seeded")
+    os.makedirs(state)
+    seeded = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-replacing"],
+             installed_status=status), state)
+    baseline = seeded["provenance"]["installed_baseline"]
+    suite.check("a seeded run records the guest status it answered against",
+                baseline["kind"] == "guest-dpkg-status"
+                and baseline["package_count"] == 1
+                and len(baseline["sha256"]) == 64, str(baseline))
+    removals = [item.get("removes", []) for item in seeded["packages"]]
+    suite.check("a transaction that displaces an installed package says so",
+                any("fixture-installed" in entry for entry in removals),
+                "%s vs unseeded %s"
+                % (removals, [item.get("removes", [])
+                              for item in empty["packages"]]))
+    suite.check("the same transaction removes nothing against an empty baseline",
+                all(not item.get("removes") for item in empty["packages"]),
+                str([item.get("removes") for item in empty["packages"]]))
+
+    wrong = os.path.join(workspace, "guest-status-wrong-port")
+    with open(wrong, "w", encoding="utf-8") as handle:
+        handle.write("Package: fixture-installed\n"
+                     "Status: install ok installed\n"
+                     "Architecture: hurd-i386\n"
+                     "Version: 1.0\n\n")
+    state = os.path.join(workspace, "state-baseline-wrong")
+    os.makedirs(state)
+    suite.raises("a status file from the other port is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-replacing"],
+                          installed_status=wrong), state))
+
+    state = os.path.join(workspace, "state-baseline-absent")
+    os.makedirs(state)
+    suite.raises("a named status file that does not exist is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-replacing"],
+                          installed_status=os.path.join(workspace, "absent")),
+                     state))
+
+
 def test_key_pin(module, suite, workspace):
     packets = module.dearmor(open(KEYRING, encoding="utf-8").read())
     suite.check("the vendored key carries the pinned primary fingerprint",
@@ -815,6 +892,7 @@ def run(module):
         test_foreign_architecture(module, suite, workspace)
         test_build_dependencies(module, suite, workspace)
         test_snapshot_expiry(module, suite, workspace)
+        test_installed_baseline(module, suite, workspace)
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 

@@ -171,18 +171,34 @@ prepare_disposable_overlay() {
     log_info "Disposable overlay ${QCOW2_IMAGE} created over ${BACKING_IMAGE}"
 
     # What QEMU will open is the chain the overlay records, not the arguments
-    # that created it. Reading it back catches a create that silently resolved
-    # a relative path elsewhere, and it is the same fact the host runner
-    # asserts, so a disagreement between them is visible.
-    local chain
-    chain="$(qemu-img info --output=json "$QCOW2_IMAGE" 2>/dev/null \
+    # that created it. Reading the chain back catches a create that resolved a
+    # relative path elsewhere, and it is the same fact the host runner asserts,
+    # so a disagreement between them is visible rather than silent.
+    #
+    # The path is canonicalized on both sides before comparison, because a
+    # symlinked or dot-containing base names the same file and a string compare
+    # would reject it. The backing format is read rather than assumed: a raw
+    # backing file recorded as qcow2 would be interpreted as whatever its first
+    # bytes resemble.
+    local chain chain_format canonical_backing canonical_chain
+    chain="$(qemu-img info --backing-chain --output=json "$QCOW2_IMAGE" 2>/dev/null \
         | sed -n 's/.*"backing-filename": "\([^"]*\)".*/\1/p' | head -1)"
-    if [ "$chain" != "$BACKING_IMAGE" ]; then
+    chain_format="$(qemu-img info --output=json "$QCOW2_IMAGE" 2>/dev/null \
+        | sed -n 's/.*"backing-filename-format": "\([^"]*\)".*/\1/p' | head -1)"
+    canonical_backing="$(readlink -f "$BACKING_IMAGE" 2>/dev/null || echo "$BACKING_IMAGE")"
+    canonical_chain="$(readlink -f "$chain" 2>/dev/null || echo "$chain")"
+
+    if [ "$canonical_chain" != "$canonical_backing" ]; then
         log_error "Overlay backing file resolves to '${chain}', not ${BACKING_IMAGE}"
         rm -f "$QCOW2_IMAGE"
         exit 1
     fi
-    log_info "Overlay backing chain resolves to ${chain}"
+    if [ "$chain_format" != "qcow2" ]; then
+        log_error "Overlay records backing format '${chain_format}', not qcow2"
+        rm -f "$QCOW2_IMAGE"
+        exit 1
+    fi
+    log_info "Overlay backing chain resolves to ${chain} (format ${chain_format})"
 }
 
 # Every option that can abort the run is checked before the overlay exists, so a

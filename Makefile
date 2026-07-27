@@ -186,6 +186,13 @@ HURD_CLOSURE_DIR ?= evidence/hurd-archive
 HURD_ARCHIVE_SNAPSHOT ?=
 HURD_SNAPSHOT_FLAG = $(if $(HURD_ARCHIVE_SNAPSHOT),--archive-snapshot "$(HURD_ARCHIVE_SNAPSHOT)",)
 
+# Without a baseline every verdict describes an empty system, so a removal list
+# is empty by construction rather than by observation. Point this at a status
+# file exported from the guest to ask what this image would accept.
+HURD_INSTALLED_STATUS ?=
+HURD_STATUS_FLAG = $(if $(HURD_INSTALLED_STATUS),--installed-status "/status",)
+HURD_STATUS_MOUNT = $(if $(HURD_INSTALLED_STATUS),-v "$(CURDIR)/$(HURD_INSTALLED_STATUS):/status:ro",)
+
 HURD_FOREIGN ?=
 
 hurd-archive-image:
@@ -216,9 +223,9 @@ hurd-closure-report: hurd-archive-image
 	mkdir -p "$(HURD_CLOSURE_DIR)"
 	$(CONTAINER_RUNTIME) run --rm \
 		--user "$$(id -u):$$(id -g)" \
-		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" $(HURD_STATUS_MOUNT) \
 		gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
+		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" $(HURD_STATUS_FLAG) \
 		--foreign-architecture "$(HURD_FOREIGN)" $(HURD_SNAPSHOT_FLAG) \
 		--json "/out/$(HURD_ARCH)$(if $(HURD_FOREIGN),-foreign-$(HURD_FOREIGN),)-$(HURD_SET).json"
 
@@ -228,9 +235,9 @@ hurd-build-closure-report: hurd-archive-image
 	mkdir -p "$(HURD_CLOSURE_DIR)"
 	$(CONTAINER_RUNTIME) run --rm \
 		--user "$$(id -u):$$(id -g)" \
-		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" $(HURD_STATUS_MOUNT) \
 		gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
+		--architecture "$(HURD_ARCH)" --set rebuild-candidates $(HURD_STATUS_FLAG) \
 		--build-dependencies --no-lmde $(HURD_SNAPSHOT_FLAG) \
 		--json "/out/$(HURD_ARCH)-build-closure-rebuild-candidates.json"
 
@@ -457,10 +464,12 @@ SSH_PORT ?= 2222
 
 # The accelerator is the entrypoint's decision, so a target selects the inputs
 # and reads the outcome back from the decision record rather than claiming one.
-# The base file pulls a GHCR image no workflow currently publishes, and the
-# Minty overlay selects the tag docker-bake.hcl produces locally. Without this
-# check a missing local build falls through to a registry pull that fails with a
-# message about an unrelated image.
+# The base file pulls a GHCR tag that does resolve, and that is the problem: it
+# was last published 2026-01-11 and every push run since has failed before the
+# push step, so a bare pull silently supplies a stale image rather than failing.
+# The Minty overlay selects the tag docker-bake.hcl produces locally, and this
+# check names the build command instead of letting the run fall through to a
+# registry.
 minty-image-check:
 	@$(CONTAINER_RUNTIME) image inspect "$(MINTY_CONTAINER_IMAGE)" >/dev/null 2>&1 \
 		|| { echo "The Minty profile needs the local image $(MINTY_CONTAINER_IMAGE)."; \

@@ -45,11 +45,10 @@ ssh -i hurd_test_key -p 2222 root@127.0.0.1
 sudo /root/scripts/lmde7-apt-setup.sh    # adds LMDE7 (gigi) repo with strict pin
 sudo /root/scripts/minty-hurd-install.sh # the resilient installer
 
-# 6. start the XFCE desktop via tightvncserver
-ssh -i hurd_test_key -p 2222 user@127.0.0.1
-vncpasswd                                          # set VNC password (one-time)
-tightvncserver :1 -geometry 1440x900 -depth 24     # binds 127.0.0.1:5901 (guest)
-exit
+# 6. the desktop autostarts at boot: Xvfb on :1 with x11vnc exporting 5901.
+#    scripts/hurd-desktop-autostart.sh stages that launcher; tightvncserver is
+#    not the mechanism, and this document's own troubleshooting section records
+#    that it does not work on the guest.
 vncviewer 127.0.0.1:5901                            # from host (port forwarded)
 ```
 
