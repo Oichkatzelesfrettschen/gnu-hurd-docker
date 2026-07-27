@@ -38,6 +38,27 @@ the package that advertises it. Files in this directory that the index does not
 name are resolver reports, and each one names in its provenance the status file
 it was resolved against. `make guest-baseline-check` asserts all of that.
 
+## How the package is produced
+
+    make minty-collect-baseline MINTY_SSH_PORT=<port>
+    make minty-baseline-run-manifest MINTY_BASELINE_BEFORE=<digest> \
+        MINTY_BASELINE_FSCK=clean MINTY_BASELINE_CONTAINER=<name>
+
+The collector reads the guest; the run manifest carries what sits outside it,
+and `scripts/write-guest-baseline-run.py` derives the artifact index from the
+directory rather than taking it by hand. The container has to still be running
+for its image ID and QEMU version to be readable, because those are properties
+of the process that produced the evidence.
+
+Two independent boots of the same image produced byte-identical artifacts for
+every probe except `free.txt`, whose numbers are a property of the running
+kernel, and byte-identical package state at 740 entries. A third boot from the
+same clean backing image stalled before reaching `sshd`: QEMU held at 2% CPU
+with the overlay static at 964 KiB for thirty minutes, and a fresh overlay
+prepared identically answered in 165 seconds. That is roadmap items 33 and 34
+observed on this image rather than a new defect, and it is why a collection
+bounds its wait rather than assuming a boot.
+
 ## What the guest reports
 
     uname            GNU debian 0.9 GNU-Mach 1.8+git20260224-up-amd64/Hurd-0.9 x86_64 GNU

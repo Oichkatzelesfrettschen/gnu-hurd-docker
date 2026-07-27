@@ -31,9 +31,14 @@ SECRET_MARKERS = ("PRIVATE KEY", "BEGIN OPENSSH", "BEGIN RSA",
                   "BEGIN EC PRIVATE")
 # A committed artifact that names a directory only one machine has binds the
 # evidence to that machine, which the repository rules keep out of the tree.
-# Guest paths are content -- the baseline exists to record them. What must not
-# appear is a directory that exists only on the machine that produced the run.
-LOCAL_PATH = re.compile(r"(?:/home/|/Users/|/tmp/claude)")
+# Guest and container paths are content -- the baseline exists to record them,
+# and QEMU's own argv names /tmp/qemu-guest-errors.log inside the container.
+# What must not appear is a home directory, which exists only on the machine
+# that produced the run. The complementary rule is that every artifact a
+# manifest advertises is a basename, which artifact() enforces, so a run
+# directory outside the repository never reaches a recorded path in the first
+# place.
+LOCAL_PATH = re.compile(r"(?:/home/|/Users/)")
 DIGEST = re.compile(r"^[0-9a-f]{64}$")
 
 

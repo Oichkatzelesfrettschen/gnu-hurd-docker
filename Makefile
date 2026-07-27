@@ -44,6 +44,7 @@ help:
 	@echo "  make minty-accel                  - print the accelerator decision record the entrypoint wrote"
 	@echo "  make minty-export-state           - export the guest installed-package manifest to evidence/guest-state/"
 	@echo "  make minty-collect-baseline       - collect the whole guest baseline from one running guest"
+	@echo "  make minty-baseline-run-manifest  - derive the baseline run manifest from the artifacts it indexes"
 	@echo "  make minty-down / minty-status / minty-logs / minty-ssh"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
@@ -453,6 +454,7 @@ shell:
 .PHONY: minty-up minty-up-tcg minty-up-kvm minty-up-vnc minty-up-kvm-vnc \
 	minty-down minty-status minty-logs minty-container-shell minty-accel \
 	minty-ssh minty-shell minty-export-state minty-collect-baseline \
+	minty-baseline-run-manifest \
 	minty-image-check oobe
 
 # Stage the out-of-box experience on the RUNNING guest: sets the documented
@@ -541,9 +543,39 @@ minty-export-state:
 	./scripts/export-guest-package-state.sh
 
 # A boot is expensive enough that collecting one artifact from it wastes the
-# other nine, so the baseline collection is one target over one running guest.
+# other dozen, so the baseline collection is one target over one running guest.
+#
+# The image digest reaches the status export from here, because a status file
+# that names no image is a package list from somewhere: the collector reads the
+# guest and the host is what knows which qcow2 the guest was booted from.
+MINTY_GUEST_IMAGE ?= images/hurd-working.qcow2
+
 minty-collect-baseline:
-	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" ./scripts/collect-guest-baseline.sh
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" \
+		GUEST_IMAGE_SHA256="$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1)" \
+		./scripts/collect-guest-baseline.sh
+
+# The probe records come from the guest; the run-level facts sit outside it and
+# outside the collector's reach.  A manifest typed by hand drifts from the
+# artifacts it indexes, so it is derived from them the way the build lock is.
+# The measurements the host alone holds are named on the command line and
+# refused when absent, and the container has to still be running for its image
+# and QEMU version to be readable.
+MINTY_BASELINE_ACCEL ?= tcg
+MINTY_BASELINE_REASON ?= disable_kvm_requested
+MINTY_BASELINE_FSCK ?= not run
+MINTY_BASELINE_BEFORE ?=
+MINTY_BASELINE_CONTAINER ?=
+
+minty-baseline-run-manifest:
+	python3 scripts/write-guest-baseline-run.py \
+		--backing-image "$(MINTY_GUEST_IMAGE)" \
+		--backing-sha256-before "$(MINTY_BASELINE_BEFORE)" \
+		--accelerator "$(MINTY_BASELINE_ACCEL)" \
+		--accelerator-reason-code "$(MINTY_BASELINE_REASON)" \
+		--offline-fsck "$(MINTY_BASELINE_FSCK)" \
+		--container "$(MINTY_BASELINE_CONTAINER)" \
+		$(MINTY_BASELINE_EXTRA)
 
 minty-ssh:
 	@ssh -i $(MINTY_SSH_KEY) -p $(MINTY_SSH_PORT) user@127.0.0.1
