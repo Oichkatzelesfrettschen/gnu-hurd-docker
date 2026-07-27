@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "guest-baseline-run",
+  "accelerator": "tcg",
+  "accelerator_reason_code": "disable_kvm_requested",
+  "qemu_smp": 1,
+  "backing_image": "images/hurd-working.qcow2",
+  "backing_sha256_before": "a2afe1ea41ce7a7b58afb90ef4dff190a1722e034a7022a5601e2b583dca8ad1",
+  "backing_sha256_after": "a2afe1ea41ce7a7b58afb90ef4dff190a1722e034a7022a5601e2b583dca8ad1",
+  "backing_unchanged": true,
+  "overlay_size_at_discard": "18M",
+  "overlay_discarded": true,
+  "offline_fsck": "clean",
+  "guest_packages": 740
+}

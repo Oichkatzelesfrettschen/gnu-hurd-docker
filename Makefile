@@ -42,6 +42,7 @@ help:
 	@echo "  make minty-up-kvm-vnc             - start with both overlays"
 	@echo "  make minty-accel                  - print the accelerator decision record the entrypoint wrote"
 	@echo "  make minty-export-state           - export the guest installed-package manifest to evidence/guest-state/"
+	@echo "  make minty-collect-baseline       - collect the whole guest baseline from one running guest"
 	@echo "  make minty-down / minty-status / minty-logs / minty-ssh"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
@@ -430,7 +431,8 @@ shell:
 # ===== Minty Hurd targets =====
 .PHONY: minty-up minty-up-tcg minty-up-kvm minty-up-vnc minty-up-kvm-vnc \
 	minty-down minty-status minty-logs minty-container-shell minty-accel \
-	minty-ssh minty-shell minty-export-state minty-image-check oobe
+	minty-ssh minty-shell minty-export-state minty-collect-baseline \
+	minty-image-check oobe
 
 # Stage the out-of-box experience on the RUNNING guest: sets the documented
 # generic passwords (user/user, root/root) and expires them so the first
@@ -516,6 +518,11 @@ minty-accel:
 # guest does not answer.
 minty-export-state:
 	./scripts/export-guest-package-state.sh
+
+# A boot is expensive enough that collecting one artifact from it wastes the
+# other nine, so the baseline collection is one target over one running guest.
+minty-collect-baseline:
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" ./scripts/collect-guest-baseline.sh
 
 minty-ssh:
 	@ssh -i $(MINTY_SSH_KEY) -p $(MINTY_SSH_PORT) user@127.0.0.1

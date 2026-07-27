@@ -1,0 +1,3 @@
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/wd0s5       16G  3.8G   11G  26% /
+none            199M   64K  199M   1% /run

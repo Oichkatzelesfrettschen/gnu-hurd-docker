@@ -27,6 +27,17 @@ SSH_PORT="${MINTY_SSH_PORT:-${SSH_PORT:-2222}}"
 SSH_USER="${GUEST_SSH_USER:-root}"
 OUTPUT_DIR="${OUTPUT_DIR:-evidence/guest-state}"
 
+# A disposable guest has no host key anyone has seen before, so strict checking
+# refuses it and disabling checking accepts anything for the rest of time.
+# accept-new against a per-run known_hosts records the key on first contact and
+# verifies it on every later connection of the same run.
+KNOWN_HOSTS="${GUEST_KNOWN_HOSTS:-}"
+ssh_options=(-o BatchMode=yes -o ConnectTimeout=20)
+if [ -n "$KNOWN_HOSTS" ]; then
+    ssh_options+=(-o StrictHostKeyChecking=accept-new
+                  -o "UserKnownHostsFile=${KNOWN_HOSTS}")
+fi
+
 log() { printf '%s\n' "$*" >&2; }
 
 if [ ! -f "$SSH_KEY" ]; then
@@ -60,8 +71,7 @@ Version: ${Version}
 '
 REMOTE
 
-if ! raw="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" \
-        -o BatchMode=yes -o ConnectTimeout=20 \
+if ! raw="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
         "${SSH_USER}@127.0.0.1" "$query" 2>/dev/null)"; then
     log "not run: the guest did not answer on port ${SSH_PORT}"
     exit 2
@@ -72,9 +82,9 @@ if [ -z "$raw" ]; then
     exit 2
 fi
 
-architecture="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" -o BatchMode=yes \
+architecture="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
     "${SSH_USER}@127.0.0.1" 'dpkg --print-architecture' 2>/dev/null || echo "")"
-kernel="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" -o BatchMode=yes \
+kernel="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
     "${SSH_USER}@127.0.0.1" 'uname -a' 2>/dev/null || echo "")"
 
 destination="${OUTPUT_DIR}/${architecture:-unknown}-dpkg-status"
