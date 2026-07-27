@@ -93,3 +93,11 @@ evidence/runtime/*
 # received hashes for streams it did not have. A repository rule overrides the
 # global file, so the retained stdout travels with the capture that cites it.
 !evidence/runtime/cases/**/*.out
+
+# The same rule reaches the guest baseline. A global excludesFile commonly
+# ignores *.log as build output, which silently dropped the offline filesystem
+# check transcript while run.json indexed it, so a clone received a digest for a
+# file it did not have and the baseline gate refused the package. The overlay is
+# discarded after the check runs, making the transcript the only surviving
+# statement about the filesystem the baseline was read from.
+!evidence/guest-state/*.log
