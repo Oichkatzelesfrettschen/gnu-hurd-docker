@@ -291,11 +291,22 @@ all, which places its executables in shared paths where two architectures cannot
 coexist. The barrier is in the packaging layer, ahead of any ABI question.
 
 Whether such a transaction would displace an installed native userland is **not
-measured**. The resolver's tree carries an empty dpkg status file, recorded as
-`provenance.installed_baseline`, so `native_packages_removed` is empty by
-construction rather than by observation. What the reports establish is that the
-architecture-qualified requests do not resolve; settling replacement against
-coinstallation needs a tree seeded from the published image's own status file.
+measured** in the committed reports. The resolver's tree carries an empty dpkg
+status file, recorded as `provenance.installed_baseline`, so
+`native_packages_removed` is empty by construction rather than by observation.
+What the reports establish is that the architecture-qualified requests do not
+resolve.
+
+The mechanism that settles it now exists and has not been run against a guest.
+apt reads installed state as RFC822 paragraphs, so the export renders paragraphs
+through `dpkg-query` rather than a table, and spells `Status` from its three
+parts because apt parses `install ok installed` and not the abbreviated `ii`.
+`--installed-status` copies that file into `Dir::State::status`, refuses a file
+naming no package, and refuses one carrying the other port's architecture, which
+would otherwise make every native verdict wrong while still parsing. A fixture
+shows what the seed changes: one transaction reports removing an installed
+package against a seeded baseline and reports nothing against an empty one. The
+remaining step is the boot that produces the file.
 
 The guest half of the experiment stays in a disposable clone, and its outcomes
 are graded before it runs so a partial success is not read as a route:
@@ -472,6 +483,53 @@ clean shutdown, an offline filesystem check, and the overlay discarded. The
 tested binaries install into a separate product overlay. That removes any need
 to trust an internal snapshot as the routine rollback, and it keeps a failed
 build away from the image the product boots.
+
+The overlay half of that is in place and measured. `QEMU_BACKING_DRIVE` names an
+immutable image and `QEMU_DRIVE` an overlay path that must not already exist;
+the entrypoint records the backing digest, refuses a declared
+`QEMU_BACKING_SHA256` that disagrees, refuses to reuse an overlay because the
+previous run's writes would carry forward, and states the backing format rather
+than letting `qemu-img` probe it, which would read a raw backing file as
+whatever its first bytes resemble. A probe booted QEMU against a fresh overlay
+and compared the backing image's SHA-256 across the run: unchanged. The two
+refusals were exercised, and the refused run created no overlay.
+
+Which rollback applies follows from intent rather than from preference.
+Provisioning mutates the canonical image on purpose and wants the change kept,
+so it snapshots first. A build mutates a filesystem on purpose and must leave
+nothing behind, so it runs on an overlay that is discarded. Discarding a file
+cannot half-apply, and it holds when the guest never shuts down cleanly, which
+is exactly the case an internal snapshot handles worst.
+
+**Pin the archive, so the closure and the build answer the same question.** sid
+and unreleased move, so a closure resolved one day and the build it schedules
+the next can resolve against different archives, and the report then carries a
+verdict the build cannot reproduce. `--archive-snapshot` points both the ports
+mirror and the source archive at one `snapshot.debian.org` timestamp;
+snapshot.debian.org carries dated dists for debian-ports as well as the main
+archive, so the lock is a timestamp rather than a local cache of every fetched
+artifact. Timestamp 20260726T003219Z reproduces the committed hurd-amd64 build
+closure exactly, including the 240-package shared builder tree.
+
+A timestamp alone does not make the lock durable, and two mechanisms bound it.
+
+The first is expiry. A snapshot Release carries the `Valid-Until` it was
+published with, so the archive state a timestamp pins stops being acceptable to
+apt some weeks later while the bytes and the signature stay exactly what they
+were. Against a January 2026 snapshot apt reports `Release file ... is expired
+(invalid since 200d 2h 55min 3s)`. Expiry checking is therefore disabled for
+snapshot sources and left enabled for live mirrors, where a stale Release is a
+genuine freshness failure rather than the point; disabling it everywhere would
+trade the lock for the freshness check.
+
+The second is the keyring, and it is the harder bound. That same January 2026
+debian-ports snapshot also fails verification with `Missing key
+519759FBC670BF...`, because debian-ports rotates its archive signing key and the
+keyring shipped in the resolver image carries the current one. Expiry is
+configuration; a key the verifier does not hold is not. A timestamp is therefore
+usable only together with a keyring vintage that can verify it, and pinning far
+into the past means vendoring the historical keyring as well. The build lock
+records the timestamp beside the resolver image that verified it.
 
 **Wait or pin, for an archive inconsistency.** The `caja` failure is a skew
 between `gvfs` and its own split-out packages inside `sid`, and both ports carry

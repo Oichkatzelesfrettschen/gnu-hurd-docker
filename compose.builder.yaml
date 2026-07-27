@@ -1,0 +1,56 @@
+# Standalone one-shot builder composition.
+#
+# This is not an overlay on compose.yaml. The base service carries
+# `restart: unless-stopped` and a fixed `container_name`, and both are wrong for
+# a build: a restart policy turns a finished or failed run into a loop, and a
+# fixed container name makes two runs collide. A build is one process that ends,
+# and its container ends with it.
+#
+# The disk is a disposable external overlay over an immutable backing image, so
+# a failed build is discarded by deleting a file rather than by reverting an
+# internal snapshot. scripts/run-hurd-build.sh owns that lifecycle -- it creates
+# the run directory, starts this composition under a unique project name, waits,
+# collects, and then disposes or quarantines. Starting this file by hand creates
+# an overlay nothing will clean up.
+
+---
+services:
+  builder:
+    image: ${BUILDER_CONTAINER_IMAGE:-gnu-hurd-docker:latest}
+
+    # A build that exits has finished, whether it succeeded or not, and the
+    # runner reads its result. Restarting it would re-enter a guest whose
+    # filesystem the previous attempt left mid-write.
+    restart: "no"
+
+    environment:
+      QEMU_BACKING_DRIVE: /opt/hurd-image/base/${BUILDER_BASE_BASENAME:?builder base image basename is required}
+      QEMU_BACKING_SHA256: ${BUILDER_BASE_SHA256:-}
+      QEMU_DRIVE: /opt/hurd-run/overlay.qcow2
+      QEMU_RAM: ${BUILDER_QEMU_RAM:-4096}
+      # The installed kernel is the uniprocessor Mach build, so a second vCPU
+      # buys no guest parallelism and varies host-side QEMU timing instead.
+      QEMU_SMP: ${BUILDER_QEMU_SMP:-1}
+      # A package build is a sustained-write workload, which is the load that
+      # provokes the bus-master DMA fault the entrypoint demotes KVM to avoid.
+      # The builder stays on TCG until a build survives FORCE_KVM=1 with a
+      # clean offline check; roadmap 69 carries that qualification.
+      DISABLE_KVM: ${BUILDER_DISABLE_KVM:-1}
+      SERIAL_PORT: 5555
+      MONITOR_PORT: 9999
+      QEMU_HOSTFWDS: "tcp::2222-:22"
+
+    volumes:
+      # The backing image is mounted read-only, so the guest cannot write
+      # through to it even if the overlay mechanism were misconfigured.
+      - ${BUILDER_BASE_DIR:?builder base directory is required}:/opt/hurd-image/base:ro
+      # The overlay and every exported artifact live in the run directory, which
+      # the runner creates fresh and deletes or quarantines.
+      - ${BUILDER_RUN_DIR:?builder run directory is required}:/opt/hurd-run:rw
+
+    ports:
+      - "127.0.0.1:${BUILDER_SSH_PORT:-2223}:2222"
+
+    labels:
+      com.gnu-hurd.profile: "builder"
+      com.gnu-hurd.run.disposable: "true"

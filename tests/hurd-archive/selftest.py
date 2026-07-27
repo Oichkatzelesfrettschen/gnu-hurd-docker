@@ -51,6 +51,7 @@ class Args(object):
         self.build_dependencies = False
         self.main_archive = ""
         self.packages = []
+        self.installed_status = ""
         for key, value in fields.items():
             setattr(self, key, value)
 
@@ -96,6 +97,23 @@ def write_repo(root, suite, stanzas, foreign_stanzas=()):
     with open(os.path.join(root, "dists", suite, "Release"), "w",
               encoding="utf-8") as handle:
         handle.write(release)
+
+
+def expire_release(root, suite):
+    """Backdate a fixture suite's Release so apt treats it as expired.
+
+    A snapshot Release carries the Valid-Until it was published with, so the
+    bytes a timestamp pins stay identical while apt stops accepting them. That
+    is the failure a pinned archive meets weeks after it is pinned, and it is
+    invisible to a check that only reads the timestamp grammar.
+    """
+    path = os.path.join(root, "dists", suite, "Release")
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read()
+    stamped = ("Date: Mon, 01 Jan 2024 00:00:00 UTC\n"
+               "Valid-Until: Tue, 02 Jan 2024 00:00:00 UTC\n")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(stamped + text)
 
 
 def ports_fixture(root, sid, unreleased=(), foreign=()):
@@ -348,7 +366,7 @@ def test_foreign_architecture(module, suite, workspace):
     # userland. That question needs a tree seeded from the image's own status.
     suite.check("removals are reported against the tree's installed baseline",
                 foreign["native_packages_removed"] == []
-                and report["provenance"]["installed_baseline"] == "empty",
+                and report["provenance"]["installed_baseline"]["kind"] == "empty",
                 str(foreign["native_packages_removed"]))
 
     state = os.path.join(workspace, "state-foreign-native")
@@ -584,12 +602,137 @@ def test_build_dependencies(module, suite, workspace):
                 and not module.applies_to("!hurd-any", "hurd-amd64"), "")
     suite.check("naming packages explicitly is not labelled with a set default",
                 report["set"] == "explicit", report["set"])
+    # sid and unreleased move, so an unpinned closure and the build it schedules
+    # can answer against different archives.
+    ports, main = module.snapshot_mirrors("20260726T003219Z")
+    suite.check("a snapshot timestamp pins both archives to one state",
+                ports.endswith("/debian-ports/20260726T003219Z")
+                and main.endswith("/debian/20260726T003219Z"),
+                "%s %s" % (ports, main))
+    suite.raises("a value that is not a snapshot timestamp is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.snapshot_mirrors("yesterday"))
+    suite.check("an unpinned report says so rather than omitting the field",
+                report["provenance"]["archive_snapshot"] == "",
+                str(report["provenance"].get("archive_snapshot")))
     suite.check("a build dependency's version constraint is retained",
                 module.unsatisfied_dependencies(
                     "a : Depends: one (>= 2) but it is not installable"
                 )[0]["constraint"] == ">= 2",
                 str(module.unsatisfied_dependencies(
                     "a : Depends: one (>= 2) but it is not installable")))
+
+
+def test_snapshot_expiry(module, suite, workspace):
+    """A pinned archive stays usable after its Release expires.
+
+    snapshot.debian.org serves the exact bytes a timestamp named, Valid-Until
+    included, so apt refuses the pinned state some weeks after it was pinned
+    while the signature and the payload are unchanged. Expiry checking is
+    therefore disabled for a snapshot-pinned run and left enabled for a live
+    mirror, where a stale Release is a genuine freshness failure. Disabling it
+    everywhere would trade the lock for the freshness check.
+    """
+    root = os.path.join(workspace, "ports-expired")
+    mirror = ports_fixture(root, [stanza("fixture-pinned", "1.0", "hurd-amd64")])
+    expire_release(root, "sid")
+    expire_release(root, "unreleased")
+
+    state = os.path.join(workspace, "state-expired-live")
+    os.makedirs(state)
+    suite.raises("an expired Release is refused for a live mirror",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-pinned"]),
+                     state))
+
+    state = os.path.join(workspace, "state-expired-pinned")
+    os.makedirs(state)
+    report = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-pinned"],
+             archive_snapshot="20260726T003219Z"), state)
+    suite.check("the same expired Release is accepted when the run is pinned",
+                verdicts(report).get("fixture-pinned") == "native",
+                str(verdicts(report)))
+    suite.check("a pinned report records the timestamp it answered against",
+                report["provenance"]["archive_snapshot"] == "20260726T003219Z",
+                str(report["provenance"]["archive_snapshot"]))
+
+
+def test_installed_baseline(module, suite, workspace):
+    """A seeded baseline turns availability into a claim about this image.
+
+    Resolved against an empty status file a transaction has no installed
+    package to displace, so a removal list is empty by construction and a
+    report cannot say whether an install would replace part of the guest's
+    userland. The status file is what makes that question answerable, and a
+    status file from the wrong port would answer it wrongly while parsing.
+    """
+    root = os.path.join(workspace, "ports-baseline")
+    mirror = ports_fixture(root, [
+        stanza("fixture-installed", "2.0", "hurd-amd64"),
+        stanza("fixture-replacing", "1.0", "hurd-amd64",
+               conflicts="fixture-installed", replaces="fixture-installed"),
+    ])
+
+    status = os.path.join(workspace, "guest-status")
+    with open(status, "w", encoding="utf-8") as handle:
+        handle.write("Package: fixture-installed\n"
+                     "Status: install ok installed\n"
+                     "Priority: optional\n"
+                     "Architecture: hurd-amd64\n"
+                     "Version: 1.0\n\n")
+
+    state = os.path.join(workspace, "state-baseline-empty")
+    os.makedirs(state)
+    empty = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-replacing"]), state)
+    suite.check("an unseeded run names its baseline empty rather than omitting it",
+                empty["provenance"]["installed_baseline"]["kind"] == "empty",
+                str(empty["provenance"]["installed_baseline"]))
+
+    state = os.path.join(workspace, "state-baseline-seeded")
+    os.makedirs(state)
+    seeded = module.resolve(
+        Args(ports_mirror=mirror, packages=["fixture-replacing"],
+             installed_status=status), state)
+    baseline = seeded["provenance"]["installed_baseline"]
+    suite.check("a seeded run records the guest status it answered against",
+                baseline["kind"] == "guest-dpkg-status"
+                and baseline["package_count"] == 1
+                and len(baseline["sha256"]) == 64, str(baseline))
+    removals = [item.get("removes", []) for item in seeded["packages"]]
+    suite.check("a transaction that displaces an installed package says so",
+                any("fixture-installed" in entry for entry in removals),
+                "%s vs unseeded %s"
+                % (removals, [item.get("removes", [])
+                              for item in empty["packages"]]))
+    suite.check("the same transaction removes nothing against an empty baseline",
+                all(not item.get("removes") for item in empty["packages"]),
+                str([item.get("removes") for item in empty["packages"]]))
+
+    wrong = os.path.join(workspace, "guest-status-wrong-port")
+    with open(wrong, "w", encoding="utf-8") as handle:
+        handle.write("Package: fixture-installed\n"
+                     "Status: install ok installed\n"
+                     "Architecture: hurd-i386\n"
+                     "Version: 1.0\n\n")
+    state = os.path.join(workspace, "state-baseline-wrong")
+    os.makedirs(state)
+    suite.raises("a status file from the other port is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-replacing"],
+                          installed_status=wrong), state))
+
+    state = os.path.join(workspace, "state-baseline-absent")
+    os.makedirs(state)
+    suite.raises("a named status file that does not exist is refused",
+                 module.ArchiveTrustError,
+                 lambda: module.resolve(
+                     Args(ports_mirror=mirror, packages=["fixture-replacing"],
+                          installed_status=os.path.join(workspace, "absent")),
+                     state))
 
 
 def test_key_pin(module, suite, workspace):
@@ -748,6 +891,8 @@ def run(module):
         test_wildcards(module, suite, workspace)
         test_foreign_architecture(module, suite, workspace)
         test_build_dependencies(module, suite, workspace)
+        test_snapshot_expiry(module, suite, workspace)
+        test_installed_baseline(module, suite, workspace)
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 

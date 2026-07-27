@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -24,6 +24,7 @@ help:
 	@echo "  make validate                     - validate repo invariants"
 	@echo "  make security                     - validate compose security posture"
 	@echo "  make topology                     - assert the service and port topology each Minty composition renders to"
+	@echo "  make overlay-lifecycle            - exercise the disposable build overlay against a synthetic backing image"
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
@@ -115,6 +116,13 @@ security:
 topology:
 	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" python3 scripts/check-compose-topology.py
 
+# The archive fixtures cover the resolver and say nothing about the entrypoint,
+# so this drives the real overlay mechanism in a real container and reads the
+# filesystem afterwards. It reports itself not run when the image is absent.
+overlay-lifecycle:
+	$(CONTAINER_RUNTIME) build -q -t gnu-hurd-docker:overlay-lifecycle . >/dev/null
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" ./tests/overlay-lifecycle/run.sh
+
 # error is the enforced level: every maintained script passes it. Warning-level
 # findings are real work that is tracked as roadmap item 43, so raising the
 # default here without clearing them first would make `make lint` fail on a
@@ -172,6 +180,19 @@ HURD_CLOSURE_DIR ?= evidence/hurd-archive
 # Setting this asks whether a foreign build installs into a native tree, the way
 # dpkg --add-architecture would. It answers a packaging question and says
 # nothing about whether a foreign process runs, which is a guest fact.
+# A closure that schedules a build is pinned to one archive state, because sid
+# and unreleased move and an unpinned report carries a verdict the build cannot
+# reproduce. Exploratory reports may stay unpinned; their provenance says so.
+HURD_ARCHIVE_SNAPSHOT ?=
+HURD_SNAPSHOT_FLAG = $(if $(HURD_ARCHIVE_SNAPSHOT),--archive-snapshot "$(HURD_ARCHIVE_SNAPSHOT)",)
+
+# Without a baseline every verdict describes an empty system, so a removal list
+# is empty by construction rather than by observation. Point this at a status
+# file exported from the guest to ask what this image would accept.
+HURD_INSTALLED_STATUS ?=
+HURD_STATUS_FLAG = $(if $(HURD_INSTALLED_STATUS),--installed-status "/status",)
+HURD_STATUS_MOUNT = $(if $(HURD_INSTALLED_STATUS),-v "$(CURDIR)/$(HURD_INSTALLED_STATUS):/status:ro",)
+
 HURD_FOREIGN ?=
 
 hurd-archive-image:
@@ -189,12 +210,12 @@ hurd-closure-selftest: hurd-archive-image
 hurd-build-closure: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
 		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
-		--build-dependencies --no-lmde
+		--build-dependencies --no-lmde $(HURD_SNAPSHOT_FLAG)
 
 hurd-closure: hurd-archive-image
 	$(CONTAINER_RUNTIME) run --rm gnu-hurd-archive:local \
 		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
-		--foreign-architecture "$(HURD_FOREIGN)"
+		--foreign-architecture "$(HURD_FOREIGN)" $(HURD_SNAPSHOT_FLAG)
 
 # The report is written through a bind mount, because a report that stays inside
 # a --rm container is a number in a terminal rather than an artifact.
@@ -202,10 +223,10 @@ hurd-closure-report: hurd-archive-image
 	mkdir -p "$(HURD_CLOSURE_DIR)"
 	$(CONTAINER_RUNTIME) run --rm \
 		--user "$$(id -u):$$(id -g)" \
-		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" $(HURD_STATUS_MOUNT) \
 		gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" \
-		--foreign-architecture "$(HURD_FOREIGN)" \
+		--architecture "$(HURD_ARCH)" --set "$(HURD_SET)" $(HURD_STATUS_FLAG) \
+		--foreign-architecture "$(HURD_FOREIGN)" $(HURD_SNAPSHOT_FLAG) \
 		--json "/out/$(HURD_ARCH)$(if $(HURD_FOREIGN),-foreign-$(HURD_FOREIGN),)-$(HURD_SET).json"
 
 # The build reports are committed evidence, so the command that produced them is
@@ -214,10 +235,10 @@ hurd-build-closure-report: hurd-archive-image
 	mkdir -p "$(HURD_CLOSURE_DIR)"
 	$(CONTAINER_RUNTIME) run --rm \
 		--user "$$(id -u):$$(id -g)" \
-		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" \
+		-v "$(CURDIR)/$(HURD_CLOSURE_DIR):/out" $(HURD_STATUS_MOUNT) \
 		gnu-hurd-archive:local \
-		--architecture "$(HURD_ARCH)" --set rebuild-candidates \
-		--build-dependencies --no-lmde \
+		--architecture "$(HURD_ARCH)" --set rebuild-candidates $(HURD_STATUS_FLAG) \
+		--build-dependencies --no-lmde $(HURD_SNAPSHOT_FLAG) \
 		--json "/out/$(HURD_ARCH)-build-closure-rebuild-candidates.json"
 
 smoke-host:
@@ -409,7 +430,7 @@ shell:
 # ===== Minty Hurd targets =====
 .PHONY: minty-up minty-up-tcg minty-up-kvm minty-up-vnc minty-up-kvm-vnc \
 	minty-down minty-status minty-logs minty-container-shell minty-accel \
-	minty-ssh minty-shell minty-export-state oobe
+	minty-ssh minty-shell minty-export-state minty-image-check oobe
 
 # Stage the out-of-box experience on the RUNNING guest: sets the documented
 # generic passwords (user/user, root/root) and expires them so the first
@@ -428,6 +449,10 @@ oobe:
 # them. Each target names the composition it wants rather than restating the
 # service, and `up`, `down`, `ps`, and `logs` share one file set so a target
 # cannot address a different stack than the one it started.
+MINTY_CONTAINER_IMAGE ?= gnu-hurd-docker:latest
+# compose.minty.yaml reads this from the environment, so the tag the guard
+# checked and the tag Compose selects are the same value.
+export MINTY_CONTAINER_IMAGE
 MINTY_FILES ?= compose.yaml:compose.bind.yaml:compose.minty.yaml
 MINTY_KVM_FILES ?= $(MINTY_FILES):compose.kvm.yaml
 MINTY_VNC_FILES ?= $(MINTY_FILES):compose.vnc.yaml
@@ -439,20 +464,33 @@ SSH_PORT ?= 2222
 
 # The accelerator is the entrypoint's decision, so a target selects the inputs
 # and reads the outcome back from the decision record rather than claiming one.
-minty-up:
+# The base file pulls a GHCR tag that does resolve, and that is the problem: it
+# was last published 2026-01-11 and every push run since has failed before the
+# push step, so a bare pull silently supplies a stale image rather than failing.
+# The Minty overlay selects the tag docker-bake.hcl produces locally, and this
+# check names the build command instead of letting the run fall through to a
+# registry.
+minty-image-check:
+	@$(CONTAINER_RUNTIME) image inspect "$(MINTY_CONTAINER_IMAGE)" >/dev/null 2>&1 \
+		|| { echo "The Minty profile needs the local image $(MINTY_CONTAINER_IMAGE)."; \
+		     echo "Build it with:  make build"; \
+		     echo "Or select another with:  make minty-up MINTY_CONTAINER_IMAGE=<tag>"; \
+		     exit 1; }
+
+minty-up: minty-image-check
 	COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
 
-minty-up-tcg:
+minty-up-tcg: minty-image-check
 	DISABLE_KVM=1 COMPOSE_FILE="$(MINTY_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
 
-minty-up-kvm:
+minty-up-kvm: minty-image-check
 	FORCE_KVM=1 COMPOSE_FILE="$(MINTY_KVM_FILES)" $(COMPOSE) up -d $(SERVICE_NAME)
 
 # The noVNC sidecar sits behind a Compose profile, so it is named explicitly.
-minty-up-vnc:
+minty-up-vnc: minty-image-check
 	COMPOSE_FILE="$(MINTY_VNC_FILES)" $(COMPOSE) --profile vnc up -d
 
-minty-up-kvm-vnc:
+minty-up-kvm-vnc: minty-image-check
 	FORCE_KVM=1 COMPOSE_FILE="$(MINTY_KVM_VNC_FILES)" $(COMPOSE) --profile vnc up -d
 
 minty-down:

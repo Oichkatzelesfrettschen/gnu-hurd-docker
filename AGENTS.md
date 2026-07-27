@@ -179,7 +179,38 @@ The warning tier is reported and not enforced while its findings remain open.
 
 The Compose profiles bind-mount `./images` read-write with no overlay and no
 `-snapshot`, so the guest writes straight through to the qcow2. A qcow2 internal
-snapshot is the only rollback.
+snapshot is the rollback for a guest being provisioned in place.
+
+A build gets a disposable external overlay instead. `QEMU_BACKING_DRIVE` names
+an immutable image and `QEMU_DRIVE` names an overlay path that must not exist;
+the entrypoint records the backing digest, refuses a declared
+`QEMU_BACKING_SHA256` that disagrees, refuses to reuse an overlay because the
+previous run's writes would carry forward, and creates the overlay with the
+backing format stated rather than probed. The backing file is then read-only for
+the run. Discarding a file is a rollback that cannot half-apply, and it holds
+when the guest never shuts down cleanly, which an internal snapshot does not.
+
+Which mechanism applies follows from intent. Provisioning mutates the canonical
+image on purpose and wants the change kept, so it snapshots first. A build
+mutates a filesystem on purpose and must leave nothing behind, so it runs on an
+overlay and the canonical image is never opened for writing.
+
+The host owns the overlay's lifecycle, not the entrypoint. The entrypoint
+replaces itself with QEMU through `exec`, so no trap of its own survives to run
+afterwards, and disposal has to happen after QEMU exits anyway because the
+artifacts, the filesystem check, and the manifest are all read out of the
+overlay. `scripts/run-hurd-build.sh` creates the run directory, starts
+`compose.builder.yaml` under a unique project name, waits, collects, and then
+deletes the overlay on success or retains it for diagnosis on failure. A
+creation primitive with no owner leaves an overlay behind on every exit, and
+under a restart policy the next start meets its own leftover and refuses, which
+reads as a boot loop.
+
+A builder composition therefore carries `restart: "no"` and no fixed
+`container_name`: a build is one process that ends, and two runs must not
+collide. `tests/overlay-lifecycle/run.sh` drives the mechanism in a real
+container and reads the filesystem afterwards, because a shell gate proves the
+overlay code parses rather than that it behaves.
 
 - Snapshot before any mutation, with the guest powered off:
   `qemu-img snapshot -c <mechanism>-<date> images/<image>.qcow2`.

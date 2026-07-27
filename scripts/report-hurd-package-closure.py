@@ -87,6 +87,61 @@ OVERLAY_ORIGIN = "lmde-arch-all-overlay"
 SCHEMA_VERSION = 2
 
 
+SNAPSHOT_HOST = os.environ.get("DEBIAN_SNAPSHOT_HOST",
+                               "https://snapshot.debian.org/archive")
+
+
+def snapshot_mirrors(timestamp):
+    """Point both archives at one snapshot.debian.org state.
+
+    sid and unreleased move, so a closure resolved today and the build it
+    schedules tomorrow can answer against different archives, and the report
+    would carry a verdict the build cannot reproduce. snapshot.debian.org
+    carries dated dists for debian-ports as well as the main archive, so pinning
+    is a timestamp rather than a local cache of every fetched artifact.
+    """
+    if not re.match(r"^\d{8}T\d{6}Z$", timestamp):
+        raise ArchiveTrustError(
+            "%r is not a snapshot timestamp such as 20260726T003219Z"
+            % timestamp)
+    return ("%s/debian-ports/%s" % (SNAPSHOT_HOST, timestamp),
+            "%s/debian/%s" % (SNAPSHOT_HOST, timestamp))
+
+
+def installed_baseline(path, architecture):
+    """Describe the installed state the verdicts were resolved against.
+
+    An empty baseline is a real answer and must say so: it means the report
+    describes what the archive permits on an empty system, and that a claim
+    about replacing an installed package is unmeasured rather than negative.
+    """
+    if not path:
+        return {"kind": "empty",
+                "note": "no installed package, so a transaction has nothing to "
+                        "displace and removals are empty by construction"}
+    if not os.path.exists(path):
+        raise ArchiveTrustError("no installed status file at %s" % path)
+    with open(path, "rb") as handle:
+        body = handle.read()
+    digest = hashlib.sha256(body).hexdigest()
+    text = body.decode("utf-8", "replace")
+    packages = len(re.findall(r"^Package:\s", text, re.MULTILINE))
+    if not packages:
+        raise ArchiveTrustError(
+            "%s names no package, so it is not a dpkg status file" % path)
+    # A status file from the other port would make every native verdict wrong
+    # while still parsing, which is the failure that reads as a real result.
+    found = set(re.findall(r"^Architecture:\s*(\S+)", text, re.MULTILINE))
+    native = found - {"all"}
+    if native and architecture not in native:
+        raise ArchiveTrustError(
+            "%s carries architectures %s and the run resolves %s"
+            % (path, ",".join(sorted(native)), architecture))
+    return {"kind": "guest-dpkg-status", "path": os.path.basename(path),
+            "architecture": architecture, "package_count": packages,
+            "sha256": digest}
+
+
 def generator_digest():
     try:
         with open(os.path.realpath(__file__), "rb") as handle:
@@ -441,7 +496,8 @@ def write_overlay(root, architecture, mirror, suite, release):
     }
 
 
-def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
+def build_tree(root, architecture, ports, lmde, foreign="", sources="",
+               snapshot="", installed_status=""):
     """Create a private apt state tree whose native architecture is the target.
 
     A foreign architecture is enabled the way `dpkg --add-architecture` enables
@@ -452,7 +508,16 @@ def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
               "var/lib/dpkg", "var/cache/apt/archives/partial"]
     for part in layout:
         os.makedirs(os.path.join(root, part), exist_ok=True)
-    open(os.path.join(root, "var/lib/dpkg/status"), "w").close()
+    # An empty status file makes every verdict a statement about an empty system:
+    # a transaction has no installed package to displace, so a report cannot say
+    # whether an install would replace part of the guest's userland. Seeding the
+    # tree with the guest's own status turns availability into a prediction
+    # about this image.
+    status_path = os.path.join(root, "var/lib/dpkg/status")
+    if installed_status:
+        shutil.copy(installed_status, status_path)
+    else:
+        open(status_path, "w").close()
 
     # debian-ports signs the binary indices; the main archive signs the source
     # index, and its key is a separate keyring, so a build closure that omits it
@@ -465,15 +530,30 @@ def build_tree(root, architecture, ports, lmde, foreign="", sources=""):
 
     # A file:// ports mirror is a fixture, which carries no signature; the
     # network mirror is verified by apt against the debian-ports keyring above.
-    local = "[trusted=yes] " if ports.startswith("file:") else ""
+    # A snapshot Release carries the Valid-Until it was published with, so the
+    # archive state a timestamp pins stops being acceptable to apt some weeks
+    # later while the bytes and the signature stay exactly what they were. A
+    # reproducibility lock that expires is not one, so expiry checking is
+    # disabled for snapshot sources and left enabled for live mirrors, where a
+    # stale Release is a real freshness failure rather than the point.
+    expiry = "check-valid-until=no" if snapshot else ""
+
+    def source_options(mirror):
+        options = []
+        if mirror.startswith("file:"):
+            options.append("trusted=yes")
+        if expiry:
+            options.append(expiry)
+        return "[%s] " % " ".join(options) if options else ""
+
+    local = source_options(ports)
     lines = ["deb %s%s sid main" % (local, ports),
              "deb %s%s unreleased main" % (local, ports)]
     if sources:
         # Source is architecture-independent, so one deb-src line serves either
         # Hurd port; the binaries it resolves against stay the port's own.
         lines.append("deb-src %s%s sid main"
-                     % ("[trusted=yes] " if sources.startswith("file:") else "",
-                        sources))
+                     % (source_options(sources), sources))
 
     if lmde:
         lines.append("deb [trusted=yes] file://%s/lmde %s %s"
@@ -906,12 +986,11 @@ def resolve(args, workspace):
             datetime.timezone.utc).replace(microsecond=0).isoformat(),
         "resolver_image": os.environ.get("HURD_RESOLVER_IMAGE", ""),
         "debian_ports_mirror": args.ports_mirror,
+        # A pinned run answers against one archive state, so the report and
+        # the build it schedules can be compared. An empty value means the
+        # verdicts were read from a moving suite.
+        "archive_snapshot": getattr(args, "archive_snapshot", ""),
         "suites": ["sid", "unreleased"],
-        # The tree carries no installed packages, so every verdict is about what
-        # the archive permits on an empty system rather than about what the
-        # published image would accept. A claim that a transaction preserves the
-        # installed userland needs a run seeded from the image's dpkg status.
-        "installed_baseline": "empty",
         # sid and unreleased move, so the same command reruns to a different
         # answer. The generator digest says which producer wrote a report when
         # two reports of the same set disagree.
@@ -939,9 +1018,14 @@ def resolve(args, workspace):
     if foreign == args.architecture:
         raise ArchiveTrustError(
             "the foreign architecture is the native one, which tests nothing")
+    baseline = installed_baseline(getattr(args, "installed_status", ""),
+                                  args.architecture)
+    provenance["installed_baseline"] = baseline
     config = build_tree(workspace, args.architecture, args.ports_mirror, lmde,
                         foreign,
-                        args.main_archive if args.build_dependencies else "")
+                        args.main_archive if args.build_dependencies else "",
+                        getattr(args, "archive_snapshot", ""),
+                        getattr(args, "installed_status", ""))
     env = dict(os.environ, APT_CONFIG=config)
     provenance["tools"] = tool_versions(env)
 
@@ -1171,6 +1255,18 @@ def main():
     parser.add_argument("--lmde-suite", default=LMDE_SUITE)
     parser.add_argument("--keyring", default=MINT_KEYRING,
                         help="armored Linux Mint archive key, pinned by fingerprint")
+    parser.add_argument("--archive-snapshot", default="",
+                        help="snapshot.debian.org timestamp, such as "
+                             "20260726T003219Z, which pins both the ports "
+                             "mirror and the source archive to one archive "
+                             "state; sid and unreleased move, so an unpinned "
+                             "closure and the build it schedules can resolve "
+                             "against different archives")
+    parser.add_argument("--installed-status", default="",
+                        help="a dpkg status file exported from the guest, used "
+                             "as the installed baseline; without it every "
+                             "verdict describes an empty system and a removal "
+                             "list is empty by construction")
     parser.add_argument("--json", default="")
     parser.add_argument("--self-test", action="store_true",
                         help="run the offline fixture suite and exit")
@@ -1181,6 +1277,10 @@ def main():
 
     if args.self_test:
         return self_test(args.self_test_suite)
+
+    if args.archive_snapshot:
+        args.ports_mirror, args.main_archive = snapshot_mirrors(
+            args.archive_snapshot)
 
     workspace = tempfile.mkdtemp(prefix="hurd-apt-")
     try:

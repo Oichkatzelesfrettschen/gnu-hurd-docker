@@ -36,9 +36,29 @@ fi
 
 mkdir -p "$OUTPUT_DIR"
 
-# dpkg-query renders one line per package, which avoids parsing status
-# paragraphs and drops the free-text fields in the same step.
-query='dpkg-query -W -f=${binary:Package}\t${Version}\t${Architecture}\t${db:Status-Abbrev}\n'
+# apt reads installed state as RFC822 paragraphs, so a table of columns is not
+# an input it can take. dpkg-query renders the paragraphs directly, which avoids
+# copying /var/lib/dpkg/status wholesale and carrying every maintainer address
+# and long description into a committed artifact.
+#
+# Status is spelled from its three parts rather than the abbreviated form,
+# because apt parses "install ok installed" and not "ii".
+#
+# The format string is quoted for the remote shell, not just for this one. ssh
+# concatenates its arguments and the remote shell reparses them, so an unquoted
+# format containing spaces arrives as several words and dpkg-query reads only
+# the first. A quoted heredoc keeps the dpkg field syntax out of both shells.
+read -r -d '' query <<'REMOTE' || true
+dpkg-query -W -f='Package: ${binary:Package}
+Status: ${db:Status-Want} ${db:Status-Eflag} ${db:Status-Status}
+Priority: ${Priority}
+Architecture: ${Architecture}
+Multi-Arch: ${Multi-Arch}
+Essential: ${Essential}
+Version: ${Version}
+
+'
+REMOTE
 
 if ! raw="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" \
         -o BatchMode=yes -o ConnectTimeout=20 \
@@ -57,22 +77,34 @@ architecture="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" -o BatchMode=yes \
 kernel="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" -o BatchMode=yes \
     "${SSH_USER}@127.0.0.1" 'uname -a' 2>/dev/null || echo "")"
 
-destination="${OUTPUT_DIR}/${architecture:-unknown}-installed-packages.tsv"
-printf '%s\n' "$raw" | LC_ALL=C sort > "$destination"
+destination="${OUTPUT_DIR}/${architecture:-unknown}-dpkg-status"
+
+# A field dpkg-query has no value for renders as an empty value, and apt treats
+# an empty Priority or Multi-Arch as a malformed paragraph rather than an absent
+# field, so those lines are dropped instead of emitted blank.
+printf '%s\n' "$raw" \
+    | awk 'NF == 1 && /:$/ { next } { print }' \
+    | awk 'BEGIN { blank = 0 }
+           /^$/ { blank++; next }
+           { if (blank && NR > 1) print ""; blank = 0; print }' \
+    > "$destination"
+printf '\n' >> "$destination"
 
 digest="$(sha256sum "$destination" | cut -d' ' -f1)"
-count="$(wc -l < "$destination" | tr -d ' ')"
+count="$(grep -c '^Package: ' "$destination" || true)"
 
 # The manifest is what a resolver run cites; the digest is what says two runs
 # read the same guest.
-cat > "${OUTPUT_DIR}/${architecture:-unknown}-installed-packages.json" <<EOF
+cat > "${OUTPUT_DIR}/${architecture:-unknown}-dpkg-status.json" <<EOF
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "kind": "guest-dpkg-status",
   "architecture": "${architecture}",
   "kernel": "${kernel}",
   "package_count": ${count},
   "manifest": "$(basename "$destination")",
-  "manifest_sha256": "${digest}"
+  "manifest_sha256": "${digest}",
+  "source_image_sha256": "${GUEST_IMAGE_SHA256:-}"
 }
 EOF
 

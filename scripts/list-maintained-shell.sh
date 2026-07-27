@@ -4,10 +4,12 @@
 # so the gates agree by construction rather than by five separate globs that
 # drift apart.
 #
-# The surface is entrypoint.sh, scripts/**, and share/**.  share/ ships into the
-# guest through the /share mount and is maintained in this tree, so it belongs
-# in the same gate as scripts/.  Archived scripts are kept for history and are
-# not maintained against current standards, so they stay out.
+# The surface is entrypoint.sh, scripts/**, share/**, and tests/**.  share/
+# ships into the guest through the /share mount and is maintained in this tree,
+# so it belongs in the same gate as scripts/.  tests/ holds shell a gate
+# executes, and gate code that decides whether other code passes is the last
+# place an unchecked script belongs.  Archived scripts are kept for history and
+# are not maintained against current standards, so they stay out.
 #
 # -0 emits NUL separators for `xargs -0`.  The conversion happens after the
 # newline-delimited sort, so it is correct exactly while no maintained path
@@ -34,7 +36,7 @@ cd "$REPO_ROOT"
 listing="$(mktemp)"
 trap 'rm -f "$listing"' EXIT
 
-find entrypoint.sh scripts share \
+find entrypoint.sh scripts share tests \
         \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
         \( -type f -name '*.sh' -print \) \
     | LC_ALL=C sort >"$listing"
@@ -46,7 +48,7 @@ find entrypoint.sh scripts share \
 # newlines and would hide a path whose last character is one.
 newline_count="$(grep -c '' <"$listing" || true)"
 nul_count="$(
-    find entrypoint.sh scripts share \
+    find entrypoint.sh scripts share tests \
             \( -type d \( -name archive -o -name ARCHIVE \) -prune \) -o \
             \( -type f -name '*.sh' -print0 \) \
         | tr -dc '\0' | wc -c

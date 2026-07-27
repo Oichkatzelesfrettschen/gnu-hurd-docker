@@ -137,7 +137,7 @@ Host System (x86_64)
   │         │    │
   │         │    ├── CPU: host (KVM) or max (TCG)
   │         │    ├── RAM: 4 GB (default, configurable)
-  │         │    ├── SMP: 2 cores (Hurd 2025 has SMP)
+  │         │    ├── SMP: 1 core (uniprocessor Mach; nproc reports 1)
   │         │    ├── Machine: pc (i440fx chipset)
   │         │    │
   │         │    ├── Disk: IDE interface
@@ -315,24 +315,26 @@ cache=writeback,aio=threads,if=ide
 
 ### 6. SMP Configuration (Multi-Core)
 
-**Decision**: Default to `-smp 2` (2 CPU cores)
+**Decision**: the Minty profile defaults to `-smp 1`.
 
-**Rationale**:
-- **Hurd 2025**: SMP support is now stable and production-ready
-- **Performance**: Parallel builds, better responsiveness
-- **Modern Systems**: 2+ cores standard on all development machines
-- **Conservative**: Not excessive, good balance
+**Rationale**: the installed kernel is the uniprocessor Mach build. `uname -a`
+reports `GNU-Mach 1.8+git20260224-up-amd64` and `nproc` returns 1 while QEMU
+presents whatever `QEMU_SMP` asks for, because `gnumach-image-1-amd64` depends
+on the `-up` variant. Guest parallelism is one processor at any setting, so a
+second vCPU buys no parallel build and varies host-side QEMU timing instead.
+`docs/audits/minty-image-provenance-sid-drift-up-mach-evidence.md` carries the
+measurement.
 
 **Configuration Options**:
 ```bash
-QEMU_SMP=2    # Default (recommended)
-QEMU_SMP=4    # For development workstations
-QEMU_SMP=1    # For minimal testing (if needed)
+QEMU_SMP=1    # Minty default: matches what the guest kernel can use
+QEMU_SMP=2    # varies host-side QEMU behavior, not guest scaling
 ```
 
-**Historical Context**:
-- Old Hurd (<2024): SMP was experimental, used single core
-- Hurd 2025: SMP is stable, default to 2+ cores recommended
+An experiment arm that varies `QEMU_SMP` measures QEMU rather than the Hurd.
+Raising the default waits on an SMP Mach kernel being installed and selected,
+at which point `nproc` is the falsifier: it reports more than 1 or the kernel
+did not change.
 
 ### 7. Memory Allocation
 
@@ -625,7 +627,7 @@ Configurable via compose.yaml `environment:` section:
 |----------------|----------------------------------------------|---------------------------------|
 | `QEMU_DRIVE`   | `/opt/hurd-image/debian-hurd-amd64.qcow2`   | Path to disk image              |
 | `QEMU_RAM`     | `4096`                                       | RAM in MB (4 GB default)        |
-| `QEMU_SMP`     | `2`                                          | CPU cores (Hurd 2025 has SMP)   |
+| `QEMU_SMP`     | `1`                                          | CPU cores; the guest kernel is uniprocessor   |
 | `ENABLE_VNC`   | `0`                                          | Set to `1` for VNC on port 5900 |
 | `SERIAL_PORT`  | `5555`                                       | Serial console port             |
 | `MONITOR_PORT` | `9999`                                       | QEMU monitor port               |
@@ -752,7 +754,7 @@ volumes:
 **Optimization Impact**:
 - **KVM**: 5-10x faster compilation vs TCG
 - **More RAM**: Reduces page cache pressure, faster builds
-- **SMP**: 2+ cores enable parallel make (-j flag)
+- **SMP**: the uniprocessor kernel gives one processor, so `-j` above 1 contends rather than parallelizes
 
 ### Disk I/O Performance
 

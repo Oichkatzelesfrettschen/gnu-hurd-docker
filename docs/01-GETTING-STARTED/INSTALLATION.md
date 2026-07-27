@@ -400,8 +400,9 @@ environment:
   # RAM allocation (in MB)
   QEMU_RAM: 4096          # Change to 8192 for more memory
 
-  # CPU cores (Hurd 2025 has SMP support)
-  QEMU_SMP: 2             # Change to 4 for more cores
+  # CPU cores. The installed kernel is the uniprocessor Mach build, so the
+  # guest reports one processor whatever this presents to it.
+  QEMU_SMP: 1             # raising this varies QEMU, not guest scaling
 
   # Serial port
   SERIAL_PORT: 5555       # Change if port conflicts

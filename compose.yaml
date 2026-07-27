@@ -71,7 +71,8 @@ services:
       # Memory allocation (MB)
       QEMU_RAM: ${QEMU_RAM:-4096}
 
-      # CPU cores (Hurd 2025 has SMP support)
+      # CPU cores. The installed kernel is the uniprocessor Mach build, so
+      # the guest reports one processor whatever this asks QEMU to present.
       QEMU_SMP: ${QEMU_SMP:-2}
 
       # Display configuration

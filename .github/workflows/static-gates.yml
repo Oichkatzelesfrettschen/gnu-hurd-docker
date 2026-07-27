@@ -71,6 +71,13 @@ jobs:
       - name: Assert the rendered Compose topology
         run: make topology
 
+      # The archive fixtures cover the resolver and say nothing about the
+      # entrypoint. This drives the real overlay mechanism in a container and
+      # reads the filesystem afterwards, so the gate asserts behavior rather
+      # than that the overlay code parses.
+      - name: Exercise the disposable build overlay
+        run: make overlay-lifecycle
+
       # The negative fixtures assert what the evidence contract rejects, and the
       # capture check recomputes each retained stream's digest.  A digest
       # mismatch is the signature of redaction that ran after hashing, which is
