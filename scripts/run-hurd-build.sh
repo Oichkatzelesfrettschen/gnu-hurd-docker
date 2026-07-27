@@ -51,8 +51,16 @@ snapshot="$(jq -r '.archive_snapshot' "$LOCK_FILE")"
 # The digest is checked before anything is created, so a run against the wrong
 # base produces no overlay, no container, and no artifacts to mistake for good
 # ones.
+#
+# An absent or malformed digest is refused rather than skipped. A lock whose
+# digest is empty accepts whatever file appears at the declared path, which is
+# the case a build lock exists to exclude: the identity of the base has to be
+# declared before the run, not read from the run.
+if ! printf '%s' "$base_sha" | grep -Eq '^[0-9a-f]{64}$'; then
+    fail "the lock declares no sha256 for ${base_path}, so a build against it reproduces nothing; build the base and rerun scripts/write-builder-lock.py"
+fi
 found_sha="$(sha256sum "$base_path" | cut -d' ' -f1)"
-if [ "$base_sha" != "null" ] && [ -n "$base_sha" ] && [ "$found_sha" != "$base_sha" ]; then
+if [ "$found_sha" != "$base_sha" ]; then
     fail "builder base ${base_path} hashes to ${found_sha}, lock declares ${base_sha}"
 fi
 log "builder base ${base_path} sha256 ${found_sha}"

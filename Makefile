@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -28,6 +28,7 @@ help:
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
+	@echo "  make guest-baseline-check         - assert the committed guest baseline against itself"
 	@echo "  make hurd-closure                 - classify a package set against the real hurd-amd64 or hurd-i386 archive (HURD_ARCH, HURD_SET)"
 	@echo "  make hurd-build-closure           - report whether each rebuild candidate's build can start (HURD_ARCH)"
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
@@ -169,6 +170,26 @@ evidence-check:
 		python3 scripts/check-runtime-evidence.py --require-redacted $$captures; \
 	else \
 		echo "evidence-check: no committed captures to validate"; \
+	fi
+
+# A committed baseline degrades quietly: a probe whose command stopped working
+# leaves a marker that reads as a guest fact, and a digest stops matching the
+# file beside it.  None of that is visible in review, because a broken artifact
+# looks exactly like a correct one.  This asserts the package against itself.
+#
+# The fixture suite runs first and drives the checker against baselines whose
+# defect is known, because a checker exercised only by packages it accepts
+# states nothing about its exclusions.
+guest-baseline-check:
+	python3 tests/guest-baseline/selftest.py
+	@set -e; roots=$$(git ls-files 'evidence/guest-state/probes.json' \
+		'evidence/guest-state/*/probes.json' | xargs -r -n1 dirname | sort -u); \
+	if [ -n "$$roots" ]; then \
+		for root in $$roots; do \
+			python3 scripts/check-guest-baseline.py "$$root"; \
+		done; \
+	else \
+		echo "guest-baseline-check: no committed baseline to validate"; \
 	fi
 
 # Availability and dependency facts are archive facts, so they are read on the

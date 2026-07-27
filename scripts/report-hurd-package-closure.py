@@ -870,13 +870,17 @@ def shared_builder(env, records):
     targets = ["%s=%s" % (item["source_package"], item["version"])
                for item in records if item["class"] == "buildable"]
     if not targets:
-        return False, "no source in the set is buildable", []
+        return False, "no source in the set is buildable", [], []
     rc, out, err = run(
         ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends"] + targets,
         env=env)
     if rc != 0:
-        return False, first_blocker(out + err), []
-    return True, "", installations(out)
+        return False, first_blocker(out + err), [], []
+    # Against a seeded tree a builder transaction can displace an installed
+    # package, and installing the build dependencies of two sources is exactly
+    # where that happens: a -dev package can conflict with the runtime library
+    # the image already carries.
+    return True, "", installations(out), removals(out)
 
 
 def installations(text):
@@ -1049,7 +1053,7 @@ def resolve(args, workspace):
         # source is buildable answers a different question than the field names.
         # What the subset leaves open is whether one builder tree serves all of
         # them at once, and that is what the simulation below decides.
-        shared, blocker, transaction = shared_builder(env, results)
+        shared, blocker, transaction, displaced = shared_builder(env, results)
         report = {
             "architecture": args.architecture,
             "set": selection,
@@ -1058,6 +1062,12 @@ def resolve(args, workspace):
             "foreign_architecture": {"enabled": False, "name": "",
                                      "native_packages_removed": [],
                                      "foreign_qualified_in_transaction": 0},
+            # What a transaction removes is a property of the tree it runs
+            # against. An empty list from an empty tree says nothing, because
+            # there was no installed package to displace; an empty list from a
+            # tree seeded with the guest's status file is a measurement. The
+            # baseline named in provenance is what tells the two apart.
+            "transaction_removals": displaced,
             "provenance": provenance,
             "lmde_overlay": lmde or {"enabled": False},
             "packages": results,
@@ -1125,17 +1135,21 @@ def resolve(args, workspace):
             "name": foreign,
             # Coinstallation and replacement read the same in a success line, so
             # what the transaction removes is reported beside what it installs.
-            #
-            # The tree's dpkg status file is empty, so there is no installed
-            # native package for a transaction to displace and this list is
-            # empty by construction. Whether a foreign build would replace the
-            # installed guest userland is settled by seeding the tree with the
-            # image's own status file, which the installed_baseline field names.
+            # This is the same list as transaction_removals below, kept here
+            # because a foreign request is the case where a removal decides
+            # whether the answer is coinstallation at all.
             "native_packages_removed": removals(final_out),
             "foreign_qualified_in_transaction": len(
                 [name for name in transaction if ":%s " % foreign in name])
             if foreign else 0,
         },
+        # What a transaction removes is a property of the tree it runs against.
+        # An empty list from an empty tree says nothing, because there was no
+        # installed package to displace; an empty list from a tree seeded with
+        # the guest's status file is a measurement that installing this set
+        # keeps the userland it lands on. The baseline named in provenance is
+        # what tells the two apart.
+        "transaction_removals": removals(final_out),
         "provenance": provenance,
         "lmde_overlay": lmde or {"enabled": False},
         "packages": results,
@@ -1193,6 +1207,7 @@ def print_report(report):
                      ", ".join(("%s %s" % (entry["name"], entry["constraint"])
                                 ).strip() for entry in unmet)
                      or item["evidence"]))
+        print_removals(report)
         return
     print("\nresolvable subset: %d of %d, %s"
           % (len(report["resolvable_subset"]), len(results),
@@ -1216,6 +1231,28 @@ def print_report(report):
         if foreign["native_packages_removed"]:
             print("the transaction replaces rather than coinstalls, removing: "
                   "%s" % ", ".join(foreign["native_packages_removed"]))
+    print_removals(report)
+
+
+def print_removals(report):
+    """Say what the transaction displaces, and against which tree.
+
+    An operator reading "0 removals" has to know whether anything could have
+    been removed. Naming the baseline beside the count is what makes the line
+    an answer instead of a number.
+    """
+    baseline = report["provenance"].get("installed_baseline") or {}
+    seeded = isinstance(baseline, dict) and baseline.get("kind") != "empty"
+    displaced = report.get("transaction_removals") or []
+    if not seeded:
+        print("removals: not measurable against an empty tree")
+    elif displaced:
+        print("removals against the %d-package baseline (%d): %s"
+              % (baseline.get("package_count", 0), len(displaced),
+                 ", ".join(displaced)))
+    else:
+        print("removals against the %d-package baseline: none"
+              % baseline.get("package_count", 0))
 
 
 def self_test(suite):

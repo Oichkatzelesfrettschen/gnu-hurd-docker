@@ -85,6 +85,14 @@ jobs:
       - name: Validate the runtime evidence contract
         run: make evidence-check
 
+      # The guest baseline seeds every closure verdict that claims to describe
+      # this image, so a probe that silently stopped answering propagates into
+      # a resolver report as a fact.  This asserts the package against itself:
+      # advertised artifacts exist, digests match, required probes reached an
+      # answer, and a partial capture is labelled rather than presented as one.
+      - name: Validate the committed guest baseline
+        run: make guest-baseline-check
+
       # The resolver's verdicts are produced by apt over a synthetic
       # architecture, so a source-level pass says nothing about whether a
       # verdict is right.  The image build proves the resolver's dependencies

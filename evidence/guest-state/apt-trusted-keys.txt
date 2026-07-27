@@ -1,0 +1,12 @@
+debian-archive-bookworm-automatic.asc
+debian-archive-bookworm-security-automatic.asc
+debian-archive-bookworm-stable.asc
+debian-archive-bullseye-automatic.asc
+debian-archive-bullseye-security-automatic.asc
+debian-archive-bullseye-stable.asc
+debian-archive-trixie-automatic.asc
+debian-archive-trixie-security-automatic.asc
+debian-archive-trixie-stable.asc
+debian-ports-archive-2026.asc
+debian-ports-archive-2027.asc
+linuxmint-keyring.gpg

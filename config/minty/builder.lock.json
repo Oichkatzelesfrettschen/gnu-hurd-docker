@@ -2,14 +2,14 @@
   "archive_key_note": "debian-ports rotates its archive signing key, so a snapshot older than the keyring shipped in the resolver image fails signature verification rather than expiry. A timestamp is pinned together with the keyring vintage that can verify it.",
   "archive_snapshot": "20260726T003219Z",
   "build_closure_archive_snapshot": "20260726T003219Z",
-  "build_closure_report_sha256": "733972c5fbc37f62beb30742778f54d618f4f65be9c60b5d46dd95c1761dc8f5",
+  "build_closure_report_sha256": "f443f6ec0ffdd60df1f86fc6c713bcb4d0ea184f1cb53bd46ab56b51521285a4",
   "builder_base": {
     "path": "images/minty-hurd-builder-base.qcow2",
     "sha256": "",
     "status": "not built; roadmap 55a"
   },
   "comment": "One archive state and one base image identify a build. The resolver that schedules the build, the guest APT configuration, the source downloads, and the package builder all read this file, because a timestamp recorded in one of them and not the others reproduces nothing. builder_base.sha256 stays empty until the base image exists; the runner refuses an unpinned or absent base rather than building against whatever is present.",
-  "resolver_generator_sha256": "15e9697f10307414f0147f7a9b3009a8489a131bd816d9e4640349bc493bfd7f",
+  "resolver_generator_sha256": "649ece0d2964571f757ae84ccadc04e8c4b61b4881866678c76dc3dced312e24",
   "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
   "schema_version": 1,
   "sources": [

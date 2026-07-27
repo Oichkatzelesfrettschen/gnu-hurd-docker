@@ -40,7 +40,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "native",
       "evidence": "dependencies resolve",
       "package": "mate-session-manager",
@@ -56,7 +56,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "uninstallable",
       "evidence": "mate-polkit : Depends: accountsservice but it is not installable",
       "package": "mate-panel",
@@ -66,7 +66,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "native",
       "evidence": "dependencies resolve",
       "package": "marco",
@@ -77,7 +77,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "uninstallable",
       "evidence": "gvfs : Depends: gvfs-common (= 1.58.0-2) but it is not going to be installed",
       "package": "caja",
@@ -87,7 +87,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "native",
       "evidence": "dependencies resolve",
       "package": "mate-terminal",
@@ -97,7 +97,7 @@
       "architectures": [
         "hurd-amd64"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "native",
       "evidence": "dependencies resolve",
       "package": "mate-notification-daemon",
@@ -107,7 +107,7 @@
       "architectures": [
         "all"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "architecture-all",
       "evidence": "dependencies resolve",
       "package": "mate-menus",
@@ -117,7 +117,7 @@
       "architectures": [
         "all"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "architecture-all",
       "evidence": "dependencies resolve",
       "package": "mate-icon-theme",
@@ -127,7 +127,7 @@
       "architectures": [
         "all"
       ],
-      "candidate_origin": "500 http://ftp.ports.debian.org/debian-ports sid/main hurd-amd64 Packages",
+      "candidate_origin": "500 https://snapshot.debian.org/archive/debian-ports/20260726T003219Z sid/main hurd-amd64 Packages",
       "class": "architecture-all",
       "evidence": "dependencies resolve",
       "package": "mate-themes",
@@ -135,10 +135,10 @@
     }
   ],
   "provenance": {
-    "archive_snapshot": "",
-    "collected_at": "2026-07-27T02:21:50+00:00",
-    "debian_ports_mirror": "http://ftp.ports.debian.org/debian-ports",
-    "generator_sha256": "15e9697f10307414f0147f7a9b3009a8489a131bd816d9e4640349bc493bfd7f",
+    "archive_snapshot": "20260726T003219Z",
+    "collected_at": "2026-07-27T10:19:58+00:00",
+    "debian_ports_mirror": "https://snapshot.debian.org/archive/debian-ports/20260726T003219Z",
+    "generator_sha256": "649ece0d2964571f757ae84ccadc04e8c4b61b4881866678c76dc3dced312e24",
     "installed_baseline": {
       "kind": "empty",
       "note": "no installed package, so a transaction has nothing to displace and removals are empty by construction"
@@ -389,5 +389,6 @@
     "native": 4,
     "uninstallable": 2
   },
+  "transaction_removals": [],
   "unmatched_patterns": []
 }
