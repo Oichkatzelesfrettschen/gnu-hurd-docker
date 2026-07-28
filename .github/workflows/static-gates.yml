@@ -34,6 +34,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # The guest-baseline gate verifies the recorded producer digests
+          # against the commit the collection ran from through git show, and a
+          # depth-1 checkout carries only the merge commit, which makes every
+          # committed producer digest unverifiable.
+          fetch-depth: 0
 
       - name: Install gate dependencies
         run: |
