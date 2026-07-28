@@ -7,10 +7,10 @@
 
 $ qemu-img check --output=json overlay.qcow2
 {
-    "image-end-offset": 18284544,
+    "image-end-offset": 18219008,
     "total-clusters": 262144,
     "check-errors": 0,
-    "allocated-clusters": 244,
+    "allocated-clusters": 243,
     "filename": "overlay.qcow2",
     "format": "qcow2",
     "fragmented-clusters": 148
