@@ -140,7 +140,7 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 79d. [x] Validate the baseline by derivation rather than declaration. `scripts/check-guest-baseline.py` owns the required-probe roster, recomputes each probe class from its recorded statuses and streams, reads the accelerator, vCPU count, RAM, and disk bus back out of the retained argv, derives the filesystem verdict from the transcript, refuses symlinked or path-carrying artifacts, and verifies the producer digests against the recorded commit through git history
 
-79e. [ ] Recapture the baseline from the final committed producer and certify it in CI, so the code that produced the evidence exists in its exact final form before the evidence it is cited for
+79e. [x] Recapture the baseline from the final committed producer and certify it in CI, so the code that produced the evidence exists in its exact final form before the evidence it is cited for
 
 79f. [ ] Retain and classify failed boot attempts as separate evidence packages rather than folding them into the accepted baseline's narrative
 
