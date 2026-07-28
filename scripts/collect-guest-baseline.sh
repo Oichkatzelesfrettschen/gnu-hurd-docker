@@ -159,6 +159,15 @@ probe() {
 
 started_at="$(now)"
 
+# The status export and the image it was read from are one fact. A collection
+# that starts with no image identity produces a package list from somewhere,
+# so the digest is refused before the guest is ever contacted rather than
+# caught by the checker after the boot was spent.
+if ! printf '%s' "${GUEST_IMAGE_SHA256:-}" | grep -Eq '^[0-9a-f]{64}$'; then
+    log "not run: GUEST_IMAGE_SHA256 is ${GUEST_IMAGE_SHA256:-empty}, not a sha256 digest of the booted image"
+    exit 2
+fi
+
 if ! guest_ssh_alive; then
     log "not run: the guest did not answer on ${GUEST_SSH_HOST}:${GUEST_SSH_PORT}"
     exit 2
@@ -270,6 +279,18 @@ for name in mig gcc g++ make dpkg-dev build-essential binutils python3 \
         libc0.3-dev pkg-config; do
     version="$(dpkg-query -W -f='${Version}' "$name" 2>/dev/null || true)"
     printf '%s\t%s\n' "$name" "${version:-absent}"
+done
+PROBE
+
+# A package inventory and an executable on PATH are different facts: a
+# pkg-config command can be supplied by pkgconf, an alternative, or a manual
+# install with no pkg-config package behind it. command -v settles capability
+# where dpkg-query settles packaging, and both levels are recorded because a
+# build plan needs the command and the archive repair needs the package name.
+probe toolchain-commands optional <<'PROBE'
+for name in mig pkg-config; do
+    path="$(command -v "$name" 2>/dev/null || true)"
+    printf '%s\t%s\n' "$name" "${path:-absent}"
 done
 PROBE
 

@@ -41,6 +41,21 @@ STATUS = (
 
 IMAGE_DIGEST = "a" * 64
 
+QEMU_ARGV = (
+    "/usr/bin/qemu-system-x86_64\n"
+    "-accel\ntcg,thread=multi\n"
+    "-smp\n1\n"
+    "-m\n2048\n"
+    "-drive\nid=drive0,file=/opt/hurd-run/overlay.qcow2,format=qcow2\n"
+    "-device\nide-hd,drive=drive0\n"
+)
+
+OVERLAY_CHAIN = json.dumps([
+    {"filename": "/opt/hurd-run/overlay.qcow2", "format": "qcow2",
+     "backing-filename": "fixture.qcow2"},
+    {"filename": "/opt/hurd-run/fixture.qcow2", "format": "qcow2"},
+], indent=2) + "\n"
+
 
 def sha256(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -50,6 +65,42 @@ def write(root, name, text):
     with open(os.path.join(root, name), "w", encoding="utf-8") as handle:
         handle.write(text)
     return sha256(text)
+
+
+def init_producers(root, probes):
+    """Give the fixture a real commit carrying its producers.
+
+    The checker verifies the recorded producer digests against the recorded
+    commit's own copies, so a fixture with no history would silently skip that
+    assertion and the negative case below would pass for the wrong reason.
+    """
+    env = dict(os.environ,
+               GIT_AUTHOR_NAME="fixture", GIT_AUTHOR_EMAIL="f@fixture",
+               GIT_COMMITTER_NAME="fixture", GIT_COMMITTER_EMAIL="f@fixture")
+    producers = {
+        "collector_sha256": ("scripts/collect-guest-baseline.sh",
+                             "collector fixture\n"),
+        "transport_sha256": ("scripts/lib/guest-ssh.sh", "transport fixture\n"),
+        "exporter_sha256": ("scripts/export-guest-package-state.sh",
+                            "exporter fixture\n"),
+    }
+    subprocess.run(["git", "init", "-q", root], check=True, env=env)
+    # A host-level fsmonitor daemon would drop a socket into .git, which a
+    # later copytree of the fixture cannot copy.
+    subprocess.run(["git", "-C", root, "config", "core.fsmonitor", "false"],
+                   check=True, env=env)
+    for field, (path, text) in producers.items():
+        full = os.path.join(root, path)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        probes[field] = sha256(text)
+    subprocess.run(["git", "-C", root, "add", "scripts"], check=True, env=env)
+    subprocess.run(["git", "-C", root, "commit", "-qm", "producers"],
+                   check=True, env=env)
+    probes["repository_commit"] = subprocess.run(
+        ["git", "-C", root, "rev-parse", "HEAD"], capture_output=True,
+        text=True, check=True, env=env).stdout.strip()
 
 
 def build(root):
@@ -63,22 +114,23 @@ def build(root):
         "debian_version.txt": "forky/sid\n",
         "dpkg-architecture.txt": "hurd-amd64\n",
         "apt-preferences.txt": "",
-        "qemu-argv.txt": "/usr/bin/qemu-system-x86_64\n-accel\ntcg\n",
-        "offline-fsck.log": "$ e2fsck /dev/sda5\nexit=0\n",
+        "qemu-argv.txt": QEMU_ARGV,
+        "overlay-chain.json": OVERLAY_CHAIN,
+        "offline-fsck.log": "$ guestfish e2fsck /dev/sda5\nexit=0\n",
         "README.md": "Fixture baseline.\n",
     }
     for name, text in contents.items():
-        artifacts[name] = write(root, name, text)
+        digest = write(root, name, text)
+        # README.md is narrative outside the run index; indexing it would make
+        # the accepting fixture claim an artifact the checker excludes.
+        if name != "README.md":
+            artifacts[name] = digest
 
     probes = {
         "schema_version": 1,
         "kind": "guest-baseline-probes",
         "started_at": "2026-07-27T00:00:00Z",
         "ended_at": "2026-07-27T00:01:00Z",
-        "repository_commit": "0" * 40,
-        "collector_sha256": "b" * 64,
-        "transport_sha256": "c" * 64,
-        "exporter_sha256": "d" * 64,
         "transport": {"host": "127.0.0.1", "port": 2223, "user": "root",
                       "host_key_fingerprint": "SHA256:fixture"},
         "package_state_export": {"requirement": "required", "status": 0,
@@ -87,6 +139,7 @@ def build(root):
                                  "ended_at": "2026-07-27T00:00:20Z"},
         "probes": [],
     }
+    init_producers(root, probes)
     required = {"uname", "nproc", "debian_version", "dpkg-architecture"}
     for name in ("uname", "nproc", "debian_version", "dpkg-architecture",
                  "apt-preferences"):
@@ -131,18 +184,22 @@ def build(root):
           json.dumps(report, indent=2, sort_keys=True) + "\n")
 
     run = {
-        "schema_version": 2,
+        "schema_version": 3,
         "kind": "guest-baseline-run",
-        "repository_commit": "0" * 40,
+        "repository_commit": probes["repository_commit"],
         "container_image_id": "sha256:" + "e" * 64,
         "qemu_version": "8.2.2",
         "qemu_argv": "qemu-argv.txt",
         "accelerator": "tcg",
         "accelerator_reason_code": "disable_kvm_requested",
+        "qemu_smp": 1,
+        "qemu_ram_mb": 2048,
+        "disk_bus": "ide",
         "backing_image": "images/fixture.qcow2",
         "backing_sha256_before": IMAGE_DIGEST,
         "backing_sha256_after": IMAGE_DIGEST,
         "backing_unchanged": True,
+        "overlay_chain": "overlay-chain.json",
         "overlay_discarded": True,
         "offline_fsck": "clean",
         "offline_fsck_transcript": "offline-fsck.log",
@@ -322,11 +379,70 @@ def main():
              lambda root: rewrite_probe_artifact(
                  root, "nproc.txt", "/home/someone/tree\n"),
              "machine-local path", True),
+            ("a manifest that omits a roster probe is refused",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: d.update({"probes": [probe for probe in d["probes"]
+                                                if probe["name"] != "uname"]})),
+             "roster requires probe", True),
+            ("a roster probe relabeled optional is refused",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: d["probes"][0].update({"requirement": "optional"})),
+             "roster requires it", True),
+            ("a class the recorded statuses do not derive is refused",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: d["probes"][0].update({"remote_status": 7})),
+             "derive", True),
+            ("an accelerator the argv did not select is refused",
+             lambda root: edit_json(
+                 root, "run.json",
+                 lambda d: d.update({"accelerator": "kvm"})),
+             "argv selects", True),
+            ("a vCPU count the argv did not ask for is refused",
+             lambda root: edit_json(
+                 root, "run.json", lambda d: d.update({"qemu_smp": 2})),
+             "argv asks for", True),
+            ("an overlay chain onto another image is refused",
+             lambda root: edit_json(
+                 root, "overlay-chain.json",
+                 lambda d: d[0].update({"backing-filename": "other.qcow2"})),
+             "run.json names", True),
+            ("a clean verdict the transcript does not derive is refused",
+             lambda root: write(
+                 root, "offline-fsck.log",
+                 "$ guestfish e2fsck /dev/sda5\nexit=1\n"),
+             "transcript derives", True),
+            ("an artifact that is a symlink is refused",
+             lambda root: (
+                 os.remove(os.path.join(root, "uname.txt")),
+                 os.symlink("/etc/hostname",
+                            os.path.join(root, "uname.txt")))[-1],
+             "not a regular file", True),
+            ("a producer digest the recorded commit does not carry is refused",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: d.update({"collector_sha256": "b" * 64})),
+             "at commit", True),
+            ("a run manifest under the current schema is required",
+             lambda root: edit_json(
+                 root, "run.json",
+                 lambda d: d.update({"schema_version": 2})),
+             "declares schema_version", True),
+            ("a run with no host key fingerprint is refused",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: d["transport"].update(
+                     {"host_key_fingerprint": ""})),
+             "host key fingerprint", True),
         ]
 
         for index, (description, damage, marker, rebuild) in enumerate(cases):
             root = os.path.join(workspace, "case-%02d" % index)
-            shutil.copytree(pristine, root)
+            shutil.copytree(pristine, root,
+                            ignore=shutil.ignore_patterns(
+                                "fsmonitor--daemon*"))
             damage(root)
             if rebuild:
                 reindex(root)

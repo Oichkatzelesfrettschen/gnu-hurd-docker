@@ -85,8 +85,18 @@ guest_ssh_exec() {
 # The fingerprint identifies the host the artifacts came from. Reading it from
 # the run's own known_hosts is what binds every artifact in the run to one
 # guest, where a host and port alone name a socket that anything can hold.
+# ssh-keygen -F selects the entry for the endpoint this run connected to,
+# because a reused known-hosts file can hold keys for other ports and the first
+# line of the file is then some other run's guest. ssh stores a nonstandard
+# port in the [host]:port form and the default port bare.
 guest_ssh_host_fingerprint() {
     [ -n "$GUEST_KNOWN_HOSTS" ] && [ -f "$GUEST_KNOWN_HOSTS" ] || return 0
-    ssh-keygen -lf "$GUEST_KNOWN_HOSTS" 2>/dev/null \
+    local lookup="$GUEST_SSH_HOST"
+    if [ "$GUEST_SSH_PORT" != 22 ]; then
+        lookup="[${GUEST_SSH_HOST}]:${GUEST_SSH_PORT}"
+    fi
+    ssh-keygen -F "$lookup" -f "$GUEST_KNOWN_HOSTS" 2>/dev/null \
+        | grep -v '^#' \
+        | ssh-keygen -lf /dev/stdin 2>/dev/null \
         | awk '{ print $2 }' | head -1
 }

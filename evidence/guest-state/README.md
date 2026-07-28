@@ -42,22 +42,32 @@ it was resolved against. `make guest-baseline-check` asserts all of that.
 
     make minty-collect-baseline MINTY_SSH_PORT=<port>
     make minty-baseline-run-manifest MINTY_BASELINE_BEFORE=<digest> \
-        MINTY_BASELINE_FSCK=clean MINTY_BASELINE_CONTAINER=<name>
+        MINTY_BASELINE_FSCK=clean MINTY_BASELINE_CONTAINER=<name> \
+        MINTY_BASELINE_QEMU_ARGV=<file> MINTY_BASELINE_FSCK_LOG=<file> \
+        MINTY_BASELINE_OVERLAY=<overlay>
 
-The collector reads the guest; the run manifest carries what sits outside it,
-and `scripts/write-guest-baseline-run.py` derives the artifact index from the
-directory rather than taking it by hand. The container has to still be running
-for its image ID and QEMU version to be readable, because those are properties
-of the process that produced the evidence.
+The collector reads the guest; the run manifest carries what sits outside it.
+`scripts/write-guest-baseline-run.py` takes the QEMU argv, the filesystem
+transcript, and the overlay as explicit inputs and refuses to discover them in
+the directory, because the directory persists across collections and a stale
+file beside a fresh probes.json would be hashed into a manifest describing no
+single boot. It reads the overlay's backing chain before disposal, which is
+what links the drive QEMU opened to the image the manifest names. The container
+has to still be running for its image ID and QEMU version to be readable,
+because those are properties of the process that produced the evidence.
+README.md sits outside the artifact index: it is narrative derived from the
+evidence, so a wording correction leaves the run's integrity intact.
 
 Two independent boots of the same image produced byte-identical artifacts for
 every probe except `free.txt`, whose numbers are a property of the running
 kernel, and byte-identical package state at 740 entries. A third boot from the
 same clean backing image stalled before reaching `sshd`: QEMU held at 2% CPU
 with the overlay static at 964 KiB for thirty minutes, and a fresh overlay
-prepared identically answered in 165 seconds. That is roadmap items 33 and 34
-observed on this image rather than a new defect, and it is why a collection
-bounds its wait rather than assuming a boot.
+prepared identically answered in 165 seconds. The stalled run was TCG, so it
+exercised neither the KVM DMA mechanism of roadmap item 33 nor an `sshd` crash
+for item 34, and its failure phase was not retained: the mechanism is
+unclassified, roadmap item 81 carries its reproduction with retained evidence,
+and it is why a collection bounds its wait rather than assuming a boot.
 
 ## What the guest reports
 
@@ -85,6 +95,11 @@ than a failed query:
     g++ 4:15.2.0-5+b1        dpkg-dev 1.23.7      libc0.3-dev 2.42-17
     build-essential 12.12    python3 3.14.6-1
     mig absent               pkg-config absent
+
+Package absence and command absence are different facts -- a pkg-config
+command can be supplied by pkgconf or a manual install with no pkg-config
+package behind it -- so `toolchain-commands.txt` asks `command -v` for `mig`
+and `pkg-config` beside the package inventory.
 
 `mig` is the Mach Interface Generator, and no Hurd server, translator, or RPC
 stub is built without it. The archive carries it -- the seeded development
@@ -118,10 +133,12 @@ The other seeded reports answer against the same 740-package state:
 The Mint visual set pulls exactly its own 35 members against this image, so the
 visual freeze is those 35 `.deb` files with no native dependency behind them.
 
-No transaction removes an installed package. Each report carries
-`transaction_removals` and names the baseline it was measured against, so an
-empty list here is a measurement where the same field against an empty tree is
-empty by construction.
+Each successfully simulated resolvable subset removes no installed package
+from the 740-package baseline. Packages outside a resolvable subset do not
+participate in its simulation, so the claim is scoped to what was simulated.
+Each report carries `transaction_removals` and names the baseline it was
+measured against, so an empty list here is a measurement where the same field
+against an empty tree is empty by construction.
 
 ## The LMDE keyring is globally trusted
 
@@ -132,8 +149,11 @@ itself to `signed-by=/etc/apt/trusted.gpg.d/linuxmint-keyring.gpg`.
 `debian-ports-archive-2026.asc` and `debian-ports-archive-2027.asc`.
 
 A key in `/etc/apt/trusted.gpg.d/` authenticates every source that does not
-scope itself, so the Mint archive key is a valid signer for the Debian Ports
-archive on this guest. Roadmap item 72 carries the repair.
+scope itself, so the key material in the file named `linuxmint-keyring.gpg` is
+eligible to authenticate the unscoped Debian Ports sources on this guest. The
+probe records the filename rather than the contained key, so the fingerprint of
+what that file holds is unproven here; the narrower claim is the one the
+evidence supports. Roadmap item 72 carries the repair.
 
 ## The pins the image already carries
 

@@ -550,9 +550,18 @@ minty-export-state:
 # guest and the host is what knows which qcow2 the guest was booted from.
 MINTY_GUEST_IMAGE ?= images/hurd-working.qcow2
 
+# The digest is computed and validated here rather than inline in the
+# collector's environment, because a pipeline whose sha256sum fails still lets
+# the final cut succeed and an empty digest then reaches the export as if it
+# named an image.
 minty-collect-baseline:
-	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" \
-		GUEST_IMAGE_SHA256="$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1)" \
+	@set -e; \
+	test -f "$(MINTY_GUEST_IMAGE)" \
+		|| { echo "no image at $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	digest=$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1); \
+	echo "$$digest" | grep -Eq '^[0-9a-f]{64}$$' \
+		|| { echo "no digest for $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" GUEST_IMAGE_SHA256="$$digest" \
 		./scripts/collect-guest-baseline.sh
 
 # The probe records come from the guest; the run-level facts sit outside it and
@@ -566,6 +575,13 @@ MINTY_BASELINE_REASON ?= disable_kvm_requested
 MINTY_BASELINE_FSCK ?= not run
 MINTY_BASELINE_BEFORE ?=
 MINTY_BASELINE_CONTAINER ?=
+# The run artifacts the host alone holds are named explicitly. The writer
+# refuses to discover them in the output directory, because the directory
+# persists across collections and a stale argv or transcript beside a fresh
+# probes.json would be hashed into a manifest describing no single boot.
+MINTY_BASELINE_QEMU_ARGV ?=
+MINTY_BASELINE_FSCK_LOG ?=
+MINTY_BASELINE_OVERLAY ?=
 
 minty-baseline-run-manifest:
 	python3 scripts/write-guest-baseline-run.py \
@@ -574,6 +590,9 @@ minty-baseline-run-manifest:
 		--accelerator "$(MINTY_BASELINE_ACCEL)" \
 		--accelerator-reason-code "$(MINTY_BASELINE_REASON)" \
 		--offline-fsck "$(MINTY_BASELINE_FSCK)" \
+		--qemu-argv "$(MINTY_BASELINE_QEMU_ARGV)" \
+		--offline-fsck-transcript "$(MINTY_BASELINE_FSCK_LOG)" \
+		--overlay "$(MINTY_BASELINE_OVERLAY)" \
 		--container "$(MINTY_BASELINE_CONTAINER)" \
 		$(MINTY_BASELINE_EXTRA)
 

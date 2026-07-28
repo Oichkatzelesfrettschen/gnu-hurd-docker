@@ -33,6 +33,15 @@ OUTPUT_DIR="${OUTPUT_DIR:-evidence/guest-state}"
 
 log() { printf '%s\n' "$*" >&2; }
 
+# The manifest binds the status file to the image it was read from, and a
+# manifest with an empty source image names no image at all. The digest is
+# validated here as well as in the collector, because this exporter also runs
+# standalone.
+if ! printf '%s' "${GUEST_IMAGE_SHA256:-}" | grep -Eq '^[0-9a-f]{64}$'; then
+    log "not run: GUEST_IMAGE_SHA256 is ${GUEST_IMAGE_SHA256:-empty}, not a sha256 digest of the booted image"
+    exit 2
+fi
+
 if [ ! -f "$GUEST_SSH_KEY" ]; then
     log "not run: no SSH key at ${GUEST_SSH_KEY}, so the guest was never queried"
     exit 2

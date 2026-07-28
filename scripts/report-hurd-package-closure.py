@@ -869,18 +869,22 @@ def shared_builder(env, records):
     """
     targets = ["%s=%s" % (item["source_package"], item["version"])
                for item in records if item["class"] == "buildable"]
+    # A removal list exists only where a completed simulation produced a
+    # transaction. A failed or unrun simulation returns None rather than [],
+    # because an empty list downstream reads as "measured: nothing removed"
+    # and that is a claim only a successful simulation can make.
     if not targets:
-        return False, "no source in the set is buildable", [], []
+        return "not-run", "no source in the set is buildable", [], None
     rc, out, err = run(
         ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends"] + targets,
         env=env)
     if rc != 0:
-        return False, first_blocker(out + err), [], []
+        return "failed", first_blocker(out + err), [], None
     # Against a seeded tree a builder transaction can displace an installed
     # package, and installing the build dependencies of two sources is exactly
     # where that happens: a -dev package can conflict with the runtime library
     # the image already carries.
-    return True, "", installations(out), removals(out)
+    return "success", "", installations(out), removals(out)
 
 
 def installations(text):
@@ -1053,7 +1057,7 @@ def resolve(args, workspace):
         # source is buildable answers a different question than the field names.
         # What the subset leaves open is whether one builder tree serves all of
         # them at once, and that is what the simulation below decides.
-        shared, blocker, transaction, displaced = shared_builder(env, results)
+        outcome, blocker, transaction, displaced = shared_builder(env, results)
         report = {
             "architecture": args.architecture,
             "set": selection,
@@ -1066,7 +1070,11 @@ def resolve(args, workspace):
             # against. An empty list from an empty tree says nothing, because
             # there was no installed package to displace; an empty list from a
             # tree seeded with the guest's status file is a measurement. The
-            # baseline named in provenance is what tells the two apart.
+            # baseline named in provenance is what tells the two apart, and
+            # transaction_result is what tells a measured empty list from a
+            # simulation that never completed: removals are null unless the
+            # combined simulation succeeded.
+            "transaction_result": outcome,
             "transaction_removals": displaced,
             "provenance": provenance,
             "lmde_overlay": lmde or {"enabled": False},
@@ -1074,7 +1082,7 @@ def resolve(args, workspace):
             "unmatched_patterns": [],
             "resolvable_subset": [item["package"] for item in results
                                   if item["class"] == "buildable"],
-            "resolvable_subset_resolves": shared,
+            "resolvable_subset_resolves": outcome == "success",
             "resolvable_subset_blocker": blocker,
             "recursive_transaction": transaction,
             "recursive_transaction_size": len(transaction),
@@ -1148,8 +1156,12 @@ def resolve(args, workspace):
         # installed package to displace; an empty list from a tree seeded with
         # the guest's status file is a measurement that installing this set
         # keeps the userland it lands on. The baseline named in provenance is
-        # what tells the two apart.
-        "transaction_removals": removals(final_out),
+        # what tells the two apart, and transaction_result is what tells a
+        # measured empty list from a simulation that never completed:
+        # removals are null unless the simulation succeeded.
+        "transaction_result": "success" if final == 0
+                              else ("failed" if resolvable else "not-run"),
+        "transaction_removals": removals(final_out) if final == 0 else None,
         "provenance": provenance,
         "lmde_overlay": lmde or {"enabled": False},
         "packages": results,
@@ -1243,15 +1255,23 @@ def print_removals(report):
     """
     baseline = report["provenance"].get("installed_baseline") or {}
     seeded = isinstance(baseline, dict) and baseline.get("kind") != "empty"
+    outcome = report.get("transaction_result")
     displaced = report.get("transaction_removals") or []
     if not seeded:
         print("removals: not measurable against an empty tree")
+    elif outcome is not None and outcome != "success":
+        # A simulation that failed or never ran produced no transaction, so
+        # there is no removal list to report: absence of a measurement, not a
+        # measurement of zero.
+        print("removals: not measured; the combined simulation %s"
+              % ("did not run" if outcome == "not-run" else "failed"))
     elif displaced:
         print("removals against the %d-package baseline (%d): %s"
               % (baseline.get("package_count", 0), len(displaced),
                  ", ".join(displaced)))
     else:
-        print("removals against the %d-package baseline: none"
+        print("the successfully simulated resolvable subset removes no "
+              "installed package from the %d-package baseline"
               % baseline.get("package_count", 0))
 
 
