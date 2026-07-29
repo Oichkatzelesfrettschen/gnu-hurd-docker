@@ -20,6 +20,8 @@ import sys
 LOCK = os.environ.get("BUILDER_LOCK", "config/minty/builder.lock.json")
 RESOLVER = "scripts/report-hurd-package-closure.py"
 BUILD_CLOSURE = "evidence/hurd-archive/hurd-amd64-build-closure-rebuild-candidates.json"
+BASE_STATUS = "evidence/builder-base/hurd-amd64-dpkg-status"
+BASE_CLOSURE = "evidence/builder-base/hurd-amd64-build-closure-rebuild-candidates.json"
 DOCKERFILE = "Dockerfile.hurd-archive"
 
 
@@ -56,12 +58,42 @@ def main():
     lock["resolver_generator_sha256"] = digest(RESOLVER)
     lock["build_closure_report_sha256"] = digest(BUILD_CLOSURE)
 
+    # The base image is multi-gigabyte local state that the repository excludes,
+    # so a checkout without it cannot re-measure the digest. The recorded value
+    # survives when the file is absent and is recomputed whenever the file is
+    # present, which keeps the CI drift gate meaningful for every digest CI can
+    # actually read while a host holding the image still verifies this one.
     base = lock.setdefault("builder_base", {})
-    base["sha256"] = digest(base.get("path", ""))
-    if not base["sha256"]:
+    if os.path.exists(base.get("path", "")):
+        base["sha256"] = digest(base["path"])
+    if not base.get("sha256"):
         base["status"] = "not built; roadmap 55a"
     else:
         base.pop("status", None)
+
+    # The batch planner sizes its work from the transaction derived against the
+    # finished base, so the lock binds the base's exported status and the
+    # closure seeded with it. The seeded report must name that status file and
+    # the pinned snapshot, or the planner would schedule from a prediction made
+    # against some other installed state.
+    if os.path.exists(BASE_CLOSURE):
+        base["status_sha256"] = digest(BASE_STATUS)
+        base["build_closure_report_sha256"] = digest(BASE_CLOSURE)
+        with open(BASE_CLOSURE, encoding="utf-8") as handle:
+            seeded = json.load(handle)
+        prov = seeded.get("provenance", {})
+        seeded_status = prov.get("installed_baseline", {}).get("sha256", "")
+        if seeded_status != base["status_sha256"]:
+            print("the seeded build closure was resolved against status %s "
+                  "and the exported base status hashes to %s"
+                  % (seeded_status or "(empty)", base["status_sha256"]),
+                  file=sys.stderr)
+            return 1
+        if prov.get("archive_snapshot", "") != lock.get("archive_snapshot"):
+            print("the seeded build closure answered against %s and the lock "
+                  "pins %s" % (prov.get("archive_snapshot") or "a moving suite",
+                               lock.get("archive_snapshot")), file=sys.stderr)
+            return 1
 
     # The report the lock cites has to have answered against the timestamp the
     # lock pins, or the two describe different archives and the build would
