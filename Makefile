@@ -193,6 +193,13 @@ guest-baseline-check:
 		echo "guest-baseline-check: no committed baseline to validate"; \
 	fi
 
+# The lock is a derived artifact: rerunning its writer against the committed
+# tree must reproduce it byte for byte, or the lock cites a resolver or report
+# that is no longer the one in the tree.
+builder-lock-check:
+	python3 scripts/write-builder-lock.py
+	git diff --exit-code config/minty/builder.lock.json
+
 # Availability and dependency facts are archive facts, so they are read on the
 # host in seconds rather than from a guest that takes minutes to boot and holds
 # one mutable qcow2. Hurd binaries cannot execute here; the boundary probe is in
@@ -538,9 +545,18 @@ minty-accel:
 # Every closure verdict is resolved against an empty dpkg status file, so a
 # transaction has no installed package to displace. This is what seeds a
 # resolver run with the real guest, and it reports itself not run when the
-# guest does not answer.
+# guest does not answer. The exporter refuses a run with no valid image
+# digest, so the digest is derived and validated here the way
+# minty-collect-baseline derives it.
 minty-export-state:
-	./scripts/export-guest-package-state.sh
+	@set -e; \
+	test -f "$(MINTY_GUEST_IMAGE)" \
+		|| { echo "no image at $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	digest=$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1); \
+	echo "$$digest" | grep -Eq '^[0-9a-f]{64}$$' \
+		|| { echo "no digest for $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" GUEST_IMAGE_SHA256="$$digest" \
+		./scripts/export-guest-package-state.sh
 
 # A boot is expensive enough that collecting one artifact from it wastes the
 # other dozen, so the baseline collection is one target over one running guest.
@@ -570,9 +586,13 @@ minty-collect-baseline:
 # The measurements the host alone holds are named on the command line and
 # refused when absent, and the container has to still be running for its image
 # and QEMU version to be readable.
-MINTY_BASELINE_ACCEL ?= tcg
+# The accelerator, vCPU count, RAM, and disk bus are derived from the retained
+# argv by the writer, so only the decision's reason code is named here. The
+# filesystem verdict and pre-run digest carry no defaults: the writer validates
+# both before touching the package, so an unset value fails the target rather
+# than writing a manifest its own checker refuses.
 MINTY_BASELINE_REASON ?= disable_kvm_requested
-MINTY_BASELINE_FSCK ?= not run
+MINTY_BASELINE_FSCK ?=
 MINTY_BASELINE_BEFORE ?=
 MINTY_BASELINE_CONTAINER ?=
 # The run artifacts the host alone holds are named explicitly. The writer
@@ -587,7 +607,6 @@ minty-baseline-run-manifest:
 	python3 scripts/write-guest-baseline-run.py \
 		--backing-image "$(MINTY_GUEST_IMAGE)" \
 		--backing-sha256-before "$(MINTY_BASELINE_BEFORE)" \
-		--accelerator "$(MINTY_BASELINE_ACCEL)" \
 		--accelerator-reason-code "$(MINTY_BASELINE_REASON)" \
 		--offline-fsck "$(MINTY_BASELINE_FSCK)" \
 		--qemu-argv "$(MINTY_BASELINE_QEMU_ARGV)" \

@@ -47,12 +47,14 @@ SECRET_MARKERS = ("PRIVATE KEY", "BEGIN OPENSSH", "BEGIN RSA",
 # evidence to that machine, which the repository rules keep out of the tree.
 # Guest and container paths are content -- the baseline exists to record them,
 # and QEMU's own argv names /tmp/qemu-guest-errors.log inside the container.
-# What must not appear is a home directory, which exists only on the machine
-# that produced the run. The complementary rule is that every artifact a
-# manifest advertises is a basename, which artifact() enforces, so a run
-# directory outside the repository never reaches a recorded path in the first
-# place.
-LOCAL_PATH = re.compile(r"(?:/home/|/Users/)")
+# What must not appear is a host location: a home directory in its slash or
+# flattened session-directory spelling, a host scratchpad under /tmp/claude-,
+# or the resolver's private /tmp/hurd-apt- apt workspace. The complementary
+# rule is that every artifact a manifest advertises is a basename, which
+# artifact() enforces, so a run directory outside the repository never reaches
+# a recorded path in the first place.
+LOCAL_PATH = re.compile(
+    r"(?:/home/|/Users/|-home-|-Users-|/tmp/claude-|/tmp/hurd-apt-)")
 DIGEST = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -340,24 +342,25 @@ def check_runtime_against_argv(root, run, failures):
         return None
     pairs = parse_argv(path)
 
+    # Each field is required and compared: a manifest that omits one would
+    # otherwise bypass a fact the retained argv derives.
     accels = [value.split(",")[0] for value in pairs.get("-accel", [])]
     if run.get("accelerator") not in accels:
         failures.append("run.json claims accelerator %r and the argv selects "
                         "%s" % (run.get("accelerator"), ", ".join(accels)
                                 or "none"))
     smp = [value.split(",")[0] for value in pairs.get("-smp", [])]
-    if smp and str(run.get("qemu_smp")) != smp[0]:
+    if not smp or str(run.get("qemu_smp")) != smp[0]:
         failures.append("run.json claims %r vCPUs and the argv asks for %s"
-                        % (run.get("qemu_smp"), smp[0]))
+                        % (run.get("qemu_smp"), smp[0] if smp else "none"))
     ram = [value.split(",")[0] for value in pairs.get("-m", [])]
-    if ram and run.get("qemu_ram_mb") is not None \
-            and str(run.get("qemu_ram_mb")) != ram[0]:
+    if not ram or str(run.get("qemu_ram_mb")) != ram[0]:
         failures.append("run.json claims %r MiB and the argv asks for %s"
-                        % (run.get("qemu_ram_mb"), ram[0]))
+                        % (run.get("qemu_ram_mb"), ram[0] if ram else "none"))
 
     devices = [value.split(",")[0] for value in pairs.get("-device", [])]
     bus = run.get("disk_bus") or ""
-    if bus and not any(device.startswith(bus) for device in devices):
+    if not bus or not any(device.startswith(bus) for device in devices):
         failures.append("run.json claims disk bus %r and the argv attaches %s"
                         % (bus, ", ".join(devices) or "no device"))
 
@@ -374,9 +377,9 @@ def check_runtime_against_argv(root, run, failures):
 
 def check_overlay_chain(root, run, drive, failures):
     """The chain is what links the drive QEMU opened to the image the manifest
-    names. The matching digests in run.json and the status manifest prove the
-    two documents agree with each other; the chain is the artifact that says
-    QEMU used a child of that image."""
+    names, and its base is identified by content: the writer hashed the file
+    the overlay actually backed onto before disposal, so a same-named copy
+    with different bytes fails here rather than passing a name comparison."""
     try:
         path = artifact(root, run.get("overlay_chain"),
                         "run.json overlay_chain")
@@ -388,25 +391,36 @@ def check_overlay_chain(root, run, drive, failures):
     except (Failure, ValueError) as error:
         failures.append("the overlay chain does not parse: %s" % error)
         return
-    if not isinstance(chain, list) or len(chain) < 2:
-        failures.append("the overlay chain records %d image(s); an overlay "
-                        "over a base is two" % (len(chain)
-                                                if isinstance(chain, list)
-                                                else 0))
+    if not isinstance(chain, dict) \
+            or chain.get("kind") != "guest-baseline-overlay-chain":
+        failures.append("the overlay chain is not a sanitized "
+                        "guest-baseline-overlay-chain record")
         return
-    overlay, base = chain[0], chain[1]
-    if drive and os.path.basename(overlay.get("filename", "")) != drive:
+    overlay = chain.get("overlay") or {}
+    backing = chain.get("backing") or {}
+    if drive and overlay.get("basename") != drive:
         failures.append("QEMU opened %s and the chain starts at %s"
-                        % (drive,
-                           os.path.basename(overlay.get("filename", ""))))
-    backing = os.path.basename(overlay.get("backing-filename", ""))
-    named = os.path.basename(run.get("backing_image", ""))
-    if backing != named:
-        failures.append("the overlay backs onto %s and run.json names %s"
-                        % (backing or "nothing", named))
-    if base.get("format") != "qcow2":
-        failures.append("the chain records base format %r"
-                        % base.get("format"))
+                        % (drive, overlay.get("basename") or "nothing"))
+    if backing.get("repository_path") != run.get("backing_image"):
+        failures.append("the chain backs onto %r and run.json names %r"
+                        % (backing.get("repository_path"),
+                           run.get("backing_image")))
+    if backing.get("basename") \
+            != os.path.basename(run.get("backing_image", "")):
+        failures.append("the chain's base basename %r is not the manifest "
+                        "image's" % backing.get("basename"))
+    for field, record in (("overlay", overlay), ("backing", backing)):
+        if record.get("format") != "qcow2":
+            failures.append("the chain records %s format %r"
+                            % (field, record.get("format")))
+    measured = backing.get("sha256") or ""
+    if not DIGEST.match(measured):
+        failures.append("the chain records no measured base digest, so the "
+                        "image QEMU read is identified only by name")
+    elif measured != run.get("backing_sha256_before"):
+        failures.append("the chain's base hashes to %s and run.json declares "
+                        "%s; QEMU read a different image than the manifest "
+                        "names" % (measured, run.get("backing_sha256_before")))
 
 
 def check_fsck_transcript(root, run, failures):
@@ -436,7 +450,7 @@ def check_fsck_transcript(root, run, failures):
 
 def check_run(root, manifest, failures):
     run = load(os.path.join(root, "run.json"))
-    if run.get("schema_version") != 3:
+    if run.get("schema_version") != 4:
         failures.append("run.json declares schema_version %r"
                         % run.get("schema_version"))
     for field in ("repository_commit", "container_image_id", "qemu_version",
@@ -448,6 +462,16 @@ def check_run(root, manifest, failures):
     drive = check_runtime_against_argv(root, run, failures)
     check_overlay_chain(root, run, drive, failures)
     check_fsck_transcript(root, run, failures)
+
+    # The package count in run.json and the one in the status manifest are two
+    # statements of one measurement; the manifest's own count is already
+    # checked against the parsed paragraphs, so this closes the triangle.
+    if manifest is not None \
+            and run.get("guest_packages") != manifest.get("package_count"):
+        failures.append("run.json records %r guest packages and the status "
+                        "manifest counts %r"
+                        % (run.get("guest_packages"),
+                           manifest.get("package_count")))
 
     # The index is what makes the run's own output tamper-evident: a file
     # added, removed, or edited after the run shows up as an index that no
@@ -539,8 +563,16 @@ def cross_check(root, probes, manifest, failures):
     for probe in probes.get("probes") or []:
         if probe.get("name") == "dpkg-architecture" \
                 and probe.get("class") == "observed":
-            with open(os.path.join(root, probe["stdout"]),
-                      encoding="utf-8") as handle:
+            # The stream resolves through the same confinement contract as
+            # every other artifact, so a symlink or path here becomes an
+            # ordinary finding rather than a bypass or an uncaught exception.
+            try:
+                path = artifact(root, probe.get("stdout"),
+                                "probe dpkg-architecture stdout")
+            except Failure as error:
+                failures.append(str(error))
+                continue
+            with open(path, encoding="utf-8") as handle:
                 reported = handle.read().strip()
     if reported and reported != manifest.get("architecture"):
         failures.append("the guest reported architecture %s and the status "

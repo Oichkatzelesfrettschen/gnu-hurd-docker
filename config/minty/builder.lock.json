@@ -9,7 +9,7 @@
     "status": "not built; roadmap 55a"
   },
   "comment": "One archive state and one base image identify a build. The resolver that schedules the build, the guest APT configuration, the source downloads, and the package builder all read this file, because a timestamp recorded in one of them and not the others reproduces nothing. builder_base.sha256 stays empty until the base image exists; the runner refuses an unpinned or absent base rather than building against whatever is present.",
-  "resolver_generator_sha256": "649ece0d2964571f757ae84ccadc04e8c4b61b4881866678c76dc3dced312e24",
+  "resolver_generator_sha256": "d22df7ad779b26d1410788545089733382d474c6d2b4da139155ffaa3bd97156",
   "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
   "schema_version": 1,
   "sources": [

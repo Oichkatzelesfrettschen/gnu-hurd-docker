@@ -28,15 +28,17 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 RUN_MANIFEST = "run.json"
 QEMU_ARGV = "qemu-argv.txt"
 FSCK_TRANSCRIPT = "offline-fsck.log"
 OVERLAY_CHAIN = "overlay-chain.json"
+DIGEST = re.compile(r"^[0-9a-f]{64}$")
 
 
 def digest(path):
@@ -60,21 +62,118 @@ def place(source, root, name):
     return name
 
 
-def capture_overlay_chain(overlay, root):
-    """Read the overlay's backing chain while the overlay still exists.
+def parse_argv_file(path):
+    """Read the retained argv as the option/value pairs QEMU parsed."""
+    with open(path, encoding="utf-8") as handle:
+        words = [line.rstrip("\n") for line in handle if line.strip()]
+    pairs = {}
+    index = 1
+    while index < len(words):
+        word = words[index]
+        if word.startswith("-"):
+            value = ""
+            if index + 1 < len(words) and not words[index + 1].startswith("-"):
+                value = words[index + 1]
+                index += 1
+            pairs.setdefault(word, []).append(value)
+        index += 1
+    return pairs
 
-    The chain is what links the drive QEMU opened to the image the manifest
-    names; after disposal nothing can re-derive it, which is why the manifest
-    is written before the overlay is discarded."""
+
+def derive_runtime(argv_path):
+    """Derive the accelerator, vCPU count, RAM, disk bus, and drive from the
+    retained argv. The argv is the run's own record of what QEMU was asked to
+    do, so a value supplied a second time on this command line would be a claim
+    the manifest could contradict; deriving them leaves one authority."""
+    pairs = parse_argv_file(argv_path)
+    facts = {}
+    for option, name in (("-accel", "accelerator"), ("-smp", "vCPU count"),
+                         ("-m", "RAM")):
+        values = pairs.get(option, [])
+        if not values:
+            raise SystemExit("the argv carries no %s option, so the run's %s "
+                             "is underivable" % (option, name))
+        facts[option] = values[0].split(",")[0]
+    drive_id, drive_basename = "", ""
+    for value in pairs.get("-drive", []):
+        for part in value.split(","):
+            if part.startswith("file="):
+                drive_basename = os.path.basename(part[len("file="):])
+            if part.startswith("id="):
+                drive_id = part[len("id="):]
+    if not drive_basename:
+        raise SystemExit("the argv names no -drive file, so the run describes "
+                         "a guest with no disk")
+    bus = ""
+    for value in pairs.get("-device", []):
+        parts = value.split(",")
+        if drive_id and ("drive=%s" % drive_id) in parts[1:]:
+            bus = parts[0].split("-")[0]
+    if not bus:
+        raise SystemExit("no -device attaches drive %r, so the disk bus is "
+                         "underivable from the argv" % drive_id)
+    return {"accelerator": facts["-accel"], "qemu_smp": int(facts["-smp"]),
+            "qemu_ram_mb": int(facts["-m"]), "disk_bus": bus,
+            "drive_basename": drive_basename}
+
+
+def sanitize_chain(chain, chain_source, backing, before, drive_basename):
+    """Reduce a raw qemu-img backing chain to the facts the evidence carries,
+    binding the base by content rather than by name.
+
+    The raw capture names the producing machine's directories in every
+    filename field, and its base is identified only by basename -- a
+    same-named copy with different bytes would satisfy a name comparison. The
+    actual base file is therefore hashed while it still exists, and the digest
+    is what the committed record carries.
+    """
+    if not isinstance(chain, list) or len(chain) < 2:
+        raise SystemExit("the overlay chain records %d image(s); an overlay "
+                         "over a base is two"
+                         % (len(chain) if isinstance(chain, list) else 0))
+    overlay, base = chain[0], chain[1]
+    found = os.path.basename(overlay.get("filename", ""))
+    if found != drive_basename:
+        raise SystemExit("QEMU opened %s and the captured chain starts at %s"
+                         % (drive_basename, found or "nothing"))
+    actual_base = overlay.get("full-backing-filename") or os.path.join(
+        os.path.dirname(chain_source), overlay.get("backing-filename", ""))
+    if not os.path.isfile(actual_base):
+        raise SystemExit("the chain's base %r is gone, so the image QEMU "
+                         "actually read cannot be hashed; capture the chain "
+                         "before disposing of the run directory" % actual_base)
+    base_sha256 = digest(actual_base)
+    if base_sha256 != before:
+        raise SystemExit("the chain's base hashes to %s and the run declares "
+                         "%s; QEMU read a different image than the one the "
+                         "manifest names" % (base_sha256, before))
+    return {
+        "kind": "guest-baseline-overlay-chain",
+        "overlay": {"basename": os.path.basename(overlay.get("filename", "")),
+                    "format": overlay.get("format", "")},
+        "backing": {"repository_path": backing,
+                    "basename": os.path.basename(backing),
+                    "format": base.get("format", ""),
+                    "sha256": base_sha256},
+    }
+
+
+def capture_overlay_chain(overlay, root, backing, before, drive_basename):
+    """Read and sanitize the overlay's backing chain while the overlay and its
+    base still exist; after disposal nothing can re-derive or re-hash them,
+    which is why the manifest is written before the overlay is discarded."""
     result = subprocess.run(["qemu-img", "info", "--backing-chain",
                              "--output=json", overlay],
                             capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise SystemExit("qemu-img could not read the overlay chain of %s: %s"
                          % (overlay, result.stderr.strip()))
+    sanitized = sanitize_chain(json.loads(result.stdout), overlay, backing,
+                               before, drive_basename)
     with open(os.path.join(root, OVERLAY_CHAIN), "w",
               encoding="utf-8") as handle:
-        handle.write(result.stdout)
+        json.dump(sanitized, handle, indent=2, sort_keys=True)
+        handle.write("\n")
     return OVERLAY_CHAIN
 
 
@@ -155,7 +254,6 @@ def main(argv=None):
                              "booted; its digest is read now")
     parser.add_argument("--backing-sha256-before", required=True,
                         help="the digest recorded before the run started")
-    parser.add_argument("--accelerator", required=True)
     parser.add_argument("--accelerator-reason-code", required=True)
     parser.add_argument("--offline-fsck", required=True,
                         choices=["clean", "dirty", "not run"])
@@ -168,36 +266,43 @@ def main(argv=None):
                         help="this run's overlay, read for its backing chain "
                              "and size before disposal")
     parser.add_argument("--overlay-chain", default="",
-                        help="a backing-chain record already captured from "
-                             "this run's overlay, for a caller that has "
-                             "disposed of it")
+                        help="a raw qemu-img backing-chain capture from this "
+                             "run's overlay whose base file still exists, for "
+                             "a caller that has disposed of the overlay")
     parser.add_argument("--container", default="",
                         help="a running container to read the image and QEMU "
                              "version from")
     parser.add_argument("--container-image-id", default="")
     parser.add_argument("--qemu-version", default="")
-    parser.add_argument("--qemu-smp", type=int, default=1)
-    parser.add_argument("--qemu-ram-mb", type=int, default=0)
-    parser.add_argument("--disk-bus", default="")
     parser.add_argument("--overlay-size", default="")
     parser.add_argument("--overlay-discarded", action="store_true")
     args = parser.parse_args(argv)
 
+    # Every input is validated before the package is touched: a writer that
+    # copies files in and then refuses leaves the persistent evidence
+    # directory half-mutated by a run whose manifest was never written.
     root = args.root
     if not os.path.isdir(root):
         raise SystemExit("no baseline directory at %s" % root)
     backing = repository_relative(args.backing_image)
     if not os.path.exists(backing):
         raise SystemExit("no backing image at %s" % backing)
-
-    place(args.qemu_argv, root, QEMU_ARGV)
-    place(args.offline_fsck_transcript, root, FSCK_TRANSCRIPT)
-    if args.overlay and os.path.exists(args.overlay):
-        capture_overlay_chain(args.overlay, root)
-    else:
-        place(args.overlay_chain, root, OVERLAY_CHAIN)
-
-    probes, index = run_artifacts(root)
+    if not DIGEST.match(args.backing_sha256_before):
+        raise SystemExit("--backing-sha256-before is %r, which names no "
+                         "image" % args.backing_sha256_before)
+    if args.offline_fsck != "clean":
+        raise SystemExit("the filesystem check is %r; an accepted baseline "
+                         "certifies a clean filesystem, and a failed run is "
+                         "retained as a separate package (roadmap 79f) rather "
+                         "than written over the accepted one"
+                         % args.offline_fsck)
+    if not (args.qemu_argv and os.path.isfile(args.qemu_argv)):
+        raise SystemExit("no QEMU argv at %r" % args.qemu_argv)
+    if not (args.offline_fsck_transcript
+            and os.path.isfile(args.offline_fsck_transcript)):
+        raise SystemExit("no filesystem-check transcript at %r"
+                         % args.offline_fsck_transcript)
+    runtime = derive_runtime(args.qemu_argv)
 
     image_id, qemu_version = args.container_image_id, args.qemu_version
     if args.container and not (image_id and qemu_version):
@@ -211,6 +316,29 @@ def main(argv=None):
                              "because a manifest that omits the process that "
                              "produced the evidence names no producer" % name)
 
+    place(args.qemu_argv, root, QEMU_ARGV)
+    place(args.offline_fsck_transcript, root, FSCK_TRANSCRIPT)
+    if args.overlay and os.path.exists(args.overlay):
+        capture_overlay_chain(args.overlay, root, backing,
+                              args.backing_sha256_before,
+                              runtime["drive_basename"])
+    else:
+        if not (args.overlay_chain and os.path.isfile(args.overlay_chain)):
+            raise SystemExit("no overlay and no captured chain; the chain is "
+                             "what links the drive QEMU opened to the image "
+                             "the manifest names")
+        with open(args.overlay_chain, encoding="utf-8") as handle:
+            raw = json.load(handle)
+        sanitized = sanitize_chain(raw, args.overlay_chain, backing,
+                                   args.backing_sha256_before,
+                                   runtime["drive_basename"])
+        with open(os.path.join(root, OVERLAY_CHAIN), "w",
+                  encoding="utf-8") as handle:
+            json.dump(sanitized, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+
+    probes, index = run_artifacts(root)
+
     after = digest(backing)
     manifest = {
         "schema_version": SCHEMA_VERSION,
@@ -219,10 +347,11 @@ def main(argv=None):
         "container_image_id": image_id,
         "qemu_version": qemu_version,
         "qemu_argv": QEMU_ARGV,
-        "accelerator": args.accelerator,
+        "accelerator": runtime["accelerator"],
         "accelerator_reason_code": args.accelerator_reason_code,
-        "qemu_smp": args.qemu_smp,
-        "disk_bus": args.disk_bus,
+        "qemu_smp": runtime["qemu_smp"],
+        "qemu_ram_mb": runtime["qemu_ram_mb"],
+        "disk_bus": runtime["disk_bus"],
         "backing_image": backing,
         "backing_sha256_before": args.backing_sha256_before,
         "backing_sha256_after": after,
@@ -236,8 +365,6 @@ def main(argv=None):
         "guest_packages": 0,
         "artifact_sha256": index,
     }
-    if args.qemu_ram_mb:
-        manifest["qemu_ram_mb"] = args.qemu_ram_mb
 
     status_manifests = [name for name in index
                         if name.endswith("-dpkg-status.json")]

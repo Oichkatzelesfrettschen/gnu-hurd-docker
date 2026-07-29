@@ -99,6 +99,12 @@ jobs:
       - name: Validate the committed guest baseline
         run: make guest-baseline-check
 
+      # The lock's digests are read from the files they name, so a resolver or
+      # report edit that skips the lock writer shows up as a diff here rather
+      # than as a build scheduled from stale inputs.
+      - name: Assert the builder lock reproduces from the tree
+        run: make builder-lock-check
+
       # The resolver's verdicts are produced by apt over a synthetic
       # architecture, so a source-level pass says nothing about whether a
       # verdict is right.  The image build proves the resolver's dependencies

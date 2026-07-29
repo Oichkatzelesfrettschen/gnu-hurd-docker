@@ -50,11 +50,13 @@ QEMU_ARGV = (
     "-device\nide-hd,drive=drive0\n"
 )
 
-OVERLAY_CHAIN = json.dumps([
-    {"filename": "/opt/hurd-run/overlay.qcow2", "format": "qcow2",
-     "backing-filename": "fixture.qcow2"},
-    {"filename": "/opt/hurd-run/fixture.qcow2", "format": "qcow2"},
-], indent=2) + "\n"
+OVERLAY_CHAIN = json.dumps({
+    "kind": "guest-baseline-overlay-chain",
+    "overlay": {"basename": "overlay.qcow2", "format": "qcow2"},
+    "backing": {"repository_path": "images/fixture.qcow2",
+                "basename": "fixture.qcow2", "format": "qcow2",
+                "sha256": IMAGE_DIGEST},
+}, indent=2) + "\n"
 
 
 def sha256(text):
@@ -184,7 +186,7 @@ def build(root):
           json.dumps(report, indent=2, sort_keys=True) + "\n")
 
     run = {
-        "schema_version": 3,
+        "schema_version": 4,
         "kind": "guest-baseline-run",
         "repository_commit": probes["repository_commit"],
         "container_image_id": "sha256:" + "e" * 64,
@@ -300,6 +302,45 @@ def main():
         status, output = check(pristine)
         suite.check("a complete baseline is accepted", status == 0, output)
 
+        # The writer's chain binding is content-addressed: a base file whose
+        # basename matches the manifest image but whose bytes differ is the
+        # exact composite a name comparison accepts, so the writer must refuse
+        # it before any manifest is written.
+        stage = os.path.join(workspace, "writer-stage")
+        out = os.path.join(stage, "out")
+        os.makedirs(os.path.join(stage, "images"))
+        os.makedirs(out)
+        before = write(stage, "images/fixture.qcow2", "canonical bytes\n")
+        write(stage, "fixture.qcow2", "different bytes, same basename\n")
+        write(stage, "chain-raw.json", json.dumps([
+            {"filename": os.path.join(stage, "overlay.qcow2"),
+             "format": "qcow2", "backing-filename": "fixture.qcow2",
+             "full-backing-filename": os.path.join(stage, "fixture.qcow2")},
+            {"filename": os.path.join(stage, "fixture.qcow2"),
+             "format": "qcow2"},
+        ]) + "\n")
+        write(stage, "argv.txt", QEMU_ARGV)
+        write(stage, "fsck.log", "$ guestfish e2fsck /dev/sda5\nexit=0\n")
+        writer = os.path.join(ROOT, "scripts", "write-guest-baseline-run.py")
+        result = subprocess.run(
+            [sys.executable, writer, "--root", out,
+             "--backing-image", "images/fixture.qcow2",
+             "--backing-sha256-before", before,
+             "--accelerator-reason-code", "disable_kvm_requested",
+             "--offline-fsck", "clean",
+             "--qemu-argv", os.path.join(stage, "argv.txt"),
+             "--offline-fsck-transcript", os.path.join(stage, "fsck.log"),
+             "--overlay-chain", os.path.join(stage, "chain-raw.json"),
+             "--container-image-id", "sha256:" + "e" * 64,
+             "--qemu-version", "8.2.2"],
+            capture_output=True, text=True, check=False, cwd=stage)
+        suite.check(
+            "the writer refuses a chain base whose bytes are not the named "
+            "image's",
+            result.returncode != 0
+            and "different image" in result.stderr + result.stdout,
+            (result.stderr + result.stdout).replace("\n", " | ")[:200])
+
         # Each case is (description, damage, marker, reindex). A case that
         # means to break the digest index leaves it stale; every other case
         # rebuilds it first, so the assertion under test is the one that fires
@@ -407,8 +448,57 @@ def main():
             ("an overlay chain onto another image is refused",
              lambda root: edit_json(
                  root, "overlay-chain.json",
-                 lambda d: d[0].update({"backing-filename": "other.qcow2"})),
+                 lambda d: d["backing"].update(
+                     {"repository_path": "images/other.qcow2"})),
              "run.json names", True),
+            ("a chain base whose bytes are not the manifest image is refused",
+             lambda root: edit_json(
+                 root, "overlay-chain.json",
+                 lambda d: d["backing"].update({"sha256": "c" * 64})),
+             "different image than the manifest names", True),
+            ("a chain with no measured base digest is refused",
+             lambda root: edit_json(
+                 root, "overlay-chain.json",
+                 lambda d: d["backing"].update({"sha256": ""})),
+             "no measured base digest", True),
+            ("a raw unsanitized chain capture is refused",
+             lambda root: write(root, "overlay-chain.json", json.dumps([
+                 {"filename": "overlay.qcow2", "format": "qcow2",
+                  "backing-filename": "fixture.qcow2"},
+                 {"filename": "fixture.qcow2", "format": "qcow2"},
+             ]) + "\n"),
+             "sanitized", True),
+            ("a package count run.json does not share with the manifest is "
+             "refused",
+             lambda root: edit_json(
+                 root, "run.json", lambda d: d.update({"guest_packages": 99})),
+             "guest packages", True),
+            ("a run manifest that omits the RAM the argv asks for is refused",
+             lambda root: edit_json(
+                 root, "run.json", lambda d: d.pop("qemu_ram_mb")),
+             "MiB", True),
+            ("a flattened home-directory path in an artifact is refused",
+             lambda root: rewrite_probe_artifact(
+                 root, "nproc.txt", "-home-someone-Github-tree\n"),
+             "machine-local path", True),
+            ("a host scratchpad path in an artifact is refused",
+             lambda root: rewrite_probe_artifact(
+                 root, "nproc.txt", "/tmp/claude-1000/session/run\n"),
+             "machine-local path", True),
+            ("a resolver apt-workspace path in an artifact is refused",
+             lambda root: rewrite_probe_artifact(
+                 root, "nproc.txt",
+                 "100 /tmp/hurd-apt-abc123/var/lib/dpkg/status\n"),
+             "machine-local path", True),
+            ("an architecture probe with no stdout record is a finding, not a "
+             "crash",
+             lambda root: edit_json(
+                 root, "probes.json",
+                 lambda d: [probe.update({"stdout": None,
+                                          "stdout_sha256": None})
+                            for probe in d["probes"]
+                            if probe["name"] == "dpkg-architecture"]),
+             "dpkg-architecture stdout names", True),
             ("a clean verdict the transcript does not derive is refused",
              lambda root: write(
                  root, "offline-fsck.log",

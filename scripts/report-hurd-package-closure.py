@@ -606,22 +606,26 @@ def expand(env, packages):
     return resolved, unmatched
 
 
-def candidate_origin(env, package, workspace):
+def candidate_origin(env, package, workspace, status_identity):
     """Report which configured source supplies the candidate.
 
     apt-cache policy marks the installed-or-selected entry with ***; absent
     that, the first priority line of the version table is the candidate's, which
     is what distinguishes a Debian Ports answer from an overlay answer.
 
-    The overlay lives under a per-invocation temporary directory, so its path is
-    replaced by the overlay's origin name: the raw path is machine-only state
-    that would differ on every rerun and make two reports of the same archive
-    read as two different results.
+    The overlay and the seeded dpkg status both live under a per-invocation
+    temporary directory, so their paths are replaced by stable identities: the
+    overlay by its origin name, the status file by the installed baseline's
+    digest-bound identity. The raw paths are machine-only state that would
+    differ on every rerun and make two reports of the same archive read as two
+    different results.
     """
     status, out, _ = run(["apt-cache", "policy", package], env=env)
     if status != 0:
         return ""
-    lines = [line.strip().replace("file:%s/lmde" % workspace, OVERLAY_ORIGIN)
+    lines = [line.strip()
+             .replace("file:%s/lmde" % workspace, OVERLAY_ORIGIN)
+             .replace("%s/var/lib/dpkg/status" % workspace, status_identity)
              for line in out.splitlines()]
     for index, line in enumerate(lines):
         if line.startswith("***") and index + 1 < len(lines):
@@ -641,7 +645,7 @@ def architecture_all(env, package):
     return architectures == {"all"}
 
 
-def classify(env, package, architecture, workspace):
+def classify(env, package, architecture, workspace, status_identity):
     status, out, _ = run(["apt-cache", "show", package], env=env)
     if status != 0 or not out.strip():
         return {"package": package, "class": "missing",
@@ -651,7 +655,8 @@ def classify(env, package, architecture, workspace):
     version = versions[0] if versions else ""
     record = {"package": package, "version": version,
               "architectures": sorted(set(architectures)),
-              "candidate_origin": candidate_origin(env, package, workspace)}
+              "candidate_origin": candidate_origin(env, package, workspace,
+                                                   status_identity)}
     if architecture in architectures:
         klass = "native"
     elif "all" in architectures:
@@ -1122,7 +1127,10 @@ def resolve(args, workspace):
     if foreign:
         packages = [name if architecture_all(env, name)
                     else "%s:%s" % (name, foreign) for name in packages]
-    results = [classify(env, name, target, workspace) for name in packages]
+    status_identity = ("installed-baseline:%s" % baseline["sha256"]
+                       if baseline.get("sha256") else "installed-baseline:empty")
+    results = [classify(env, name, target, workspace, status_identity)
+               for name in packages]
     unmet, resolvable = missing_dependencies(results)
 
     if resolvable:

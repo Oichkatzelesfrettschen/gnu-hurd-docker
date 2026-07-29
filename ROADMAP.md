@@ -142,6 +142,8 @@ This roadmap focuses on making the project **portable**, **truthful**, and **rep
 
 79e. [x] Recapture the baseline from the final committed producer and certify it in CI, so the code that produced the evidence exists in its exact final form before the evidence it is cited for
 
+79g. [ ] Identify the chain base by content rather than by name and keep every host location out of the committed record. The writer hashes the file the overlay actually backed onto before disposal, `overlay-chain.json` is a sanitized record carrying the repository path, basename, format, and measured digest instead of the raw qemu-img capture, the checker requires the measured digest to equal the run's backing digests, and the hygiene rule also refuses flattened home paths, host scratchpads, and resolver apt workspaces; resolver installed-status origins read `installed-baseline:<sha256>`. Certified when the recaptured package passes in CI
+
 79f. [ ] Retain and classify failed boot attempts as separate evidence packages rather than folding them into the accepted baseline's narrative
 
 81. [ ] Reproduce the intermittent pre-SSH TCG boot stall with retained serial, monitor, QEMU-error, overlay-growth, and process evidence. One of three similarly prepared TCG/UP/IDE overlay boots held QEMU at 2% CPU with the overlay static at 964 KiB for thirty minutes and never reached `sshd`, while a fresh overlay prepared identically answered in 165 seconds. The run was TCG, so it exercised neither the KVM DMA mechanism of item 33 nor an `sshd` crash for item 34; the failure phase was not retained, so the mechanism is unclassified until a failed arm is captured with its serial transcript, `info status`, `info cpus`, guest-error log, and post-termination filesystem state
