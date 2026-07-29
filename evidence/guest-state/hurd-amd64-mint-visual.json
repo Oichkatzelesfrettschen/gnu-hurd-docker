@@ -1,0 +1,491 @@
+{
+  "architecture": "hurd-amd64",
+  "foreign_architecture": {
+    "enabled": false,
+    "foreign_qualified_in_transaction": 0,
+    "name": "",
+    "native_packages_removed": []
+  },
+  "lmde_overlay": {
+    "architecture_all_packages": 152,
+    "components": [
+      "main",
+      "upstream",
+      "import",
+      "backport"
+    ],
+    "mirror": "https://mirrors.edge.kernel.org/linuxmint-packages",
+    "overlay_release_sha256": "53b60b37d0ed1e2b1ecbd7d562c2f4be9ddf8b142583f8143b2c5d954a674cdc",
+    "release_date": "Fri, 24 Jul 2026 08:20:07 UTC",
+    "release_sha256": "afbe33a9d2538774e147be3ede942c314c95f48b96ec4e3d19f0169b5ddfd02c",
+    "signing_key_fingerprint": "302F0738F465C1535761F965A6616109451BBBF2",
+    "source_index_sha256": {
+      "backport/binary-amd64/Packages.gz": "441146771d1d02ce8cf7594841d520bc5090bff806344ceb5e4d9183a3eaa2f2",
+      "import/binary-amd64/Packages.gz": "08a3961bf20489c459d1df61a89a2f44b838d3c06a9057351c6538110099b5d0",
+      "main/binary-amd64/Packages.gz": "f3c350b9eca103da5788521d8039a0293094576b76b29d3573deb3b66d3867dc",
+      "upstream/binary-amd64/Packages.gz": "899074717455cdea7bd476d35668758edb0afc9fd6b356a6f9d016b2df72f985"
+    },
+    "suite": "gigi"
+  },
+  "mode": "binary",
+  "must_be_built_or_substituted": [],
+  "packages": [
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-themes",
+      "version": "2.3.8"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-l-theme",
+      "version": "2.0.6"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-l-icons",
+      "version": "1.8.0"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-x-icons",
+      "version": "1.7.5"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-y-icons",
+      "version": "1.9.2-1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-cursor-themes",
+      "version": "1.0.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-artwork",
+      "version": "1.9.3"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-maya",
+      "version": "1.5"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-nadia",
+      "version": "1.4"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-olivia",
+      "version": "1.7"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-petra",
+      "version": "1.7"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-qiana",
+      "version": "1.5"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-rafaela",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-rebecca",
+      "version": "1.5"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-retro",
+      "version": "1.3"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-rosa",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-sarah",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-serena",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-sonya",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-sylvia",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-tara",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-tessa",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-tina",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-tricia",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-ulyana",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-ulyssa",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-uma",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-una",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-vanessa",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-vera",
+      "version": "1.0"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-victoria",
+      "version": "1.2"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-virginia",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-wallpapers",
+      "version": "1.0"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 installed-baseline:a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-backgrounds-wilma",
+      "version": "1.1"
+    },
+    {
+      "architectures": [
+        "all"
+      ],
+      "candidate_origin": "100 lmde-arch-all-overlay gigi/main hurd-amd64 Packages",
+      "class": "architecture-all",
+      "evidence": "dependencies resolve",
+      "package": "mint-translations",
+      "version": "2026.01.08"
+    }
+  ],
+  "provenance": {
+    "archive_snapshot": "20260726T003219Z",
+    "collected_at": "2026-07-29T01:49:02+00:00",
+    "debian_ports_mirror": "https://snapshot.debian.org/archive/debian-ports/20260726T003219Z",
+    "generator_sha256": "d22df7ad779b26d1410788545089733382d474c6d2b4da139155ffaa3bd97156",
+    "installed_baseline": {
+      "architecture": "hurd-amd64",
+      "kind": "guest-dpkg-status",
+      "package_count": 740,
+      "path": "status",
+      "sha256": "a7f78cdc24a9e1cf71df4ee832b8b270600fecd8499a87687e04dd9c4a7abf1b"
+    },
+    "resolver_image": "debian@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd",
+    "schema_version": 2,
+    "suites": [
+      "sid",
+      "unreleased"
+    ],
+    "tools": {
+      "apt": "apt 3.0.3 (amd64)",
+      "dpkg": "Debian 'dpkg' package management program version 1.22.22 (amd64)."
+    }
+  },
+  "recursive_transaction": [
+    "mint-x-icons [1.7.5] (1.7.5 LMDE Architecture: all overlay:gigi [all])",
+    "mint-y-icons [1.9.2-1] (1.9.2-1 ftp.ports.debian.org:unstable [all])",
+    "mint-themes [2.3.8] (2.3.8 LMDE Architecture: all overlay:gigi [all])",
+    "mint-cursor-themes [1.0.2] (1.0.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-artwork [1.9.3] (1.9.3 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-maya (1.5 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-nadia (1.4 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-olivia (1.7 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-petra (1.7 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-qiana (1.5 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-rafaela (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-rebecca (1.5 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-retro (1.3 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-rosa (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-sarah (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-serena (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-sonya (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-sylvia (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-tara (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-tessa (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-tina (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-tricia (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-ulyana (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-ulyssa (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-uma (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-una (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-vanessa (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-vera (1.0 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-victoria (1.2 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-virginia (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-wallpapers (1.0 LMDE Architecture: all overlay:gigi [all])",
+    "mint-backgrounds-wilma [1.1] (1.1 LMDE Architecture: all overlay:gigi [all])",
+    "mint-l-icons [1.8.0] (1.8.0 LMDE Architecture: all overlay:gigi [all])",
+    "mint-l-theme [2.0.6] (2.0.6 LMDE Architecture: all overlay:gigi [all])",
+    "mint-translations (2026.01.08 LMDE Architecture: all overlay:gigi [all])"
+  ],
+  "recursive_transaction_size": 35,
+  "resolvable_subset": [
+    "mint-themes",
+    "mint-l-theme",
+    "mint-l-icons",
+    "mint-x-icons",
+    "mint-y-icons",
+    "mint-cursor-themes",
+    "mint-artwork",
+    "mint-backgrounds-maya",
+    "mint-backgrounds-nadia",
+    "mint-backgrounds-olivia",
+    "mint-backgrounds-petra",
+    "mint-backgrounds-qiana",
+    "mint-backgrounds-rafaela",
+    "mint-backgrounds-rebecca",
+    "mint-backgrounds-retro",
+    "mint-backgrounds-rosa",
+    "mint-backgrounds-sarah",
+    "mint-backgrounds-serena",
+    "mint-backgrounds-sonya",
+    "mint-backgrounds-sylvia",
+    "mint-backgrounds-tara",
+    "mint-backgrounds-tessa",
+    "mint-backgrounds-tina",
+    "mint-backgrounds-tricia",
+    "mint-backgrounds-ulyana",
+    "mint-backgrounds-ulyssa",
+    "mint-backgrounds-uma",
+    "mint-backgrounds-una",
+    "mint-backgrounds-vanessa",
+    "mint-backgrounds-vera",
+    "mint-backgrounds-victoria",
+    "mint-backgrounds-virginia",
+    "mint-backgrounds-wallpapers",
+    "mint-backgrounds-wilma",
+    "mint-translations"
+  ],
+  "resolvable_subset_blocker": "",
+  "resolvable_subset_resolves": true,
+  "set": "mint-visual",
+  "summary": {
+    "architecture-all": 35
+  },
+  "transaction_removals": [],
+  "transaction_result": "success",
+  "unmatched_patterns": []
+}

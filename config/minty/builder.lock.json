@@ -2,7 +2,7 @@
   "archive_key_note": "debian-ports rotates its archive signing key, so a snapshot older than the keyring shipped in the resolver image fails signature verification rather than expiry. A timestamp is pinned together with the keyring vintage that can verify it.",
   "archive_snapshot": "20260726T003219Z",
   "build_closure_archive_snapshot": "20260726T003219Z",
-  "build_closure_report_sha256": "f443f6ec0ffdd60df1f86fc6c713bcb4d0ea184f1cb53bd46ab56b51521285a4",
+  "build_closure_report_sha256": "933757276436fefeaaf940eeb22133009b525047f015094f68e5663723872b7d",
   "builder_base": {
     "path": "images/minty-hurd-builder-base.qcow2",
     "sha256": "",
