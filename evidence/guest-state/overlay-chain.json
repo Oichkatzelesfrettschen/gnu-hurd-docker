@@ -1,0 +1,13 @@
+{
+  "backing": {
+    "basename": "hurd-working.qcow2",
+    "format": "qcow2",
+    "repository_path": "images/hurd-working.qcow2",
+    "sha256": "a2afe1ea41ce7a7b58afb90ef4dff190a1722e034a7022a5601e2b583dca8ad1"
+  },
+  "kind": "guest-baseline-overlay-chain",
+  "overlay": {
+    "basename": "overlay.qcow2",
+    "format": "qcow2"
+  }
+}

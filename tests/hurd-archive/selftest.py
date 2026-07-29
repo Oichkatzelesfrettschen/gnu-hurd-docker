@@ -711,6 +711,17 @@ def test_installed_baseline(module, suite, workspace):
                 all(not item.get("removes") for item in empty["packages"]),
                 str([item.get("removes") for item in empty["packages"]]))
 
+    # A per-package removal answers what installing one member displaces. The
+    # set is installed as one transaction, so what that transaction displaces is
+    # a separate field, and a reader looking for "does this set replace part of
+    # the userland" reads the second rather than reassembling the first.
+    suite.check("the set-level transaction names what it displaces",
+                "fixture-installed" in seeded["transaction_removals"],
+                str(seeded["transaction_removals"]))
+    suite.check("the set-level removal list is empty against an empty baseline",
+                empty["transaction_removals"] == [],
+                str(empty["transaction_removals"]))
+
     wrong = os.path.join(workspace, "guest-status-wrong-port")
     with open(wrong, "w", encoding="utf-8") as handle:
         handle.write("Package: fixture-installed\n"

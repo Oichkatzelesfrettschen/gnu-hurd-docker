@@ -34,6 +34,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # The guest-baseline gate verifies the recorded producer digests
+          # against the commit the collection ran from through git show, and a
+          # depth-1 checkout carries only the merge commit, which makes every
+          # committed producer digest unverifiable.
+          fetch-depth: 0
 
       - name: Install gate dependencies
         run: |
@@ -84,6 +90,20 @@ jobs:
       # how a sanitized capture came to fail its own integrity record.
       - name: Validate the runtime evidence contract
         run: make evidence-check
+
+      # The guest baseline seeds every closure verdict that claims to describe
+      # this image, so a probe that silently stopped answering propagates into
+      # a resolver report as a fact.  This asserts the package against itself:
+      # advertised artifacts exist, digests match, required probes reached an
+      # answer, and a partial capture is labelled rather than presented as one.
+      - name: Validate the committed guest baseline
+        run: make guest-baseline-check
+
+      # The lock's digests are read from the files they name, so a resolver or
+      # report edit that skips the lock writer shows up as a diff here rather
+      # than as a build scheduled from stale inputs.
+      - name: Assert the builder lock reproduces from the tree
+        run: make builder-lock-check
 
       # The resolver's verdicts are produced by apt over a synthetic
       # architecture, so a source-level pass says nothing about whether a

@@ -606,22 +606,26 @@ def expand(env, packages):
     return resolved, unmatched
 
 
-def candidate_origin(env, package, workspace):
+def candidate_origin(env, package, workspace, status_identity):
     """Report which configured source supplies the candidate.
 
     apt-cache policy marks the installed-or-selected entry with ***; absent
     that, the first priority line of the version table is the candidate's, which
     is what distinguishes a Debian Ports answer from an overlay answer.
 
-    The overlay lives under a per-invocation temporary directory, so its path is
-    replaced by the overlay's origin name: the raw path is machine-only state
-    that would differ on every rerun and make two reports of the same archive
-    read as two different results.
+    The overlay and the seeded dpkg status both live under a per-invocation
+    temporary directory, so their paths are replaced by stable identities: the
+    overlay by its origin name, the status file by the installed baseline's
+    digest-bound identity. The raw paths are machine-only state that would
+    differ on every rerun and make two reports of the same archive read as two
+    different results.
     """
     status, out, _ = run(["apt-cache", "policy", package], env=env)
     if status != 0:
         return ""
-    lines = [line.strip().replace("file:%s/lmde" % workspace, OVERLAY_ORIGIN)
+    lines = [line.strip()
+             .replace("file:%s/lmde" % workspace, OVERLAY_ORIGIN)
+             .replace("%s/var/lib/dpkg/status" % workspace, status_identity)
              for line in out.splitlines()]
     for index, line in enumerate(lines):
         if line.startswith("***") and index + 1 < len(lines):
@@ -641,7 +645,7 @@ def architecture_all(env, package):
     return architectures == {"all"}
 
 
-def classify(env, package, architecture, workspace):
+def classify(env, package, architecture, workspace, status_identity):
     status, out, _ = run(["apt-cache", "show", package], env=env)
     if status != 0 or not out.strip():
         return {"package": package, "class": "missing",
@@ -651,7 +655,8 @@ def classify(env, package, architecture, workspace):
     version = versions[0] if versions else ""
     record = {"package": package, "version": version,
               "architectures": sorted(set(architectures)),
-              "candidate_origin": candidate_origin(env, package, workspace)}
+              "candidate_origin": candidate_origin(env, package, workspace,
+                                                   status_identity)}
     if architecture in architectures:
         klass = "native"
     elif "all" in architectures:
@@ -869,14 +874,22 @@ def shared_builder(env, records):
     """
     targets = ["%s=%s" % (item["source_package"], item["version"])
                for item in records if item["class"] == "buildable"]
+    # A removal list exists only where a completed simulation produced a
+    # transaction. A failed or unrun simulation returns None rather than [],
+    # because an empty list downstream reads as "measured: nothing removed"
+    # and that is a claim only a successful simulation can make.
     if not targets:
-        return False, "no source in the set is buildable", []
+        return "not-run", "no source in the set is buildable", [], None
     rc, out, err = run(
         ["apt-get", "build-dep", "-s", "-y", "--no-install-recommends"] + targets,
         env=env)
     if rc != 0:
-        return False, first_blocker(out + err), []
-    return True, "", installations(out)
+        return "failed", first_blocker(out + err), [], None
+    # Against a seeded tree a builder transaction can displace an installed
+    # package, and installing the build dependencies of two sources is exactly
+    # where that happens: a -dev package can conflict with the runtime library
+    # the image already carries.
+    return "success", "", installations(out), removals(out)
 
 
 def installations(text):
@@ -1049,7 +1062,7 @@ def resolve(args, workspace):
         # source is buildable answers a different question than the field names.
         # What the subset leaves open is whether one builder tree serves all of
         # them at once, and that is what the simulation below decides.
-        shared, blocker, transaction = shared_builder(env, results)
+        outcome, blocker, transaction, displaced = shared_builder(env, results)
         report = {
             "architecture": args.architecture,
             "set": selection,
@@ -1058,13 +1071,23 @@ def resolve(args, workspace):
             "foreign_architecture": {"enabled": False, "name": "",
                                      "native_packages_removed": [],
                                      "foreign_qualified_in_transaction": 0},
+            # What a transaction removes is a property of the tree it runs
+            # against. An empty list from an empty tree says nothing, because
+            # there was no installed package to displace; an empty list from a
+            # tree seeded with the guest's status file is a measurement. The
+            # baseline named in provenance is what tells the two apart, and
+            # transaction_result is what tells a measured empty list from a
+            # simulation that never completed: removals are null unless the
+            # combined simulation succeeded.
+            "transaction_result": outcome,
+            "transaction_removals": displaced,
             "provenance": provenance,
             "lmde_overlay": lmde or {"enabled": False},
             "packages": results,
             "unmatched_patterns": [],
             "resolvable_subset": [item["package"] for item in results
                                   if item["class"] == "buildable"],
-            "resolvable_subset_resolves": shared,
+            "resolvable_subset_resolves": outcome == "success",
             "resolvable_subset_blocker": blocker,
             "recursive_transaction": transaction,
             "recursive_transaction_size": len(transaction),
@@ -1104,7 +1127,10 @@ def resolve(args, workspace):
     if foreign:
         packages = [name if architecture_all(env, name)
                     else "%s:%s" % (name, foreign) for name in packages]
-    results = [classify(env, name, target, workspace) for name in packages]
+    status_identity = ("installed-baseline:%s" % baseline["sha256"]
+                       if baseline.get("sha256") else "installed-baseline:empty")
+    results = [classify(env, name, target, workspace, status_identity)
+               for name in packages]
     unmet, resolvable = missing_dependencies(results)
 
     if resolvable:
@@ -1125,17 +1151,25 @@ def resolve(args, workspace):
             "name": foreign,
             # Coinstallation and replacement read the same in a success line, so
             # what the transaction removes is reported beside what it installs.
-            #
-            # The tree's dpkg status file is empty, so there is no installed
-            # native package for a transaction to displace and this list is
-            # empty by construction. Whether a foreign build would replace the
-            # installed guest userland is settled by seeding the tree with the
-            # image's own status file, which the installed_baseline field names.
+            # This is the same list as transaction_removals below, kept here
+            # because a foreign request is the case where a removal decides
+            # whether the answer is coinstallation at all.
             "native_packages_removed": removals(final_out),
             "foreign_qualified_in_transaction": len(
                 [name for name in transaction if ":%s " % foreign in name])
             if foreign else 0,
         },
+        # What a transaction removes is a property of the tree it runs against.
+        # An empty list from an empty tree says nothing, because there was no
+        # installed package to displace; an empty list from a tree seeded with
+        # the guest's status file is a measurement that installing this set
+        # keeps the userland it lands on. The baseline named in provenance is
+        # what tells the two apart, and transaction_result is what tells a
+        # measured empty list from a simulation that never completed:
+        # removals are null unless the simulation succeeded.
+        "transaction_result": "success" if final == 0
+                              else ("failed" if resolvable else "not-run"),
+        "transaction_removals": removals(final_out) if final == 0 else None,
         "provenance": provenance,
         "lmde_overlay": lmde or {"enabled": False},
         "packages": results,
@@ -1193,6 +1227,7 @@ def print_report(report):
                      ", ".join(("%s %s" % (entry["name"], entry["constraint"])
                                 ).strip() for entry in unmet)
                      or item["evidence"]))
+        print_removals(report)
         return
     print("\nresolvable subset: %d of %d, %s"
           % (len(report["resolvable_subset"]), len(results),
@@ -1216,6 +1251,36 @@ def print_report(report):
         if foreign["native_packages_removed"]:
             print("the transaction replaces rather than coinstalls, removing: "
                   "%s" % ", ".join(foreign["native_packages_removed"]))
+    print_removals(report)
+
+
+def print_removals(report):
+    """Say what the transaction displaces, and against which tree.
+
+    An operator reading "0 removals" has to know whether anything could have
+    been removed. Naming the baseline beside the count is what makes the line
+    an answer instead of a number.
+    """
+    baseline = report["provenance"].get("installed_baseline") or {}
+    seeded = isinstance(baseline, dict) and baseline.get("kind") != "empty"
+    outcome = report.get("transaction_result")
+    displaced = report.get("transaction_removals") or []
+    if not seeded:
+        print("removals: not measurable against an empty tree")
+    elif outcome is not None and outcome != "success":
+        # A simulation that failed or never ran produced no transaction, so
+        # there is no removal list to report: absence of a measurement, not a
+        # measurement of zero.
+        print("removals: not measured; the combined simulation %s"
+              % ("did not run" if outcome == "not-run" else "failed"))
+    elif displaced:
+        print("removals against the %d-package baseline (%d): %s"
+              % (baseline.get("package_count", 0), len(displaced),
+                 ", ".join(displaced)))
+    else:
+        print("the successfully simulated resolvable subset removes no "
+              "installed package from the %d-package baseline"
+              % baseline.get("package_count", 0))
 
 
 def self_test(suite):

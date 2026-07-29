@@ -1,0 +1,24 @@
+# Offline checks over the disposable overlay after the guest halted.
+# The overlay is discarded after these run, so this transcript is the only
+# surviving statement about the filesystem the baseline was read from.
+# The run directory sits outside the repository and is named by basename,
+# because a committed artifact naming one machine's path describes a tree
+# nobody else has.
+
+$ qemu-img check --output=json overlay.qcow2
+{
+    "image-end-offset": 18219008,
+    "total-clusters": 262144,
+    "check-errors": 0,
+    "allocated-clusters": 243,
+    "filename": "overlay.qcow2",
+    "format": "qcow2",
+    "fragmented-clusters": 150
+}
+exit=0
+
+$ guestfish --rw -a overlay.qcow2 <<< "run; e2fsck /dev/sda5 correct:true forceall:false"
+exit=0
+# e2fsck emitted no diagnostic. A non-clean filesystem reports its
+# repairs on stdout and a failed pass exits nonzero, so silence with a
+# zero status is the clean result rather than an unrun check.

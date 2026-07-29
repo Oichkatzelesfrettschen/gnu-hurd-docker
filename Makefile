@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -28,6 +28,7 @@ help:
 	@echo "  make lint                         - shellcheck all scripts"
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
+	@echo "  make guest-baseline-check         - assert the committed guest baseline against itself"
 	@echo "  make hurd-closure                 - classify a package set against the real hurd-amd64 or hurd-i386 archive (HURD_ARCH, HURD_SET)"
 	@echo "  make hurd-build-closure           - report whether each rebuild candidate's build can start (HURD_ARCH)"
 	@echo "  make hurd-closure-selftest        - run the resolver's offline fixture suite"
@@ -43,6 +44,7 @@ help:
 	@echo "  make minty-accel                  - print the accelerator decision record the entrypoint wrote"
 	@echo "  make minty-export-state           - export the guest installed-package manifest to evidence/guest-state/"
 	@echo "  make minty-collect-baseline       - collect the whole guest baseline from one running guest"
+	@echo "  make minty-baseline-run-manifest  - derive the baseline run manifest from the artifacts it indexes"
 	@echo "  make minty-down / minty-status / minty-logs / minty-ssh"
 	@echo "  make smoke-host                   - host-side quick sanity check"
 	@echo "  make smoke-container              - container/QEMU process sanity (no guest assumptions)"
@@ -170,6 +172,33 @@ evidence-check:
 	else \
 		echo "evidence-check: no committed captures to validate"; \
 	fi
+
+# A committed baseline degrades quietly: a probe whose command stopped working
+# leaves a marker that reads as a guest fact, and a digest stops matching the
+# file beside it.  None of that is visible in review, because a broken artifact
+# looks exactly like a correct one.  This asserts the package against itself.
+#
+# The fixture suite runs first and drives the checker against baselines whose
+# defect is known, because a checker exercised only by packages it accepts
+# states nothing about its exclusions.
+guest-baseline-check:
+	python3 tests/guest-baseline/selftest.py
+	@set -e; roots=$$(git ls-files 'evidence/guest-state/probes.json' \
+		'evidence/guest-state/*/probes.json' | xargs -r -n1 dirname | sort -u); \
+	if [ -n "$$roots" ]; then \
+		for root in $$roots; do \
+			python3 scripts/check-guest-baseline.py "$$root"; \
+		done; \
+	else \
+		echo "guest-baseline-check: no committed baseline to validate"; \
+	fi
+
+# The lock is a derived artifact: rerunning its writer against the committed
+# tree must reproduce it byte for byte, or the lock cites a resolver or report
+# that is no longer the one in the tree.
+builder-lock-check:
+	python3 scripts/write-builder-lock.py
+	git diff --exit-code config/minty/builder.lock.json
 
 # Availability and dependency facts are archive facts, so they are read on the
 # host in seconds rather than from a guest that takes minutes to boot and holds
@@ -432,6 +461,7 @@ shell:
 .PHONY: minty-up minty-up-tcg minty-up-kvm minty-up-vnc minty-up-kvm-vnc \
 	minty-down minty-status minty-logs minty-container-shell minty-accel \
 	minty-ssh minty-shell minty-export-state minty-collect-baseline \
+	minty-baseline-run-manifest \
 	minty-image-check oobe
 
 # Stage the out-of-box experience on the RUNNING guest: sets the documented
@@ -515,14 +545,75 @@ minty-accel:
 # Every closure verdict is resolved against an empty dpkg status file, so a
 # transaction has no installed package to displace. This is what seeds a
 # resolver run with the real guest, and it reports itself not run when the
-# guest does not answer.
+# guest does not answer. The exporter refuses a run with no valid image
+# digest, so the digest is derived and validated here the way
+# minty-collect-baseline derives it.
 minty-export-state:
-	./scripts/export-guest-package-state.sh
+	@set -e; \
+	test -f "$(MINTY_GUEST_IMAGE)" \
+		|| { echo "no image at $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	digest=$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1); \
+	echo "$$digest" | grep -Eq '^[0-9a-f]{64}$$' \
+		|| { echo "no digest for $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" GUEST_IMAGE_SHA256="$$digest" \
+		./scripts/export-guest-package-state.sh
 
 # A boot is expensive enough that collecting one artifact from it wastes the
-# other nine, so the baseline collection is one target over one running guest.
+# other dozen, so the baseline collection is one target over one running guest.
+#
+# The image digest reaches the status export from here, because a status file
+# that names no image is a package list from somewhere: the collector reads the
+# guest and the host is what knows which qcow2 the guest was booted from.
+MINTY_GUEST_IMAGE ?= images/hurd-working.qcow2
+
+# The digest is computed and validated here rather than inline in the
+# collector's environment, because a pipeline whose sha256sum fails still lets
+# the final cut succeed and an empty digest then reaches the export as if it
+# named an image.
 minty-collect-baseline:
-	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" ./scripts/collect-guest-baseline.sh
+	@set -e; \
+	test -f "$(MINTY_GUEST_IMAGE)" \
+		|| { echo "no image at $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	digest=$$(sha256sum "$(MINTY_GUEST_IMAGE)" | cut -d' ' -f1); \
+	echo "$$digest" | grep -Eq '^[0-9a-f]{64}$$' \
+		|| { echo "no digest for $(MINTY_GUEST_IMAGE)" >&2; exit 1; }; \
+	GUEST_SSH_PORT="$(MINTY_SSH_PORT)" GUEST_IMAGE_SHA256="$$digest" \
+		./scripts/collect-guest-baseline.sh
+
+# The probe records come from the guest; the run-level facts sit outside it and
+# outside the collector's reach.  A manifest typed by hand drifts from the
+# artifacts it indexes, so it is derived from them the way the build lock is.
+# The measurements the host alone holds are named on the command line and
+# refused when absent, and the container has to still be running for its image
+# and QEMU version to be readable.
+# The accelerator, vCPU count, RAM, and disk bus are derived from the retained
+# argv by the writer, so only the decision's reason code is named here. The
+# filesystem verdict and pre-run digest carry no defaults: the writer validates
+# both before touching the package, so an unset value fails the target rather
+# than writing a manifest its own checker refuses.
+MINTY_BASELINE_REASON ?= disable_kvm_requested
+MINTY_BASELINE_FSCK ?=
+MINTY_BASELINE_BEFORE ?=
+MINTY_BASELINE_CONTAINER ?=
+# The run artifacts the host alone holds are named explicitly. The writer
+# refuses to discover them in the output directory, because the directory
+# persists across collections and a stale argv or transcript beside a fresh
+# probes.json would be hashed into a manifest describing no single boot.
+MINTY_BASELINE_QEMU_ARGV ?=
+MINTY_BASELINE_FSCK_LOG ?=
+MINTY_BASELINE_OVERLAY ?=
+
+minty-baseline-run-manifest:
+	python3 scripts/write-guest-baseline-run.py \
+		--backing-image "$(MINTY_GUEST_IMAGE)" \
+		--backing-sha256-before "$(MINTY_BASELINE_BEFORE)" \
+		--accelerator-reason-code "$(MINTY_BASELINE_REASON)" \
+		--offline-fsck "$(MINTY_BASELINE_FSCK)" \
+		--qemu-argv "$(MINTY_BASELINE_QEMU_ARGV)" \
+		--offline-fsck-transcript "$(MINTY_BASELINE_FSCK_LOG)" \
+		--overlay "$(MINTY_BASELINE_OVERLAY)" \
+		--container "$(MINTY_BASELINE_CONTAINER)" \
+		$(MINTY_BASELINE_EXTRA)
 
 minty-ssh:
 	@ssh -i $(MINTY_SSH_KEY) -p $(MINTY_SSH_PORT) user@127.0.0.1

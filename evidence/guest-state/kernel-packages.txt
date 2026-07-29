@@ -1,1 +1,9 @@
-not captured: the guest did not answer this query
+gnumach-image-1-486	
+gnumach-image-1-amd64	2:1.8+git20260224-11
+gnumach-image-1-xen-486	
+gnumach-image-1.8-486	
+gnumach-image-1.8-486-dbg	
+gnumach-image-1.8-amd64-up	2:1.8+git20260224-11
+gnumach-image-1.8-xen-486	
+gnumach-image-1.8-xen-486-dbg	
+hurd	1:0.9.git20260527-3+b1

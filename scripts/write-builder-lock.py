@@ -71,7 +71,11 @@ def main():
             report = json.load(handle)
         recorded = report.get("provenance", {}).get("archive_snapshot", "")
         lock["build_closure_archive_snapshot"] = recorded
-        if recorded and recorded != lock.get("archive_snapshot"):
+        # An empty timestamp is not a match that happens to be blank: it means
+        # the report answered against whatever sid and unreleased held that
+        # minute, so the lock would pin a build to an archive state the report
+        # never saw.
+        if recorded != lock.get("archive_snapshot"):
             print("the cited build closure answered against %s and the lock "
                   "pins %s" % (recorded or "a moving suite",
                                lock.get("archive_snapshot")), file=sys.stderr)

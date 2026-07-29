@@ -1,0 +1,12 @@
+### /etc/apt/sources.list.d/lmde7.list
+# Linux Mint Debian Edition 7 (gigi) - trixie-based.
+# Used ONLY for arch=all Mint-specific packages (themes, mintmenu, mintdesktop,
+# etc.).  See /etc/apt/preferences.d/lmde7 for the pin that enforces this.
+#
+# Mint publishes release codenames only, so there is no sid-tracking suite to
+# pair with the guest's debian-ports sid.  gigi is the newest, and its staging
+# areas are components rather than suites: romeo carries packages Mint has not
+# promoted to main, and incoming is the upload queue.  Both sit under the same
+# "release o=linuxmint" pin as main, so the priority-100 default and the
+# whitelist govern them without further configuration.
+deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/linuxmint-keyring.gpg] http://mirrors.kernel.org/linuxmint-packages/ gigi main upstream import backport

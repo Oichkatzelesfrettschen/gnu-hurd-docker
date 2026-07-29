@@ -21,31 +21,35 @@
 
 set -euo pipefail
 
-SERVICE_NAME="${SERVICE_NAME:-gnu-hurd-dev}"
-SSH_KEY="${MINTY_SSH_KEY:-ssh-test-keys/hurd_test_key}"
-SSH_PORT="${MINTY_SSH_PORT:-${SSH_PORT:-2222}}"
-SSH_USER="${GUEST_SSH_USER:-root}"
-OUTPUT_DIR="${OUTPUT_DIR:-evidence/guest-state}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# The collector and this exporter read the same guest in the same run, so they
+# reach it the same way. Two transports mean a run can be reachable for one
+# artifact and refused for another, and the evidence then reports a guest fact
+# that is really a difference between two scripts.
+# shellcheck source=scripts/lib/guest-ssh.sh
+. "${REPO_ROOT}/scripts/lib/guest-ssh.sh"
 
-# A disposable guest has no host key anyone has seen before, so strict checking
-# refuses it and disabling checking accepts anything for the rest of time.
-# accept-new against a per-run known_hosts records the key on first contact and
-# verifies it on every later connection of the same run.
-KNOWN_HOSTS="${GUEST_KNOWN_HOSTS:-}"
-ssh_options=(-o BatchMode=yes -o ConnectTimeout=20)
-if [ -n "$KNOWN_HOSTS" ]; then
-    ssh_options+=(-o StrictHostKeyChecking=accept-new
-                  -o "UserKnownHostsFile=${KNOWN_HOSTS}")
-fi
+OUTPUT_DIR="${OUTPUT_DIR:-evidence/guest-state}"
 
 log() { printf '%s\n' "$*" >&2; }
 
-if [ ! -f "$SSH_KEY" ]; then
-    log "not run: no SSH key at ${SSH_KEY}, so the guest was never queried"
+# The manifest binds the status file to the image it was read from, and a
+# manifest with an empty source image names no image at all. The digest is
+# validated here as well as in the collector, because this exporter also runs
+# standalone.
+if ! printf '%s' "${GUEST_IMAGE_SHA256:-}" | grep -Eq '^[0-9a-f]{64}$'; then
+    log "not run: GUEST_IMAGE_SHA256 is ${GUEST_IMAGE_SHA256:-empty}, not a sha256 digest of the booted image"
+    exit 2
+fi
+
+if [ ! -f "$GUEST_SSH_KEY" ]; then
+    log "not run: no SSH key at ${GUEST_SSH_KEY}, so the guest was never queried"
     exit 2
 fi
 
 mkdir -p "$OUTPUT_DIR"
+scratch="$(mktemp -d)"
+trap 'rm -rf "$scratch"' EXIT
 
 # apt reads installed state as RFC822 paragraphs, so a table of columns is not
 # an input it can take. dpkg-query renders the paragraphs directly, which avoids
@@ -71,21 +75,34 @@ Version: ${Version}
 '
 REMOTE
 
-if ! raw="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
-        "${SSH_USER}@127.0.0.1" "$query" 2>/dev/null)"; then
-    log "not run: the guest did not answer on port ${SSH_PORT}"
+status=0
+guest_ssh_exec "${scratch}/status.raw" "${scratch}/status.err" "$query" \
+    || status=$?
+if [ "$status" -ne 0 ]; then
+    if [ "$GUEST_SSH_TRANSPORT_STATUS" -ne 0 ]; then
+        log "not run: the guest did not answer on ${GUEST_SSH_HOST}:${GUEST_SSH_PORT}"
+    else
+        log "not run: dpkg-query exited ${status} on the guest"
+        cat "${scratch}/status.err" >&2
+    fi
     exit 2
 fi
 
-if [ -z "$raw" ]; then
+if [ ! -s "${scratch}/status.raw" ]; then
     log "not run: the guest returned no package state"
     exit 2
 fi
+raw="$(cat "${scratch}/status.raw")"
 
-architecture="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
-    "${SSH_USER}@127.0.0.1" 'dpkg --print-architecture' 2>/dev/null || echo "")"
-kernel="$(ssh -i "$SSH_KEY" -p "$SSH_PORT" "${ssh_options[@]}" \
-    "${SSH_USER}@127.0.0.1" 'uname -a' 2>/dev/null || echo "")"
+architecture=""
+kernel=""
+if guest_ssh_exec "${scratch}/arch" "${scratch}/arch.err" \
+        'dpkg --print-architecture'; then
+    architecture="$(cat "${scratch}/arch")"
+fi
+if guest_ssh_exec "${scratch}/kernel" "${scratch}/kernel.err" 'uname -a'; then
+    kernel="$(cat "${scratch}/kernel")"
+fi
 
 destination="${OUTPUT_DIR}/${architecture:-unknown}-dpkg-status"
 
