@@ -17,9 +17,10 @@ from the overlay after the guest halted. `batch-plan.json` sits under
 `94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138` and one
 schedule therefore describes both runs.
 
-The planner has since produced a different digest for the same schedule: the
-round bound's recorded wording changed when the bound was restated as a bound on
-the request. The member partition is byte-identical, so a regenerated plan
+The planner has since produced a different digest for the same schedule. The
+digest covers the whole plan document, so restating the round bound as a bound
+on the request and adding the guest console to the journal schema each moved it.
+The member partition is byte-identical across all of them, so a regenerated plan
 differs from the plan here in its own digest and in no batch.
 
 ## What the journal records
@@ -56,10 +57,22 @@ produced.
 
 The plan declares a recorded Mach IPC-map allocation failure as the falsifier
 that rejects a batch. The executor greps APT's own streams, and GNU Mach writes
-allocation failures to the kernel console, which this run did not capture: the
-builder publishes no serial surface and the entrypoint writes no console
-transcript. The Mach falsifier is therefore `not run`, and `no Mach IPC
-allocation error appeared in APT's output` is the whole of what was observed.
+allocation failures to the kernel console, which these runs did not capture. The
+Mach falsifier is therefore `not run`, and `no Mach IPC allocation error
+appeared in APT's output` is the whole of what was observed.
+
+The console now reaches the run directory: `QEMU_SERIAL_LOG` gives the
+entrypoint a chardev that keeps the telnet socket while logging to a file, and
+the executor scans that file per round from the offset the round began at. One
+boot of the base measured what it carries. SeaBIOS, iPXE, and GRUB output
+arrived within ten seconds; after five minutes the transcript was still 338
+bytes and held no GNU Mach output, while the guest answered SSH. The base's
+multiboot line is `/boot/gnumach-1.8-amd64-up.gz root=part:5:device:wd0`, which
+names no `console=com0`, so the kernel writes to VGA and the serial port sees
+only what runs before it. A transcript that exists and a transcript that can
+carry a Mach message are different facts, so the executor tests for the Mach
+banner and reports the falsifier unobserved when it is absent, rather than
+reporting zero matches as zero errors.
 
 ## The Hurd leaves ext2 reporting deleted inodes with zero dtime
 

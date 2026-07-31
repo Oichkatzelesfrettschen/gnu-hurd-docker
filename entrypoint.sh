@@ -698,8 +698,29 @@ build_qemu_command() {
     log_info "Network: ${net_model} NIC with user-mode NAT"
 
     # Serial console and monitor (disable explicitly for hardened deployments)
+    #
+    # A telnet socket serves a reader that is attached when a message arrives
+    # and loses every message that arrives when none is. GNU Mach writes
+    # allocation failures to this console, so a run that has to establish
+    # whether one occurred needs the console on disk. QEMU_SERIAL_LOG names that
+    # file, and the chardev keeps the socket while logging to it, so a run gains
+    # a transcript without losing the interactive surface.
     if [ "${DISABLE_SERIAL:-0}" != "1" ]; then
-        cmd+=(-serial "telnet:0.0.0.0:${SERIAL_PORT},server,nowait")
+        if [ -n "${QEMU_SERIAL_LOG:-}" ]; then
+            local serial_log_dir
+            serial_log_dir="$(dirname "${QEMU_SERIAL_LOG}")"
+            if [ ! -d "$serial_log_dir" ] || [ ! -w "$serial_log_dir" ]; then
+                log_error "QEMU_SERIAL_LOG=${QEMU_SERIAL_LOG} is not in a writable directory"
+                exit 1
+            fi
+            # logappend=off truncates, so the transcript describes this run and
+            # not this run appended to whatever shared the path before it.
+            cmd+=(-chardev "socket,id=serial0,host=0.0.0.0,port=${SERIAL_PORT},telnet=on,server=on,wait=off,logfile=${QEMU_SERIAL_LOG},logappend=off")
+            cmd+=(-serial chardev:serial0)
+            log_info "Serial console: telnet ${SERIAL_PORT}, transcript ${QEMU_SERIAL_LOG}"
+        else
+            cmd+=(-serial "telnet:0.0.0.0:${SERIAL_PORT},server,nowait")
+        fi
     else
         log_warn "Serial console disabled (DISABLE_SERIAL=1)"
     fi
