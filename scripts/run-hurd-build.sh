@@ -35,6 +35,8 @@ BUILD_ROOT="${BUILD_ROOT:-artifacts/builds}"
 LOCK_FILE="${BUILDER_LOCK:-config/minty/builder.lock.json}"
 BUILDER_TIMEOUT="${BUILDER_TIMEOUT:-1800}"
 KEEP_OVERLAY="${KEEP_OVERLAY:-0}"
+BUILDER_SSH_PORT="${BUILDER_SSH_PORT:-2223}"
+export BUILDER_SSH_PORT
 
 log() { printf '%s\n' "$*" >&2; }
 fail() { log "ERROR: $*"; exit 1; }
@@ -85,16 +87,102 @@ export BUILDER_BASE_SHA256="$found_sha"
 export BUILDER_RUN_DIR="$run_abs"
 
 overlay="$run_abs/overlay.qcow2"
+batch_plan="$run_dir/batch-plan.json"
+batch_journal="$run_dir/batch-journal.json"
 status="unknown"
+qcow2_check="not run"
+guest_filesystem_as_left="not run"
+guest_filesystem_after_repair="not run"
+backing_rebased="false"
+
+# The runner is the only layer that has the actual qcow2 and can prove it is
+# present and hashes to the lock. The planner then binds that proved base to the
+# exported status and seeded resolver transaction before QEMU starts, so a run
+# directory never contains an unbound package schedule.
+python3 scripts/plan-builder-batches.py --lock "$LOCK_FILE" \
+    --output "$batch_plan"
+batch_plan_sha="$(jq -r '.plan_sha256' "$batch_plan")"
+if ! printf '%s' "$batch_plan_sha" | grep -Eq '^[0-9a-f]{64}$'; then
+    fail "batch planner wrote no valid plan sha256 to ${batch_plan}"
+fi
+log "builder batch plan ${batch_plan} sha256 ${batch_plan_sha}"
+python3 scripts/write-builder-batch-journal.py --plan "$batch_plan" \
+    --journal "$batch_journal" --initialize
+log "builder batch journal ${batch_journal} records guest actions"
 
 stop_composition() {
     COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" down \
         --remove-orphans >/dev/null 2>&1 || true
 }
 
+check_overlay_offline() {
+    local qemu_check_log="$run_dir/qemu-img-check.json"
+    local as_left_log="$run_dir/offline-fsck-as-left.log"
+    local repair_log="$run_dir/offline-fsck-repair.log"
+    local as_left_status=0
+
+    command -v guestfish >/dev/null 2>&1 \
+        || { log "ERROR: guestfish is required for the guest filesystem check"; return 1; }
+
+    # The overlay's header records the backing path the container saw, which
+    # exists in no host directory, so every host tool that follows the chain
+    # fails to open it. `qemu-img rebase -u` rewrites that one header field to
+    # the host copy of the same file and copies no data. The chain assertion
+    # above has already read the recorded name, so the identity the run declared
+    # is established before the field is rewritten, and the checker then needs
+    # no privilege to recreate the container's filesystem layout.
+    if ! qemu-img rebase -u -b "${base_dir}/${BUILDER_BASE_BASENAME}" \
+            -F qcow2 "$overlay" >/dev/null 2>&1; then
+        log "ERROR: cannot point the overlay at the host copy of its backing image"
+        return 1
+    fi
+    backing_rebased="true"
+
+    if ! qemu-img check -U --output=json "$overlay" >"$qemu_check_log" 2>&1; then
+        log "ERROR: qcow2 check failed; see ${qemu_check_log}"
+        return 1
+    fi
+    if [ "$(jq -r '."check-errors" // -1' "$qemu_check_log")" != "0" ]; then
+        log "ERROR: qcow2 check reports errors; see ${qemu_check_log}"
+        return 1
+    fi
+    qcow2_check="clean"
+
+    # `forceno:true` answers every repair prompt negatively, so this pass reads
+    # the filesystem exactly as the guest left it and changes nothing. It is an
+    # observation rather than a gate: the Hurd's ext2fs leaves i_dtime unset on
+    # unlink, so a read-only pass over any Hurd-written ext2 root reports
+    # deleted inodes with zero dtime and the bitmap differences that follow from
+    # them. Gating on it would refuse every run this project can produce.
+    guestfish --ro -a "$overlay" run : e2fsck /dev/sda5 forceno:true \
+        >"$as_left_log" 2>&1 || as_left_status=$?
+    if [ "$as_left_status" -eq 0 ]; then
+        guest_filesystem_as_left="consistent"
+    else
+        guest_filesystem_as_left="differences reported"
+    fi
+
+    # This pass is the gate. A full non-interactive repair is what the guest
+    # image discipline prescribes after a guest stops, and the overlay is
+    # disposable, so repairing it costs nothing and produces the filesystem the
+    # artifacts are read from. A repair that cannot complete is the finding that
+    # separates the unlink convention from actual damage.
+    if ! guestfish -a "$overlay" run : e2fsck /dev/sda5 correct:true \
+            forceall:false >"$repair_log" 2>&1; then
+        log "ERROR: the guest filesystem repair pass failed; see ${repair_log}"
+        return 1
+    fi
+    guest_filesystem_after_repair="clean"
+}
+
 # The overlay outlives the container on purpose, so the trap disposes of it
 # rather than the container doing so, and a failed run keeps it for diagnosis.
 dispose() {
+    # The entrypoint can fail before it creates an overlay. Capture its own
+    # words before Compose removes the stopped container, because an absent
+    # overlay alone does not say whether the base, mount, or qemu-img failed.
+    COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" logs --no-color \
+        >"$run_dir/container.log" 2>&1 || true
     stop_composition
     if [ "$status" = "success" ] && [ "$KEEP_OVERLAY" != "1" ]; then
         rm -f "$overlay" "${overlay}.backing-sha256"
@@ -127,6 +215,21 @@ write_manifest() {
     "sha256_before": "${found_sha}",
     "sha256_after": "${after}"
   },
+  "batch_plan": {
+    "path": "batch-plan.json",
+    "sha256": "${batch_plan_sha}"
+  },
+  "batch_journal": "batch-journal.json",
+  "offline_checks": {
+    "backing_rebased_to_host_path": ${backing_rebased},
+    "qcow2": "${qcow2_check}",
+    "qcow2_transcript": "qemu-img-check.json",
+    "guest_filesystem_as_left": "${guest_filesystem_as_left}",
+    "guest_filesystem_as_left_transcript": "offline-fsck-as-left.log",
+    "guest_filesystem_after_repair": "${guest_filesystem_after_repair}",
+    "guest_filesystem_after_repair_transcript": "offline-fsck-repair.log"
+  },
+  "guest_console_capture": "not run; the builder publishes no serial surface and the entrypoint writes no console transcript, so a Mach console message is unobserved",
   "overlay_retained": $([ -f "$overlay" ] && echo true || echo false),
   "compose_project": "${project}"
 }
@@ -146,16 +249,25 @@ fi
 # The overlay must exist and must descend from the declared base. qemu-img
 # reports the chain, so this reads what QEMU will open rather than trusting the
 # creation call that preceded it.
-sleep 5
+# The entrypoint validates its QEMU configuration before it creates the overlay.
+# A fixed five-second delay races that work on a busy host and mislabels a live
+# startup as an absent overlay. Wait for the artifact or a stopped container.
+overlay_waited=0
+while [ ! -f "$overlay" ] && [ "$overlay_waited" -lt 60 ]; do
+    if ! $CONTAINER_RUNTIME ps --filter "label=com.gnu-hurd.profile=builder" \
+            --filter status=running --format '{{.ID}}' | grep -q .; then
+        break
+    fi
+    sleep 2
+    overlay_waited=$((overlay_waited + 2))
+done
 if [ ! -f "$overlay" ]; then
     status="no-overlay"
-    fail "the builder created no overlay at ${overlay}"
+    fail "the builder created no overlay at ${overlay} within ${overlay_waited}s"
 fi
 
-chain_base="$($CONTAINER_RUNTIME run --rm -v "$run_abs:/run-dir:ro" \
-    -v "$base_dir:/base:ro" --entrypoint qemu-img \
-    "${BUILDER_CONTAINER_IMAGE:-gnu-hurd-docker:latest}" \
-    info --output=json /run-dir/overlay.qcow2 2>/dev/null \
+command -v qemu-img >/dev/null 2>&1 || fail "qemu-img is required to inspect the overlay chain"
+chain_base="$(qemu-img info -U --output=json "$overlay" \
     | jq -r '."backing-filename" // ""')"
 case "$chain_base" in
     */"$BUILDER_BASE_BASENAME") : ;;
@@ -164,8 +276,24 @@ case "$chain_base" in
 esac
 log "overlay backing chain resolves to ${chain_base}"
 
-# The guest signals completion by exiting; the runner does not interpret guest
-# state it cannot see.
+# A clean QEMU exit alone only says that the guest stopped. The executor records
+# the guest APT work and issues the final halt after all planned rounds finish,
+# so an empty or partial journal rejects a run that otherwise looks clean.
+if ! scripts/execute-builder-batches.sh --plan "$batch_plan" --journal "$batch_journal" \
+        --run-dir "$run_dir" --final-halt; then
+    status="batch-execution-failed"
+    exit 1
+fi
+
+planned_batches="$(jq '.batches | length' "$batch_plan")"
+completed_batches="$(jq '[.records[] | select(.outcome == "completed")] | length' "$batch_journal")"
+if [ "$completed_batches" -ne "$planned_batches" ]; then
+    status="batch-journal-incomplete"
+    fail "batch journal records ${completed_batches} completed batches, plan requires ${planned_batches}"
+fi
+
+# The executor requests the final clean halt. The runner waits for QEMU itself
+# because only the VM process proves that the guest shutdown reached QEMU.
 waited=0
 while [ "$waited" -lt "$BUILDER_TIMEOUT" ]; do
     if ! $CONTAINER_RUNTIME ps --filter "label=com.gnu-hurd.profile=builder" \
@@ -179,6 +307,11 @@ done
 if [ "$waited" -ge "$BUILDER_TIMEOUT" ]; then
     status="timeout"
     fail "builder did not finish within ${BUILDER_TIMEOUT}s"
+fi
+
+if ! check_overlay_offline; then
+    status="offline-check-failed"
+    exit 1
 fi
 
 status="success"
