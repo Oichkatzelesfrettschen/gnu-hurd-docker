@@ -221,6 +221,23 @@ overlay code parses rather than that it behaves.
   full pass rather than boot anyway.
 - A dirty root filesystem makes the guest fsck, request a restart, and never
   reach `sshd`, which reads from outside as a boot hang.
+- The full repairing pass is the acceptance gate, and a read-only pass
+  (`e2fsck -n`, or guestfish `forceno:true`) is an observation. The Hurd's
+  ext2fs leaves `i_dtime` unset when it unlinks, so a read-only pass over any
+  Hurd-written ext2 root reports deleted inodes with zero dtime, the bitmap
+  differences that follow from them, and `Filesystem still has errors`. The
+  repairing pass clears it and a second read-only pass is then silent. Gating
+  on the read-only pass refuses every run this project can produce;
+  `evidence/builder-batches/README.md` carries the base, boot-only, and
+  post-repair controls that separate the convention from damage.
+
+A host tool cannot follow an overlay's backing chain out of a container,
+because the header records the path QEMU saw and no host directory provides it.
+`qemu-img rebase -u -b <host path> -F qcow2` rewrites that one header field and
+copies no data, so the assertion that reads the recorded name runs first and
+the check that follows needs no privilege. Recreating the container's layout
+under `sudo` and a private mount namespace reaches the same file and adds a
+root requirement to every check.
 
 The QEMU monitor's `quit` command terminates QEMU rather than ending the monitor
 session. A script that drives the monitor omits it and lets the connection close

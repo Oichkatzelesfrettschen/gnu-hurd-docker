@@ -66,3 +66,16 @@ what the guest installed, but a transaction size predicted by the resolver and
 the transaction a guest executes are two solvers' answers to one question, so
 the planner treats the resolver's figure as a bound to derive batches from and
 the guest's simulation as the authority immediately before each batch runs.
+
+`scripts/plan-builder-batches.py` consumes this closure. It refuses any
+disagreement among the lock's digests, the exported status, and the report's own
+provenance, then partitions the 171-member transaction in resolver order into
+rounds of at most 40 requested members. `scripts/run-hurd-build.sh` writes the
+checked plan into a disposable run directory only after proving the local base
+image hashes to the lock, and `scripts/execute-builder-batches.sh` runs it.
+
+That boundary is what makes the round bound a bound on the request rather than
+on the installation: a round names up to 40 members and the guest's own
+simulation decides how many of them are missing.
+`evidence/builder-batches/README.md` carries the run where five rounds of 40,
+40, 40, 40, and 11 members installed 44 packages.
