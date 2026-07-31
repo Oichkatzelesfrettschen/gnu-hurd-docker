@@ -16,12 +16,23 @@
 #   create a unique run directory
 #   verify the backing image against the lock
 #   start the one-shot builder composition, which creates the overlay
-#   wait for the guest to finish
-#   stop the composition
+#   record the identity of the container that started
+#   wait for that container to finish
 #   check the overlay filesystem offline
-#   write the run manifest
 #   verify the backing image is byte-identical
+#   write the run manifest
 #   delete the overlay on success, quarantine it on failure
+#   stop the composition
+#
+# Every wait and inspection names the container ID Compose reported for this
+# project's builder service. A label the composition also carries identifies the
+# class of builder containers rather than this one, so a concurrent or abandoned
+# run answers the question this run asked.
+#
+# The postconditions are evaluated before disposal because the overlay is what
+# any of them failing sends someone to look at, and a failure that flips the
+# status also fails the process. A manifest reading `base-mutated` beside exit 0
+# reports a successful build to every caller that reads the exit status.
 #
 # A failed run keeps its overlay, because a build that failed is the one whose
 # filesystem someone needs to look at. Quarantined runs are named and reported
@@ -35,7 +46,19 @@ BUILD_ROOT="${BUILD_ROOT:-artifacts/builds}"
 LOCK_FILE="${BUILDER_LOCK:-config/minty/builder.lock.json}"
 BUILDER_TIMEOUT="${BUILDER_TIMEOUT:-1800}"
 KEEP_OVERLAY="${KEEP_OVERLAY:-0}"
-BUILDER_SSH_PORT="${BUILDER_SSH_PORT:-2223}"
+
+# A unique Compose project keeps two runs' containers apart and does nothing
+# about the host port each publishes, so a fixed default collides on the second
+# concurrent run and the second run's SSH reaches the first run's guest. An
+# unset port is allocated from the ephemeral range by binding it and reading
+# back what the kernel assigned.
+if [ -z "${BUILDER_SSH_PORT:-}" ]; then
+    BUILDER_SSH_PORT="$(python3 -c 'import socket
+probe = socket.socket()
+probe.bind(("127.0.0.1", 0))
+print(probe.getsockname()[1])
+probe.close()')"
+fi
 export BUILDER_SSH_PORT
 
 log() { printf '%s\n' "$*" >&2; }
@@ -94,6 +117,12 @@ qcow2_check="not run"
 guest_filesystem_as_left="not run"
 guest_filesystem_after_repair="not run"
 backing_rebased="false"
+container_id=""
+container_image_id=""
+container_repository_digest=""
+container_exit_status="not read"
+qemu_version=""
+entrypoint_sha256=""
 
 # The runner is the only layer that has the actual qcow2 and can prove it is
 # present and hashes to the lock. The planner then binds that proved base to the
@@ -113,6 +142,51 @@ log "builder batch journal ${batch_journal} records guest actions"
 stop_composition() {
     COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" down \
         --remove-orphans >/dev/null 2>&1 || true
+}
+
+# The one container this run started. Compose reports it for this project's
+# builder service, so every wait and inspection below names an identity rather
+# than a class: the composition's `com.gnu-hurd.profile=builder` label is
+# carried by every builder container on the host, and filtering on it lets a
+# concurrent or abandoned run decide when this run's guest has stopped.
+builder_running() {
+    [ -n "$container_id" ] || return 1
+    [ "$($CONTAINER_RUNTIME inspect -f '{{.State.Running}}' "$container_id" \
+        2>/dev/null)" = "true" ]
+}
+
+# Read the immutable identity of what actually ran. `BUILDER_CONTAINER_IMAGE`
+# defaults to a local tag, which names whatever that tag points at on the
+# invoking host at the moment Compose resolved it, so the manifest records the
+# image ID the container was created from. The QEMU binary and the entrypoint
+# conduct the build, and both live in that image, so they are read from the
+# running container rather than from the repository working tree.
+record_container_identity() {
+    container_image_id="$($CONTAINER_RUNTIME inspect -f '{{.Image}}' \
+        "$container_id" 2>/dev/null || true)"
+    if [ -n "$container_image_id" ]; then
+        container_repository_digest="$($CONTAINER_RUNTIME image inspect \
+            -f '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' \
+            "$container_image_id" 2>/dev/null || true)"
+    fi
+    qemu_version="$($CONTAINER_RUNTIME exec "$container_id" \
+        qemu-system-x86_64 --version 2>/dev/null | head -1 || true)"
+    entrypoint_sha256="$($CONTAINER_RUNTIME exec "$container_id" \
+        sha256sum /entrypoint.sh 2>/dev/null | cut -d' ' -f1 || true)"
+    log "builder container ${container_id} from image ${container_image_id:-unread}"
+}
+
+# A container that exited before the runner asked has already recorded why. The
+# code is read from the container that ran rather than inferred from whether a
+# process is still listed.
+read_container_exit_status() {
+    [ -n "$container_id" ] || return 0
+    local code
+    code="$($CONTAINER_RUNTIME inspect -f '{{.State.ExitCode}}' "$container_id" \
+        2>/dev/null || true)"
+    if printf '%s' "$code" | grep -Eq '^[0-9]+$'; then
+        container_exit_status="$code"
+    fi
 }
 
 check_overlay_offline() {
@@ -178,12 +252,31 @@ check_overlay_offline() {
 # The overlay outlives the container on purpose, so the trap disposes of it
 # rather than the container doing so, and a failed run keeps it for diagnosis.
 dispose() {
+    local entry_status=$?
+
     # The entrypoint can fail before it creates an overlay. Capture its own
     # words before Compose removes the stopped container, because an absent
     # overlay alone does not say whether the base, mount, or qemu-img failed.
     COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" logs --no-color \
         >"$run_dir/container.log" 2>&1 || true
-    stop_composition
+    read_container_exit_status
+
+    # Every postcondition is evaluated before anything is deleted. The backing
+    # image is mounted read-only and opened as a backing file, and this is what
+    # says so rather than assuming it; a base that moved is also the case whose
+    # overlay someone needs, so discovering it after the discard would destroy
+    # the evidence the finding calls for.
+    local after
+    after="$(sha256sum "$base_path" | cut -d' ' -f1)"
+    if [ "$after" != "$found_sha" ]; then
+        log "ERROR: builder base changed during the run: ${found_sha} -> ${after}"
+        status="base-mutated"
+    fi
+    if [ "$status" = "success" ] && [ "$container_exit_status" != "0" ]; then
+        log "ERROR: builder container exited ${container_exit_status}"
+        status="container-exit-nonzero"
+    fi
+
     if [ "$status" = "success" ] && [ "$KEEP_OVERLAY" != "1" ]; then
         rm -f "$overlay" "${overlay}.backing-sha256"
         log "overlay discarded; artifacts remain in ${run_dir}/artifacts"
@@ -191,15 +284,17 @@ dispose() {
         log "overlay retained for diagnosis at ${overlay}"
     fi
 
-    # The backing image is mounted read-only and opened as a backing file, and
-    # this is what says so rather than assuming it.
-    local after
-    after="$(sha256sum "$base_path" | cut -d' ' -f1)"
-    if [ "$after" != "$found_sha" ]; then
-        log "ERROR: builder base changed during the run: ${found_sha} -> ${after}"
-        status="base-mutated"
-    fi
     write_manifest "$after"
+    stop_composition
+
+    # A postcondition that fails after the script body succeeded leaves the
+    # process status saying the build worked, and a caller reads the status
+    # rather than the manifest. The trap therefore carries its own verdict out.
+    if [ "$entry_status" -eq 0 ] && [ "$status" != "success" ]; then
+        log "run ${run_id} failed its postconditions: ${status}"
+        exit 1
+    fi
+    exit "$entry_status"
 }
 
 write_manifest() {
@@ -235,7 +330,17 @@ write_manifest() {
     "carries_kernel_output": $(grep -qEi 'gnumach|mach operating system|mach [0-9]+\.[0-9]' "$run_dir/serial.log" 2>/dev/null && echo true || echo false)
   },
   "overlay_retained": $([ -f "$overlay" ] && echo true || echo false),
-  "compose_project": "${project}"
+  "compose_project": "${project}",
+  "builder_container": {
+    "requested_reference": "${BUILDER_CONTAINER_IMAGE:-gnu-hurd-docker:latest}",
+    "container_id": "${container_id}",
+    "image_id": "${container_image_id}",
+    "repository_digest": "${container_repository_digest}",
+    "exit_status": "${container_exit_status}",
+    "qemu_version": "${qemu_version}",
+    "entrypoint_sha256": "${entrypoint_sha256}",
+    "ssh_port": ${BUILDER_SSH_PORT}
+  }
 }
 EOF
     log "run manifest at ${run_dir}/run.json (status ${status})"
@@ -250,6 +355,14 @@ if ! COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" up -d builder; the
     exit 1
 fi
 
+container_id="$(COMPOSE_FILE=compose.builder.yaml $COMPOSE -p "$project" \
+    ps -q builder 2>/dev/null | head -1)"
+if [ -z "$container_id" ]; then
+    status="no-container"
+    fail "Compose reported no builder container for project ${project}"
+fi
+record_container_identity
+
 # The overlay must exist and must descend from the declared base. qemu-img
 # reports the chain, so this reads what QEMU will open rather than trusting the
 # creation call that preceded it.
@@ -258,10 +371,7 @@ fi
 # startup as an absent overlay. Wait for the artifact or a stopped container.
 overlay_waited=0
 while [ ! -f "$overlay" ] && [ "$overlay_waited" -lt 60 ]; do
-    if ! $CONTAINER_RUNTIME ps --filter "label=com.gnu-hurd.profile=builder" \
-            --filter status=running --format '{{.ID}}' | grep -q .; then
-        break
-    fi
+    builder_running || break
     sleep 2
     overlay_waited=$((overlay_waited + 2))
 done
@@ -300,10 +410,7 @@ fi
 # because only the VM process proves that the guest shutdown reached QEMU.
 waited=0
 while [ "$waited" -lt "$BUILDER_TIMEOUT" ]; do
-    if ! $CONTAINER_RUNTIME ps --filter "label=com.gnu-hurd.profile=builder" \
-            --filter status=running --format '{{.ID}}' | grep -q .; then
-        break
-    fi
+    builder_running || break
     sleep 10
     waited=$((waited + 10))
 done
@@ -311,6 +418,15 @@ done
 if [ "$waited" -ge "$BUILDER_TIMEOUT" ]; then
     status="timeout"
     fail "builder did not finish within ${BUILDER_TIMEOUT}s"
+fi
+
+# QEMU exiting says the VM process ended and not how it ended. The container's
+# recorded code carries that, and a nonzero one rejects a run whose guest work
+# otherwise journaled clean.
+read_container_exit_status
+if [ "$container_exit_status" != "0" ]; then
+    status="container-exit-nonzero"
+    fail "builder container ${container_id} exited ${container_exit_status}"
 fi
 
 if ! check_overlay_offline; then
