@@ -81,6 +81,19 @@ mint-sources/
 *.db
 link-scan.json
 
+# Build runs are disposable instances: each carries a multi-hundred-megabyte
+# overlay, guest stream captures, and a run directory named for the moment it
+# ran. The signed local package repository from roadmap 71 is generated into the
+# same tree. What survives a run is exported to evidence/ as an argued package.
+artifacts/
+
+# A global core.excludesFile commonly ignores *.log as build output, which
+# silently drops a transcript whose digest an evidence manifest already records,
+# so a clone receives a hash for a file it does not have. A repository rule
+# overrides the global file, so the retained filesystem transcripts travel with
+# the run they describe.
+!evidence/builder-batches/**/*.log
+
 # Generated runtime captures are dated instances and stay untracked.
 # evidence/runtime/cases/ holds deliberate, sanitized captures that are
 # argued artifacts and are tracked.

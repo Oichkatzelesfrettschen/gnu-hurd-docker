@@ -1,0 +1,1165 @@
+{
+  "archive_snapshot": "20260726T003219Z",
+  "batches": [
+    {
+      "batch_id": "builder-dependencies-001",
+      "batch_index": 1,
+      "guest_pre_batch_simulation": {
+        "command": [
+          "apt-get",
+          "-s",
+          "install",
+          "-y",
+          "--no-install-recommends",
+          "gcc-16-base",
+          "libc-gconv-modules-extra",
+          "libc0.3",
+          "libgcc-s1",
+          "libtinfo6",
+          "ncurses-bin",
+          "libcrypt1",
+          "perl-base",
+          "libdb5.3t64",
+          "libpam0g",
+          "libpam-modules",
+          "libblkid1",
+          "libmount1",
+          "libsmartcols1",
+          "libuuid1",
+          "util-linux",
+          "libc-bin",
+          "ncurses-base",
+          "login",
+          "autoconf-archive",
+          "libexpat1",
+          "perl-modules-5.42",
+          "libbz2-1.0",
+          "libgdbm6t64",
+          "libgdbm-compat4t64",
+          "zlib1g",
+          "libperl5.42",
+          "perl",
+          "sgml-base",
+          "xml-core",
+          "sgml-data",
+          "docbook",
+          "libstdc++6",
+          "libosp5",
+          "opensp",
+          "docbook-to-man",
+          "docbook-xml",
+          "docbook-xsl",
+          "libpkgconf7",
+          "pkgconf-bin"
+        ],
+        "must_succeed_before_install": true
+      },
+      "guest_reboot_after_install": true,
+      "member_count": 40,
+      "members": [
+        {
+          "package": "gcc-16-base",
+          "resolver_entry": "gcc-16-base (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 1
+        },
+        {
+          "package": "libc-gconv-modules-extra",
+          "resolver_entry": "libc-gconv-modules-extra (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 2
+        },
+        {
+          "package": "libc0.3",
+          "resolver_entry": "libc0.3 (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64]) []",
+          "transaction_index": 3
+        },
+        {
+          "package": "libgcc-s1",
+          "resolver_entry": "libgcc-s1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 4
+        },
+        {
+          "package": "libtinfo6",
+          "resolver_entry": "libtinfo6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 5
+        },
+        {
+          "package": "ncurses-bin",
+          "resolver_entry": "ncurses-bin [6.6+20260608-2] (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 6
+        },
+        {
+          "package": "libcrypt1",
+          "resolver_entry": "libcrypt1 (1:4.5.1-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 7
+        },
+        {
+          "package": "perl-base",
+          "resolver_entry": "perl-base [5.42.2-3] (5.42.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 8
+        },
+        {
+          "package": "libdb5.3t64",
+          "resolver_entry": "libdb5.3t64 (5.3.28+dfsg2-5 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 9
+        },
+        {
+          "package": "libpam0g",
+          "resolver_entry": "libpam0g (1.7.0-2+hurd.1 ftp.ports.debian.org:unreleased [hurd-amd64])",
+          "transaction_index": 10
+        },
+        {
+          "package": "libpam-modules",
+          "resolver_entry": "libpam-modules (1.7.0-2+hurd.1 ftp.ports.debian.org:unreleased [hurd-amd64])",
+          "transaction_index": 11
+        },
+        {
+          "package": "libblkid1",
+          "resolver_entry": "libblkid1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 12
+        },
+        {
+          "package": "libmount1",
+          "resolver_entry": "libmount1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 13
+        },
+        {
+          "package": "libsmartcols1",
+          "resolver_entry": "libsmartcols1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 14
+        },
+        {
+          "package": "libuuid1",
+          "resolver_entry": "libuuid1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 15
+        },
+        {
+          "package": "util-linux",
+          "resolver_entry": "util-linux [2.42.2-2] (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 16
+        },
+        {
+          "package": "libc-bin",
+          "resolver_entry": "libc-bin [2.42-17] (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 17
+        },
+        {
+          "package": "ncurses-base",
+          "resolver_entry": "ncurses-base [6.6+20260608-2] (6.6+20260608-2 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 18
+        },
+        {
+          "package": "login",
+          "resolver_entry": "login [1:4.16.0-2+really2.42.2-2] (1:4.16.0-2+really2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 19
+        },
+        {
+          "package": "autoconf-archive",
+          "resolver_entry": "autoconf-archive (20241016-3 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 20
+        },
+        {
+          "package": "libexpat1",
+          "resolver_entry": "libexpat1 (2.8.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 21
+        },
+        {
+          "package": "perl-modules-5.42",
+          "resolver_entry": "perl-modules-5.42 [5.42.2-3] (5.42.2-3 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 22
+        },
+        {
+          "package": "libbz2-1.0",
+          "resolver_entry": "libbz2-1.0 (1.0.8-6+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 23
+        },
+        {
+          "package": "libgdbm6t64",
+          "resolver_entry": "libgdbm6t64 (1.26-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 24
+        },
+        {
+          "package": "libgdbm-compat4t64",
+          "resolver_entry": "libgdbm-compat4t64 (1.26-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 25
+        },
+        {
+          "package": "zlib1g",
+          "resolver_entry": "zlib1g (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 26
+        },
+        {
+          "package": "libperl5.42",
+          "resolver_entry": "libperl5.42 (5.42.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 27
+        },
+        {
+          "package": "perl",
+          "resolver_entry": "perl [5.42.2-3] (5.42.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 28
+        },
+        {
+          "package": "sgml-base",
+          "resolver_entry": "sgml-base (1.31+nmu1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 29
+        },
+        {
+          "package": "xml-core",
+          "resolver_entry": "xml-core (0.21 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 30
+        },
+        {
+          "package": "sgml-data",
+          "resolver_entry": "sgml-data (2.0.11+nmu1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 31
+        },
+        {
+          "package": "docbook",
+          "resolver_entry": "docbook (4.5-11 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 32
+        },
+        {
+          "package": "libstdc++6",
+          "resolver_entry": "libstdc++6 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 33
+        },
+        {
+          "package": "libosp5",
+          "resolver_entry": "libosp5 (1.5.2-15.2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 34
+        },
+        {
+          "package": "opensp",
+          "resolver_entry": "opensp (1.5.2-15.2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 35
+        },
+        {
+          "package": "docbook-to-man",
+          "resolver_entry": "docbook-to-man (1:2.0.0-50 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 36
+        },
+        {
+          "package": "docbook-xml",
+          "resolver_entry": "docbook-xml (4.5-14 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 37
+        },
+        {
+          "package": "docbook-xsl",
+          "resolver_entry": "docbook-xsl (1.79.2+dfsg-8 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 38
+        },
+        {
+          "package": "libpkgconf7",
+          "resolver_entry": "libpkgconf7 (2.5.1-4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 39
+        },
+        {
+          "package": "pkgconf-bin",
+          "resolver_entry": "pkgconf-bin [2.5.1-4] (2.5.1-4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 40
+        }
+      ]
+    },
+    {
+      "batch_id": "builder-dependencies-002",
+      "batch_index": 2,
+      "guest_pre_batch_simulation": {
+        "command": [
+          "apt-get",
+          "-s",
+          "install",
+          "-y",
+          "--no-install-recommends",
+          "pkgconf",
+          "libzstd1",
+          "openssl-provider-legacy",
+          "libssl3t64",
+          "libpython3.14-minimal",
+          "python3.14-minimal",
+          "libffi8",
+          "liblzma5",
+          "libncursesw6",
+          "readline-common",
+          "libreadline8t64",
+          "libsqlite3-0",
+          "libpython3.14-stdlib",
+          "python3.14",
+          "libpython3-stdlib",
+          "python3",
+          "libxml2-16",
+          "libgpg-error0",
+          "libgcrypt20",
+          "libxslt1.1",
+          "python3-lxml",
+          "python3-pygments",
+          "xsltproc",
+          "gtk-doc-tools",
+          "libxml-parser-perl",
+          "intltool",
+          "libc-dev-bin",
+          "gnumach-dev",
+          "libc0.3-dev",
+          "libtool",
+          "mate-common",
+          "python3-minimal",
+          "libpam-modules-bin",
+          "bsdutils",
+          "libfdisk1",
+          "fdisk",
+          "bzip2",
+          "libdbus-1-3",
+          "dbus-bin",
+          "dbus-session-bus-common"
+        ],
+        "must_succeed_before_install": true
+      },
+      "guest_reboot_after_install": true,
+      "member_count": 40,
+      "members": [
+        {
+          "package": "pkgconf",
+          "resolver_entry": "pkgconf (2.5.1-4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 41
+        },
+        {
+          "package": "libzstd1",
+          "resolver_entry": "libzstd1 (1.5.7+dfsg-3+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 42
+        },
+        {
+          "package": "openssl-provider-legacy",
+          "resolver_entry": "openssl-provider-legacy [3.6.3-1] (3.6.3-1 ftp.ports.debian.org:unstable [hurd-amd64]) []",
+          "transaction_index": 43
+        },
+        {
+          "package": "libssl3t64",
+          "resolver_entry": "libssl3t64 (3.6.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 44
+        },
+        {
+          "package": "libpython3.14-minimal",
+          "resolver_entry": "libpython3.14-minimal (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 45
+        },
+        {
+          "package": "python3.14-minimal",
+          "resolver_entry": "python3.14-minimal [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 46
+        },
+        {
+          "package": "libffi8",
+          "resolver_entry": "libffi8 (3.7.1-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 47
+        },
+        {
+          "package": "liblzma5",
+          "resolver_entry": "liblzma5 (5.8.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 48
+        },
+        {
+          "package": "libncursesw6",
+          "resolver_entry": "libncursesw6 (6.6+20260608-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 49
+        },
+        {
+          "package": "readline-common",
+          "resolver_entry": "readline-common [8.3-4] (8.3-4 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 50
+        },
+        {
+          "package": "libreadline8t64",
+          "resolver_entry": "libreadline8t64 (8.3-4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 51
+        },
+        {
+          "package": "libsqlite3-0",
+          "resolver_entry": "libsqlite3-0 (3.53.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 52
+        },
+        {
+          "package": "libpython3.14-stdlib",
+          "resolver_entry": "libpython3.14-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 53
+        },
+        {
+          "package": "python3.14",
+          "resolver_entry": "python3.14 [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 54
+        },
+        {
+          "package": "libpython3-stdlib",
+          "resolver_entry": "libpython3-stdlib (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 55
+        },
+        {
+          "package": "python3",
+          "resolver_entry": "python3 [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 56
+        },
+        {
+          "package": "libxml2-16",
+          "resolver_entry": "libxml2-16 (2.15.3+dfsg-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 57
+        },
+        {
+          "package": "libgpg-error0",
+          "resolver_entry": "libgpg-error0 (1.61-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 58
+        },
+        {
+          "package": "libgcrypt20",
+          "resolver_entry": "libgcrypt20 (1.12.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 59
+        },
+        {
+          "package": "libxslt1.1",
+          "resolver_entry": "libxslt1.1 (1.1.45-0.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 60
+        },
+        {
+          "package": "python3-lxml",
+          "resolver_entry": "python3-lxml (6.1.0-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 61
+        },
+        {
+          "package": "python3-pygments",
+          "resolver_entry": "python3-pygments (2.20.0+dfsg-2 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 62
+        },
+        {
+          "package": "xsltproc",
+          "resolver_entry": "xsltproc (1.1.45-0.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 63
+        },
+        {
+          "package": "gtk-doc-tools",
+          "resolver_entry": "gtk-doc-tools (1.36.1-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 64
+        },
+        {
+          "package": "libxml-parser-perl",
+          "resolver_entry": "libxml-parser-perl (2.47-2+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 65
+        },
+        {
+          "package": "intltool",
+          "resolver_entry": "intltool (0.51.0-7 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 66
+        },
+        {
+          "package": "libc-dev-bin",
+          "resolver_entry": "libc-dev-bin [2.42-17] (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 67
+        },
+        {
+          "package": "gnumach-dev",
+          "resolver_entry": "gnumach-dev (2:1.8+git20260224-11 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 68
+        },
+        {
+          "package": "libc0.3-dev",
+          "resolver_entry": "libc0.3-dev (2.42-17 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 69
+        },
+        {
+          "package": "libtool",
+          "resolver_entry": "libtool [2.5.4-11] (2.5.4-11 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 70
+        },
+        {
+          "package": "mate-common",
+          "resolver_entry": "mate-common (1.26.0-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 71
+        },
+        {
+          "package": "python3-minimal",
+          "resolver_entry": "python3-minimal [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 72
+        },
+        {
+          "package": "libpam-modules-bin",
+          "resolver_entry": "libpam-modules-bin [1.7.0-2+hurd.1] (1.7.0-2+hurd.1 ftp.ports.debian.org:unreleased [hurd-amd64])",
+          "transaction_index": 73
+        },
+        {
+          "package": "bsdutils",
+          "resolver_entry": "bsdutils [1:2.42.2-2] (1:2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 74
+        },
+        {
+          "package": "libfdisk1",
+          "resolver_entry": "libfdisk1 (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 75
+        },
+        {
+          "package": "fdisk",
+          "resolver_entry": "fdisk [2.42.2-2] (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 76
+        },
+        {
+          "package": "bzip2",
+          "resolver_entry": "bzip2 [1.0.8-6+b2] (1.0.8-6+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 77
+        },
+        {
+          "package": "libdbus-1-3",
+          "resolver_entry": "libdbus-1-3 (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 78
+        },
+        {
+          "package": "dbus-bin",
+          "resolver_entry": "dbus-bin [1.16.2-5+b1] (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 79
+        },
+        {
+          "package": "dbus-session-bus-common",
+          "resolver_entry": "dbus-session-bus-common [1.16.2-5] (1.16.2-5 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 80
+        }
+      ]
+    },
+    {
+      "batch_id": "builder-dependencies-003",
+      "batch_index": 3,
+      "guest_pre_batch_simulation": {
+        "command": [
+          "apt-get",
+          "-s",
+          "install",
+          "-y",
+          "--no-install-recommends",
+          "dbus-daemon",
+          "opensysusers",
+          "dbus-system-bus-common",
+          "dbus",
+          "libc-l10n",
+          "xz-utils",
+          "bsdextrautils",
+          "libxau6",
+          "libxdmcp6",
+          "libxcb1",
+          "libx11-data",
+          "libx11-6",
+          "dbus-x11",
+          "libdebhelper-perl",
+          "debhelper",
+          "dh-python",
+          "native-architecture",
+          "libatomic1",
+          "libpcre2-8-0",
+          "libglib2.0-0t64",
+          "libgirepository-2.0-0",
+          "girepository-tools",
+          "gnumach-common",
+          "gnumach-image-1.8-amd64-up",
+          "gnumach-image-1-amd64",
+          "libasyncns0",
+          "libelf1t64",
+          "libexpat1-dev",
+          "libffi-dev",
+          "libgomp1",
+          "libfftw3-single3",
+          "libogg0",
+          "libflac14",
+          "libpcre2-16-0",
+          "libpcre2-32-0",
+          "libpcre2-posix3",
+          "libpcre2-dev",
+          "zlib1g-dev",
+          "libgio-2.0-dev",
+          "libgio-2.0-dev-bin"
+        ],
+        "must_succeed_before_install": true
+      },
+      "guest_reboot_after_install": true,
+      "member_count": 40,
+      "members": [
+        {
+          "package": "dbus-daemon",
+          "resolver_entry": "dbus-daemon [1.16.2-5+b1] (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 81
+        },
+        {
+          "package": "opensysusers",
+          "resolver_entry": "opensysusers [0.7.5-1] (0.7.5-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 82
+        },
+        {
+          "package": "dbus-system-bus-common",
+          "resolver_entry": "dbus-system-bus-common [1.16.2-5] (1.16.2-5 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 83
+        },
+        {
+          "package": "dbus",
+          "resolver_entry": "dbus [1.16.2-5+b1] (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 84
+        },
+        {
+          "package": "libc-l10n",
+          "resolver_entry": "libc-l10n [2.42-17] (2.42-17 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 85
+        },
+        {
+          "package": "xz-utils",
+          "resolver_entry": "xz-utils [5.8.3-1] (5.8.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 86
+        },
+        {
+          "package": "bsdextrautils",
+          "resolver_entry": "bsdextrautils [2.42.2-2] (2.42.2-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 87
+        },
+        {
+          "package": "libxau6",
+          "resolver_entry": "libxau6 (1:1.0.11-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 88
+        },
+        {
+          "package": "libxdmcp6",
+          "resolver_entry": "libxdmcp6 (1:1.1.5-2+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 89
+        },
+        {
+          "package": "libxcb1",
+          "resolver_entry": "libxcb1 (1.15-1+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 90
+        },
+        {
+          "package": "libx11-data",
+          "resolver_entry": "libx11-data [2:1.8.13-1] (2:1.8.13-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 91
+        },
+        {
+          "package": "libx11-6",
+          "resolver_entry": "libx11-6 (2:1.8.13-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 92
+        },
+        {
+          "package": "dbus-x11",
+          "resolver_entry": "dbus-x11 [1.16.2-5+b1] (1.16.2-5+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 93
+        },
+        {
+          "package": "libdebhelper-perl",
+          "resolver_entry": "libdebhelper-perl [14.3] (14.3 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 94
+        },
+        {
+          "package": "debhelper",
+          "resolver_entry": "debhelper [14.3] (14.3 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 95
+        },
+        {
+          "package": "dh-python",
+          "resolver_entry": "dh-python (7.20260623 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 96
+        },
+        {
+          "package": "native-architecture",
+          "resolver_entry": "native-architecture (0.2.6 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 97
+        },
+        {
+          "package": "libatomic1",
+          "resolver_entry": "libatomic1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 98
+        },
+        {
+          "package": "libpcre2-8-0",
+          "resolver_entry": "libpcre2-8-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 99
+        },
+        {
+          "package": "libglib2.0-0t64",
+          "resolver_entry": "libglib2.0-0t64 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 100
+        },
+        {
+          "package": "libgirepository-2.0-0",
+          "resolver_entry": "libgirepository-2.0-0 (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 101
+        },
+        {
+          "package": "girepository-tools",
+          "resolver_entry": "girepository-tools (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 102
+        },
+        {
+          "package": "gnumach-common",
+          "resolver_entry": "gnumach-common [2:1.8+git20260224-11] (2:1.8+git20260224-11 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 103
+        },
+        {
+          "package": "gnumach-image-1.8-amd64-up",
+          "resolver_entry": "gnumach-image-1.8-amd64-up [2:1.8+git20260224-11] (2:1.8+git20260224-11 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 104
+        },
+        {
+          "package": "gnumach-image-1-amd64",
+          "resolver_entry": "gnumach-image-1-amd64 [2:1.8+git20260224-11] (2:1.8+git20260224-11 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 105
+        },
+        {
+          "package": "libasyncns0",
+          "resolver_entry": "libasyncns0 (0.8-8 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 106
+        },
+        {
+          "package": "libelf1t64",
+          "resolver_entry": "libelf1t64 (0.195-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 107
+        },
+        {
+          "package": "libexpat1-dev",
+          "resolver_entry": "libexpat1-dev (2.8.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 108
+        },
+        {
+          "package": "libffi-dev",
+          "resolver_entry": "libffi-dev (3.7.1-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 109
+        },
+        {
+          "package": "libgomp1",
+          "resolver_entry": "libgomp1 (16.1.0-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 110
+        },
+        {
+          "package": "libfftw3-single3",
+          "resolver_entry": "libfftw3-single3 (3.3.11-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 111
+        },
+        {
+          "package": "libogg0",
+          "resolver_entry": "libogg0 (1.3.6-2+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 112
+        },
+        {
+          "package": "libflac14",
+          "resolver_entry": "libflac14 (1.5.0+ds-5 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 113
+        },
+        {
+          "package": "libpcre2-16-0",
+          "resolver_entry": "libpcre2-16-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 114
+        },
+        {
+          "package": "libpcre2-32-0",
+          "resolver_entry": "libpcre2-32-0 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 115
+        },
+        {
+          "package": "libpcre2-posix3",
+          "resolver_entry": "libpcre2-posix3 (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 116
+        },
+        {
+          "package": "libpcre2-dev",
+          "resolver_entry": "libpcre2-dev (10.46-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 117
+        },
+        {
+          "package": "zlib1g-dev",
+          "resolver_entry": "zlib1g-dev (1:1.3.dfsg+really1.3.2-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 118
+        },
+        {
+          "package": "libgio-2.0-dev",
+          "resolver_entry": "libgio-2.0-dev (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 119
+        },
+        {
+          "package": "libgio-2.0-dev-bin",
+          "resolver_entry": "libgio-2.0-dev-bin (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 120
+        }
+      ]
+    },
+    {
+      "batch_id": "builder-dependencies-004",
+      "batch_index": 4,
+      "guest_pre_batch_simulation": {
+        "command": [
+          "apt-get",
+          "-s",
+          "install",
+          "-y",
+          "--no-install-recommends",
+          "libglib2.0-data",
+          "libglib2.0-bin",
+          "libglib2.0-dev-bin",
+          "libglib2.0-dev",
+          "libgstreamer1.0-0",
+          "liborc-0.4-0t64",
+          "libgstreamer-plugins-base1.0-0",
+          "libice6",
+          "libltdl7",
+          "libmpg123-0t64",
+          "libmp3lame0",
+          "libopus0",
+          "liboss4-salsa2",
+          "liboss4-salsa-asound2",
+          "liboss4-salsa-dev",
+          "libvorbis0a",
+          "libvorbisenc2",
+          "libsndfile1",
+          "libx11-xcb1",
+          "libpulse0",
+          "libpulse-mainloop-glib0",
+          "libpulse-dev",
+          "libpulsedsp",
+          "libpython3.14",
+          "libpython3.14-dev",
+          "libpython3-dev",
+          "libpython3.13-minimal",
+          "libpython3.13-stdlib",
+          "libpython3.13",
+          "libpython3.13-dev",
+          "libpython3-all-dev",
+          "libsm6",
+          "libsoxr0",
+          "libspeexdsp1",
+          "libtdb1",
+          "libwrap0",
+          "libxext6",
+          "libxtst6",
+          "openssl",
+          "pulseaudio-utils"
+        ],
+        "must_succeed_before_install": true
+      },
+      "guest_reboot_after_install": true,
+      "member_count": 40,
+      "members": [
+        {
+          "package": "libglib2.0-data",
+          "resolver_entry": "libglib2.0-data [2.88.2-1] (2.88.2-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 121
+        },
+        {
+          "package": "libglib2.0-bin",
+          "resolver_entry": "libglib2.0-bin [2.88.2-1] (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 122
+        },
+        {
+          "package": "libglib2.0-dev-bin",
+          "resolver_entry": "libglib2.0-dev-bin (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 123
+        },
+        {
+          "package": "libglib2.0-dev",
+          "resolver_entry": "libglib2.0-dev (2.88.2-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 124
+        },
+        {
+          "package": "libgstreamer1.0-0",
+          "resolver_entry": "libgstreamer1.0-0 (1.28.5-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 125
+        },
+        {
+          "package": "liborc-0.4-0t64",
+          "resolver_entry": "liborc-0.4-0t64 (1:0.4.42-3 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 126
+        },
+        {
+          "package": "libgstreamer-plugins-base1.0-0",
+          "resolver_entry": "libgstreamer-plugins-base1.0-0 (1.28.5-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 127
+        },
+        {
+          "package": "libice6",
+          "resolver_entry": "libice6 (2:1.1.1-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 128
+        },
+        {
+          "package": "libltdl7",
+          "resolver_entry": "libltdl7 (2.5.4-11 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 129
+        },
+        {
+          "package": "libmpg123-0t64",
+          "resolver_entry": "libmpg123-0t64 (1.33.6-2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 130
+        },
+        {
+          "package": "libmp3lame0",
+          "resolver_entry": "libmp3lame0 (4.0-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 131
+        },
+        {
+          "package": "libopus0",
+          "resolver_entry": "libopus0 (1.6.1-1+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 132
+        },
+        {
+          "package": "liboss4-salsa2",
+          "resolver_entry": "liboss4-salsa2 (4.2-build2020-6+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 133
+        },
+        {
+          "package": "liboss4-salsa-asound2",
+          "resolver_entry": "liboss4-salsa-asound2 (4.2-build2020-6+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 134
+        },
+        {
+          "package": "liboss4-salsa-dev",
+          "resolver_entry": "liboss4-salsa-dev (4.2-build2020-6+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 135
+        },
+        {
+          "package": "libvorbis0a",
+          "resolver_entry": "libvorbis0a (1.3.7-3+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 136
+        },
+        {
+          "package": "libvorbisenc2",
+          "resolver_entry": "libvorbisenc2 (1.3.7-3+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 137
+        },
+        {
+          "package": "libsndfile1",
+          "resolver_entry": "libsndfile1 (1.2.2-4+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 138
+        },
+        {
+          "package": "libx11-xcb1",
+          "resolver_entry": "libx11-xcb1 (2:1.8.13-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 139
+        },
+        {
+          "package": "libpulse0",
+          "resolver_entry": "libpulse0 (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 140
+        },
+        {
+          "package": "libpulse-mainloop-glib0",
+          "resolver_entry": "libpulse-mainloop-glib0 (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 141
+        },
+        {
+          "package": "libpulse-dev",
+          "resolver_entry": "libpulse-dev (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 142
+        },
+        {
+          "package": "libpulsedsp",
+          "resolver_entry": "libpulsedsp (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 143
+        },
+        {
+          "package": "libpython3.14",
+          "resolver_entry": "libpython3.14 (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 144
+        },
+        {
+          "package": "libpython3.14-dev",
+          "resolver_entry": "libpython3.14-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 145
+        },
+        {
+          "package": "libpython3-dev",
+          "resolver_entry": "libpython3-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 146
+        },
+        {
+          "package": "libpython3.13-minimal",
+          "resolver_entry": "libpython3.13-minimal (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 147
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "resolver_entry": "libpython3.13-stdlib (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 148
+        },
+        {
+          "package": "libpython3.13",
+          "resolver_entry": "libpython3.13 (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 149
+        },
+        {
+          "package": "libpython3.13-dev",
+          "resolver_entry": "libpython3.13-dev (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 150
+        },
+        {
+          "package": "libpython3-all-dev",
+          "resolver_entry": "libpython3-all-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 151
+        },
+        {
+          "package": "libsm6",
+          "resolver_entry": "libsm6 (2:1.2.6-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 152
+        },
+        {
+          "package": "libsoxr0",
+          "resolver_entry": "libsoxr0 (0.1.3-4.1+b1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 153
+        },
+        {
+          "package": "libspeexdsp1",
+          "resolver_entry": "libspeexdsp1 (1.2.1-4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 154
+        },
+        {
+          "package": "libtdb1",
+          "resolver_entry": "libtdb1 (2:1.4.15+samba4.24.4+dfsg-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 155
+        },
+        {
+          "package": "libwrap0",
+          "resolver_entry": "libwrap0 (7.6.q-37 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 156
+        },
+        {
+          "package": "libxext6",
+          "resolver_entry": "libxext6 (2:1.3.4-1+b4 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 157
+        },
+        {
+          "package": "libxtst6",
+          "resolver_entry": "libxtst6 (2:1.2.5-1+b2 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 158
+        },
+        {
+          "package": "openssl",
+          "resolver_entry": "openssl [3.6.3-1] (3.6.3-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 159
+        },
+        {
+          "package": "pulseaudio-utils",
+          "resolver_entry": "pulseaudio-utils [17.0+dfsg1-2.1] (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 160
+        }
+      ]
+    },
+    {
+      "batch_id": "builder-dependencies-005",
+      "batch_index": 5,
+      "guest_pre_batch_simulation": {
+        "command": [
+          "apt-get",
+          "-s",
+          "install",
+          "-y",
+          "--no-install-recommends",
+          "pulseaudio",
+          "python3.13-minimal",
+          "python3.13",
+          "python3-all",
+          "python3.14-dev",
+          "python3-dev",
+          "python3.13-dev",
+          "python3-all-dev",
+          "python3-iniconfig",
+          "python3-pluggy",
+          "python3-pytest"
+        ],
+        "must_succeed_before_install": true
+      },
+      "guest_reboot_after_install": true,
+      "member_count": 11,
+      "members": [
+        {
+          "package": "pulseaudio",
+          "resolver_entry": "pulseaudio [17.0+dfsg1-2.1] (17.0+dfsg1-2.1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 161
+        },
+        {
+          "package": "python3.13-minimal",
+          "resolver_entry": "python3.13-minimal (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 162
+        },
+        {
+          "package": "python3.13",
+          "resolver_entry": "python3.13 (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 163
+        },
+        {
+          "package": "python3-all",
+          "resolver_entry": "python3-all (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 164
+        },
+        {
+          "package": "python3.14-dev",
+          "resolver_entry": "python3.14-dev [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 165
+        },
+        {
+          "package": "python3-dev",
+          "resolver_entry": "python3-dev [3.14.6-1] (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 166
+        },
+        {
+          "package": "python3.13-dev",
+          "resolver_entry": "python3.13-dev (3.13.14-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 167
+        },
+        {
+          "package": "python3-all-dev",
+          "resolver_entry": "python3-all-dev (3.14.6-1 ftp.ports.debian.org:unstable [hurd-amd64])",
+          "transaction_index": 168
+        },
+        {
+          "package": "python3-iniconfig",
+          "resolver_entry": "python3-iniconfig (2.1.0-2 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 169
+        },
+        {
+          "package": "python3-pluggy",
+          "resolver_entry": "python3-pluggy (1.6.0-2 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 170
+        },
+        {
+          "package": "python3-pytest",
+          "resolver_entry": "python3-pytest (9.1.1-1 ftp.ports.debian.org:unstable [all])",
+          "transaction_index": 171
+        }
+      ]
+    }
+  ],
+  "builder_base": {
+    "path": "images/minty-hurd-builder-base.qcow2",
+    "sha256": "7bffe2be3e6fbcd7569d1d274556ea7a234712fa1ffd2df7a66286851ea28072",
+    "status_path": "evidence/builder-base/hurd-amd64-dpkg-status",
+    "status_sha256": "773d5a23ce15734b720c7724e900d3138ac5f5af9606ef8bb693033cfa5d6d5b"
+  },
+  "closure": {
+    "path": "evidence/builder-base/hurd-amd64-build-closure-rebuild-candidates.json",
+    "sha256": "2f138593fabe4fdd0f73d4bf84ec1f74bb9e89ffe0ff8dac017098a7d195bf6f",
+    "transaction_size": 171
+  },
+  "journal_schema": {
+    "acceptance": "pre_batch_simulation.exit_status == 0",
+    "kind": "builder-batch-journal",
+    "pre_batch_simulation_required_fields": [
+      "command",
+      "completed_at_utc",
+      "exit_status",
+      "stdout_sha256",
+      "stderr_sha256",
+      "simulated_package_count"
+    ],
+    "required_record_fields": [
+      "batch_id",
+      "batch_index",
+      "members",
+      "started_at_utc",
+      "outcome",
+      "pre_batch_simulation",
+      "install",
+      "sync",
+      "reboot"
+    ],
+    "schema_version": 1
+  },
+  "kind": "builder-dependency-batch-plan",
+  "plan_sha256": "94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138",
+  "schema_version": 1,
+  "stock_kernel_batch_bound": {
+    "evidence": "docs/reports/GUEST-UPGRADE-CAMPAIGN-2026-07-16.md",
+    "falsifier": "A guest pre-batch apt-get -s failure or a recorded Mach IPC-map allocation failure rejects that batch plan.",
+    "max_packages": 40,
+    "reason": "A reboot resets the stock GNU Mach IPC map; the retained campaign completed 40-package rounds, while transactions above 100 packages are recorded as a wedge risk."
+  }
+}

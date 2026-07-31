@@ -25,6 +25,7 @@ GUEST_SSH_PORT="${GUEST_SSH_PORT:-${MINTY_SSH_PORT:-${SSH_PORT:-2222}}}"
 GUEST_SSH_USER="${GUEST_SSH_USER:-root}"
 GUEST_SSH_KEY="${GUEST_SSH_KEY:-${MINTY_SSH_KEY:-ssh-test-keys/hurd_test_key}}"
 GUEST_SSH_TIMEOUT="${GUEST_SSH_TIMEOUT:-20}"
+GUEST_SSH_PROBE_TIMEOUT="${GUEST_SSH_PROBE_TIMEOUT:-30}"
 
 # A disposable guest presents a key nobody has seen before, so strict checking
 # refuses it and disabling the check accepts any host for every later
@@ -53,8 +54,11 @@ guest_ssh_options() {
 guest_ssh_alive() {
     local options
     mapfile -t options < <(guest_ssh_options)
-    ssh "${options[@]}" "${GUEST_SSH_USER}@${GUEST_SSH_HOST}" 'exit 0' \
-        >/dev/null 2>&1
+    # ConnectTimeout only covers opening SSH.  A guest can accept a connection
+    # and leave the remote command open during a reboot, so the liveness probe
+    # has its own wall-clock limit.
+    timeout "$GUEST_SSH_PROBE_TIMEOUT" ssh "${options[@]}" \
+        "${GUEST_SSH_USER}@${GUEST_SSH_HOST}" 'exit 0' >/dev/null 2>&1
 }
 
 # Run one command and keep both streams. The remote side writes to the named

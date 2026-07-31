@@ -48,6 +48,12 @@ services:
       # the runner creates fresh and deletes or quarantines.
       - ${BUILDER_RUN_DIR:?builder run directory is required}:/opt/hurd-run:rw
 
+    # A build is one process that ends and two runs must not collide, which is
+    # why this composition fixes no container name. A fixed serial or monitor
+    # port reintroduces that collision on a second concurrent run, so the guest
+    # console surface belongs in the run directory as a file rather than on a
+    # published port. The entrypoint writes no such file, so a run carries no
+    # console transcript and a Mach console message goes unobserved.
     ports:
       - "127.0.0.1:${BUILDER_SSH_PORT:-2223}:2222"
 
