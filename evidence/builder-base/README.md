@@ -44,6 +44,19 @@ so `source_image_sha256` in `hurd-amd64-dpkg-status.json` names the base and
 the export describes the file that exists rather than the overlay it was built
 in. That boot also observed the `builder` login and the toolchain commands.
 
+`scripts/write-builder-lock.py` reads all three files and holds the chain they
+state. The status metadata names the manifest it sits beside and the digest that
+manifest hashes to, and its `source_image_sha256` is held against the base digest
+the lock records, which is the one link that says the package state was exported
+from the locked image rather than from some other guest. The seeded closure names
+the status it answered against, the archive it resolved at, and the resolver
+revision and image that produced it, and each is held against the tree. An absent
+field refuses rather than comparing equal to another absent field, and a missing
+input refuses rather than leaving the previous run's value in the lock.
+`make builder-lock-selftest` breaks one link per case and requires a refusal that
+writes no lock, because the drift gate runs against a tree whose links already
+hold and so shows only that a correct chain is accepted.
+
 `hurd-amd64-build-closure-rebuild-candidates.json` is the rebuild-candidate
 closure seeded with that status at the lock's snapshot. Against the base the
 shared build-dependency transaction is 171 packages and removes nothing, where

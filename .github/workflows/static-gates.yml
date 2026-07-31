@@ -101,9 +101,14 @@ jobs:
 
       # The lock's digests are read from the files they name, so a resolver or
       # report edit that skips the lock writer shows up as a diff here rather
-      # than as a build scheduled from stale inputs.
+      # than as a build scheduled from stale inputs.  The fixtures break one
+      # link of the base-to-status-to-closure chain per case, because a writer
+      # run against a tree whose links hold shows only that a correct chain is
+      # accepted.
       - name: Assert the builder lock reproduces from the tree
-        run: make builder-lock-check
+        run: |
+          make builder-lock-check
+          make builder-lock-selftest
 
       # The planner refuses a closure tied to another base image, archive
       # snapshot, or transaction. The local tests also prove that a failed
