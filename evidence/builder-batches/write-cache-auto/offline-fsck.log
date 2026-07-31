@@ -1,0 +1,141 @@
+$ LIBGUESTFS_TRACE=1 guestfish --ro -a overlay.qcow2 run : e2fsck /dev/sda5 forceno:true
+libguestfs: trace: set_backend "direct"
+libguestfs: trace: set_backend = 0
+libguestfs: trace: set_pgroup true
+libguestfs: trace: set_pgroup = 0
+libguestfs: trace: add_drive "/opt/hurd-run/overlay.qcow2" "readonly:true"
+libguestfs: trace: get_tmpdir
+libguestfs: trace: get_tmpdir = "/tmp"
+libguestfs: trace: disk_create "/tmp/libguestfsNrJM9x/overlay1.qcow2" "qcow2" -1 "backingfile:/opt/hurd-run/overlay.qcow2"
+libguestfs: trace: disk_format "/opt/hurd-run/overlay.qcow2"
+libguestfs: trace: disk_format = "qcow2"
+libguestfs: trace: disk_create = 0
+libguestfs: trace: add_drive = 0
+libguestfs: trace: launch
+libguestfs: trace: max_disks
+libguestfs: trace: max_disks = 255
+libguestfs: trace: get_cachedir
+libguestfs: trace: get_cachedir = "/var/tmp"
+libguestfs: trace: get_backend_setting "force_tcg"
+libguestfs: trace: get_backend_setting = NULL (error)
+libguestfs: trace: get_backend_setting "force_kvm"
+libguestfs: trace: get_backend_setting = NULL (error)
+libguestfs: trace: get_sockdir
+libguestfs: trace: get_sockdir = "/tmp"
+libguestfs: trace: get_backend_setting "gdb"
+libguestfs: trace: get_backend_setting = NULL (error)
+libguestfs: trace: launch = 0
+libguestfs: trace: e2fsck "/dev/sda5" "forceno:true"
+libguestfs: trace: e2fsck = -1 (error)
+libguestfs: error: e2fsck: e2fsck 1.47.4 (6-Mar-2025)
+Superblock last write time is in the future.
+	(by less than a day, probably due to the hardware clock being incorrectly set)
+Pass 1: Checking inodes, blocks, and sizes
+Deleted inode 22015 has zero dtime.  Fix? no
+
+Deleted inode 22016 has zero dtime.  Fix? no
+
+Deleted inode 22017 has zero dtime.  Fix? no
+
+Deleted inode 22019 has zero dtime.  Fix? no
+
+Deleted inode 24490 has zero dtime.  Fix? no
+
+Deleted inode 24491 has zero dtime.  Fix? no
+
+Deleted inode 24578 has zero dtime.  Fix? no
+
+Deleted inode 24621 has zero dtime.  Fix? no
+
+Deleted inode 30468 has zero dtime.  Fix? no
+
+Deleted inode 30473 has zero dtime.  Fix? no
+
+Deleted inode 318131 has zero dtime.  Fix? no
+
+Deleted inode 318132 has zero dtime.  Fix? no
+
+Deleted inode 318133 has zero dtime.  Fix? no
+
+Deleted inode 318477 has zero dtime.  Fix? no
+
+Deleted inode 318478 has zero dtime.  Fix? no
+
+Deleted inode 318479 has zero dtime.  Fix? no
+
+Deleted inode 318480 has zero dtime.  Fix? no
+
+Deleted inode 318497 has zero dtime.  Fix? no
+
+Deleted inode 318499 has zero dtime.  Fix? no
+
+Deleted inode 318500 has zero dtime.  Fix? no
+
+Deleted inode 318501 has zero dtime.  Fix? no
+
+Deleted inode 319388 has zero dtime.  Fix? no
+
+Deleted inode 319390 has zero dtime.  Fix? no
+
+Deleted inode 319392 has zero dtime.  Fix? no
+
+Deleted inode 319394 has zero dtime.  Fix? no
+
+Deleted inode 319396 has zero dtime.  Fix? no
+
+Deleted inode 319404 has zero dtime.  Fix? no
+
+Deleted inode 319406 has zero dtime.  Fix? no
+
+Deleted inode 319408 has zero dtime.  Fix? no
+
+Deleted inode 319410 has zero dtime.  Fix? no
+
+Deleted inode 399091 has zero dtime.  Fix? no
+
+Deleted inode 472235 has zero dtime.  Fix? no
+
+Deleted inode 731640 has zero dtime.  Fix? no
+
+Deleted inode 732173 has zero dtime.  Fix? no
+
+Deleted inode 732181 has zero dtime.  Fix? no
+
+Deleted inode 821475 has zero dtime.  Fix? no
+
+Deleted inode 845567 has zero dtime.  Fix? no
+
+Deleted inode 845568 has zero dtime.  Fix? no
+
+Deleted inode 845569 has zero dtime.  Fix? no
+
+Deleted inode 846794 has zero dtime.  Fix? no
+
+Deleted inode 846795 has zero dtime.  Fix? no
+
+Deleted inode 886323 has zero dtime.  Fix? no
+
+Deleted inode 913099 has zero dtime.  Fix? no
+
+Deleted inode 913104 has zero dtime.  Fix? no
+
+Deleted inode 913179 has zero dtime.  Fix? no
+
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+Block bitmap differences:  -(67910--67912) -67914 -(67918--67920) -67922 -67927 -(70939--70940) -(70946--70948) -(70970--70971) -(70978--70979) -(71027--71028) -71034 -(71070--71071) -(71077--71079) -71085 -(71221--71222) -71230 -(71237--71239) -(71246--71247) -71271
+Fix? no
+
+Inode bitmap differences:  -(22015--22017) -22019 -(24490--24491) -24578 -24621 -30468 -30473 -(318131--318133) -(318477--318480) -318497 -(318499--318501) -319388 -319390 -319392 -319394 -319396 -319404 -319406 -319408 -319410 -399091 -472235 -731640 -732173 -732181 -821475 -(845567--845569) -(846794--846795) -886323 -913099 -913104 -913179
+Fix? no
+
+
+/dev/sda5: ********** WARNING: Filesystem still has errors **********
+
+/dev/sda5: 380508/983488 files (2.5% non-contiguous), 1070596/3949824 blocks
+libguestfs: trace: close
+libguestfs: trace: internal_autosync
+libguestfs: trace: internal_autosync = 0
+exit=1

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "run_id": "stock-kernel-builder-dependencies-retry-20260730",
+  "status": "offline-check-failed",
+  "archive_snapshot": "20260726T003219Z",
+  "builder_base": {
+    "path": "images/minty-hurd-builder-base.qcow2",
+    "sha256_before": "7bffe2be3e6fbcd7569d1d274556ea7a234712fa1ffd2df7a66286851ea28072",
+    "sha256_after": "7bffe2be3e6fbcd7569d1d274556ea7a234712fa1ffd2df7a66286851ea28072"
+  },
+  "batch_plan": {
+    "path": "batch-plan.json",
+    "sha256": "94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138"
+  },
+  "batch_journal": "batch-journal.json",
+  "offline_checks": {
+    "qcow2": "clean",
+    "qcow2_transcript": "qemu-img-check.json",
+    "guest_filesystem": "not run",
+    "guest_filesystem_transcript": "offline-fsck.log"
+  },
+  "overlay_retained": true,
+  "compose_project": "hurdbuild-stock-kernel-builder-dependencies-retry-"
+}

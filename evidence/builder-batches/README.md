@@ -8,20 +8,29 @@ journal. The files here are one such run, executed against
 `7bffe2be3e6fbcd7569d1d274556ea7a234712fa1ffd2df7a66286851ea28072` on a
 disposable overlay, with the base unchanged before and after.
 
-`batch-plan.json` is the schedule, `batch-journal.json` is what the guest did,
-`run.json` is the run manifest the host wrote, and `offline-fsck-as-left.log`
-is the offline filesystem transcript read from the overlay after the guest
-halted.
+Two runs are here, named for the one QEMU setting that separates them: the PIIX
+IDE disk presented with `write-cache=off` and with `write-cache=auto`. Each
+directory carries `batch-journal.json`, what the guest did; `run.json`, the
+manifest the host wrote; and `offline-fsck.log`, the filesystem transcript read
+from the overlay after the guest halted. `batch-plan.json` sits under
+`write-cache-off/` alone, because both journals name plan digest
+`94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138` and one
+schedule therefore describes both runs.
+
+The planner has since produced a different digest for the same schedule: the
+round bound's recorded wording changed when the bound was restated as a bound on
+the request. The member partition is byte-identical, so a regenerated plan
+differs from the plan here in its own digest and in no batch.
 
 ## What the journal records
 
-Five rounds, all with outcome `completed`. The plan named 40, 40, 40, 40, and
-11 members; the guest's own simulation reported 10, 8, 10, 8, and 8 packages to
-install, so the run installed 44 packages and found the remaining 127 members
-already satisfied by the base's 845. Every round reported `0 upgraded`,
-`0 to remove`, and `10 not upgraded`. Each install exited 0, each `sync` exited
-0, each `/sbin/reboot` was accepted, and the guest returned to SSH before the
-next round began.
+Five rounds, all with outcome `completed`, in both runs. The plan named 40, 40,
+40, 40, and 11 members; the guest's own simulation reported 10, 8, 10, 8, and 8
+packages to install in each run, so a run installed 44 packages and found the
+remaining 127 members already satisfied by the base's 845. Every round reported
+`0 upgraded`, `0 to remove`, and `10 not upgraded`. Each install exited 0, each
+`sync` exited 0, each `/sbin/reboot` was accepted, and the guest returned to SSH
+before the next round began.
 
 The 40-package figure bounds the size of the request a round names. It is not
 the number of packages a round installs, and the journal's
@@ -30,10 +39,6 @@ transaction is resolved against the base's own installed state and still names
 members the base satisfies, because the resolver runs apt 3.0.3 on amd64 while
 the guest runs apt 3.3.1 on hurd-amd64; `evidence/builder-base/README.md`
 carries that boundary.
-
-A second run reaching the same five completed rounds with the same per-round
-counts is retained in the run tree rather than here, because one exported run
-and a statement that another agreed carries the same fact as two copies.
 
 ## What is settled and what is not
 
@@ -58,8 +63,8 @@ allocation error appeared in APT's output` is the whole of what was observed.
 
 ## The Hurd leaves ext2 reporting deleted inodes with zero dtime
 
-`offline-fsck-as-left.log` is a read-only `e2fsck` over the overlay as the
-guest left it. It exits 1 and reports deleted inodes with zero dtime, the block
+Each `offline-fsck.log` is a read-only `e2fsck` over that run's overlay as the
+guest left it. Both exit 1 and report deleted inodes with zero dtime, the block
 and inode bitmap differences that follow from them, and
 `Filesystem still has errors`. Four host-side observations place that signature:
 
@@ -82,16 +87,17 @@ pass is an observation and never a gate, because gating on it refuses every run
 this project can produce. `scripts/run-hurd-build.sh` runs both and records
 them as `guest_filesystem_as_left` and `guest_filesystem_after_repair`.
 
-`run.json` here was written before that split and carries the single
+Each `run.json` here was written before that split and carries the single
 `guest_filesystem` field reading `not run`, which is what the runner recorded
-when the read-only pass was still the gate and failed. It is kept as written,
-because evidence describes the run rather than the code that followed it.
+when the read-only pass was still the gate and failed. Both are kept as written,
+including the transcript name they index, because evidence describes the run
+rather than the code that followed it.
 
-## A remedy this run falsified
+## A remedy these runs falsified
 
-The two completed runs differ in one QEMU setting: one presented the PIIX IDE
-disk with `write-cache=auto` and the other with `write-cache=off`. They produce
-the same per-round install counts and the same filesystem report, and the
-boot-only overlay produces the report with no package work at all. Disk write
-caching does not explain the signature, and the builder composition carries no
-write-cache override.
+The two runs differ in one QEMU setting, which is why they are both here. Their
+journals record the same five completed rounds and the same per-round install
+counts, their filesystem transcripts report the same class, and the boot-only
+overlay reports it with no package work at all. Disk write caching does not
+explain the signature, and the builder composition carries no write-cache
+override.
