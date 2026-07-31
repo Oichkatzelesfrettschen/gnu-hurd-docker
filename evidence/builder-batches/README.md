@@ -80,9 +80,40 @@ bytes and held no GNU Mach output, while the guest answered SSH. The base's
 multiboot line is `/boot/gnumach-1.8-amd64-up.gz root=part:5:device:wd0`, which
 names no `console=com0`, so the kernel writes to VGA and the serial port sees
 only what runs before it. A transcript that exists and a transcript that can
-carry a Mach message are different facts, so the executor tests for the Mach
-banner and reports the falsifier unobserved when it is absent, rather than
-reporting zero matches as zero errors.
+carry a Mach message are different facts, so the executor reports the falsifier
+unobserved when the transcript carries no kernel output, rather than reporting
+zero matches as zero errors.
+
+## A disposable overlay can carry the Mach console, and the banner cannot test it
+
+Setting `GRUB_CMDLINE_GNUMACH="console=com0"` in `/etc/default/grub` and running
+`update-grub` inside a disposable overlay writes `console=com0` onto all three
+generated multiboot lines, including the recovery entry. The guest rebooted and
+answered SSH 40 seconds later, and the transcript grew from 338 bytes to 18796.
+The overlay carries the change and the base is untouched, so the observation
+costs no re-cut of the base image and no rebinding of the lock.
+
+What arrives is the kernel's own boot output: the ACPI table addresses, the APIC
+entries, the IOAPIC configuration and its GSI range, the IRQ overrides, the RTC
+time, the HPET report, `timer calibration`, and the multiboot module echo that
+names `pci-arbiter`, `acpi`, `rumpdisk`, `ext2fs`, and `exec`. The Hurd's own
+`/usr/bin/console` then reports a timeout receiving a return value from its
+daemon, because `com0` holds the console it expected; the boot continues through
+runlevel 2 and `sshd` starts.
+
+The version string is not what identifies any of that. It appears exactly once
+in the whole transcript, in the `/etc/issue` login banner a getty writes, and no
+kernel line carries it. A serial port reaching a getty while the kernel writes to
+VGA therefore produces a version string and no kernel message, so matching the
+banner accepts precisely the arrangement the falsifier exists to exclude. The
+executor matches lines only the kernel writes.
+
+The anchor matters as much as the pattern. A serial console terminates its lines
+with CRLF, so every line after the first begins with the carriage return the
+previous line ended with, and a pattern anchored at column zero matches nothing
+in a transcript that is full of kernel output. The same pattern found 22 lines
+once the anchor absorbed the leading carriage return and the ACPI report's
+indentation.
 
 ## The Hurd leaves ext2 reporting deleted inodes with zero dtime
 

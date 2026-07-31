@@ -143,14 +143,31 @@ console_scan() {
 # different facts, and zero matches in the second case would turn an unobserved
 # falsifier into a passed one. GNU Mach writes to the console its multiboot
 # command line names, so a guest booted without `console=com0` sends firmware
-# and GRUB output to the serial port and every kernel message to VGA. Its own
-# banner in the transcript is what separates the two, and it is present by the
-# time the guest answers SSH.
-MACH_BANNER='gnumach|mach operating system|mach [0-9]+\.[0-9]'
+# and GRUB output to the serial port and every kernel message to VGA.
+#
+# The test is for output the kernel itself emitted. A measured transcript of a
+# guest booted with `console=com0` carries the version string exactly once, in
+# the `/etc/issue` login banner a getty writes, while every kernel line -- the
+# ACPI and APIC tables, the IOAPIC configuration, the RTC and HPET report, the
+# timer calibration, and the multiboot module echo -- carries no version string
+# at all. Matching the version string therefore accepts a serial port that
+# carries a login prompt and no kernel message, which is the arrangement the
+# falsifier has to exclude. The markers below are lines only the kernel writes,
+# and the module echo is structural to how the Hurd boots rather than dependent
+# on the emulated hardware.
+#
+# A serial console terminates its lines with CRLF, so every line after the first
+# begins with the carriage return the previous line ended with, and an anchor
+# that expects the text at column zero matches nothing. The leading run of
+# whitespace absorbs it and also the indentation the ACPI report uses.
+MACH_KERNEL_OUTPUT='^[[:space:]]*(module [0-9]+:|timer calibration|IOAPIC .* configured with GSI|APIC entry=|IRQ override:|RTC time is)'
 console_available=0
 if [ -f "$serial_console" ]; then
-    if grep -qEi "$MACH_BANNER" "$serial_console"; then
+    if grep -qE "$MACH_KERNEL_OUTPUT" "$serial_console"; then
         console_available=1
+    elif grep -qEi 'gnumach|mach [0-9]+\.[0-9]' "$serial_console"; then
+        printf 'builder batch executor: %s carries a GNU Mach version string and no kernel output, so a getty reaches the serial port while the kernel writes to VGA; the Mach falsifier is unobserved\n' \
+            "$serial_console" >&2
     else
         printf 'builder batch executor: %s carries no GNU Mach output, so the guest console reaches VGA and the Mach falsifier is unobserved\n' \
             "$serial_console" >&2

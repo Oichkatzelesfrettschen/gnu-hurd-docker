@@ -105,11 +105,35 @@ def main():
         os.remove(os.path.join(fixture, "serial.log"))
         console_vga = vga_console.get("scanned") is False and \
             vga_console.get("mach_ipc_allocation_error") is None
-        console_passed = console_absent and console_vga
+
+        # A measured transcript of a guest booted with console=com0 carries the
+        # version string exactly once, in the /etc/issue login banner a getty
+        # writes, and every kernel line carries none. A serial port that reaches
+        # a getty while the kernel writes to VGA therefore produces this, and
+        # accepting it would report an unobserved falsifier as clear.
+        result = command([sys.executable, WRITER, "--plan", "plan.json", "--journal",
+                          "getty-journal.json", "--initialize"], fixture, environment)
+        if result.returncode:
+            print(result.stderr, file=sys.stderr)
+            return 1
+        with open(os.path.join(fixture, "serial.log"), "w", encoding="utf-8") as handle:
+            handle.write("SeaBIOS (version 1.16.3-debian)\nBooting from Hard Disk...\n"
+                         "GRUB loading.\n\n  Minty Hurd  (? console)\n"
+                         "  GNU-Mach 1.8 + Hurd-0.9 -- amd64\n\nlogin: \n")
+        command([EXECUTOR, "--plan", "plan.json", "--journal", "getty-journal.json",
+                 "--run-dir", "."], fixture, environment)
+        with open(os.path.join(fixture, "getty-journal.json"), encoding="utf-8") as handle:
+            getty_console = json.load(handle)["records"][0].get("guest_console", {})
+        os.remove(os.path.join(fixture, "serial.log"))
+        console_getty = getty_console.get("scanned") is False and \
+            getty_console.get("mach_ipc_allocation_error") is None
+
+        console_passed = console_absent and console_vga and console_getty
         if not console_passed:
             print("absent-console record: %s" % json.dumps(absent), file=sys.stderr)
             print("vga-console record: %s" % json.dumps(vga_console), file=sys.stderr)
-        print("ok    a console carrying no GNU Mach output stays an unobserved falsifier"
+            print("getty-console record: %s" % json.dumps(getty_console), file=sys.stderr)
+        print("ok    a console without GNU Mach kernel output stays an unobserved falsifier"
               if console_passed else "FAIL  console falsifier reported as clear")
         if not console_passed:
             return 1
