@@ -57,6 +57,9 @@ require_file docker-bake.hcl
 # success over zero files.
 require_executable scripts/list-maintained-shell.sh
 require_executable scripts/check-maintained-shell.sh
+require_file scripts/plan-builder-batches.py
+require_file scripts/write-builder-batch-journal.py
+require_executable scripts/execute-builder-batches.sh
 require_file scripts/health-check.sh
 require_file scripts/download-image.sh
 require_file scripts/setup-hurd-amd64.sh
@@ -137,6 +140,17 @@ if command -v shellcheck >/dev/null 2>&1; then
     fi
 else
     warn "shellcheck not installed"
+fi
+
+echo ""
+
+echo "2a. Validating builder batch-plan inputs..."
+echo ""
+
+if python3 scripts/plan-builder-batches.py --check; then
+    pass "The stock-kernel builder batch plan binds to the committed lock and closure"
+else
+    fail "The stock-kernel builder batch plan does not bind to the committed lock and closure"
 fi
 
 echo ""
