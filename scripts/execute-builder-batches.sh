@@ -104,13 +104,61 @@ run_guest_command() {
     printf '%s' "$status"
 }
 
+# One definition of the falsifier, applied to both surfaces it can appear on.
+MACH_IPC_PATTERN='mach.*(ipc|vm).*allocat|allocat.*mach.*(ipc|vm)|ipc.*allocat'
+
 mach_error_artifact() {
     local prefix="$1" output_path="$2" error_path="$3" matches
     matches="${artifact_dir}/${prefix}-mach-ipc-matches.txt"
-    grep -Ein 'mach.*(ipc|vm).*allocat|allocat.*mach.*(ipc|vm)|ipc.*allocat' \
-        "$output_path" "$error_path" >"$matches" || true
+    grep -Ein "$MACH_IPC_PATTERN" "$output_path" "$error_path" >"$matches" || true
     printf '%s' "$(basename "$matches")"
 }
+
+# APT's own streams carry what APT printed. GNU Mach writes allocation failures
+# to the kernel console, which reaches the run directory only when the
+# entrypoint was given QEMU_SERIAL_LOG. Scanning from the offset the round
+# started at attributes a console message to the round that provoked it.
+serial_console="${run_dir}/serial.log"
+
+console_offset() {
+    if [ -f "$serial_console" ]; then
+        wc -c <"$serial_console" | tr -d ' '
+    else
+        printf '0'
+    fi
+}
+
+console_scan() {
+    local prefix="$1" start="$2" matches
+    matches="${artifact_dir}/${prefix}-console-mach-matches.txt"
+    : >"$matches"
+    if [ -f "$serial_console" ]; then
+        tail -c "+$((start + 1))" "$serial_console" \
+            | grep -Ein "$MACH_IPC_PATTERN" >"$matches" || true
+    fi
+    printf '%s' "$(basename "$matches")"
+}
+
+# A transcript that exists and a transcript that can carry a Mach message are
+# different facts, and zero matches in the second case would turn an unobserved
+# falsifier into a passed one. GNU Mach writes to the console its multiboot
+# command line names, so a guest booted without `console=com0` sends firmware
+# and GRUB output to the serial port and every kernel message to VGA. Its own
+# banner in the transcript is what separates the two, and it is present by the
+# time the guest answers SSH.
+MACH_BANNER='gnumach|mach operating system|mach [0-9]+\.[0-9]'
+console_available=0
+if [ -f "$serial_console" ]; then
+    if grep -qEi "$MACH_BANNER" "$serial_console"; then
+        console_available=1
+    else
+        printf 'builder batch executor: %s carries no GNU Mach output, so the guest console reaches VGA and the Mach falsifier is unobserved\n' \
+            "$serial_console" >&2
+    fi
+else
+    printf 'builder batch executor: no guest console transcript at %s; the Mach falsifier is unobserved\n' \
+        "$serial_console" >&2
+fi
 
 append_record() {
     local record_path="$1"
@@ -143,6 +191,7 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
     reboot_stderr="${artifact_dir}/${record_prefix}-reboot.stderr"
     record_path="${artifact_dir}/${record_prefix}-record.json"
     started_at="$(timestamp)"
+    console_start="$(console_offset)"
     for stream_path in "$simulation_stdout" "$simulation_stderr" \
         "$install_stdout" "$install_stderr" "$sync_stdout" "$sync_stderr" \
         "$reboot_stdout" "$reboot_stderr"; do
@@ -155,16 +204,35 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
     simulation_match_count="$(wc -l <"${artifact_dir}/${simulation_matches}")"
     simulation_count="$(grep -c '^Inst ' "$simulation_stdout" || true)"
 
-    if [ "$simulation_status" -ne 0 ] || [ "$simulation_match_count" -ne 0 ]; then
+    simulation_console_matches="$(console_scan "${record_prefix}-simulation" "$console_start")"
+    simulation_console_count="$(wc -l <"${artifact_dir}/${simulation_console_matches}")"
+
+    if [ "$simulation_status" -ne 0 ] || [ "$simulation_match_count" -ne 0 ] \
+            || [ "$simulation_console_count" -ne 0 ]; then
         jq -n --argjson batch "$batch" --arg started "$started_at" --arg completed "$simulation_done" \
             --arg command "$simulation_command" --arg stdout "$(digest "$simulation_stdout")" \
             --arg stderr "$(digest "$simulation_stderr")" --arg matches "$simulation_matches" \
             --argjson status "$simulation_status" --argjson count "$simulation_count" \
-            --argjson match_count "$simulation_match_count" '
+            --argjson match_count "$simulation_match_count" \
+            --arg console_matches "$simulation_console_matches" \
+            --argjson console_count "$simulation_console_count" \
+            --argjson console_scanned "$console_available" '
             ($batch | {
                 batch_id, batch_index, members,
                 started_at_utc: $started,
                 outcome: "simulation-failed",
+                guest_console: {
+                    scanned: ($console_scanned == 1),
+                    source: (if $console_scanned == 1 then "serial.log" else null end),
+                    mach_ipc_allocation_error:
+                        (if $console_scanned == 1 then ($console_count > 0) else null end),
+                    artifact:
+                        (if $console_scanned == 1 then $console_matches else null end),
+                    not_scanned_reason:
+                        (if $console_scanned == 1 then null
+                         else "no transcript carrying GNU Mach output: the guest multiboot line names no console=com0, so kernel messages reach VGA and a Mach console message is unobserved"
+                         end)
+                },
                 pre_batch_simulation: {
                     command: ($command | split(" ")),
                     completed_at_utc: $completed,
@@ -172,14 +240,15 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
                     stdout_sha256: $stdout,
                     stderr_sha256: $stderr,
                     simulated_package_count: $count,
-                    mach_ipc_allocation_error: {observed: ($match_count > 0), artifact: $matches}
+                    mach_ipc_allocation_error: {observed: ($match_count > 0),
+                                                artifact: $matches}
                 },
                 install: {not_run_reason: "simulation-failed"},
                 sync: {not_run_reason: "simulation-failed"},
                 reboot: {not_run_reason: "simulation-failed"}
             })' >"$record_path"
         append_record "$record_path"
-        printf 'builder batch executor: %s simulation failed or reported a Mach IPC allocation error\n' "$batch_id" >&2
+        printf 'builder batch executor: %s simulation failed or a Mach IPC allocation error appeared\n' "$batch_id" >&2
         exit 1
     fi
 
@@ -187,7 +256,10 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
     install_done="$(timestamp)"
     install_matches="$(mach_error_artifact "${record_prefix}-install" "$install_stdout" "$install_stderr")"
     install_match_count="$(wc -l <"${artifact_dir}/${install_matches}")"
-    if [ "$install_status" -ne 0 ] || [ "$install_match_count" -ne 0 ]; then
+    install_console_matches="$(console_scan "${record_prefix}-install" "$console_start")"
+    install_console_count="$(wc -l <"${artifact_dir}/${install_console_matches}")"
+    if [ "$install_status" -ne 0 ] || [ "$install_match_count" -ne 0 ] \
+            || [ "$install_console_count" -ne 0 ]; then
         sync_status=-1
         sync_done="$install_done"
         reboot_status=-1
@@ -212,6 +284,15 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
         fi
     fi
 
+    # The reboot writes its own console output, so the round's console region
+    # closes only after the guest is back. A message here with every command at
+    # exit 0 is still a failed round: the falsifier is the message.
+    round_console_matches="$(console_scan "${record_prefix}-round" "$console_start")"
+    round_console_count="$(wc -l <"${artifact_dir}/${round_console_matches}")"
+    if [ "$round_console_count" -ne 0 ] && [ "$outcome" = "completed" ]; then
+        outcome="mach-console-error"
+    fi
+
     jq -n --argjson batch "$batch" --arg started "$started_at" --arg simulation_done "$simulation_done" \
         --arg simulation_command "$simulation_command" --arg simulation_stdout "$(digest "$simulation_stdout")" \
         --arg simulation_stderr "$(digest "$simulation_stderr")" --arg simulation_matches "$simulation_matches" \
@@ -224,11 +305,25 @@ for batch_index in $(seq 0 "$((batch_count - 1))"); do
         --argjson simulation_status "$simulation_status" --argjson simulation_count "$simulation_count" \
         --argjson simulation_match_count "$simulation_match_count" --argjson install_status "$install_status" \
         --argjson install_match_count "$install_match_count" --argjson sync_status "$sync_status" \
-        --argjson reboot_status "$reboot_status" '
+        --argjson reboot_status "$reboot_status" --argjson console_scanned "$console_available" \
+        --arg round_console_matches "$round_console_matches" \
+        --argjson round_console_count "$round_console_count" '
         ($batch | {
             batch_id, batch_index, members,
             started_at_utc: $started,
             outcome: $outcome,
+            guest_console: {
+                scanned: ($console_scanned == 1),
+                source: (if $console_scanned == 1 then "serial.log" else null end),
+                mach_ipc_allocation_error:
+                    (if $console_scanned == 1 then ($round_console_count > 0) else null end),
+                artifact:
+                    (if $console_scanned == 1 then $round_console_matches else null end),
+                not_scanned_reason:
+                    (if $console_scanned == 1 then null
+                     else "the run carries no guest console transcript, so a Mach console message is unobserved"
+                     end)
+            },
             pre_batch_simulation: {
                 command: ($simulation_command | split(" ")),
                 completed_at_utc: $simulation_done,

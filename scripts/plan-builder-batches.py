@@ -269,7 +269,8 @@ def build_plan(repository_root, lock_name, status_name, closure_name):
             "kind": "builder-batch-journal",
             "required_record_fields": [
                 "batch_id", "batch_index", "members", "started_at_utc",
-                "outcome", "pre_batch_simulation", "install", "sync", "reboot",
+                "outcome", "guest_console", "pre_batch_simulation", "install",
+                "sync", "reboot",
             ],
             "pre_batch_simulation_required_fields": [
                 "command", "completed_at_utc", "exit_status",

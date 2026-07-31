@@ -229,7 +229,11 @@ write_manifest() {
     "guest_filesystem_after_repair": "${guest_filesystem_after_repair}",
     "guest_filesystem_after_repair_transcript": "offline-fsck-repair.log"
   },
-  "guest_console_capture": "not run; the builder publishes no serial surface and the entrypoint writes no console transcript, so a Mach console message is unobserved",
+  "guest_console": {
+    "transcript": "serial.log",
+    "captured": $([ -s "$run_dir/serial.log" ] && echo true || echo false),
+    "carries_kernel_output": $(grep -qEi 'gnumach|mach operating system|mach [0-9]+\.[0-9]' "$run_dir/serial.log" 2>/dev/null && echo true || echo false)
+  },
   "overlay_retained": $([ -f "$overlay" ] && echo true || echo false),
   "compose_project": "${project}"
 }

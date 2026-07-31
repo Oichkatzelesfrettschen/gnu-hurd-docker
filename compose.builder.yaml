@@ -38,6 +38,11 @@ services:
       DISABLE_KVM: ${BUILDER_DISABLE_KVM:-1}
       SERIAL_PORT: 5555
       MONITOR_PORT: 9999
+      # GNU Mach writes allocation failures to the guest console, and the plan
+      # names such a failure as the falsifier that rejects a round. A telnet
+      # socket only carries what a reader is attached for, so the console lands
+      # in the run directory as a file the executor scans after every round.
+      QEMU_SERIAL_LOG: /opt/hurd-run/serial.log
       QEMU_HOSTFWDS: "tcp::2222-:22"
 
     volumes:
@@ -50,10 +55,9 @@ services:
 
     # A build is one process that ends and two runs must not collide, which is
     # why this composition fixes no container name. A fixed serial or monitor
-    # port reintroduces that collision on a second concurrent run, so the guest
-    # console surface belongs in the run directory as a file rather than on a
-    # published port. The entrypoint writes no such file, so a run carries no
-    # console transcript and a Mach console message goes unobserved.
+    # port reintroduces that collision on a second concurrent run, so the
+    # console reaches the run directory through QEMU_SERIAL_LOG and only SSH is
+    # published.
     ports:
       - "127.0.0.1:${BUILDER_SSH_PORT:-2223}:2222"
 

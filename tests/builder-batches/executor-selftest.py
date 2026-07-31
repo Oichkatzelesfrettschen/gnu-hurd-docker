@@ -82,6 +82,38 @@ def main():
         if not passed:
             return 1
 
+        absent = records[0].get("guest_console", {})
+        console_absent = absent.get("scanned") is False and \
+            absent.get("mach_ipc_allocation_error") is None
+
+        # A transcript carrying firmware and GRUB output but no GNU Mach banner
+        # is what a guest whose multiboot line names no console=com0 produces.
+        # Its zero Mach matches say nothing, so the record has to keep reporting
+        # the falsifier unobserved rather than clear.
+        result = command([sys.executable, WRITER, "--plan", "plan.json", "--journal",
+                          "vga-journal.json", "--initialize"], fixture, environment)
+        if result.returncode:
+            print(result.stderr, file=sys.stderr)
+            return 1
+        with open(os.path.join(fixture, "serial.log"), "w", encoding="utf-8") as handle:
+            handle.write("SeaBIOS (version 1.16.3-debian)\nBooting from Hard Disk...\n"
+                         "GRUB loading.\nWelcome to GRUB!\n")
+        command([EXECUTOR, "--plan", "plan.json", "--journal", "vga-journal.json",
+                 "--run-dir", "."], fixture, environment)
+        with open(os.path.join(fixture, "vga-journal.json"), encoding="utf-8") as handle:
+            vga_console = json.load(handle)["records"][0].get("guest_console", {})
+        os.remove(os.path.join(fixture, "serial.log"))
+        console_vga = vga_console.get("scanned") is False and \
+            vga_console.get("mach_ipc_allocation_error") is None
+        console_passed = console_absent and console_vga
+        if not console_passed:
+            print("absent-console record: %s" % json.dumps(absent), file=sys.stderr)
+            print("vga-console record: %s" % json.dumps(vga_console), file=sys.stderr)
+        print("ok    a console carrying no GNU Mach output stays an unobserved falsifier"
+              if console_passed else "FAIL  console falsifier reported as clear")
+        if not console_passed:
+            return 1
+
         result = command([sys.executable, WRITER, "--plan", "plan.json", "--journal",
                           "probe-journal.json", "--initialize"], fixture, environment)
         if result.returncode:

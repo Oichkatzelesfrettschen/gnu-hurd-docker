@@ -94,9 +94,21 @@ def append(plan, journal_path, record_path):
             raise JournalError("record for %s omits %s" % (batch_id, field))
     if record.get("outcome") not in {"completed", "simulation-failed",
                                      "install-failed", "sync-failed",
-                                     "reboot-failed"}:
+                                     "reboot-failed", "mach-console-error"}:
         raise JournalError("record for %s has invalid outcome %r" %
                            (batch_id, record.get("outcome")))
+    # A completed round has to say whether the console was read. A record that
+    # omits the question reads as a round with no Mach message, when what it
+    # describes is a round nobody looked at.
+    if record.get("outcome") == "completed":
+        console = record.get("guest_console")
+        if not isinstance(console, dict) or "scanned" not in console:
+            raise JournalError("completed record for %s states no guest console "
+                               "outcome" % batch_id)
+        if console.get("scanned") is True and console.get(
+                "mach_ipc_allocation_error") is not False:
+            raise JournalError("completed record for %s scanned the console and "
+                               "does not report it clear" % batch_id)
     simulation = record.get("pre_batch_simulation")
     if not isinstance(simulation, dict):
         raise JournalError("record for %s has no simulation object" % batch_id)
