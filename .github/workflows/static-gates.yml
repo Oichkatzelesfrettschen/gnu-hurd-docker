@@ -105,6 +105,16 @@ jobs:
       - name: Assert the builder lock reproduces from the tree
         run: make builder-lock-check
 
+      # The planner refuses a closure tied to another base image, archive
+      # snapshot, or transaction. The local tests also prove that a failed
+      # guest dry-run blocks the package install.
+      - name: Validate the stock-kernel builder dependency plan
+        run: |
+          make builder-batch-plan-check
+          make builder-batch-plan-selftest
+          make builder-batch-journal-selftest
+          make builder-batch-executor-selftest
+
       # The resolver's verdicts are produced by apt over a synthetic
       # architecture, so a source-level pass says nothing about whether a
       # verdict is right.  The image build proves the resolver's dependencies
