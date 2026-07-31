@@ -10,12 +10,22 @@ disposable overlay, with the base unchanged before and after.
 
 Two runs are here, named for the one QEMU setting that separates them: the PIIX
 IDE disk presented with `write-cache=off` and with `write-cache=auto`. Each
-directory carries `batch-journal.json`, what the guest did; `run.json`, the
-manifest the host wrote; and `offline-fsck.log`, the filesystem transcript read
-from the overlay after the guest halted. `batch-plan.json` sits under
-`write-cache-off/` alone, because both journals name plan digest
-`94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138` and one
-schedule therefore describes both runs.
+directory carries `batch-plan.json`, the schedule; `batch-journal.json`, what
+the guest did; `run.json`, the manifest the host wrote; `qemu-img-check.json`,
+the qcow2 check; and `offline-fsck.log`, the filesystem transcript read from the
+overlay after the guest halted. The two plans are byte-identical and both
+journals name plan digest
+`94014c0c8f37402356fb5a932e2c2a3e461f3b69e33597e16fc6cad58d505138`, so one
+schedule describes both runs; each run directory still carries its own copy,
+because a manifest's paths are relative to the run it describes and a pointer
+into a sibling directory resolves to nothing.
+
+`make builder-batch-evidence-check` reads this package: every journal resolves
+to a committed plan by digest, every record names a planned batch and carries
+its planned members, every manifest indexes a file the package contains, the
+base each run declares is the base the lock pins, and runs that share a plan
+are compared against each other, which is what makes the agreement claimed
+below a checked statement.
 
 The planner has since produced a different digest for the same schedule. The
 digest covers the whole plan document, so restating the round bound as a bound

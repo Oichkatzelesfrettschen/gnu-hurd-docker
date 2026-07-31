@@ -58,6 +58,7 @@ require_file docker-bake.hcl
 require_executable scripts/list-maintained-shell.sh
 require_executable scripts/check-maintained-shell.sh
 require_file scripts/plan-builder-batches.py
+require_file scripts/check-builder-batch-evidence.py
 require_file scripts/write-builder-batch-journal.py
 require_executable scripts/execute-builder-batches.sh
 require_file scripts/health-check.sh

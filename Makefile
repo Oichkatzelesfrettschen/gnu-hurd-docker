@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -29,6 +29,7 @@ help:
 	@echo "  make links                        - scan docs for broken internal links"
 	@echo "  make runtime-info                 - report the accelerator QEMU selected, plus host, declared, and guest facts"
 	@echo "  make guest-baseline-check         - assert the committed guest baseline against itself"
+	@echo "  make builder-batch-evidence-check - assert the committed builder batch runs against their plan and the lock"
 	@echo "  make builder-batch-plan-check     - verify the stock-kernel builder batch inputs bind to the lock"
 	@echo "  make builder-batch-plan-selftest  - run the planner's offline closure and journal fixtures"
 	@echo "  make builder-batch-journal-selftest - verify the journal accepts only the planned guest work"
@@ -208,6 +209,13 @@ builder-lock-check:
 # host APT. The planner binds it to the builder base and emits batches that the
 # guest must simulate before it installs them, so this check contains no guest
 # boot or package mutation.
+# The journal writer refuses a bad record when the record is written, which
+# says nothing about the files a clone receives. This reads the committed
+# package: journals resolve to committed plans, records carry planned members,
+# manifests index files that exist, and runs sharing a plan agree.
+builder-batch-evidence-check:
+	python3 scripts/check-builder-batch-evidence.py
+
 builder-batch-plan-check:
 	python3 scripts/plan-builder-batches.py --check
 

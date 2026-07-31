@@ -111,6 +111,7 @@ jobs:
       - name: Validate the stock-kernel builder dependency plan
         run: |
           make builder-batch-plan-check
+          make builder-batch-evidence-check
           make builder-batch-plan-selftest
           make builder-batch-journal-selftest
           make builder-batch-executor-selftest

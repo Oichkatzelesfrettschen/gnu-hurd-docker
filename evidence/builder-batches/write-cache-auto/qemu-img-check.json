@@ -1,0 +1,9 @@
+{
+    "image-end-offset": 365101056,
+    "total-clusters": 262144,
+    "check-errors": 0,
+    "allocated-clusters": 5536,
+    "filename": "/opt/hurd-run/overlay.qcow2",
+    "format": "qcow2",
+    "fragmented-clusters": 1634
+}
