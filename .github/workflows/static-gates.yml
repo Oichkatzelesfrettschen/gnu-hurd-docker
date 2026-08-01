@@ -106,6 +106,15 @@ jobs:
       - name: Assert the manifest writer and evidence checker together
         run: make package-build-manifest-selftest
 
+      # The install test runs in a second overlay that never held a build
+      # dependency, so a runtime dependency the build overlay concealed shows
+      # up here. The linker-probe ordering bug (--no-as-needed after the
+      # libraries it was meant to govern) meant the library could be dropped
+      # from NEEDED silently; this proves the corrected order against a
+      # stubbed guest transport, including the case it would have missed.
+      - name: Assert the second-overlay install test's stages
+        run: make package-install-test-selftest
+
       - name: Assert the package-build evidence contract
         run: make package-build-evidence-check
 

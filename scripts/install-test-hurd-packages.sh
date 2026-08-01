@@ -154,9 +154,16 @@ if [ -z "$header" ]; then
     status="development-headers-absent"; exit 1
 fi
 
-# The probe includes the installed header, links through pkg-config's own flags,
-# and runs. --no-as-needed keeps the library in the binary's dependency list even
-# when the probe calls nothing from it, so the link is proved rather than elided.
+# The probe includes the installed header, links through pkg-config's own
+# flags, and runs. -Wl,--no-as-needed has to precede the libraries it governs
+# on the link line -- a linker's --as-needed state applies to the libraries
+# that follow it, not the ones before it, so placing the flag after
+# --libs (as this read before) left it with nothing left to affect and the
+# library could be dropped from NEEDED exactly when the probe calls none of
+# its symbols. probe.c calls no library symbol on purpose, so a correct flag
+# placement is what keeps the library in the link at all; readelf reads the
+# result back rather than trusting the link's exit status to mean the library
+# is actually there.
 probe_source="#include <$(printf '%s' "$header" | sed 's#^/usr/include/##')>
 int main(void) { return 0; }"
 if ! guest_ssh_exec "${evidence}/probe-compile.stdout" "${evidence}/probe-compile.stderr" \
@@ -166,13 +173,32 @@ fi
 probe_compiled=true
 
 if ! guest_ssh_exec "${evidence}/probe-link.stdout" "${evidence}/probe-link.stderr" \
-        "cd /tmp && cc probe.c \$(pkg-config --cflags --libs ${pc_name}) -Wl,--no-as-needed -o probe"; then
+        "cd /tmp && cc probe.c \$(pkg-config --cflags ${pc_name}) -Wl,--no-as-needed \$(pkg-config --libs ${pc_name}) -o probe"; then
     status="development-probe-link-failed"; exit 1
 fi
 probe_linked=true
 
+if ! guest_ssh_exec "${evidence}/pkg-config-libs.txt" "${evidence}/pkg-config.stderr" \
+        "pkg-config --libs ${pc_name}"; then
+    status="pkg-config-failed"; exit 1
+fi
+lib_name="$(grep -oE -- '-l[A-Za-z0-9_.+-]+' "${evidence}/pkg-config-libs.txt" | head -1 | sed 's/^-l//')"
+
+# ldd is retained as a diagnostic transcript only; a probe that dlopens or a
+# guest ldd that formats unexpectedly would make it an unreliable proof, so
+# the acceptance condition is the ELF dynamic section itself.
 guest_ssh_exec "${evidence}/probe-ldd.txt" "${evidence}/probe-ldd.stderr" \
     "ldd /tmp/probe || true" || true
+if ! guest_ssh_exec "${evidence}/probe-needed.txt" "${evidence}/probe-needed.stderr" \
+        "readelf -d /tmp/probe | grep NEEDED"; then
+    status="development-probe-needed-unreadable"; exit 1
+fi
+if [ -n "$lib_name" ] && ! grep -q "lib${lib_name}\.so" "${evidence}/probe-needed.txt"; then
+    status="development-probe-library-not-needed"
+    log "the linked probe carries no NEEDED entry for lib${lib_name}.so"
+    exit 1
+fi
+
 if ! guest_ssh_exec "${evidence}/probe-run.stdout" "${evidence}/probe-run.stderr" \
         "/tmp/probe && echo probe-exited-zero"; then
     status="development-probe-run-failed"; exit 1
