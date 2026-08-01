@@ -100,6 +100,12 @@ jobs:
       - name: Assert the build request is refused before any guest contact
         run: make package-build-request-selftest
 
+      # The writer and the checker are proved together: every case runs the
+      # real writer against real files, then the real checker against what it
+      # wrote, so neither can drift from the other unnoticed.
+      - name: Assert the manifest writer and evidence checker together
+        run: make package-build-manifest-selftest
+
       - name: Assert the package-build evidence contract
         run: make package-build-evidence-check
 

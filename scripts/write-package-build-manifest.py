@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -93,6 +94,17 @@ def main():
     with open(request_path, encoding="utf-8") as handle:
         request = json.load(handle)
 
+    # The checker reads the request from beside the manifest it names, and a
+    # request that lives wherever the caller's --request pointed (a tracked
+    # config path outside the run directory, in the real runner) is not
+    # necessarily there. Copying it in is what makes "the manifest describes
+    # the request it ships" a claim the evidence tree can actually answer.
+    output_dir = os.path.dirname(os.path.abspath(output)) or "."
+    request_copy = os.path.join(output_dir, os.path.basename(request_path))
+    if os.path.abspath(request_copy) != os.path.abspath(request_path):
+        os.makedirs(output_dir, exist_ok=True)
+        shutil.copyfile(request_path, request_copy)
+
     present = sorted(name for name in os.listdir(package_dir)
                      if os.path.isfile(os.path.join(package_dir, name)))
     changes = [name for name in present if name.endswith(".changes")]
@@ -100,7 +112,7 @@ def main():
     debs = [name for name in present if name.endswith((".deb", ".ddeb"))]
 
     declared, mismatches = [], []
-    if changes:
+    if len(changes) == 1:
         sizes, digests = changes_files(os.path.join(package_dir, changes[0]))
         for name, recorded in sorted(digests.items()):
             path = os.path.join(package_dir, name)
@@ -112,10 +124,14 @@ def main():
                 entry["measured_size"] = str(os.path.getsize(path))
                 if entry["measured_sha256"] != recorded:
                     mismatches.append(name)
+                elif entry["declared_size"] is not None and \
+                        entry["measured_size"] != entry["declared_size"]:
+                    mismatches.append(name)
             else:
                 mismatches.append(name)
             declared.append(entry)
 
+    declared_names = {entry["name"] for entry in declared}
     binaries = []
     for name in sorted(debs):
         fields = control_fields(os.path.join(package_dir, name))
@@ -126,6 +142,7 @@ def main():
             "architecture": fields.get("architecture", ""),
             "control_read": bool(fields),
             "sha256": digest(os.path.join(package_dir, name)),
+            "declared_by_changes": name in declared_names,
         })
 
     result = {}
@@ -152,11 +169,19 @@ def main():
             "build_user": result.get("build_user"),
             "sha256": digest(result_path) if os.path.isfile(result_path) else "",
         },
-        "changes_file": changes[0] if changes else "",
-        "buildinfo_file": buildinfo[0] if buildinfo else "",
+        # A build directory carrying more than one .changes or .buildinfo is as
+        # much a defect as carrying none: "the first one" is not a fact about
+        # the build, and a checker that accepted it would validate whichever
+        # file sorts first rather than the one the build actually produced.
+        "changes_file": changes[0] if len(changes) == 1 else "",
+        "changes_files_present": sorted(changes),
+        "buildinfo_file": buildinfo[0] if len(buildinfo) == 1 else "",
+        "buildinfo_files_present": sorted(buildinfo),
         "declared_artifacts": declared,
         "digest_mismatches": sorted(mismatches),
         "binary_packages": binaries,
+        "undeclared_binary_packages": sorted(
+            entry["file"] for entry in binaries if not entry["declared_by_changes"]),
         "files_present": present,
     }
     if run_path and os.path.isfile(run_path):

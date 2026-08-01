@@ -88,12 +88,17 @@ def check_package(suite, directory):
                 "%s against %s" % (result.get("architecture"),
                                    request.get("architecture")))
 
-    suite.check("%s: the build produced a .changes file" % directory,
-                bool(manifest.get("changes_file")))
+    # "The first one" is not a fact about the build: one .changes and one
+    # .buildinfo is a count the writer requires before naming either, so zero
+    # or more than one both surface here rather than silently picking one.
+    changes_present = manifest.get("changes_files_present", [])
+    suite.check("%s: the build produced exactly one .changes file" % directory,
+                len(changes_present) == 1, ", ".join(changes_present) or "none")
+    buildinfo_present = manifest.get("buildinfo_files_present", [])
     # .buildinfo is the only artifact that ties the outputs to the environment
     # that produced them, so a package without one cannot be reproduced from.
-    suite.check("%s: the build produced a .buildinfo file" % directory,
-                bool(manifest.get("buildinfo_file")))
+    suite.check("%s: the build produced exactly one .buildinfo file" % directory,
+                len(buildinfo_present) == 1, ", ".join(buildinfo_present) or "none")
 
     declared = manifest.get("declared_artifacts", [])
     suite.check("%s: the .changes file declares artifacts" % directory,
@@ -101,7 +106,7 @@ def check_package(suite, directory):
     absent = [entry["name"] for entry in declared if not entry.get("present")]
     suite.check("%s: every artifact the .changes declares is present" % directory,
                 not absent, ", ".join(absent))
-    suite.check("%s: every present artifact hashes to its declared digest"
+    suite.check("%s: every present artifact hashes and sizes to its declared value"
                 % directory, not manifest.get("digest_mismatches"),
                 ", ".join(manifest.get("digest_mismatches", [])))
 
@@ -110,6 +115,12 @@ def check_package(suite, directory):
     unread = [entry["file"] for entry in binaries if not entry.get("control_read")]
     suite.check("%s: every binary package's control fields were read" % directory,
                 not unread, ", ".join(unread))
+    # A .deb the .changes never declared is not part of the build's stated
+    # output, whatever produced it, so accepting it here would let the
+    # manifest describe a package the archive never signed off on.
+    undeclared = manifest.get("undeclared_binary_packages", [])
+    suite.check("%s: every binary package is declared by .changes" % directory,
+                not undeclared, ", ".join(undeclared))
     # A Linux architecture here means the build ran somewhere other than the
     # guest, which is the failure a native port exists to exclude.
     foreign = [entry["file"] for entry in binaries
