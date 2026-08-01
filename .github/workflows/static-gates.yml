@@ -115,6 +115,12 @@ jobs:
       - name: Assert the second-overlay install test's stages
         run: make package-install-test-selftest
 
+      # A second overlay never held a build dependency, so this proves its own
+      # disposal, postcondition, and manifest-binding order the way
+      # build-run-postconditions proves the first overlay's.
+      - name: Assert the install-test run's disposal and postconditions
+        run: make install-test-run-lifecycle
+
       - name: Assert the package-build evidence contract
         run: make package-build-evidence-check
 

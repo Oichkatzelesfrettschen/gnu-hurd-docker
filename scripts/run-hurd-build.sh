@@ -524,6 +524,32 @@ if [ -n "$BUILD_REQUEST" ]; then
         status="source-build-failed"
         exit 1
     fi
+
+    # The install test runs in its own overlay, its own Compose project, and
+    # its own SSH port, because testing inside the overlay that produced the
+    # packages would answer a question about that overlay's build-dependency
+    # closure rather than about the package's own declared dependencies. Its
+    # probe package is the first required binary; a request naming none is a
+    # request this stage cannot exercise, and it is skipped and named rather
+    # than silently reported as passing.
+    probe_package="$(jq -r '.required_binary_packages[0] // empty' "$BUILD_REQUEST")"
+    if [ -n "$probe_package" ]; then
+        if env -u BUILDER_SSH_PORT \
+                BUILD_ROOT="$(dirname "$run_dir")" \
+                BUILD_RUN_ID="$(basename "$run_dir")-installtest" \
+                scripts/run-hurd-install-test.sh \
+                --package "$run_dir/artifacts/package" \
+                --artifact-manifest "$run_dir/artifact-manifest.json" \
+                --probe-package "$probe_package"; then
+            install_test="passed"
+        else
+            install_test="failed"
+            status="install-test-failed"
+            exit 1
+        fi
+    else
+        install_test="skipped-no-probe-package"
+    fi
 fi
 
 status="success"
