@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions builder-image-preflight-selftest package-build-producer-selftest package-build-request-selftest package-build-manifest-selftest package-install-test-selftest install-test-run-lifecycle package-build-evidence-check builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -32,6 +32,14 @@ help:
 	@echo "  make builder-lock-check           - reproduce the build lock from the tree it cites"
 	@echo "  make builder-lock-selftest        - prove the lock writer refuses a chain whose links disagree"
 	@echo "  make build-run-postconditions     - prove the build runner fails and retains its overlay when a postcondition fails"
+	@echo "  make package-build-producer-selftest - prove the guest source-build producer's classified outcomes"
+	@echo "  make package-build-request-selftest - prove a malformed build request is refused before ssh or scp runs"
+	@echo "  make package-build-manifest-selftest - prove the manifest writer and evidence checker as a producer-checker pair"
+	@echo "  make package-install-test-selftest - prove the second-overlay install test's simulate/install/audit/probe stages"
+	@echo "  make install-test-run-lifecycle   - prove the second-overlay install-test run's disposal and postconditions"
+	@echo "  make package-build-evidence-check - cross-check a package build's manifest against its request, .changes, and run"
+	@echo "  make builder-image-preflight-selftest - prove the image-identity preflight refuses every disagreement"
+	@echo "  make builder-container            - build the builder image labeled with the exact commit, and verify it"
 	@echo "  make builder-batch-evidence-check - assert the committed builder batch runs against their plan and the lock"
 	@echo "  make builder-batch-plan-check     - verify the stock-kernel builder batch inputs bind to the lock"
 	@echo "  make builder-batch-plan-selftest  - run the planner's offline closure and journal fixtures"
@@ -221,6 +229,54 @@ builder-lock-selftest:
 build-run-postconditions:
 	bash tests/build-run-postconditions/run.sh
 
+# Proves the image-identity preflight refuses every disagreement between the
+# cited commit, the image's revision label, and the image's own entrypoint
+# bytes, and that a refusal leaves no run directory behind.
+builder-image-preflight-selftest:
+	bash tests/builder-image-preflight/run.sh
+
+# Proves the in-guest source-build producer's classified outcomes against
+# stubbed Debian tooling: a completed build retains its source payloads, not
+# only their checksums, and each failure mode is named rather than folded into
+# a generic nonzero exit.
+package-build-producer-selftest:
+	bash tests/package-build-producer/run.sh
+
+# Proves the host orchestrator refuses a request whose source, version,
+# build_user, or build_parallelism falls outside a conservative grammar before
+# any ssh or scp call is made -- each of those fields reaches a guest shell
+# command as an interpolated string rather than an argv element.
+package-build-request-selftest:
+	bash tests/package-build-request/run.sh
+
+# Proves the manifest writer and the evidence checker as a producer-checker
+# pair: every case runs the real writer against real files, then the real
+# checker against what it wrote, rather than a hand-assembled manifest that
+# would test the checker while bypassing the writer.
+package-build-manifest-selftest:
+	bash tests/package-build-manifest/run.sh
+
+# Proves the second-overlay install test against a stubbed guest transport:
+# the simulate-then-install gate, the audit, pkg-config/header discovery, and
+# the compile/link/run probe that proves a runtime dependency the build
+# overlay could have concealed.
+package-install-test-selftest:
+	bash tests/package-install-test/run.sh
+
+# Proves the second-overlay install-test run's lifecycle against stubbed
+# container, image, guest-filesystem, and SSH tools: a clean pass discards its
+# overlay and binds the artifact manifest under test, and a failing install
+# test fails the run and retains the overlay for diagnosis.
+install-test-run-lifecycle:
+	bash tests/install-test-run-lifecycle/run.sh
+
+# Cross-checks a package build's manifest against its own request, its
+# .changes declarations, and its run evidence. An empty evidence tree is not a
+# failure: no package build has landed yet, and the checker says so rather
+# than reporting a pass.
+package-build-evidence-check:
+	python3 scripts/check-package-build-evidence.py
+
 # The resolver transaction is a sizing input rather than an instruction to run
 # host APT. The planner binds it to the builder base and emits batches that the
 # guest must simulate before it installs them, so this check contains no guest
@@ -364,6 +420,12 @@ build:
 
 build-podman:
 	podman build -t gnu-hurd-docker:latest .
+
+# Builds the builder image labeled with the exact commit it was built from, and
+# verifies the label, the entrypoint digest, and the QEMU_SERIAL_LOG capability
+# immediately rather than leaving that to the first run that cites the image.
+builder-container:
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" scripts/build-builder-container.sh
 
 compose-config:
 	@runtime="$${CONTAINER_RUNTIME:-$(CONTAINER_RUNTIME)}"; \
