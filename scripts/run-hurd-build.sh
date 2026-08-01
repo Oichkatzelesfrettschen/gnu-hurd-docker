@@ -67,6 +67,34 @@ fail() { log "ERROR: $*"; exit 1; }
 command -v jq >/dev/null 2>&1 || fail "jq is required to read ${LOCK_FILE}"
 [ -f "$LOCK_FILE" ] || fail "no build lock at ${LOCK_FILE}"
 
+script_root="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=scripts/lib/builder-image-preflight.sh
+source "${script_root}/lib/builder-image-preflight.sh"
+
+# The image identity is settled before an overlay exists. A run that discovers
+# it started the wrong container has already created a disposable artifact whose
+# owner exits with it, and the evidence it goes on to write cites a commit whose
+# code never ran.
+BUILDER_SOURCE_COMMIT="${BUILDER_SOURCE_COMMIT:-$(git rev-parse HEAD 2>/dev/null || true)}"
+if [ "${BUILDER_SKIP_IMAGE_PREFLIGHT:-0}" = "1" ]; then
+    log "image preflight skipped by request; the run cites no source commit"
+    BUILDER_SOURCE_COMMIT=""
+else
+    [ -n "$BUILDER_SOURCE_COMMIT" ] || fail "no git commit to bind the run to"
+    [ -n "${BUILDER_CONTAINER_IMAGE:-}" ] \
+        || fail "BUILDER_CONTAINER_IMAGE must name the image built from ${BUILDER_SOURCE_COMMIT}; a mutable tag records no source"
+    builder_image_matches_commit "$BUILDER_CONTAINER_IMAGE" "$BUILDER_SOURCE_COMMIT" \
+        || fail "the builder image is not commit ${BUILDER_SOURCE_COMMIT}"
+    log "builder image ${BUILDER_CONTAINER_IMAGE} is commit ${BUILDER_SOURCE_COMMIT}"
+fi
+export BUILDER_CONTAINER_IMAGE BUILDER_SOURCE_COMMIT
+
+# A build request turns the run from a dependency campaign into a package build.
+BUILD_REQUEST="${BUILD_REQUEST:-}"
+if [ -n "$BUILD_REQUEST" ]; then
+    [ -f "$BUILD_REQUEST" ] || fail "no build request at ${BUILD_REQUEST}"
+fi
+
 base_path="$(jq -r '.builder_base.path' "$LOCK_FILE")"
 base_sha="$(jq -r '.builder_base.sha256' "$LOCK_FILE")"
 snapshot="$(jq -r '.archive_snapshot' "$LOCK_FILE")"
@@ -123,6 +151,9 @@ container_repository_digest=""
 container_exit_status="not read"
 qemu_version=""
 entrypoint_sha256=""
+mach_console="not run"
+source_build="not run"
+install_test="not run"
 
 # The runner is the only layer that has the actual qcow2 and can prove it is
 # present and hashes to the lock. The planner then binds that proved base to the
@@ -340,6 +371,13 @@ write_manifest() {
     "qemu_version": "${qemu_version}",
     "entrypoint_sha256": "${entrypoint_sha256}",
     "ssh_port": ${BUILDER_SSH_PORT}
+  },
+  "source_commit": "${BUILDER_SOURCE_COMMIT}",
+  "package_build": {
+    "requested": $([ -n "$BUILD_REQUEST" ] && echo true || echo false),
+    "mach_console": "${mach_console}",
+    "source_build": "${source_build}",
+    "install_test": "${install_test}"
   }
 }
 EOF
@@ -392,9 +430,12 @@ log "overlay backing chain resolves to ${chain_base}"
 
 # A clean QEMU exit alone only says that the guest stopped. The executor records
 # the guest APT work and issues the final halt after all planned rounds finish,
-# so an empty or partial journal rejects a run that otherwise looks clean.
-if ! scripts/execute-builder-batches.sh --plan "$batch_plan" --journal "$batch_journal" \
-        --run-dir "$run_dir" --final-halt; then
+# so an empty or partial journal rejects a run that otherwise looks clean. A
+# build request keeps the guest up past the dependency campaign for the source
+# build stage below, so only a dependency-only run takes the final halt here.
+executor_args=(--plan "$batch_plan" --journal "$batch_journal" --run-dir "$run_dir")
+[ -n "$BUILD_REQUEST" ] || executor_args+=(--final-halt)
+if ! scripts/execute-builder-batches.sh "${executor_args[@]}"; then
     status="batch-execution-failed"
     exit 1
 fi
@@ -404,6 +445,41 @@ completed_batches="$(jq '[.records[] | select(.outcome == "completed")] | length
 if [ "$completed_batches" -ne "$planned_batches" ]; then
     status="batch-journal-incomplete"
     fail "batch journal records ${completed_batches} completed batches, plan requires ${planned_batches}"
+fi
+
+# A build request turns the campaign guest into a package-build guest: the
+# serial console is proved before the build so its transcript covers the build,
+# then the unmodified source build runs as the unprivileged account, then the
+# guest halts explicitly because the executor left it running for this stage.
+if [ -n "$BUILD_REQUEST" ]; then
+    require_console="$(jq -r '.require_mach_console // false' "$BUILD_REQUEST")"
+    console_args=(--run-dir "$run_dir")
+    [ "$require_console" = "true" ] && console_args+=(--require)
+    if scripts/enable-guest-mach-console.sh "${console_args[@]}"; then
+        mach_console="ran"
+    else
+        mach_console="failed"
+        status="mach-console-failed"
+        exit 1
+    fi
+
+    if scripts/build-hurd-source-package.sh --request "$BUILD_REQUEST" --run-dir "$run_dir"; then
+        source_build="completed"
+    else
+        source_build="$(jq -r '.outcome // "failed"' "$run_dir/build-run.json" 2>/dev/null || echo failed)"
+        status="source-build-failed"
+        exit 1
+    fi
+
+    export GUEST_SSH_HOST="${GUEST_SSH_HOST:-127.0.0.1}"
+    export GUEST_SSH_PORT="${GUEST_SSH_PORT:-$BUILDER_SSH_PORT}"
+    export GUEST_SSH_USER=root
+    export GUEST_SSH_KEY="${GUEST_SSH_KEY:-ssh-test-keys/hurd_test_key}"
+    export GUEST_KNOWN_HOSTS="${GUEST_KNOWN_HOSTS:-${run_dir}/known_hosts}"
+    # shellcheck source=scripts/lib/guest-ssh.sh
+    source "${script_root}/lib/guest-ssh.sh"
+    guest_ssh_exec "$run_dir/artifacts/final-halt.stdout" "$run_dir/artifacts/final-halt.stderr" \
+        "sync; halt" || true
 fi
 
 # The executor requests the final clean halt. The runner waits for QEMU itself
@@ -432,6 +508,22 @@ fi
 if ! check_overlay_offline; then
     status="offline-check-failed"
     exit 1
+fi
+
+if [ -n "$BUILD_REQUEST" ]; then
+    manifest_args=(--package "$run_dir/artifacts/package" --request "$BUILD_REQUEST" \
+        --output "$run_dir/artifact-manifest.json" --run "$run_dir/build-run.json")
+    if scripts/write-package-build-manifest.py "${manifest_args[@]}"; then
+        install_test="pending"
+    else
+        status="manifest-write-failed"
+        exit 1
+    fi
+    build_outcome="$(jq -r '.outcome // "failed"' "$run_dir/build-run.json" 2>/dev/null || echo failed)"
+    if [ "$build_outcome" != "completed" ]; then
+        status="source-build-failed"
+        exit 1
+    fi
 fi
 
 status="success"

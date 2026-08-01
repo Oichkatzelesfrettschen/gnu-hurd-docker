@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions package-build-evidence-check builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -32,6 +32,7 @@ help:
 	@echo "  make builder-lock-check           - reproduce the build lock from the tree it cites"
 	@echo "  make builder-lock-selftest        - prove the lock writer refuses a chain whose links disagree"
 	@echo "  make build-run-postconditions     - prove the build runner fails and retains its overlay when a postcondition fails"
+	@echo "  make package-build-evidence-check - cross-check a package build's manifest against its request, .changes, and run"
 	@echo "  make builder-batch-evidence-check - assert the committed builder batch runs against their plan and the lock"
 	@echo "  make builder-batch-plan-check     - verify the stock-kernel builder batch inputs bind to the lock"
 	@echo "  make builder-batch-plan-selftest  - run the planner's offline closure and journal fixtures"
@@ -220,6 +221,13 @@ builder-lock-selftest:
 # disposal and the process status are answerable in seconds.
 build-run-postconditions:
 	bash tests/build-run-postconditions/run.sh
+
+# Cross-checks a package build's manifest against its own request, its
+# .changes declarations, and its run evidence. An empty evidence tree is not a
+# failure: no package build has landed yet, and the checker says so rather
+# than reporting a pass.
+package-build-evidence-check:
+	python3 scripts/check-package-build-evidence.py
 
 # The resolver transaction is a sizing input rather than an instruction to run
 # host APT. The planner binds it to the builder base and emits batches that the
