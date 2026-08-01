@@ -51,6 +51,24 @@ request_sha="$(sha256sum "$request" | cut -d' ' -f1)"
 [ -n "$source_name" ] && [ "$source_name" != "null" ] || { log "the request names no source"; exit 2; }
 [ -n "$source_version" ] && [ "$source_version" != "null" ] || { log "the request names no version"; exit 2; }
 
+# Every one of these fields reaches a guest root or build-user shell command as
+# an interpolated string rather than an argv element, because the transport is
+# ssh's single command-string argument. A value outside the grammar its field
+# describes is refused here, before any command is assembled, rather than
+# trusted to survive quoting inside one.
+if ! printf '%s' "$source_name" | grep -Eq '^[a-z0-9][a-z0-9+.-]*$'; then
+    log "source name '${source_name}' is not a Debian source-package name"; exit 2
+fi
+if ! printf '%s' "$source_version" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9.+~:-]*$'; then
+    log "version '${source_version}' is not a Debian version"; exit 2
+fi
+if ! printf '%s' "$build_user" | grep -Eq '^[a-z_][a-z0-9_-]{0,31}$'; then
+    log "build user '${build_user}' is not a conservative account name"; exit 2
+fi
+if ! printf '%s' "$parallelism" | grep -Eq '^[1-9][0-9]?$'; then
+    log "parallelism '${parallelism}' is not an integer from 1 to 99"; exit 2
+fi
+
 # A request that carries a patch list is refused rather than silently ignored,
 # because the artifact manifest would otherwise describe an unmodified build of
 # a modified tree.

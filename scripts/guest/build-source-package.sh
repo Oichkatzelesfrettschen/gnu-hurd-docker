@@ -77,22 +77,34 @@ if ! apt-get source --only-source "${source_name}=${source_version}" \
 fi
 record "fetched: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# The .dsc and every file it names are the source identity, recorded before the
-# build touches them.
-for candidate in *.dsc; do
+# The .dsc and the payload files it names are the source identity. The
+# overlay this build runs in is disposable, so a checksum list alone would
+# describe files that stop existing the moment the overlay is; the payloads
+# themselves are copied out beside it.
+copied=0
+for candidate in *.dsc *.tar.* *.diff.gz; do
     [ -f "$candidate" ] || continue
     cp "$candidate" "${output_dir}/"
+    copied=$((copied + 1))
 done
 sha256sum ./*.dsc ./*.tar.* ./*.diff.gz 2>/dev/null \
     >"${output_dir}/source-checksums.txt" || true
-if [ ! -s "${output_dir}/source-checksums.txt" ]; then
+if [ "$copied" -eq 0 ] || [ ! -s "${output_dir}/source-checksums.txt" ]; then
     outcome="source-verification-failed"; emit_result; exit 1
 fi
 
-tree="$(find . -maxdepth 1 -mindepth 1 -type d | head -1)"
-if [ -z "$tree" ] || [ ! -d "$tree/debian" ]; then
+# Exactly one extracted source tree is required. apt-get source extracts one
+# directory per source package, so more than one candidate means a leftover
+# from an earlier fetch shares this directory (the caller already refuses to
+# reuse a build directory, so this would be a new defect rather than a stale
+# one), and picking "the first" either way would silently build the wrong
+# tree.
+mapfile -t trees < <(find . -maxdepth 1 -mindepth 1 -type d)
+if [ "${#trees[@]}" -ne 1 ] || [ ! -d "${trees[0]}/debian" ]; then
+    record "candidate source directories: ${#trees[@]} (${trees[*]:-none})"
     outcome="source-extraction-failed"; emit_result; exit 1
 fi
+tree="${trees[0]}"
 record "source tree: ${tree}"
 
 cd "$tree" || { outcome="source-extraction-failed"; emit_result; exit 1; }

@@ -1,4 +1,4 @@
-.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions builder-image-preflight-selftest package-build-evidence-check builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
+.PHONY: help validate security lint topology overlay-lifecycle links runtime-info evidence-check guest-baseline-check builder-lock-check builder-lock-selftest build-run-postconditions builder-image-preflight-selftest package-build-producer-selftest package-build-request-selftest package-build-evidence-check builder-batch-evidence-check builder-batch-plan-check builder-batch-plan-selftest builder-batch-journal-selftest builder-batch-executor-selftest hurd-archive-image hurd-closure hurd-build-closure hurd-build-closure-report hurd-closure-selftest hurd-closure-report smoke-host smoke-container smoke-guest ports screenshot monitor sendkey setup setup-latest setup-daily-installer rebuild-unattended-iso scripts-audit resolve-latest-image resolve-latest-daily-installer build build-podman compose-config up up-kvm up-vnc up-kvm-vnc up-volume up-volume-vnc up-latest up-installer up-podman up-podman-kvm up-podman-vnc up-podman-latest up-podman-installer qemu-fsm qemu-serial-fsm qemu-stall-probe qemu-full-auto qemu-auto-verify qemu-matrix vbox-doctor vbox-install-auto vbox-provision vbox-full-auto auto-fresh down ps logs shell
 
 CONTAINER_RUNTIME ?= docker
 COMPOSE ?= $(CONTAINER_RUNTIME) compose
@@ -32,6 +32,8 @@ help:
 	@echo "  make builder-lock-check           - reproduce the build lock from the tree it cites"
 	@echo "  make builder-lock-selftest        - prove the lock writer refuses a chain whose links disagree"
 	@echo "  make build-run-postconditions     - prove the build runner fails and retains its overlay when a postcondition fails"
+	@echo "  make package-build-producer-selftest - prove the guest source-build producer's classified outcomes"
+	@echo "  make package-build-request-selftest - prove a malformed build request is refused before ssh or scp runs"
 	@echo "  make package-build-evidence-check - cross-check a package build's manifest against its request, .changes, and run"
 	@echo "  make builder-image-preflight-selftest - prove the image-identity preflight refuses every disagreement"
 	@echo "  make builder-container            - build the builder image labeled with the exact commit, and verify it"
@@ -229,6 +231,20 @@ build-run-postconditions:
 # bytes, and that a refusal leaves no run directory behind.
 builder-image-preflight-selftest:
 	bash tests/builder-image-preflight/run.sh
+
+# Proves the in-guest source-build producer's classified outcomes against
+# stubbed Debian tooling: a completed build retains its source payloads, not
+# only their checksums, and each failure mode is named rather than folded into
+# a generic nonzero exit.
+package-build-producer-selftest:
+	bash tests/package-build-producer/run.sh
+
+# Proves the host orchestrator refuses a request whose source, version,
+# build_user, or build_parallelism falls outside a conservative grammar before
+# any ssh or scp call is made -- each of those fields reaches a guest shell
+# command as an interpolated string rather than an argv element.
+package-build-request-selftest:
+	bash tests/package-build-request/run.sh
 
 # Cross-checks a package build's manifest against its own request, its
 # .changes declarations, and its run evidence. An empty evidence tree is not a
