@@ -32,8 +32,15 @@ builder_image_entrypoint_digest() {
 
 # The committed bytes, read from the commit rather than from the working tree,
 # because the tree can carry an edit the evidence would not be able to cite.
+#
+# git show failing (an absent commit or an absent entrypoint.sh at that commit)
+# still exits 0 through this pipeline and pipes nothing into sha256sum, which
+# hashes to the same digest as a real, empty entrypoint.sh would. The caller
+# below tells the two apart only if git's failure is checked directly, so the
+# existence of the path at that commit is checked first.
 builder_commit_entrypoint_digest() {
     local commit="$1"
+    git cat-file -e "${commit}:entrypoint.sh" 2>/dev/null || return 1
     git show "${commit}:entrypoint.sh" 2>/dev/null | sha256sum | cut -d' ' -f1
 }
 

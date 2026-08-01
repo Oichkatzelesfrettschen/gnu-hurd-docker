@@ -97,6 +97,13 @@ jobs:
       - name: Assert the package-build evidence contract
         run: make package-build-evidence-check
 
+      # A run cites a container against a commit before it creates anything.
+      # This proves the refusal path for every disagreement between that
+      # commit, the image's revision label, and the image's own entrypoint
+      # bytes, and that a refusal leaves no run directory behind.
+      - name: Assert the image-identity preflight
+        run: make builder-image-preflight-selftest
+
       # The negative fixtures assert what the evidence contract rejects, and the
       # capture check recomputes each retained stream's digest.  A digest
       # mismatch is the signature of redaction that ran after hashing, which is
