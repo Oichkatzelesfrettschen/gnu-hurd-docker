@@ -3,9 +3,7 @@
 ## Instruction Source
 
 This root AGENTS.md is the durable instruction file for gnu-hurd-docker.
-`CLAUDE.md` defers to it and carries only Claude-Code entry points and session
-habits. Some repositories in this ecosystem symlink `CLAUDE.md` to `AGENTS.md`
-instead; this repository keeps two distinct files.
+`CLAUDE.md` is a tracked repository-relative symbolic link to `AGENTS.md`, so Claude Code reads this same body and the rules live in one place.
 
 Nested AGENTS.md files may add narrower rules for their subtree. When rules
 conflict, the narrower file controls only inside its subtree.
@@ -316,3 +314,70 @@ deb-multimedia.org publishes a `sid` suite and builds no `hurd-amd64`.
 
 Release artifacts are cut with `git archive` from a recorded commit, and
 `.gitattributes` `export-ignore` is the single exclusion policy.
+
+## Claude Code notes
+
+These notes came from the retired standalone `CLAUDE.md` loader and hold the Claude Code specifics that a tool-generic guide leaves out. A rule that applies to every agent lives in the sections above.
+
+### Loading rule
+
+### Gate entry points
+
+- Shell: `make lint` (calls `scripts/check-maintained-shell.sh`, the single
+  ShellCheck mechanism; `SHELLCHECK_SEVERITY` defaults to `error`)
+- Repo invariants: `make validate`
+- Compose posture: `make security`
+- Docs links: `make links` (asserts the broken-link count; the scanner alone
+  exits 0 whatever it finds)
+- Host smoke: `make smoke-host`
+- Release product: `scripts/build-release-archive.sh --version vX.Y.Z --commit <sha>`
+
+Active workflows: `static-gates.yml`, `release-archive-check.yml`,
+`docs-build-check.yml`. The rest, including `validate.yml`,
+`validate-config.yml`, `quality-and-security.yml`, and `release-artifacts.yml`,
+are `disabled_manually` and produce no evidence, so changes to them are reasoned
+rather than observed and are reported that way.
+
+### Boot entry point
+
+`compose.minty.yaml` overlays the canonical `gnu-hurd-dev` service and declares
+none of its own, so one QEMU container runs. `make topology` asserts that from
+the rendered configuration; `AGENTS.md` section `Booting the Minty Profile`
+carries the composition and the accelerator decision record.
+
+### Claude Code operating notes
+
+Inspect the real repository and the live system with Claude Code tools before
+editing. Memory, prior summaries, and recalled context are leads; `AGENTS.md`,
+the source, and the running system are authority.
+
+Inspect the diff after every edit. The adversarial staged-diff read runs before
+any commit or completion claim.
+
+Claude Code task tracking is transient working state; durable state lands in
+code, commit messages, findings, documentation, or qcow2 snapshots. For any task
+involving two or more steps, track progress under durable mechanism names and
+rescope as discoveries land.
+
+Snapshot a guest image before mutating it in place and name the snapshot that is
+the rollback. A build runs on a disposable external overlay instead, through
+`QEMU_BACKING_DRIVE`, and leaves the backing image unwritten; `AGENTS.md`
+section `Guest Image Discipline` carries both sequences and which intent selects
+which.
+
+### Response shape
+
+Responses report the changed mechanism, the evidence used, the validation run,
+the checks not run and why, and the remaining risks or unresolved falsifiers.
+Observed and inferred stay separated.
+
+Chained reasoning appears when it explains the next action or a validation
+requirement; the rest of the deliberation lives in thoughtspace. Responses are
+plain ASCII mechanism prose under durable names.
+
+### Orientation pointers
+
+- Roadmap: `ROADMAP.md`
+- Findings: `docs/audits/`
+- Minty guest: `MINTY-HURD-README.md`, `compose.minty.yaml`
+- Docs site: `docs/index.md`, `mkdocs.yml`
