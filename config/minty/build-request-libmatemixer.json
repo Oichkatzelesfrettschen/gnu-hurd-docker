@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "hurd-native-source-build",
+  "source": "libmatemixer",
+  "version": "1.26.1-1",
+  "architecture": "hurd-amd64",
+  "build_user": "builder",
+  "build_parallelism": 1,
+  "run_package_tests": true,
+  "required_binary_packages": [
+    "libmatemixer-dev"
+  ],
+  "require_mach_console": true,
+  "local_patches": [],
+  "comment": "The version is the one config/minty/builder.lock.json names as producing libmatemixer-dev, which is what the measured dependency graph puts between the builder base and mate-settings-daemon. local_patches is empty and the executor refuses a non-empty list: the first build of a source establishes what the archive's own tree does on hurd-amd64, and a build that succeeds only after an unrecorded change describes a source tree that does not exist. A failure here is a classified result that a later porting change starts from."
+}

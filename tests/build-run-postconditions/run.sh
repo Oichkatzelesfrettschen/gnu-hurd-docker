@@ -37,8 +37,12 @@ check() {
 # next one.
 make_tree() {
     local tree="$1"
-    mkdir -p "$tree/scripts" "$tree/config/minty" "$tree/images" "$tree/bin"
+    mkdir -p "$tree/scripts/lib" "$tree/config/minty" "$tree/images" "$tree/bin"
     cp "$ROOT/scripts/run-hurd-build.sh" "$tree/scripts/"
+    # The runner sources this unconditionally to settle image identity before it
+    # decides whether the preflight itself runs, so the fixture tree needs it
+    # even when BUILDER_SKIP_IMAGE_PREFLIGHT skips the check the file performs.
+    cp "$ROOT/scripts/lib/builder-image-preflight.sh" "$tree/scripts/lib/"
     cp "$ROOT/compose.builder.yaml" "$tree/"
     printf 'a synthetic backing image\n' > "$tree/images/fake-base.qcow2"
     local base_sha
@@ -165,6 +169,11 @@ drive() {
         export BUILD_RUN_ID="fixture"
         export BUILDER_TIMEOUT=30
         export BUILDER_SSH_PORT=2223
+        # This fixture asserts disposal order and postconditions with a stubbed
+        # container runtime; the image-identity preflight is a separate
+        # mechanism with its own fixture, so it is skipped here rather than
+        # faked.
+        export BUILDER_SKIP_IMAGE_PREFLIGHT=1
         [ "$mutate" = "mutate" ] && export FAKE_MUTATE_BASE=1
         bash scripts/run-hurd-build.sh >"$tree/runner.log" 2>&1
         printf '%s' "$?" > "$tree/exit-status"

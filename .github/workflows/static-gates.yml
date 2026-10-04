@@ -91,6 +91,46 @@ jobs:
       - name: Assert the build runner's postconditions and disposal order
         run: make build-run-postconditions
 
+      # The manifest writer and the cross-checker have never seen a real build,
+      # so this asserts what they do against an empty evidence tree: reported
+      # honestly, not silently accepted as a pass.
+      - name: Assert the guest source-build producer's classified outcomes
+        run: make package-build-producer-selftest
+
+      - name: Assert the build request is refused before any guest contact
+        run: make package-build-request-selftest
+
+      # The writer and the checker are proved together: every case runs the
+      # real writer against real files, then the real checker against what it
+      # wrote, so neither can drift from the other unnoticed.
+      - name: Assert the manifest writer and evidence checker together
+        run: make package-build-manifest-selftest
+
+      # The install test runs in a second overlay that never held a build
+      # dependency, so a runtime dependency the build overlay concealed shows
+      # up here. The linker-probe ordering bug (--no-as-needed after the
+      # libraries it was meant to govern) meant the library could be dropped
+      # from NEEDED silently; this proves the corrected order against a
+      # stubbed guest transport, including the case it would have missed.
+      - name: Assert the second-overlay install test's stages
+        run: make package-install-test-selftest
+
+      # A second overlay never held a build dependency, so this proves its own
+      # disposal, postcondition, and manifest-binding order the way
+      # build-run-postconditions proves the first overlay's.
+      - name: Assert the install-test run's disposal and postconditions
+        run: make install-test-run-lifecycle
+
+      - name: Assert the package-build evidence contract
+        run: make package-build-evidence-check
+
+      # A run cites a container against a commit before it creates anything.
+      # This proves the refusal path for every disagreement between that
+      # commit, the image's revision label, and the image's own entrypoint
+      # bytes, and that a refusal leaves no run directory behind.
+      - name: Assert the image-identity preflight
+        run: make builder-image-preflight-selftest
+
       # The negative fixtures assert what the evidence contract rejects, and the
       # capture check recomputes each retained stream's digest.  A digest
       # mismatch is the signature of redaction that ran after hashing, which is
