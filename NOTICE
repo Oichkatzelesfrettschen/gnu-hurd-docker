@@ -1,0 +1,13 @@
+Licensing of this repository
+
+The repository's own work is offered under the MIT License in LICENSE. Two kinds
+of upstream material keep their original terms:
+
+- patches/gnumach-raise-ipc_kernel_map_size.patch modifies GNU Mach's
+  ipc/ipc_init.c. GNU Mach is distributed under the GNU General Public License,
+  version 2 or later (LICENSES/GPL-2.0-or-later.txt), and that file carries the
+  Carnegie Mellon University Mach notice (LICENSES/CMU-Mach.txt); the patch is
+  offered under the same terms as the file it changes.
+- The Debian GNU/Hurd disk images that the scripts download or build, and the
+  packages inside them, keep the licenses Debian records for each package in
+  /usr/share/doc/PACKAGE/copyright.
